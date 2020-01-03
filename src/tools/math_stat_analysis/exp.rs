@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is calculated as 
-/// [*e*](https://en.wikipedia.org/wiki/E_(mathematical_constant)) to the power of the value of the 
-/// corresponding grid cell in the input raster (`--input`). Moderate to large values in the input 
-/// raster will result in very large values in the output raster and this may cause errors when you 
-/// try to display the data. Grid cells with **NoData** values in the input raster will be assigned 
+/// This tool creates a new raster (`--output`) in which each grid cell is calculated as
+/// [*e*](https://en.wikipedia.org/wiki/E_(mathematical_constant)) to the power of the value of the
+/// corresponding grid cell in the input raster (`--input`). Moderate to large values in the input
+/// raster will result in very large values in the output raster and this may cause errors when you
+/// try to display the data. Grid cells with **NoData** values in the input raster will be assigned
 /// **NoData** values in the output raster.
-/// 
+///
 /// # See Also
 /// `Exp2`, `Power`, `Ln`
 pub struct Exp {

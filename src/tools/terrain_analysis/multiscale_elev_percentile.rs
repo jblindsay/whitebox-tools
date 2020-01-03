@@ -12,30 +12,30 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
-use std::io::{Error, ErrorKind};
 use std::i64;
+use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
 /// This tool calculates the most elevation percentile (EP) across a range of spatial scales.
-/// EP is a measure of local topographic position (LTP) and expresses the vertical 
+/// EP is a measure of local topographic position (LTP) and expresses the vertical
 /// position for a digital elevation model (DEM) grid cell (z<sub>0</sub>) as the percentile of the
 /// elevation distribution within the filter window, such that:
-/// 
+///
 /// > EP = count<sub>i&isin;C</sub>(z<sub>i</sub> > z<sub>0</sub>) x (100 / n<sub>C</sub>)
-/// 
+///
 /// where z<sub>0</sub> is the elevation of the window's center grid cell, z<sub>i</sub> is the elevation
 /// of cell *i* contained within the neighboring set C, and n<sub>C</sub> is the number
 /// of grid cells contained within the window.
-/// 
+///
 /// EP is unsigned and expressed as a percentage, bound between 0%
 /// and 100%. This tool outputs two rasters, the multiscale EP magnitude (`--out_mag`) and
 /// the scale at which the most extreme EP value occurs (`--out_scale`). **The magnitude raster is
 /// the most extreme EP value (i.e. the furthest from 50%) for each grid cell encountered within
 /// the tested scales of EP.**
-/// 
+///
 /// Quantile-based estimates (e.g., the median and interquartile
 /// range) are often used in nonparametric statistics to provide data
 /// variability estimates without assuming the distribution is normal.
@@ -46,30 +46,30 @@ use std::thread;
 /// distributions, where the occurrence of elevation errors can often result
 /// in distribution outliers. Thus, based on these statistical characteristics,
 /// EP is considered one of the most robust representation of LTP.
-/// 
-/// The algorithm implemented by this tool uses the relatively efficient running-histogram filtering algorithm of Huang 
+///
+/// The algorithm implemented by this tool uses the relatively efficient running-histogram filtering algorithm of Huang
 /// et al. (1979). Because most DEMs contain floating point data, elevation values must be rounded to be binned. The
-/// `--sig_digits` parameter is used to determine the level of precision preserved during this binning process. The 
-/// algorithm is parallelized to further aid with computational efficiency. 
-/// 
-/// Experience with multiscale EP has shown that it is highly variable at 
-/// shorter scales and changes more gradually at broader scales. Therefore, a nonlinear scale sampling 
-/// interval is used by this tool to ensure that the scale sampling density is higher for short scale 
+/// `--sig_digits` parameter is used to determine the level of precision preserved during this binning process. The
+/// algorithm is parallelized to further aid with computational efficiency.
+///
+/// Experience with multiscale EP has shown that it is highly variable at
+/// shorter scales and changes more gradually at broader scales. Therefore, a nonlinear scale sampling
+/// interval is used by this tool to ensure that the scale sampling density is higher for short scale
 /// ranges and coarser at longer tested scales, such that:
-/// 
+///
 /// > *r<sub>i</sub>* = *r<sub>L</sub>* + [step &times; (i - *r<sub>L</sub>*)]<sup>*p*</sup>
-/// 
+///
 /// Where *ri* is the filter radius for step *i* and *p* is the nonlinear scaling factor (`--step_nonlinearity`)
-/// and a step size (`--step`) of *step*. 
-/// 
-/// 
+/// and a step size (`--step`) of *step*.
+///
+///
 /// # References
-/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position
 /// for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
-/// 
-/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE 
+///
+/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE
 /// Transactions on Acoustics, Speech, and Signal Processing, 27(1), pp.13-18.
-/// 
+///
 /// # See Also
 /// `ElevationPercentile`, `MaxElevationDeviation`, `MaxDifferenceFromMean`
 pub struct MultiscaleElevationPercentile {
@@ -409,17 +409,24 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
         output_scale.configs.data_type = DataType::I16;
         output_scale.configs.nodata = std::i16::MIN as f64;
         output_scale.reinitialize_values(std::i16::MIN as f64);
-        
+
         let bd = Arc::new(binned_data); // wrap binned_data in an Arc
 
         ///////////////////////////////
         // Perform the main analysis //
         ///////////////////////////////
 
-        for s in min_scale..(min_scale+num_steps) {
-            let midpoint = min_scale + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
+        for s in min_scale..(min_scale + num_steps) {
+            let midpoint = min_scale
+                + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
             let filter_size = midpoint * 2 + 1;
-            println!("Loop {} / {} ({}x{})", s-min_scale+1, num_steps, filter_size, filter_size);
+            println!(
+                "Loop {} / {} ({}x{})",
+                s - min_scale + 1,
+                num_steps,
+                filter_size,
+                filter_size
+            );
 
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {

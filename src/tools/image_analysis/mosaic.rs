@@ -22,8 +22,8 @@ use std::thread;
 /// and cubic convolution. The order of the input source image files is important. Grid
 /// cells in the output image will be assigned the corresponding value determined from the
 /// first image found in the list to possess an overlapping coordinate.
-/// 
-/// This is the preferred mosaicing tool to use when appending multiple images with 
+///
+/// This is the preferred mosaicing tool to use when appending multiple images with
 /// little to no overlapping areas, e.g. tiled data. When images have significant overlap
 /// areas, users are advised to use the `MosaicWithFeathering` tool instead.
 ///
@@ -38,7 +38,7 @@ use std::thread;
 /// that represents the bounding rectangle of each of the two or more input images. Grid
 /// cells in the output image that do not overlap with any of the input images will be
 /// assigned the NoData value.
-/// 
+///
 /// # See Also
 /// `MosaicWithFeathering`
 pub struct Mosaic {

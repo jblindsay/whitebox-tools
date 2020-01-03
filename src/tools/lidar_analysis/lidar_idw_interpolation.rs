@@ -363,11 +363,11 @@ impl WhiteboxTool for LidarIdwInterpolation {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                         outputs.push(
@@ -619,8 +619,11 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, p.return_number() as f64);
-                                                        
+                                                        frs.insert(
+                                                            p.x,
+                                                            p.y,
+                                                            p.return_number() as f64,
+                                                        );
                                                     }
                                                 }
                                             }
@@ -647,7 +650,11 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z >= min_z
                                                         && p.z <= max_z
                                                     {
-                                                        frs.insert(p.x, p.y, p.number_of_returns() as f64);
+                                                        frs.insert(
+                                                            p.x,
+                                                            p.y,
+                                                            p.number_of_returns() as f64,
+                                                        );
                                                     }
                                                 }
                                             }
@@ -680,10 +687,18 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                         && p.z <= max_z
                                                     {
                                                         clr = match input.get_rgb(i) {
-                                                            Ok(value) => { value },
+                                                            Ok(value) => value,
                                                             Err(_) => break,
                                                         };
-                                                        frs.insert(p.x, p.y, ((255u32 << 24) | ((clr.blue as u32) << 16) | ((clr.green as u32) << 8) | (clr.red as u32)) as f64);
+                                                        frs.insert(
+                                                            p.x,
+                                                            p.y,
+                                                            ((255u32 << 24)
+                                                                | ((clr.blue as u32) << 16)
+                                                                | ((clr.green as u32) << 8)
+                                                                | (clr.red as u32))
+                                                                as f64,
+                                                        );
                                                     }
                                                 }
                                             }
@@ -803,7 +818,11 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                     }
                                     if sum_weights > 0.0 {
                                         if interp_parameter_is_rgb {
-                                            val = ((255u32 << 24) | ((val_blue.round() as u32) << 16) | ((val_green.round() as u32) << 8) | (val_red.round() as u32)) as f64;
+                                            val = ((255u32 << 24)
+                                                | ((val_blue.round() as u32) << 16)
+                                                | ((val_green.round() as u32) << 8)
+                                                | (val_red.round() as u32))
+                                                as f64;
                                         }
                                         output.set_value(row, col, val / sum_weights);
                                     }
@@ -868,7 +887,11 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                             }
                                             if sum_weights > 0.0 {
                                                 if interp_parameter_is_rgb {
-                                                    val = ((255u32 << 24) | ((val_blue.round() as u32) << 16) | ((val_green.round() as u32) << 8) | (val_red.round() as u32)) as f64;
+                                                    val = ((255u32 << 24)
+                                                        | ((val_blue.round() as u32) << 16)
+                                                        | ((val_green.round() as u32) << 8)
+                                                        | (val_red.round() as u32))
+                                                        as f64;
                                                 }
                                                 data[col as usize] = val / sum_weights;
                                             }

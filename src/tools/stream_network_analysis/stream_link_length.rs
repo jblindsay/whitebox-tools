@@ -14,13 +14,13 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to measure the length of each link in a stream network. The user must specify the names of 
-/// a stream link ID raster (`--linkid`), created using the `StreamLinkIdentifier` and D8 pointer raster (`--d8_pntr`). 
-/// The flow pointer raster is used to traverse the stream network and should only be created using the `D8Pointer` algorithm. 
-/// Stream cells are designated in the stream link ID raster as all non-zero, positive values. Background cells will be 
-/// assigned the NoData value in the output image, unless the `--zero_background` parameter is used, in which case non-stream 
+/// This tool can be used to measure the length of each link in a stream network. The user must specify the names of
+/// a stream link ID raster (`--linkid`), created using the `StreamLinkIdentifier` and D8 pointer raster (`--d8_pntr`).
+/// The flow pointer raster is used to traverse the stream network and should only be created using the `D8Pointer` algorithm.
+/// Stream cells are designated in the stream link ID raster as all non-zero, positive values. Background cells will be
+/// assigned the NoData value in the output image, unless the `--zero_background` parameter is used, in which case non-stream
 /// cells will be assinged zero values in the output.
-/// 
+///
 /// # See Also
 /// `D8Pointer`, `StreamLinkSlope`
 pub struct StreamLinkLength {

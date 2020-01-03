@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to remove pits from a digital elevation model (DEM). Pits are single grid cells with no 
-/// downslope neighbours. They are important because they impede overland flow-paths. This tool will remove any 
-/// pits in the input DEM that can be resolved by raising the elevation of the pit such that flow will continue 
-/// past the pit cell to one of the downslope neighbours. Notice that this tool can be a useful pre-processing 
-/// technique before running one of the more robust depression breaching (`BreachDepressions`) or filling 
+/// This tool can be used to remove pits from a digital elevation model (DEM). Pits are single grid cells with no
+/// downslope neighbours. They are important because they impede overland flow-paths. This tool will remove any
+/// pits in the input DEM that can be resolved by raising the elevation of the pit such that flow will continue
+/// past the pit cell to one of the downslope neighbours. Notice that this tool can be a useful pre-processing
+/// technique before running one of the more robust depression breaching (`BreachDepressions`) or filling
 /// (`FillDepressions`) techniques, which are designed to remove larger depression features.
-/// 
+///
 /// # See Also
 /// `BreachDepressions`, `FillDepressions`, `BreachSingleCellPits`
 pub struct FillSingleCellPits {

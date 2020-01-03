@@ -16,7 +16,7 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool converts a raster stream file into a vector file. The user must specify: 1) 
+/// This tool converts a raster stream file into a vector file. The user must specify: 1)
 /// the name of the raster streams file, 2) the name of the D8 flow pointer file,
 /// and 3) the name of the output vector file. Streams in the input raster streams
 /// file are denoted by cells containing any positive, non-zero integer. A field in
@@ -25,7 +25,7 @@ use std::path;
 /// link in the stream network. The flow pointer file must be calculated from a DEM with
 /// all topographic depressions and flat areas removed and must be calculated using the
 /// D8 flow pointer algorithm. The output vector will contain PolyLine features.
-/// 
+///
 /// # See Also
 /// `RasterizeStreams`, `RasterToVectorLines`
 pub struct RasterStreamsToVector {
@@ -251,9 +251,12 @@ impl WhiteboxTool for RasterStreamsToVector {
         output
             .attributes
             .add_field(&AttributeField::new("FID", FieldDataType::Int, 5u8, 0u8));
-        output
-            .attributes
-            .add_field(&AttributeField::new("STRM_VAL", FieldDataType::Real, 10u8, 3u8));
+        output.attributes.add_field(&AttributeField::new(
+            "STRM_VAL",
+            FieldDataType::Real,
+            10u8,
+            3u8,
+        ));
 
         let mut stack = Vec::with_capacity((rows * columns) as usize);
 
@@ -381,8 +384,7 @@ impl WhiteboxTool for RasterStreamsToVector {
                             col += dx[c];
 
                             in_val_n = streams.get_value(row, col);
-                            if num_inflowing.get_value(row, col) != 1 || 
-                                in_val_n != in_val {
+                            if num_inflowing.get_value(row, col) != 1 || in_val_n != in_val {
                                 // it's a confluence, so stop descending the flowpath
                                 x = pntr.get_x_from_column(col);
                                 y = pntr.get_y_from_row(row);
@@ -414,9 +416,10 @@ impl WhiteboxTool for RasterStreamsToVector {
                     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                     sfg.add_part(&points);
                     output.add_record(sfg);
-                    output
-                        .attributes
-                        .add_record(vec![FieldData::Int(current_id), FieldData::Real(in_val)], false);
+                    output.attributes.add_record(
+                        vec![FieldData::Int(current_id), FieldData::Real(in_val)],
+                        false,
+                    );
 
                     current_id += 1;
                 }

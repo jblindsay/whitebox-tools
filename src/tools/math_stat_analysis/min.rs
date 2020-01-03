@@ -18,10 +18,10 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool performs a *Min* operation on either two input rasters or a raster and a constant value
-/// (`--input1` and `--input2`). The operation is performed on a cell-by-cell basis, where by the output 
-/// raster (`--output`) will be assigned the minimum value of each of the input values. **NoData** values 
+/// (`--input1` and `--input2`). The operation is performed on a cell-by-cell basis, where by the output
+/// raster (`--output`) will be assigned the minimum value of each of the input values. **NoData** values
 /// in the input image will be assigned **NoData** values in the output raster.
-/// 
+///
 /// # See Also
 /// `Max`
 pub struct Min {

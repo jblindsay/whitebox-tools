@@ -17,8 +17,8 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to one divided by the grid cell 
-/// values in the input raster image (`--input`). **NoData** values in the input image will be assigned **NoData** 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to one divided by the grid cell
+/// values in the input raster image (`--input`). **NoData** values in the input image will be assigned **NoData**
 /// values in the output image.
 pub struct Reciprocal {
     name: String,

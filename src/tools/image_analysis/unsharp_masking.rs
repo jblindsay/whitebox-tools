@@ -18,26 +18,26 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Unsharp masking is an image edge-sharpening technique commonly applied in digital image processing. 
+/// Unsharp masking is an image edge-sharpening technique commonly applied in digital image processing.
 /// Admittedly, the name 'unsharp' seems somewhat counter-intuitive given the purpose of the filter, which
-/// is to enchance the definition of edge features within the input image (`--input`). This name comes 
-/// from the use of a blurred, or unsharpened, intermediate image (mask) in the process. The blurred image 
-/// is combined with the positive (original) image, creating an image that exhibits enhanced feature definition. 
-/// A caution is needed in that the output image, although clearer, may be a less accurate representation 
+/// is to enchance the definition of edge features within the input image (`--input`). This name comes
+/// from the use of a blurred, or unsharpened, intermediate image (mask) in the process. The blurred image
+/// is combined with the positive (original) image, creating an image that exhibits enhanced feature definition.
+/// A caution is needed in that the output image, although clearer, may be a less accurate representation
 /// of the image's subject. The output may also contain more speckle than the input image.
-/// 
-/// In addition to the input (`--input`) and output (`--output`) image files, the user must specify the 
-/// values of three parameters: the standard deviation distance (`--sigma`), which is a measure of the 
-/// filter size in pixels, the amount (`--amount`), a percentage value that controls the magnitude of 
-/// each overshoot at edges, and lastly, the threshold (`--threshold`), which controls the minimal 
+///
+/// In addition to the input (`--input`) and output (`--output`) image files, the user must specify the
+/// values of three parameters: the standard deviation distance (`--sigma`), which is a measure of the
+/// filter size in pixels, the amount (`--amount`), a percentage value that controls the magnitude of
+/// each overshoot at edges, and lastly, the threshold (`--threshold`), which controls the minimal
 /// brightness change that will be sharpened. Pixels with values differ after the calculation of the filter
 /// by less than the threshold are unmodified in the output image.
-/// 
-/// `UnsharpMasking` works with both greyscale and red-green-blue (RGB) colour images. RGB images are 
+///
+/// `UnsharpMasking` works with both greyscale and red-green-blue (RGB) colour images. RGB images are
 /// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
-/// channel. Importantly, the intensity values range from 0-1, which is important when setting the 
+/// channel. Importantly, the intensity values range from 0-1, which is important when setting the
 /// threshold value for colour images. NoData values in the input image are ignored during processing.
-/// 
+///
 /// # See Also
 /// `GaussianFilter`, `HighPassFilter`
 pub struct UnsharpMasking {

@@ -17,10 +17,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a floor operation on the values in an input raster (`--input`) to the nearest integer value. 
-/// The `floor` function calculates the largest integer less than or equal to the input value (e.g. floor(0.5) = 0, floor(-4.5) = -4). 
-/// The output raster (`--output`) will be of an I32 data type. 
-/// 
+/// This tool performs a floor operation on the values in an input raster (`--input`) to the nearest integer value.
+/// The `floor` function calculates the largest integer less than or equal to the input value (e.g. floor(0.5) = 0, floor(-4.5) = -4).
+/// The output raster (`--output`) will be of an I32 data type.
+///
 /// # See Also
 /// `Ceil`, `Round`, `Truncate`
 pub struct Floor {

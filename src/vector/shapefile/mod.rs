@@ -233,7 +233,7 @@ impl Shapefile {
         ///////////////////////////////
         // First read the geometries //
         ///////////////////////////////
-        
+
         // read the header
         let mut f = File::open(self.file_name.clone()).unwrap(); //?;
         let metadata = fs::metadata(self.file_name.clone()).unwrap(); //?;
@@ -246,7 +246,8 @@ impl Shapefile {
         // Note: the shapefile format uses mixed endianness for whatever reason.
         // The ByteOrderReader was set up to have one consistent endianness. As
         // such, we will need to switch the endianness frequently.
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::BigEndian);
+        let mut bor =
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::BigEndian);
         bor.seek(0);
         self.header.file_code = bor.read_i32()?;
         bor.seek(24);
@@ -391,7 +392,8 @@ impl Shapefile {
                         num_points: bor.read_i32()?,
                         ..Default::default()
                     };
-                    length_without_m = 44 + 4 * sfg.num_parts + 16 * sfg.num_points + 16 + 8 * sfg.num_points;
+                    length_without_m =
+                        44 + 4 * sfg.num_parts + 16 * sfg.num_points + 16 + 8 * sfg.num_points;
                     contains_m = if content_length == length_without_m {
                         false
                     } else {
@@ -415,7 +417,7 @@ impl Shapefile {
                         sfg.z_array.push(bor.read_f64()?);
                     }
 
-                    if contains_m { 
+                    if contains_m {
                         sfg.m_min = bor.read_f64()?;
                         sfg.m_max = bor.read_f64()?;
                         for _ in 0..sfg.num_points {
@@ -548,7 +550,11 @@ impl Shapefile {
         // Read the projection file //
         //////////////////////////////
         // let prj_file = self.file_name.replace(".shp", ".prj");
-        let prj_file = Path::new(&self.file_name).with_extension("prj").into_os_string().into_string().unwrap();
+        let prj_file = Path::new(&self.file_name)
+            .with_extension("prj")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         match File::open(prj_file) {
             Ok(f) => {
                 let f = BufReader::new(f);
@@ -565,7 +571,11 @@ impl Shapefile {
         ///////////////////////////////
         // read the header
         // let dbf_file = self.file_name.replace(".shp", ".dbf");
-        let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
+        let dbf_file = Path::new(&self.file_name)
+            .with_extension("dbf")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         let mut f = File::open(dbf_file.clone()).unwrap();
         let metadata = fs::metadata(dbf_file.clone()).unwrap();
         let file_size: usize = metadata.len() as usize;
@@ -573,7 +583,8 @@ impl Shapefile {
 
         // read the file's bytes into a buffer
         f.read(&mut buffer).unwrap();
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
+        let mut bor =
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
 
         self.attributes.header.version = bor.read_u8()?;
         self.attributes.header.year = 1900u32 + bor.read_u8()? as u32;
@@ -770,8 +781,10 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
-                    
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
+
                     if self.records[i].shape_type != ShapeType::Null {
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -783,7 +796,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
 
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
@@ -813,7 +828,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
 
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
@@ -837,8 +854,10 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
-                    
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
+
                     if self.records[i].shape_type != ShapeType::Null {
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -852,7 +871,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
 
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
@@ -898,7 +919,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
 
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
@@ -938,8 +961,10 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
-                    
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
+
                     if self.records[i].shape_type != ShapeType::Null {
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].x)?;
                         writer.write_f64::<LittleEndian>(self.records[i].points[0].y)?;
@@ -952,7 +977,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
 
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
@@ -989,7 +1016,9 @@ impl Shapefile {
                 for i in 0..self.num_records {
                     writer.write_i32::<BigEndian>(i as i32 + 1i32)?; // Record number
                     writer.write_i32::<BigEndian>(self.records[i].get_length() / 2)?; // Content length in 16-bit words
-                    writer.write_i32::<LittleEndian>(ShapeType::to_int(&self.records[i].shape_type))?; // Shape type
+                    writer.write_i32::<LittleEndian>(ShapeType::to_int(
+                        &self.records[i].shape_type,
+                    ))?; // Shape type
                     if self.records[i].shape_type != ShapeType::Null {
                         // extent
                         writer.write_f64::<LittleEndian>(self.records[i].x_min)?;
@@ -1022,7 +1051,11 @@ impl Shapefile {
 
         // write the header
         // let index_file = self.file_name.replace(".shp", ".shx");
-        let index_file = Path::new(&self.file_name).with_extension("shx").into_os_string().into_string().unwrap();
+        let index_file = Path::new(&self.file_name)
+            .with_extension("shx")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         let f = File::create(&index_file)?;
         let mut writer = BufWriter::new(f);
 
@@ -1068,7 +1101,11 @@ impl Shapefile {
 
         if !self.projection.is_empty() {
             // let prj_file = self.file_name.replace(".shp", ".prj");
-            let prj_file = Path::new(&self.file_name).with_extension("prj").into_os_string().into_string().unwrap();
+            let prj_file = Path::new(&self.file_name)
+                .with_extension("prj")
+                .into_os_string()
+                .into_string()
+                .unwrap();
             let f = File::create(&prj_file)?;
             let mut writer = BufWriter::new(f);
             writer.write_all(self.projection.as_bytes())?;
@@ -1078,7 +1115,11 @@ impl Shapefile {
         // Write the attributes file //
         ///////////////////////////////
 
-        let dbf_file = Path::new(&self.file_name).with_extension("dbf").into_os_string().into_string().unwrap();
+        let dbf_file = Path::new(&self.file_name)
+            .with_extension("dbf")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         let f = File::create(&dbf_file)?;
         let mut writer = BufWriter::new(f);
 
@@ -1170,11 +1211,7 @@ impl Shapefile {
                         let dc = self.attributes.fields[j as usize].decimal_count as usize;
                         let s = v.to_string();
                         let e: Vec<&str> = s.split(".").collect();
-                        let f = if e.len() == 2 {
-                            e[1].clone()
-                        } else {
-                            ""
-                        };
+                        let f = if e.len() == 2 { e[1].clone() } else { "" };
                         let mut s: String;
                         let decimals = if f.len() > dc {
                             let (e2, _) = f.split_at(dc);

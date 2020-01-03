@@ -1,14 +1,14 @@
 #![allow(unused_assignments, dead_code)]
 pub mod geokeys;
-pub mod tiff_consts;
 pub mod ifd;
+pub mod tiff_consts;
 
 // use flate2::read::GzDecoder;
-use crate::structures::{Point2D, PolynomialRegression2D};
 use crate::raster::geotiff::geokeys::*;
 use crate::raster::geotiff::tiff_consts::*;
 use crate::raster::*;
 use crate::spatial_ref_system::esri_wkt_from_epsg;
+use crate::structures::{Point2D, PolynomialRegression2D};
 use crate::utils::{ByteOrderReader, ByteOrderWriter, Endianness};
 use libflate::zlib::Decoder;
 use std::cmp::min;
@@ -16,9 +16,9 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::f64;
 // use std::fs;
+use ifd::{Entry, Ifd};
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Cursor, Error, ErrorKind, Read};
-use ifd::{Entry, Ifd};
 use std::mem;
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
@@ -27,7 +27,7 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     //////////////////////////
     // Read the TIFF header //
     //////////////////////////
-    
+
     let br = BufReader::new(f);
     let mut th = ByteOrderReader::<BufReader<File>>::new(br, Endianness::LittleEndian);
 
@@ -40,7 +40,10 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
         endian = Endianness::BigEndian;
         println!("Big-endian byte order used");
     } else {
-        return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized byte-order indicator."));
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "Incorrect TIFF header. Unrecognized byte-order indicator.",
+        ));
     };
 
     if th.get_byte_order() != endian {
@@ -50,7 +53,12 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let is_big_tiff = match th.read_u16()? {
         42 => false,
         43 => true,
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized magic number.")),
+        _ => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect TIFF header. Unrecognized magic number.",
+            ))
+        }
     };
 
     if is_big_tiff {
@@ -60,7 +68,10 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     }
 
     if is_big_tiff && mem::size_of::<usize>() != 8 {
-        return Err(Error::new(ErrorKind::InvalidData, "The BigTIFF raster format cannot be read on a 32-bit system."))
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "The BigTIFF raster format cannot be read on a 32-bit system.",
+        ));
     }
 
     let mut ifd_offset = if !is_big_tiff {
@@ -68,11 +79,17 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     } else {
         // Bytesize of offsets
         if th.read_u16()? != 8 {
-            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header. Unsupported bytesize of offsets."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect BigTIFF header. Unsupported bytesize of offsets.",
+            ));
         }
         // the next two bytes must be set to zero
         if th.read_u16()? != 0 {
-            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect BigTIFF header.",
+            ));
         }
         th.read_u64()? as usize
     };
@@ -105,9 +122,9 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
             } else {
                 th.read_u64()?
             };
-            
+
             let value_offset = if !is_big_tiff {
-                th.read_u32()? as u64 
+                th.read_u32()? as u64
             } else {
                 th.read_u64()?
             };
@@ -166,15 +183,8 @@ pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
                 }
             }
 
-            let ifd = Ifd::new(
-                tag_id,
-                field_type,
-                num_values,
-                value_offset,
-                data,
-                endian,
-            );
-            
+            let ifd = Ifd::new(tag_id, field_type, num_values, value_offset, data, endian);
+
             ifd_map.insert(tag_id, ifd.clone());
 
             println!("{}", ifd);
@@ -221,7 +231,7 @@ pub fn read_geotiff<'a>(
     //////////////////////////
     // Read the TIFF header //
     //////////////////////////
-    
+
     let br = BufReader::new(f);
     let mut th = ByteOrderReader::<BufReader<File>>::new(br, configs.endian);
 
@@ -232,7 +242,10 @@ pub fn read_geotiff<'a>(
     } else if bo_indicator1 == 77 && bo_indicator2 == 77 {
         configs.endian = Endianness::BigEndian;
     } else {
-        return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized byte-order indicator."));
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "Incorrect TIFF header. Unrecognized byte-order indicator.",
+        ));
     }
 
     if th.get_byte_order() != configs.endian {
@@ -242,11 +255,19 @@ pub fn read_geotiff<'a>(
     let is_big_tiff = match th.read_u16()? {
         42 => false,
         43 => true,
-        _ => return Err(Error::new(ErrorKind::InvalidData, "Incorrect TIFF header. Unrecognized magic number.")),
+        _ => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect TIFF header. Unrecognized magic number.",
+            ))
+        }
     };
 
     if is_big_tiff && mem::size_of::<usize>() != 8 {
-        return Err(Error::new(ErrorKind::InvalidData, "The BigTIFF raster format cannot be read on a 32-bit system."))
+        return Err(Error::new(
+            ErrorKind::InvalidData,
+            "The BigTIFF raster format cannot be read on a 32-bit system.",
+        ));
     }
 
     let mut ifd_offset = if !is_big_tiff {
@@ -254,15 +275,20 @@ pub fn read_geotiff<'a>(
     } else {
         // Bytesize of offsets
         if th.read_u16()? != 8 {
-            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header. Unsupported bytesize of offsets."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect BigTIFF header. Unsupported bytesize of offsets.",
+            ));
         }
         // the next two bytes must be set to zero
         if th.read_u16()? != 0 {
-            return Err(Error::new(ErrorKind::InvalidData, "Incorrect BigTIFF header."));
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "Incorrect BigTIFF header.",
+            ));
         }
         th.read_u64()? as usize
     };
-
 
     //////////////////
     // Read the IFD //
@@ -288,9 +314,9 @@ pub fn read_geotiff<'a>(
             } else {
                 th.read_u64()?
             };
-            
+
             let value_offset = if !is_big_tiff {
-                th.read_u32()? as u64 
+                th.read_u32()? as u64
             } else {
                 th.read_u64()?
             };
@@ -357,7 +383,7 @@ pub fn read_geotiff<'a>(
                 data,
                 configs.endian,
             );
-            
+
             ifd_map.insert(tag_id, ifd.clone());
         }
         if !is_big_tiff {
@@ -473,12 +499,13 @@ pub fn read_geotiff<'a>(
     };
 
     configs.nodata = match ifd_map.get(&TAG_GDAL_NODATA) {
-        Some(ifd) => 
+        Some(ifd) => {
             if bits_per_sample[0] == 32 && sample_format[0] == 3 {
                 (ifd.interpret_as_ascii().parse::<f32>().unwrap_or(-32768f32) as f64)
             } else {
                 ifd.interpret_as_ascii().parse::<f64>().unwrap_or(-32768f64)
             }
+        }
         _ => -32768f64,
     };
 
@@ -487,7 +514,7 @@ pub fn read_geotiff<'a>(
         Some(ifd) => {
             configs.geo_key_directory = ifd.interpret_as_u16();
             geokeys.add_key_directory(&ifd.data, configs.endian);
-        },
+        }
         _ => {
             return Err(Error::new(
                 ErrorKind::InvalidData,
@@ -501,7 +528,7 @@ pub fn read_geotiff<'a>(
         Some(ifd) => {
             configs.geo_double_params = ifd.interpret_as_f64();
             geokeys.add_double_params(&ifd.data, configs.endian);
-        },
+        }
         _ => {}
     };
 
@@ -510,7 +537,7 @@ pub fn read_geotiff<'a>(
         Some(ifd) => {
             configs.geo_ascii_params = ifd.interpret_as_ascii();
             geokeys.add_ascii_params(&ifd.data);
-        },
+        }
         _ => {}
     };
 
@@ -583,7 +610,6 @@ pub fn read_geotiff<'a>(
         row = (configs.rows - 1) as f64;
         configs.east = configs.resolution_x * col + tx;
         configs.south = -configs.resolution_y * row + ty;
-
     } else if configs.model_tiepoint.len() > 6 {
         // how many points are there?
         let num_tie_points = configs.model_tiepoint.len() / 6;
@@ -601,7 +627,9 @@ pub fn read_geotiff<'a>(
 
         let mut minxp = std::f64::MAX;
         for i in 0..num_tie_points {
-            if x_prime[i] < minxp { minxp = x_prime[i]; }
+            if x_prime[i] < minxp {
+                minxp = x_prime[i];
+            }
         }
         for i in 0..num_tie_points {
             x_prime[i] -= minxp;
@@ -609,7 +637,9 @@ pub fn read_geotiff<'a>(
 
         let mut minyp = std::f64::MAX;
         for i in 0..num_tie_points {
-            if y_prime[i] < minyp { minyp = y_prime[i]; }
+            if y_prime[i] < minyp {
+                minyp = y_prime[i];
+            }
         }
         for i in 0..num_tie_points {
             y_prime[i] -= minyp;
@@ -657,33 +687,48 @@ pub fn read_geotiff<'a>(
         let lower_left = Point2D::new(lower_left_x, lower_left_y);
         configs.resolution_x = upper_right.distance(&upper_left) / configs.columns as f64;
         configs.resolution_y = upper_left.distance(&lower_left) / configs.rows as f64;
-
     } else if configs.model_transformation[0] != 0.0 {
         configs.resolution_x = configs.model_transformation[0];
         configs.resolution_y = configs.model_transformation[5].abs();
         // upper-left corner coordinates
         let mut col = 0.0;
         let mut row = 0.0;
-        let upper_left_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
-        let upper_left_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
-        
+        let upper_left_x = configs.model_transformation[0] * col
+            + configs.model_transformation[1] * row
+            + configs.model_transformation[3];
+        let upper_left_y = configs.model_transformation[4] * col
+            + configs.model_transformation[5] * row
+            + configs.model_transformation[7];
+
         // upper-right corner coordinates
         col = (configs.columns - 1) as f64;
         row = 0.0;
-        let upper_right_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
-        let upper_right_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
-        
+        let upper_right_x = configs.model_transformation[0] * col
+            + configs.model_transformation[1] * row
+            + configs.model_transformation[3];
+        let upper_right_y = configs.model_transformation[4] * col
+            + configs.model_transformation[5] * row
+            + configs.model_transformation[7];
+
         // lower-left corner coordinates
         col = 0.0;
         row = (configs.rows - 1) as f64;
-        let lower_left_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
-        let lower_left_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
-        
+        let lower_left_x = configs.model_transformation[0] * col
+            + configs.model_transformation[1] * row
+            + configs.model_transformation[3];
+        let lower_left_y = configs.model_transformation[4] * col
+            + configs.model_transformation[5] * row
+            + configs.model_transformation[7];
+
         // lower-right corner coordinates
         col = (configs.columns - 1) as f64;
         row = (configs.rows - 1) as f64;
-        let lower_right_x = configs.model_transformation[0] * col + configs.model_transformation[1] * row + configs.model_transformation[3];
-        let lower_right_y = configs.model_transformation[4] * col + configs.model_transformation[5] * row + configs.model_transformation[7];
+        let lower_right_x = configs.model_transformation[0] * col
+            + configs.model_transformation[1] * row
+            + configs.model_transformation[3];
+        let lower_right_y = configs.model_transformation[4] * col
+            + configs.model_transformation[5] * row
+            + configs.model_transformation[7];
 
         configs.west = lower_left_x.min(upper_left_x);
         configs.east = lower_right_x.max(upper_right_x);
@@ -873,9 +918,9 @@ pub fn read_geotiff<'a>(
                     return Err(Error::new(
                         ErrorKind::InvalidData,
                         "The raster TileOffsets values were not read correctly",
-                    ))
+                    ));
                 }
-            },
+            }
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
@@ -907,7 +952,7 @@ pub fn read_geotiff<'a>(
                     return Err(Error::new(
                         ErrorKind::InvalidData,
                         "The raster TileLength values were not read correctly",
-                    ))
+                    ));
                 }
             }
             _ => {
@@ -960,7 +1005,7 @@ pub fn read_geotiff<'a>(
                     return Err(Error::new(
                         ErrorKind::InvalidData,
                         "The raster StripOffsets values were not read correctly",
-                    ))
+                    ));
                 }
             }
             _ => {
@@ -994,7 +1039,7 @@ pub fn read_geotiff<'a>(
                     return Err(Error::new(
                         ErrorKind::InvalidData,
                         "The raster StripByteCounts value was not read correctly",
-                    ))
+                    ));
                 }
             }
             _ => {
@@ -1006,7 +1051,6 @@ pub fn read_geotiff<'a>(
         };
     }
 
-
     ////////////////////
     // Read the data! //
     ////////////////////
@@ -1014,10 +1058,10 @@ pub fn read_geotiff<'a>(
         data.clear();
     }
     data.reserve_exact(configs.rows * configs.columns);
-    unsafe { 
-        // The memory will be initialized when we read 
+    unsafe {
+        // The memory will be initialized when we read
         // the pixel values.
-        data.set_len(configs.rows * configs.columns); 
+        data.set_len(configs.rows * configs.columns);
     }
 
     for i in 0..blocks_across {
@@ -1566,7 +1610,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let f = File::create(r.file_name.clone())?;
     let writer = BufWriter::new(f);
     let mut bow = ByteOrderWriter::<BufWriter<File>>::new(writer, r.configs.endian);
-    
+
     // get the bytes per pixel
     let total_bytes_per_pixel = r.configs.data_type.get_data_size();
     if total_bytes_per_pixel == 0 {
@@ -1580,8 +1624,10 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     // is it a BigTiff?
-    let is_big_tiff = if 8usize + (r.configs.rows * r.configs.columns) as usize * 
-        total_bytes_per_pixel >= 4_000_000_000 {
+    let is_big_tiff = if 8usize
+        + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel
+        >= 4_000_000_000
+    {
         true
     } else {
         false
@@ -1589,16 +1635,17 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     // get the offset to the first ifd
     let mut ifd_start = if !is_big_tiff {
-        (8usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64 // plus the 8-byte header
+        (8usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64
+    // plus the 8-byte header
     } else {
-        (16usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64 // plus the 8-byte header
+        (16usize + (r.configs.rows * r.configs.columns) as usize * total_bytes_per_pixel) as u64
+        // plus the 8-byte header
     };
     let mut ifd_start_needs_extra_byte = false;
     if ifd_start % 2 == 1 {
         ifd_start += 1;
         ifd_start_needs_extra_byte = true;
     }
-
 
     //////////////////////
     // Write the header //
@@ -1633,7 +1680,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     {
         r.configs.photometric_interp = PhotometricInterpretation::Continuous;
     }
-
 
     //////////////////////////
     // Write the image data //
@@ -1804,7 +1850,6 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         bow.write_u8(0u8)?;
     }
 
-
     ////////////////////////////
     // Create the IFD entries //
     ////////////////////////////
@@ -1967,9 +2012,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // PhotometricInterpretation tag (262)
     let pi = match r.configs.photometric_interp {
         PhotometricInterpretation::Continuous => PI_BLACKISZERO,
-        PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => {
-            PI_PALETTED
-        }
+        PhotometricInterpretation::Categorical | PhotometricInterpretation::Paletted => PI_PALETTED,
         PhotometricInterpretation::Boolean => PI_BLACKISZERO,
         PhotometricInterpretation::RGB => PI_RGB,
         PhotometricInterpretation::Unknown => {
@@ -2142,7 +2185,10 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     }
 
     // ModelPixelScaleTag tag (33550)
-    if r.configs.model_pixel_scale[0] == 0f64 && r.configs.model_tiepoint.is_empty() && r.configs.model_transformation[0] == 0f64 {
+    if r.configs.model_pixel_scale[0] == 0f64
+        && r.configs.model_tiepoint.is_empty()
+        && r.configs.model_transformation[0] == 0f64
+    {
         ifd_entries.push(Entry::new(
             TAG_MODELPIXELSCALETAG,
             DT_DOUBLE,
@@ -2616,8 +2662,9 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 // it's a value
                 bow.write_u32(ifde.offset as u32)?;
                 bow.write_u32(0u32)?; // Fill the remaining bytes of the u64
-            } else if (ifde.ifd_type == DT_LONG && ifde.num_values == 2) || 
-                (ifde.ifd_type == DT_TIFF_LONG8 && ifde.num_values == 1) {
+            } else if (ifde.ifd_type == DT_LONG && ifde.num_values == 2)
+                || (ifde.ifd_type == DT_TIFF_LONG8 && ifde.num_values == 1)
+            {
                 // it's a value
                 bow.write_u64(ifde.offset)?;
             } else {

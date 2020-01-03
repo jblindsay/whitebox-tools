@@ -20,23 +20,23 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to extract, or map, the likely stream cells from an input flow-accumulation image
-/// (`--flow_accum`). The algorithm applies a threshold to the input flow accumulation image such that streams 
-/// are considered to be all grid cells with accumulation values greater than the specified threshold 
-/// (`--threshold`). As such, this threshold represents the minimum area (area is used here as a surrogate 
-/// for discharge) required to *initiate and maintain a channel*. Smaller threshold values result in more 
-/// extensive stream networks and vice versa. Unfortunately there is very little guidance regarding an appropriate 
-/// method for determining the channel initiation area threshold. As such, it is frequently determined either by 
-/// examining map or imagery data or by experimentation until a suitable or desirable channel network is 
-/// identified. Notice that the threshold value will be unique for each landscape and dataset (including source 
-/// and grid resolution), further complicating its *a priori* determination. There is also evidence that in some 
-/// landscape the threshold is a combined upslope area-slope function. Generally, a lower threshold is appropriate 
+/// (`--flow_accum`). The algorithm applies a threshold to the input flow accumulation image such that streams
+/// are considered to be all grid cells with accumulation values greater than the specified threshold
+/// (`--threshold`). As such, this threshold represents the minimum area (area is used here as a surrogate
+/// for discharge) required to *initiate and maintain a channel*. Smaller threshold values result in more
+/// extensive stream networks and vice versa. Unfortunately there is very little guidance regarding an appropriate
+/// method for determining the channel initiation area threshold. As such, it is frequently determined either by
+/// examining map or imagery data or by experimentation until a suitable or desirable channel network is
+/// identified. Notice that the threshold value will be unique for each landscape and dataset (including source
+/// and grid resolution), further complicating its *a priori* determination. There is also evidence that in some
+/// landscape the threshold is a combined upslope area-slope function. Generally, a lower threshold is appropriate
 /// in humid climates and a higher threshold is appropriate in areas underlain by more resistant bedrock. Climate
 /// and bedrock resistance are two factors related to drainage density, i.e. the extent to which a landscape is
 /// dissected by drainage channels.
-/// 
+///
 /// The background value of the ouput raster (`--output`) will be the NoData value unless the `--zero_background`
 /// flag is specified.
-/// 
+///
 /// # See Also
 /// `GreaterThan`
 pub struct ExtractStreams {

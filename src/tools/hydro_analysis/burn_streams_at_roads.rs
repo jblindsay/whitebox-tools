@@ -15,20 +15,20 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool decrements (lowers) the elevations of pixels within an input digital elevation model (DEM) (`--dem`) 
-/// along an input vector stream network (`--streams`) at the sites of road (`--roads`) intersections. In addition 
+/// This tool decrements (lowers) the elevations of pixels within an input digital elevation model (DEM) (`--dem`)
+/// along an input vector stream network (`--streams`) at the sites of road (`--roads`) intersections. In addition
 /// to the input data layers, the user must specify the output raster DEM (`--output`), and the maximum road embankment width
-/// (`--width`), in map units. The road width parameter is used to determine the length of channel along stream 
-/// lines, at the junctions between streams and roads, that the burning (i.e. decrementing) operation occurs. The 
-/// algorithm works by identifying stream-road intersection cells, then traversing along the rasterized stream path 
+/// (`--width`), in map units. The road width parameter is used to determine the length of channel along stream
+/// lines, at the junctions between streams and roads, that the burning (i.e. decrementing) operation occurs. The
+/// algorithm works by identifying stream-road intersection cells, then traversing along the rasterized stream path
 /// in the upstream and downstream directions by half the maximum road embankment width. The minimum elevation in each
 /// stream traversal is identified and then elevations that are higher than this value are lowered to the minimum
 /// elevation during a second stream traversal.
-/// 
+///
 /// # Reference
-/// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes and Landforms, 
+/// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes and Landforms,
 /// 41(5): 658–668. DOI: 10.1002/esp.3888
-/// 
+///
 /// # See Also
 /// `RasterStreamsToVector`, `RasterizeStreams`
 pub struct BurnStreamsAtRoads {
@@ -429,7 +429,7 @@ impl WhiteboxTool for BurnStreamsAtRoads {
                     intersections.push((row, col));
                     raster_lines.set_value(row, col, 4i8);
                 } else {
-                     raster_lines.set_value(row, col, 2i8);
+                    raster_lines.set_value(row, col, 2i8);
                 }
 
                 bb.initialize_to_inf();
@@ -472,35 +472,39 @@ impl WhiteboxTool for BurnStreamsAtRoads {
                                     // we have a road/stream intersection cell
                                     intersections.push((row, col));
                                     raster_lines.set_value(row, col, 4i8);
-                                } else if raster_lines.get_value(row, col) == 0i8  {
+                                } else if raster_lines.get_value(row, col) == 0i8 {
                                     raster_lines.set_value(row, col, 2i8);
-                                    if raster_lines.get_value(row + dy[0], col + dx[0]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[0], col + dx[0]) == 2i8
+                                        && raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8
+                                        && raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[2], col + dx[2]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[2], col + dx[2]) == 2i8
+                                        && raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8
+                                        && raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[4], col + dx[4]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[4], col + dx[4]) == 2i8
+                                        && raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8
+                                        && raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[6], col + dx[6]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[6], col + dx[6]) == 2i8
+                                        && raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8
+                                        && raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
@@ -532,33 +536,37 @@ impl WhiteboxTool for BurnStreamsAtRoads {
                                     raster_lines.set_value(row, col, 4i8);
                                 } else if raster_lines.get_value(row, col) == 0i8 {
                                     raster_lines.set_value(row, col, 2i8);
-                                    if raster_lines.get_value(row + dy[0], col + dx[0]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[0], col + dx[0]) == 2i8
+                                        && raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8
+                                        && raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[2], col + dx[2]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[2], col + dx[2]) == 2i8
+                                        && raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8
+                                        && raster_lines.get_value(row + dy[1], col + dx[1]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[4], col + dx[4]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[4], col + dx[4]) == 2i8
+                                        && raster_lines.get_value(row + dy[3], col + dx[3]) == 1i8
+                                        && raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
                                     }
 
-                                    if raster_lines.get_value(row + dy[6], col + dx[6]) == 2i8 &&
-                                    raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8 &&
-                                    raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8 {
+                                    if raster_lines.get_value(row + dy[6], col + dx[6]) == 2i8
+                                        && raster_lines.get_value(row + dy[7], col + dx[7]) == 1i8
+                                        && raster_lines.get_value(row + dy[5], col + dx[5]) == 1i8
+                                    {
                                         // we have a road/stream intersection cell
                                         intersections.push((row, col));
                                         raster_lines.set_value(row, col, 4i8);
@@ -598,7 +606,8 @@ impl WhiteboxTool for BurnStreamsAtRoads {
         for cell in &intersections {
             let row = cell.0;
             let col = cell.1;
-            if raster_lines.get_value(row, col) == 4i8 { // it's still an intersection; some will have been removed because they touch others
+            if raster_lines.get_value(row, col) == 4i8 {
+                // it's still an intersection; some will have been removed because they touch others
                 let mut stack = vec![];
                 let mut minz = max_elev;
                 for e in 0..8 {
@@ -655,11 +664,13 @@ impl WhiteboxTool for BurnStreamsAtRoads {
         //     }
         // }
 
-
         let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!("Created by whitebox_tools\' {} tool", self.get_tool_name()));
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            self.get_tool_name()
+        ));
         output.add_metadata_entry(format!("Input streams file: {}", streams_file));
         output.add_metadata_entry(format!("Input roads file: {}", roads_file));
         output.add_metadata_entry(format!("Input base file: {}", dem_file));

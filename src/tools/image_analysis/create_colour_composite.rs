@@ -18,25 +18,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a colour-composite image from three bands of multi-spectral imagery. 
-/// The user must specify the names of the input images to enter into the red, green, and blue channels 
-/// of the resulting composite image. The output image uses the 32-bit aRGB colour model, and therefore, 
-/// in addition to red, green and blue bands, the user may optionally specify a fourth image that will 
-/// be used to determine pixel opacity (the 'a' channel). If no opacity image is specified, each pixel 
-/// will be opaque. This can be useful for cropping an image to an irregular-shaped boundary. The opacity 
+/// This tool can be used to create a colour-composite image from three bands of multi-spectral imagery.
+/// The user must specify the names of the input images to enter into the red, green, and blue channels
+/// of the resulting composite image. The output image uses the 32-bit aRGB colour model, and therefore,
+/// in addition to red, green and blue bands, the user may optionally specify a fourth image that will
+/// be used to determine pixel opacity (the 'a' channel). If no opacity image is specified, each pixel
+/// will be opaque. This can be useful for cropping an image to an irregular-shaped boundary. The opacity
 /// channel can also be used to create transparent gradients in the composite image.
-/// 
+///
 /// A balance contrast enhancement (BCE) can optionally be performed on the bands prior to creation of
 /// the colour composite. While this operation will add to the runtime of `CreateColourComposite`, if
 /// the individual input bands have not already had contrast enhancements, then it is advisable that
 /// the BCE option be used to improve the quality of the resulting colour composite image.
-/// 
+///
 /// NoData values in any of the input images are assigned NoData values in the output image and are not
 /// taken into account when performing the BCE operation. Please note, not all images have NoData values
-/// identified. When this is the case, and when the background value is 0 (often the case with 
-/// multispectral imagery), then the `CreateColourComposite` tool can be told to ignore zero values using 
+/// identified. When this is the case, and when the background value is 0 (often the case with
+/// multispectral imagery), then the `CreateColourComposite` tool can be told to ignore zero values using
 /// the `--zeros` flag.
-/// 
+///
 /// # See Also
 /// `BalanceContrastEnhancement`, `SplitColourComposite`
 pub struct CreateColourComposite {
@@ -116,9 +116,7 @@ impl CreateColourComposite {
         parameters.push(ToolParameter {
             name: "Treat zeros as nodata?".to_owned(),
             flags: vec!["--zeros".to_owned()],
-            description:
-                "Optional flag to indicate if zeros are nodata values."
-                    .to_owned(),
+            description: "Optional flag to indicate if zeros are nodata values.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
             optional: true,

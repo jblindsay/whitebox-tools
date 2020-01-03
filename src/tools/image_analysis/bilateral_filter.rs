@@ -18,28 +18,28 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform an edge-preserving smoothing filter, or bilateral filter, on an image. A bilateral 
-/// filter can be used to emphasize the longer-range variability in an image, effectively acting to smooth the image, 
-/// while reducing the edge blurring effect common with other types of smoothing filters. As such, this filter is very 
-/// useful for reducing the noise in an image. Bilateral filtering is a non-linear filtering technique introduced by 
-/// Tomasi and Manduchi (1998). The algorithm operates by convolving a kernel of weights with each grid cell and its 
-/// neighbours in an image. The bilateral filter is related to Gaussian smoothing, in that the weights of the convolution 
-/// kernel are partly determined by the 2-dimensional Gaussian (i.e. normal) curve, which gives stronger weighting to 
-/// cells nearer the kernel centre. Unlike the `GaussianFilter`, however, the bilateral kernel weightings are also 
-/// affected by their similarity to the intensity value of the central pixel. Pixels that are very different in intensity 
-/// from the central pixel are weighted less, also based on a Gaussian weight distribution. Therefore, this non-linear 
+/// This tool can be used to perform an edge-preserving smoothing filter, or bilateral filter, on an image. A bilateral
+/// filter can be used to emphasize the longer-range variability in an image, effectively acting to smooth the image,
+/// while reducing the edge blurring effect common with other types of smoothing filters. As such, this filter is very
+/// useful for reducing the noise in an image. Bilateral filtering is a non-linear filtering technique introduced by
+/// Tomasi and Manduchi (1998). The algorithm operates by convolving a kernel of weights with each grid cell and its
+/// neighbours in an image. The bilateral filter is related to Gaussian smoothing, in that the weights of the convolution
+/// kernel are partly determined by the 2-dimensional Gaussian (i.e. normal) curve, which gives stronger weighting to
+/// cells nearer the kernel centre. Unlike the `GaussianFilter`, however, the bilateral kernel weightings are also
+/// affected by their similarity to the intensity value of the central pixel. Pixels that are very different in intensity
+/// from the central pixel are weighted less, also based on a Gaussian weight distribution. Therefore, this non-linear
 /// convolution filter is determined by the spatial and intensity domains of a localized pixel neighborhood.
 ///
-/// The heavier weighting given to nearer and similar-valued pixels makes the bilateral filter an attractive alternative 
-/// for image smoothing and noise reduction compared to the much-used Mean filter. The size of the filter is determined 
-/// by setting the standard deviation distance parameter (`--sigma_dist`); the larger the standard deviation the larger 
-/// the resulting filter kernel. The standard deviation can be any number in the range 0.5-20 and is specified in the 
-/// unit of pixels. The standard deviation intensity parameter (`--sigma_int`), specified in the same units as the z-values, 
+/// The heavier weighting given to nearer and similar-valued pixels makes the bilateral filter an attractive alternative
+/// for image smoothing and noise reduction compared to the much-used Mean filter. The size of the filter is determined
+/// by setting the standard deviation distance parameter (`--sigma_dist`); the larger the standard deviation the larger
+/// the resulting filter kernel. The standard deviation can be any number in the range 0.5-20 and is specified in the
+/// unit of pixels. The standard deviation intensity parameter (`--sigma_int`), specified in the same units as the z-values,
 /// determines the intensity domain contribution to kernel weightings.
-/// 
+///
 /// # References
 /// Tomasi, C., & Manduchi, R. (1998, January). Bilateral filtering for gray and color images. In null (p. 839). IEEE.
-/// 
+///
 /// # See Also
 /// `EdgePreservingMeanFilter`
 pub struct BilateralFilter {

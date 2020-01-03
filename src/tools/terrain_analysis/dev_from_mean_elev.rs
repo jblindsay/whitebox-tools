@@ -19,22 +19,22 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to calculate the difference between the elevation of each grid 
-/// cell and the mean elevation of the centering local neighbourhood, normalized by standard 
-/// deviation. Therefore, this index of topographic residual is essentially equivalent to a 
-/// local z-score. This attribute measures the *relative topographic position* as a fraction of 
-/// local relief, and so is normalized to the local surface roughness. `DevFromMeanElev` 
-/// utilizes an integral image approach (Crow, 1984) to ensure highly efficient filtering that 
-/// is invariant with filter size. 
-/// 
-/// The user must specify the name (`--dem`) of the input digital elevation model (DEM), the 
+/// This tool can be used to calculate the difference between the elevation of each grid
+/// cell and the mean elevation of the centering local neighbourhood, normalized by standard
+/// deviation. Therefore, this index of topographic residual is essentially equivalent to a
+/// local z-score. This attribute measures the *relative topographic position* as a fraction of
+/// local relief, and so is normalized to the local surface roughness. `DevFromMeanElev`
+/// utilizes an integral image approach (Crow, 1984) to ensure highly efficient filtering that
+/// is invariant with filter size.
+///
+/// The user must specify the name (`--dem`) of the input digital elevation model (DEM), the
 /// name of the output file (`--output`), and the size of the neighbourhood in the *x* and *y*
 /// directions (`--filterx` and `--filtery`), measured in grid size.
-/// 
+///
 /// While `DevFromMeanElev` calculates the deviation from mean elevation (DEV) at a single, user-defined
 /// scale, the `MaxElevationDeviation` tool can be used to output the per-pixel maximum DEV
 /// value across a range of input scales.
-/// 
+///
 /// # See Also
 /// `DiffFromMeanElev`, `MaxElevationDeviation`
 pub struct DevFromMeanElev {

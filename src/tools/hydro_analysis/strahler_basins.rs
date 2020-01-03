@@ -14,18 +14,18 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool will identify the catchment areas of each Horton-Strahler stream order link in a user-specified 
+/// This tool will identify the catchment areas of each Horton-Strahler stream order link in a user-specified
 /// stream network (`--streams`), i.e. the network's *Strahler basins*. The tool effectively performs a Horton-Strahler
-/// stream ordering operation (`HortonStreamOrder`) followed by by a `Watershed` operation. The user must specify the name of a 
-/// flow pointer (flow direction) raster (`--d8_pntr`), a streams raster (`--streams`), and the output raster 
-/// (`--output`). The flow pointer and streams rasters should be generated using the `D8Pointer` algorithm. This 
+/// stream ordering operation (`HortonStreamOrder`) followed by by a `Watershed` operation. The user must specify the name of a
+/// flow pointer (flow direction) raster (`--d8_pntr`), a streams raster (`--streams`), and the output raster
+/// (`--output`). The flow pointer and streams rasters should be generated using the `D8Pointer` algorithm. This
 /// will require a depressionless DEM, processed using either the `BreachDepressions` or `FillDepressions` tool.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// NoData values in the input flow pointer raster are assigned NoData values in the output image.
-/// 
+///
 /// # See Also
 /// `HortonStreamOrder`, `Watershed`, `D8Pointer`, `BreachDepressions`, `FillDepressions`
 pub struct StrahlerOrderBasins {

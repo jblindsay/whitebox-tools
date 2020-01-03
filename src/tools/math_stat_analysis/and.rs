@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool is a Boolean **AND** operator, i.e. it works on *True* or *False* (1 and 0) values. Grid cells for which 
-/// the first and second input rasters (`--input1`; `--input2`) have *True* values are assigned 
-/// 1 in the output raster, otherwise grid cells are assigned a value of 0. All non-zero values in the input 
-/// rasters are considered to be *True*, while all zero-valued grid cells are considered to be *False*. Grid 
-/// cells containing **NoData** values in either of the input rasters will be assigned a **NoData** value in 
+/// This tool is a Boolean **AND** operator, i.e. it works on *True* or *False* (1 and 0) values. Grid cells for which
+/// the first and second input rasters (`--input1`; `--input2`) have *True* values are assigned
+/// 1 in the output raster, otherwise grid cells are assigned a value of 0. All non-zero values in the input
+/// rasters are considered to be *True*, while all zero-valued grid cells are considered to be *False*. Grid
+/// cells containing **NoData** values in either of the input rasters will be assigned a **NoData** value in
 /// the output raster (`--output`).
-/// 
+///
 /// # See Also
 /// `Not`, `Or`, `Xor`
 pub struct And {

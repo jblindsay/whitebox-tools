@@ -17,32 +17,32 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the relief for each grid cell in a digital elevation model (DEM) in a specified direction. 
-/// Directional relief is an index of the degree to which a DEM grid cell is higher or lower than its surroundings. 
-/// It is calculated by subtracting the elevation of a DEM grid cell from the average elevation of those cells which 
-/// lie between it and the edge of the DEM in a specified compass direction. Thus, positive values indicate that a 
-/// grid cell is lower than the average elevation of the grid cells in a specific direction (i.e. relatively sheltered), 
-/// whereas a negative directional relief indicates that the grid cell is higher (i.e. relatively exposed). The 
-/// algorithm is based on a modification of the procedure described by Lapen and Martz (1993). The modifications 
-/// include: (1) the ability to specify any direction between 0-degrees and 360-degrees (`--azimuth`), and (2) the ability to use 
-/// a distance-limited search (`--max_dist`), such that the ray-tracing procedure terminates before the DEM edge is 
-/// reached for longer search paths. The algorithm works by tracing a ray from each grid cell in the direction of 
-/// interest and evaluating the average elevation along the ray. Linear interpolation is used to estimate the elevation 
-/// of the surface where a ray does not intersect the DEM grid precisely at one of its nodes. The user must specify the 
-/// name of an input DEM raster file, the output raster name, and a hypothetical wind direction. Furthermore, the user 
-/// is able to constrain the maximum search distance for the ray tracing. If no maximum search distance is specified, 
+/// This tool calculates the relief for each grid cell in a digital elevation model (DEM) in a specified direction.
+/// Directional relief is an index of the degree to which a DEM grid cell is higher or lower than its surroundings.
+/// It is calculated by subtracting the elevation of a DEM grid cell from the average elevation of those cells which
+/// lie between it and the edge of the DEM in a specified compass direction. Thus, positive values indicate that a
+/// grid cell is lower than the average elevation of the grid cells in a specific direction (i.e. relatively sheltered),
+/// whereas a negative directional relief indicates that the grid cell is higher (i.e. relatively exposed). The
+/// algorithm is based on a modification of the procedure described by Lapen and Martz (1993). The modifications
+/// include: (1) the ability to specify any direction between 0-degrees and 360-degrees (`--azimuth`), and (2) the ability to use
+/// a distance-limited search (`--max_dist`), such that the ray-tracing procedure terminates before the DEM edge is
+/// reached for longer search paths. The algorithm works by tracing a ray from each grid cell in the direction of
+/// interest and evaluating the average elevation along the ray. Linear interpolation is used to estimate the elevation
+/// of the surface where a ray does not intersect the DEM grid precisely at one of its nodes. The user must specify the
+/// name of an input DEM raster file, the output raster name, and a hypothetical wind direction. Furthermore, the user
+/// is able to constrain the maximum search distance for the ray tracing. If no maximum search distance is specified,
 /// each ray will be traced to the edge of the DEM. The units of the output image are the same as the input DEM.
-/// 
-/// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to operate 
-/// for larger sized DEMs. This tool is parallelized to aid with computational efficiency. NoData valued grid cells in the 
-/// input image will be assigned NoData values in the output image. The output raster is of the float data type and 
-/// continuous data scale. Directional relief is best displayed using the blue-white-red bipolar palette to distinguish 
+///
+/// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to operate
+/// for larger sized DEMs. This tool is parallelized to aid with computational efficiency. NoData valued grid cells in the
+/// input image will be assigned NoData values in the output image. The output raster is of the float data type and
+/// continuous data scale. Directional relief is best displayed using the blue-white-red bipolar palette to distinguish
 /// between the positive and negative values that are present in the output.
 ///
 /// # Reference
-/// Lapen, D. R., & Martz, L. W. (1993). The measurement of two simple topographic indices of wind sheltering-exposure 
+/// Lapen, D. R., & Martz, L. W. (1993). The measurement of two simple topographic indices of wind sheltering-exposure
 /// from raster digital elevation models. Computers & Geosciences, 19(6), 769-779.
-/// 
+///
 /// # See Also
 /// `FetchAnalysis`, `HorizonAngle`, `RelativeAspect`
 pub struct DirectionalRelief {

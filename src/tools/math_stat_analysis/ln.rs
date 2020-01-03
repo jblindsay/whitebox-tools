@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is calculated as the base-*e* logarithm 
-/// of the value of the corresponding grid cell in the input raster (`--input`), i.e. the 
-/// [natural logarithm](https://en.wikipedia.org/wiki/Natural_logarithm). Eurler's number 
-/// [*e*](https://en.wikipedia.org/wiki/E_(mathematical_constant)) is a constant approximately equal to 2.718282. 
-/// Negative values in the input raster will be assigned the **NoData** value in the output raster. **NoData** values 
+/// This tool creates a new raster (`--output`) in which each grid cell is calculated as the base-*e* logarithm
+/// of the value of the corresponding grid cell in the input raster (`--input`), i.e. the
+/// [natural logarithm](https://en.wikipedia.org/wiki/Natural_logarithm). Eurler's number
+/// [*e*](https://en.wikipedia.org/wiki/E_(mathematical_constant)) is a constant approximately equal to 2.718282.
+/// Negative values in the input raster will be assigned the **NoData** value in the output raster. **NoData** values
 /// in the input image will be assigned the **NoData** value in the output image.
-/// 
+///
 /// # See Also
 /// `Log2`, `Log10`, `Exp`
 pub struct Ln {

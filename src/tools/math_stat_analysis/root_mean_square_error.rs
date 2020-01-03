@@ -26,7 +26,7 @@ use std::thread;
 /// the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy
 /// statistics when the residuals are non-Gaussian. The LE90 requires sorting the residual values, which
 /// can be a relatively slow operation for larger rasters.
-/// 
+///
 /// # See Also
 /// `PairedSampleTTest`, `WilcoxonSignedRankTest`
 pub struct RootMeanSquareError {

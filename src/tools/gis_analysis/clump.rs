@@ -14,17 +14,17 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool re-categorizes data in a raster image by grouping cells that form  
-/// discrete, contiguous areas into unique categories. Essentially this will produce 
+/// discrete, contiguous areas into unique categories. Essentially this will produce
 /// a patch map from an input categorical raster, assigning each feature unique
-/// identifiers. The input raster should either be 
-/// Boolean (1's and 0's) or categorical. The input raster could be created using 
-/// the `Reclass` tool or one of the comparison operators (`GreaterThan`, `LessThan`, 
+/// identifiers. The input raster should either be
+/// Boolean (1's and 0's) or categorical. The input raster could be created using
+/// the `Reclass` tool or one of the comparison operators (`GreaterThan`, `LessThan`,
 /// `EqualTo`, `NotEqualTo`). Use the *treat zeros as background cells* options
-/// (`--zero_back`) if you would like to only assigned contiguous groups of non-zero 
-/// values in the raster unique identifiers. Additionally, inter-cell connectivity 
+/// (`--zero_back`) if you would like to only assigned contiguous groups of non-zero
+/// values in the raster unique identifiers. Additionally, inter-cell connectivity
 /// can optionally include diagonally neighbouring cells if the `--diag` flag is
 /// specified.
-/// 
+///
 /// # See Also
 /// `Reclass`, `GreaterThan`, `LessThan`, `EqualTo`, `NotEqualTo`
 pub struct Clump {
@@ -41,8 +41,7 @@ impl Clump {
         let name = "Clump".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "Groups cells that form discrete areas, assigning them unique identifiers."
-                .to_string();
+            "Groups cells that form discrete areas, assigning them unique identifiers.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

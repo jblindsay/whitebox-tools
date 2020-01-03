@@ -19,15 +19,15 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool performs a white [top-hat transform](https://en.wikipedia.org/wiki/Top-hat_transform) on a LiDAR point cloud.
-/// A top-hat transform is a common digital image processing operation used for various tasks, such 
+/// A top-hat transform is a common digital image processing operation used for various tasks, such
 /// as feature extraction, background equalization, and image enhancement. When applied to a LiDAR point cloud, the white
 /// top-hat transform provides an estimate of *height above ground*, which is useful for modelling the vegetation canopy.
-/// 
-/// The white top-hat transform is defined as the difference between a point's original elevation and its 
-/// [opening](https://en.wikipedia.org/wiki/Opening_(morphology)). The opening operation can be thought of as the local 
+///
+/// The white top-hat transform is defined as the difference between a point's original elevation and its
+/// [opening](https://en.wikipedia.org/wiki/Opening_(morphology)). The opening operation can be thought of as the local
 /// neighbourhood maximum of a previous local minimum surface. The user must specify the size of the neighbourhood using the
 /// `--radius` parameter.
-/// 
+///
 /// # See Also
 /// `TophatTransform`, `Closing`, `Opening`
 pub struct LidarTophatTransform {
@@ -212,10 +212,12 @@ impl WhiteboxTool for LidarTophatTransform {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<usize> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
+        let mut frs: FixedRadiusSearch2D<usize> =
+            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for i in 0..n_points {
             let p: PointData = input.get_point_info(i);
-            if !p.is_classified_noise() { // low points really mess with the tophat-transform so exclude classified noise
+            if !p.is_classified_noise() {
+                // low points really mess with the tophat-transform so exclude classified noise
                 frs.insert(p.x, p.y, i);
             }
             if verbose {

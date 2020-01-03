@@ -18,25 +18,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Percent elevation range (PER) is a measure of local topographic position (LTP). It expresses the vertical 
+/// Percent elevation range (PER) is a measure of local topographic position (LTP). It expresses the vertical
 /// position for a digital elevation model (DEM) grid cell (z<sub>0</sub>) as the percentage of the
 /// elevation range within the neighbourhood filter window, such that:
-/// 
+///
 /// > PER = z<sub>0</sub> / (z<sub>max</sub> - z<sub>min</sub>) x 100
-/// 
-/// where z<sub>0</sub> is the elevation of the window's center grid cell, z<sub>max</sub> is the maximum 
+///
+/// where z<sub>0</sub> is the elevation of the window's center grid cell, z<sub>max</sub> is the maximum
 /// neighbouring elevation, and z<sub>min</sub> is the minimum neighbouring elevation.
-/// 
-/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`flags. 
+///
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`flags.
 /// These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
-/// 
-/// Compared with `ElevPercentile` and `DevFromMeanElev`, PER is a less robust measure of LTP that is susceptible 
+///
+/// Compared with `ElevPercentile` and `DevFromMeanElev`, PER is a less robust measure of LTP that is susceptible
 /// to outliers in neighbouring elevations (e.g. the presence of off-terrain objects in the DEM).
-/// 
+///
 /// # References
-/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position
 /// for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
-/// 
+///
 /// # See Also
 /// `ElevPercentile`, `DevFromMeanElev`, `DiffFromMeanElev`, `RelativeTopographicPosition`
 pub struct PercentElevRange {

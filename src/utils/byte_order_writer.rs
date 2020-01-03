@@ -1,7 +1,7 @@
+use super::byte_order_reader::Endianness;
+use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
 use std::io::prelude::*;
 use std::io::Error;
-use byteorder::{LittleEndian, BigEndian, WriteBytesExt};
-use super::byte_order_reader::Endianness;
 
 pub struct ByteOrderWriter<W: Write> {
     is_le: bool,

@@ -122,7 +122,7 @@ impl WhiteboxTool for CleanVector {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        
+
         // read the arguments
         if args.len() == 0 {
             return Err(Error::new(
@@ -186,7 +186,7 @@ impl WhiteboxTool for CleanVector {
 
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
-        
+
             if record.shape_type != ShapeType::Null {
                 num_vertices = record.points.len();
                 // At the moment, this is pretty crude. It would be better to do this for each
@@ -195,20 +195,26 @@ impl WhiteboxTool for CleanVector {
                     ShapeType::PolyLine => {
                         if num_vertices > 1 {
                             output.add_record(record.clone());
-                            output.attributes.add_record(input.attributes.get_record(record_num), false);
+                            output
+                                .attributes
+                                .add_record(input.attributes.get_record(record_num), false);
                         }
                     }
                     ShapeType::Polygon => {
                         if num_vertices > 2 {
                             output.add_record(record.clone());
-                            output.attributes.add_record(input.attributes.get_record(record_num), false);
+                            output
+                                .attributes
+                                .add_record(input.attributes.get_record(record_num), false);
                         }
                     }
                     _ => {
                         output.add_record(record.clone());
-                        output.attributes.add_record(input.attributes.get_record(record_num), false);
+                        output
+                            .attributes
+                            .add_record(input.attributes.get_record(record_num), false);
                     }
-                } 
+                }
             }
 
             if verbose {

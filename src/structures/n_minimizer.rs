@@ -213,5 +213,4 @@ mod test {
             self.dist.partial_cmp(&other.dist)
         }
     }
-
 }

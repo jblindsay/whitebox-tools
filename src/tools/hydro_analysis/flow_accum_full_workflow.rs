@@ -25,7 +25,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow 
+/// Resolves all of the depressions in a DEM, outputting a breached DEM, an aspect-aligned non-divergent flow
 /// pointer, and a flow accumulation raster.
 pub struct FlowAccumulationFullWorkflow {
     name: String,

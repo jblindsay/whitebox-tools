@@ -17,9 +17,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool rounds the values in an input raster (`--input`) to the nearest integer value. Half-way cases 
-/// are rounded away from zero (e.g. round(0.5) = 1, round(-4.5) = -5). The output raster (`--output`) will be of an I32 data type. 
-/// 
+/// This tool rounds the values in an input raster (`--input`) to the nearest integer value. Half-way cases
+/// are rounded away from zero (e.g. round(0.5) = 1, round(-4.5) = -5). The output raster (`--output`) will be of an I32 data type.
+///
 /// # See Also
 /// `Ceil`, `Floor`, `Truncate`
 pub struct Round {

@@ -13,18 +13,18 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool performs an in-place addition, or increment operation (i.e. `input1 += input2`). The 
+/// This tool performs an in-place addition, or increment operation (i.e. `input1 += input2`). The
 /// user must specify the names of two input images (`--input1` and `--input2`) and the tool will
 /// add the values of `input2` to the `input1` raster on a pixel-by-pixel basis. Therefore, the
 /// `input1` raster is modified by this tool. Note that `input2` may either be an existing raster
 /// file or a constant value. If `input2` is a raster, it must have the same dimensions (rows and
-/// columns) as `input1`. 
-/// 
+/// columns) as `input1`.
+///
 /// The difference between this tool and the `Add` tool is that `Add` does not modify either of its
 /// two operands, and instead creates a new output raster to save the resultant value into.
-/// 
+///
 /// If `input2 = 1`, use the `Increment` tool instead.
-/// 
+///
 /// # See Also
 /// `Add`, `InPlaceSubtract`, `InPlaceDivide`, `InPlaceMultiply`, `Increment`
 pub struct InPlaceAdd {

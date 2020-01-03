@@ -19,13 +19,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a high-pass filter on a raster image. High-pass filters can be used to emphasize 
-/// the short-range variability in an image. The algorithm operates essentially by subtracting the value at 
+/// This tool performs a high-pass filter on a raster image. High-pass filters can be used to emphasize
+/// the short-range variability in an image. The algorithm operates essentially by subtracting the value at
 /// the grid cell at the centre of the window from the average value in the surrounding neighbourhood (i.e. window.)
-/// 
-/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+///
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`
 /// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
-/// 
+///
 /// # See Also
 /// `HighPassMedianFilter`, `MeanFilter`
 pub struct HighPassFilter {

@@ -21,26 +21,26 @@ use std::sync::mpsc::channel;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// This tool can be used to create a vector polygon of the bounding box or convex hull of a LiDAR point cloud (i.e. LAS file). 
-/// If the user specified an input file (`--input`) and output file (`--output`), the tool will calculate the footprint, 
-/// containing all of the data points, and output this feature to a vector polygon file. If the `input` and 
+/// This tool can be used to create a vector polygon of the bounding box or convex hull of a LiDAR point cloud (i.e. LAS file).
+/// If the user specified an input file (`--input`) and output file (`--output`), the tool will calculate the footprint,
+/// containing all of the data points, and output this feature to a vector polygon file. If the `input` and
 /// `output` parameters are left unspecified, the tool will calculate the footprint of every LAS file contained within the
-/// working directory and output these features to a single vector polygon file. If this is the desired mode of 
-/// operation, it is important to specify the working directory (`--wd`) containing the group of LAS files; do not 
-/// specify the optional `--input` and `--output` parameters in this case. Each polygon in the output vector will contain 
-/// a `LAS_NM` field, specifying the source LAS file name, a `NUM_PNTS` field, containing the number of points 
-/// within the source file, and Z_MIN and Z_MAX fields, containing the minimum and maximum elevations. This output can 
-/// therefore be useful to create an index map of a large tiled LiDAR dataset. 
-/// 
+/// working directory and output these features to a single vector polygon file. If this is the desired mode of
+/// operation, it is important to specify the working directory (`--wd`) containing the group of LAS files; do not
+/// specify the optional `--input` and `--output` parameters in this case. Each polygon in the output vector will contain
+/// a `LAS_NM` field, specifying the source LAS file name, a `NUM_PNTS` field, containing the number of points
+/// within the source file, and Z_MIN and Z_MAX fields, containing the minimum and maximum elevations. This output can
+/// therefore be useful to create an index map of a large tiled LiDAR dataset.
+///
 /// By default, this tool identifies the axis-aligned minimum rectangular hull, or bounding box, containing the points
-/// in each of the input tiles. If the user specifies the `--hull` flag, the tool will identify the 
+/// in each of the input tiles. If the user specifies the `--hull` flag, the tool will identify the
 /// [minimum convex hull](https://en.wikipedia.org/wiki/Convex_hull) instead of the bounding box. This option is considerably
-/// more computationally intensive and will be a far longer running operation if many tiles are specified as inputs. 
-/// 
+/// more computationally intensive and will be a far longer running operation if many tiles are specified as inputs.
+///
 /// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
 /// LiDAR format `LAZ`, it is able to read `LAZ` file headers. This tool, when run in in the bounding box mode (rather than
-/// the convex hull mode), is able to take `LAZ` input files. 
-/// 
+/// the convex hull mode), is able to take `LAZ` input files.
+///
 ///  `LidarTile`, `LayerFootprint`, `MinimumBoundingBox`, `MinimumConvexHull`
 pub struct LidarTileFootprint {
     name: String,
@@ -226,11 +226,11 @@ impl WhiteboxTool for LidarTileFootprint {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".laz") {
@@ -305,7 +305,10 @@ impl WhiteboxTool for LidarTileFootprint {
                                 let n_points = input.header.get_number_of_points() as usize;
 
                                 if n_points == 0usize {
-                                    println!("Warning {} does not contain any points.", short_filename);
+                                    println!(
+                                        "Warning {} does not contain any points.",
+                                        short_filename
+                                    );
                                 }
 
                                 // read the points into a Vec<Point2D>
@@ -329,19 +332,23 @@ impl WhiteboxTool for LidarTileFootprint {
                                 }
                                 // send the data to the main thread to be output
                                 tx.send((
-                                    hull_points, 
-                                    short_filename, 
+                                    hull_points,
+                                    short_filename,
                                     n_points,
                                     input.header.min_z,
                                     input.header.max_z,
-                                    input.get_wkt()
-                                )).unwrap();
+                                    input.get_wkt(),
+                                ))
+                                .unwrap();
                             }
                             Err(err) => {
                                 tx.send((
                                     vec![],
                                     format!("Error reading file {}:\n{}", input_file, err),
-                                    0, 0f64, 0f64, "".to_string()
+                                    0,
+                                    0f64,
+                                    0f64,
+                                    "".to_string(),
                                 ))
                                 .unwrap();
                             }
@@ -357,23 +364,30 @@ impl WhiteboxTool for LidarTileFootprint {
                                 bounding_points.push(Point2D::new(header.min_x, header.max_y));
 
                                 if header.get_number_of_points() == 0u64 {
-                                    println!("Warning {} does not contain any points.", short_filename);
+                                    println!(
+                                        "Warning {} does not contain any points.",
+                                        short_filename
+                                    );
                                 }
-                                
+
                                 tx.send((
-                                    bounding_points, 
-                                    short_filename, 
+                                    bounding_points,
+                                    short_filename,
                                     header.get_number_of_points() as usize,
                                     header.min_z,
                                     header.max_z,
-                                    "".to_string()
-                                )).unwrap();
+                                    "".to_string(),
+                                ))
+                                .unwrap();
                             }
                             Err(err) => {
                                 tx.send((
                                     vec![],
                                     format!("Error reading file {}:\n{}", input_file, err),
-                                    0, 0f64, 0f64, "".to_string()
+                                    0,
+                                    0f64,
+                                    0f64,
+                                    "".to_string(),
                                 ))
                                 .unwrap();
                             }
@@ -387,11 +401,33 @@ impl WhiteboxTool for LidarTileFootprint {
         let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
 
         // add the attributes
-        output.attributes.add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
-        output.attributes.add_field(&AttributeField::new("LAS_NM", FieldDataType::Text, 25u8, 4u8));
-        output.attributes.add_field(&AttributeField::new("NUM_PNTS", FieldDataType::Int, 9u8, 0u8));
-        output.attributes.add_field(&AttributeField::new("Z_MIN", FieldDataType::Real, 11u8, 5u8));
-        output.attributes.add_field(&AttributeField::new("Z_MAX", FieldDataType::Real, 11u8, 5u8));
+        output
+            .attributes
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
+        output.attributes.add_field(&AttributeField::new(
+            "LAS_NM",
+            FieldDataType::Text,
+            25u8,
+            4u8,
+        ));
+        output.attributes.add_field(&AttributeField::new(
+            "NUM_PNTS",
+            FieldDataType::Int,
+            9u8,
+            0u8,
+        ));
+        output.attributes.add_field(&AttributeField::new(
+            "Z_MIN",
+            FieldDataType::Real,
+            11u8,
+            5u8,
+        ));
+        output.attributes.add_field(&AttributeField::new(
+            "Z_MAX",
+            FieldDataType::Real,
+            11u8,
+            5u8,
+        ));
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;

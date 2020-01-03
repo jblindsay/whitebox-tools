@@ -24,23 +24,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform a k-means clustering operation on two or more input 
-/// images (`--inputs`), typically several bands of multi-spectral satellite imagery. The 
+/// This tool can be used to perform a k-means clustering operation on two or more input
+/// images (`--inputs`), typically several bands of multi-spectral satellite imagery. The
 /// tool creates two outputs, including the classified image (`--output` and a classification
-/// HTML report (`--out_html`). The user must specify the number of class (`--classes`), which should be 
+/// HTML report (`--out_html`). The user must specify the number of class (`--classes`), which should be
 /// known *a priori*, and the strategy for initializing class clusters (`--initialize`). The initilization
-/// strategies include "diagonal" (clusters are initially located randomly along the multi-dimensional diagonal 
-/// of spectral space) and "random" (clusters are initially located randomly throughout spectral space). 
+/// strategies include "diagonal" (clusters are initially located randomly along the multi-dimensional diagonal
+/// of spectral space) and "random" (clusters are initially located randomly throughout spectral space).
 /// The algorithm will continue updating cluster center locations with each iteration of the process until
 /// either the user-specified maximum number of iterations (`--max_iterations`) is reached, or until a
-/// stability criteria (`--class_change`) is achieved. The stability criteria is the percent of the total 
-/// number of pixels in the image that are changed among the class values between consecutive iterations. 
+/// stability criteria (`--class_change`) is achieved. The stability criteria is the percent of the total
+/// number of pixels in the image that are changed among the class values between consecutive iterations.
 /// Lastly, the user must specify the minimum allowable number of pixels in a cluster (`--min_class_size`).
-/// 
+///
 /// Note, each of the input images must have the same number of rows and columns and the same spatial extent
 /// because the analysis is performed on a pixel-by-pixel basis. **NoData** values in any of the input images
 /// will result in the removal of the corresponding pixel from the analysis.
-/// 
+///
 /// # See Also
 /// `ModifiedKMeansClustering`
 pub struct KMeansClustering {
@@ -614,11 +614,12 @@ impl WhiteboxTool for KMeansClustering {
                     for i in 0..num_files {
                         // let between = Range::new(class_min[large_class][i], class_max[large_class][i]);
                         class_centres[a][i] =
-                            rng.gen_range(class_min[large_class][i], class_max[large_class][i]); //between.ind_sample(&mut rng);
+                            rng.gen_range(class_min[large_class][i], class_max[large_class][i]);
+                        //between.ind_sample(&mut rng);
                     }
                 }
             }
-            
+
             if verbose {
                 println!("Cluster sizes: {:?}", class_n);
             }

@@ -7,8 +7,8 @@ License: MIT
 */
 
 use crate::raster::*;
-use crate::tools::*;
 use crate::structures::Array2D;
+use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
@@ -18,24 +18,24 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will create a mosaic from two input images. It is similar in operation to the `Mosaic` tool, 
-/// however, this tool is the preferred method of mosaicing images when there is significant overlap between 
-/// the images. For areas of overlap, the feathering method will calculate the output value as a weighted 
-/// combination of the two input values, where the weights are derived from the squared distance of the 
-/// pixel to the edge of the data in each of the input raster files. Therefore, less weight is assigned to 
-/// an image's pixel value where the pixel is very near the edge of the image. Note that the distance is 
+/// This tool will create a mosaic from two input images. It is similar in operation to the `Mosaic` tool,
+/// however, this tool is the preferred method of mosaicing images when there is significant overlap between
+/// the images. For areas of overlap, the feathering method will calculate the output value as a weighted
+/// combination of the two input values, where the weights are derived from the squared distance of the
+/// pixel to the edge of the data in each of the input raster files. Therefore, less weight is assigned to
+/// an image's pixel value where the pixel is very near the edge of the image. Note that the distance is
 /// actually calculated to the edge of the grid and not necessarily the edge of the data, which can differ
-/// if the image has been rotated during registration.  The result of this feathering method is that the 
-/// output mosaic image should have very little evidence of the original image edges within the overlapping 
-/// area. 
-/// 
-/// Unlike the Mosaic tool, which can take multiple input images, this tool only accepts two input images. 
-/// Mosaic is therefore useful when there are many, adjacent or only slightly overlapping images, e.g. for 
+/// if the image has been rotated during registration.  The result of this feathering method is that the
+/// output mosaic image should have very little evidence of the original image edges within the overlapping
+/// area.
+///
+/// Unlike the Mosaic tool, which can take multiple input images, this tool only accepts two input images.
+/// Mosaic is therefore useful when there are many, adjacent or only slightly overlapping images, e.g. for
 /// tiled data sets.
-/// 
-/// Users may want to use the `HistogramMatching` tool prior to mosaicing if the two input images differ 
+///
+/// Users may want to use the `HistogramMatching` tool prior to mosaicing if the two input images differ
 /// significantly in their radiometric properties. i.e. if image contrast differences exist.
-/// 
+///
 /// # See Also
 /// `Mosaic`, `HistogramMatching`
 pub struct MosaicWithFeathering {
@@ -227,7 +227,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                     method = "cc".to_string();
                 }
             // } else if flag_val == "-histo_match" {
-                // if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+            // if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
             //     histo_match = true;
             //    }
             } else if flag_val == "-weight" {
@@ -279,8 +279,10 @@ impl WhiteboxTool for MosaicWithFeathering {
         let nodata2 = input2.configs.nodata;
 
         if input1.configs.data_type != input2.configs.data_type {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input images do not share the same data type."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input images do not share the same data type.",
+            ));
         }
 
         let rgb_mode = if input1.configs.data_type == DataType::RGB24
@@ -306,7 +308,7 @@ impl WhiteboxTool for MosaicWithFeathering {
         let columns = (extent.get_width() / resolution_x).ceil() as isize;
         let south: f64 = extent.max_y - rows as f64 * resolution_y;
         let east = extent.min_x + columns as f64 * resolution_x;
-        
+
         let mut configs = RasterConfigs {
             ..Default::default()
         };
@@ -335,14 +337,16 @@ impl WhiteboxTool for MosaicWithFeathering {
                 for row in (0..rows1).filter(|r| r % num_procs == tid) {
                     let mut data = vec![0u32; columns1 as usize];
                     for col in 0..columns1 {
-                        data[col as usize] = col.min(row.min((columns1 - col - 1).min(rows1 - row - 1))) as u32;
+                        data[col as usize] =
+                            col.min(row.min((columns1 - col - 1).min(rows1 - row - 1))) as u32;
                     }
                     tx.send((row, data)).unwrap();
                 }
             });
         }
-        let mut dist1_raster: Array2D<u32> = Array2D::new(rows1, columns1, u32::max_value(), u32::max_value())?;
-        for row in 0..rows1 {   
+        let mut dist1_raster: Array2D<u32> =
+            Array2D::new(rows1, columns1, u32::max_value(), u32::max_value())?;
+        for row in 0..rows1 {
             let data = rx.recv().unwrap();
             dist1_raster.set_row_data(data.0, data.1);
             if verbose {
@@ -360,13 +364,15 @@ impl WhiteboxTool for MosaicWithFeathering {
                 for row in (0..rows2).filter(|r| r % num_procs == tid) {
                     let mut data = vec![0u32; columns2 as usize];
                     for col in 0..columns2 {
-                        data[col as usize] = col.min(row.min((columns2 - col - 1).min(rows2 - row - 1))) as u32;
+                        data[col as usize] =
+                            col.min(row.min((columns2 - col - 1).min(rows2 - row - 1))) as u32;
                     }
                     tx.send((row, data)).unwrap();
                 }
             });
         }
-        let mut dist2_raster: Array2D<u32> = Array2D::new(rows2, columns2, u32::max_value(), u32::max_value())?;
+        let mut dist2_raster: Array2D<u32> =
+            Array2D::new(rows2, columns2, u32::max_value(), u32::max_value())?;
         for row in 0..rows2 {
             let data = rx.recv().unwrap();
             dist2_raster.set_row_data(data.0, data.1);
@@ -428,7 +434,8 @@ impl WhiteboxTool for MosaicWithFeathering {
                             if z1 != nodata1 && z2 != nodata2 {
                                 dist1 = dist1_raster.get_value(row_src1, col_src1) as f64;
                                 dist2 = dist2_raster.get_value(row_src2, col_src2) as f64;
-                                sum_dist = dist1.powf(distance_weight) + dist2.powf(distance_weight);
+                                sum_dist =
+                                    dist1.powf(distance_weight) + dist2.powf(distance_weight);
                                 w1 = dist1.powf(distance_weight) / sum_dist;
                                 w2 = dist2.powf(distance_weight) / sum_dist;
                                 if !rgb_mode {
@@ -448,7 +455,8 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     green = (green1 * w1 + green2 * w2) as u32;
                                     blue = (blue1 * w1 + blue2 * w2) as u32;
 
-                                    data[col as usize] = ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
+                                    data[col as usize] =
+                                        ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
                                 }
                             } else if z1 != nodata1 {
                                 data[col as usize] = z1;
@@ -495,12 +503,12 @@ impl WhiteboxTool for MosaicWithFeathering {
                     } else {
                         vec![0, 0, 1, 1] // bilinear
                     };
-                    let num_neighbours = if method == "cc" { 
-                        16 
+                    let num_neighbours = if method == "cc" {
+                        16
                     } else {
                         4 // bilinear
                     };
-                    let mut neighbour = if method == "cc" { 
+                    let mut neighbour = if method == "cc" {
                         vec![[0f64; 2]; 16]
                     } else {
                         vec![[0f64; 2]; 4] // bilinear
@@ -592,7 +600,8 @@ impl WhiteboxTool for MosaicWithFeathering {
                                 if z1 != 0f64 && z2 != 0f64 {
                                     dist1 = dist1_raster.get_value(origin_row1, origin_col1) as f64;
                                     dist2 = dist2_raster.get_value(origin_row2, origin_col2) as f64;
-                                    sum_dist = dist1.powf(distance_weight) + dist2.powf(distance_weight);
+                                    sum_dist =
+                                        dist1.powf(distance_weight) + dist2.powf(distance_weight);
                                     w1 = dist1.powf(distance_weight) / sum_dist;
                                     w2 = dist2.powf(distance_weight) / sum_dist;
 
@@ -603,7 +612,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     data[col as usize] = z2;
                                 }
                             } else {
-                                // it's an rgb image and each component will need to be handled seperately. 
+                                // it's an rgb image and each component will need to be handled seperately.
                                 sum_dist = 0f64;
                                 image1_valid = false;
                                 for n in 0..num_neighbours {
@@ -632,8 +641,10 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     for n in 0..num_neighbours {
                                         val = neighbour[n][0] as u32;
                                         red1 += ((val & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
-                                        green1 += (((val >> 8) & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
-                                        blue1 += (((val >> 16) & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
+                                        green1 += (((val >> 8) & 0xFF) as f64 * neighbour[n][1])
+                                            / sum_dist;
+                                        blue1 += (((val >> 16) & 0xFF) as f64 * neighbour[n][1])
+                                            / sum_dist;
                                     }
                                 }
 
@@ -665,15 +676,18 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     for n in 0..num_neighbours {
                                         val = neighbour[n][0] as u32;
                                         red2 += ((val & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
-                                        green2 += (((val >> 8) & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
-                                        blue2 += (((val >> 16) & 0xFF) as f64 * neighbour[n][1]) / sum_dist;
+                                        green2 += (((val >> 8) & 0xFF) as f64 * neighbour[n][1])
+                                            / sum_dist;
+                                        blue2 += (((val >> 16) & 0xFF) as f64 * neighbour[n][1])
+                                            / sum_dist;
                                     }
                                 }
 
                                 if image1_valid && image2_valid {
                                     dist1 = dist1_raster.get_value(origin_row1, origin_col1) as f64;
                                     dist2 = dist2_raster.get_value(origin_row2, origin_col2) as f64;
-                                    sum_dist = dist1.powf(distance_weight) + dist2.powf(distance_weight);
+                                    sum_dist =
+                                        dist1.powf(distance_weight) + dist2.powf(distance_weight);
                                     w1 = dist1.powf(distance_weight) / sum_dist;
                                     w2 = dist2.powf(distance_weight) / sum_dist;
 
@@ -681,17 +695,20 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     green = (green1 * w1 + green2 * w2) as u32;
                                     blue = (blue1 * w1 + blue2 * w2) as u32;
 
-                                    data[col as usize] = ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
+                                    data[col as usize] =
+                                        ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
                                 } else if image1_valid {
                                     red = red1 as u32;
                                     green = green1 as u32;
                                     blue = blue1 as u32;
-                                    data[col as usize] = ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
+                                    data[col as usize] =
+                                        ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
                                 } else if image2_valid {
                                     red = red2 as u32;
                                     green = green2 as u32;
                                     blue = blue2 as u32;
-                                    data[col as usize] = ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
+                                    data[col as usize] =
+                                        ((255u32 << 24) | (blue << 16) | (green << 8) | red) as f64;
                                 }
                             }
                         }

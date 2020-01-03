@@ -7,16 +7,16 @@ pub struct PolynomialRegression2D {
     poly_order: usize,
     pub num_coefficients: usize,
     pub coefficients: Vec<[f64; 2]>,
-    pub residuals: Vec<f64>
+    pub residuals: Vec<f64>,
 }
 
 impl PolynomialRegression2D {
     pub fn new(
-        poly_order: usize, 
-        x_prime: &[f64], 
+        poly_order: usize,
+        x_prime: &[f64],
         y_prime: &[f64],
-        x: &[f64], 
-        y: &[f64], 
+        x: &[f64],
+        y: &[f64],
     ) -> Result<PolynomialRegression2D, Error> {
         // how many points are there?
         let n = x.len();
@@ -24,7 +24,9 @@ impl PolynomialRegression2D {
         // make sure that they all have the same length.
         if y.len() != n || x_prime.len() != n || y_prime.len() != n {
             return Err(Error::new(
-                ErrorKind::InvalidData, "Error: All input data to polynomial_regression_2d must have the same length"));
+                ErrorKind::InvalidData,
+                "Error: All input data to polynomial_regression_2d must have the same length",
+            ));
         }
 
         let mut num_coefficients = 0;
@@ -45,8 +47,12 @@ impl PolynomialRegression2D {
 
         let a = DMatrix::from_row_slice(n, num_coefficients, &vals);
         let a_svd = a.svd(true, true);
-        let x_eq = a_svd.solve(&DVector::from_row_slice(x_prime), EPSILON).unwrap();
-        let y_eq = a_svd.solve(&DVector::from_row_slice(y_prime), EPSILON).unwrap();
+        let x_eq = a_svd
+            .solve(&DVector::from_row_slice(x_prime), EPSILON)
+            .unwrap();
+        let y_eq = a_svd
+            .solve(&DVector::from_row_slice(y_prime), EPSILON)
+            .unwrap();
 
         let mut coefficients = Vec::with_capacity(num_coefficients);
         for i in 0..num_coefficients {
@@ -74,7 +80,7 @@ impl PolynomialRegression2D {
             poly_order: poly_order,
             num_coefficients: num_coefficients,
             coefficients: coefficients.clone(),
-            residuals: residuals.clone()
+            residuals: residuals.clone(),
         };
 
         Ok(regress)
@@ -124,8 +130,8 @@ mod test {
             y_val = rng.gen_range(0.0, 10.0);
             x.push(x_val);
             y.push(y_val);
-            x_prime.push(0.58*x_val + 0.32*y_val + 46.0);
-            y_prime.push(0.29*x_val + 0.91*y_val + 13.8);
+            x_prime.push(0.58 * x_val + 0.32 * y_val + 46.0);
+            y_prime.push(0.29 * x_val + 0.91 * y_val + 13.8);
         }
 
         let pr2d = PolynomialRegression2D::new(1, &x_prime, &y_prime, &x, &y).unwrap();

@@ -5,9 +5,9 @@ Created: Unkonwn
 Last Modified: 22/10/2019
 License: MIT
 */
+use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use std::io::prelude::*;
 use std::io::{Result, SeekFrom};
-use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 
 pub struct ByteOrderReader<R: Read + Seek> {
     is_le: bool,
@@ -23,7 +23,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
             reader: reader,
             is_le: is_le,
             pos: 0usize,
-            len: 0 // don't know the length yet
+            len: 0, // don't know the length yet
         };
         // now get the length
         let len = bor.reader.seek(SeekFrom::End(0)).unwrap() as usize;
@@ -88,7 +88,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_u16(&mut self) -> Result<u16> {
         self.pos += 2;
         if self.is_le {
-            return self.reader.read_u16::<LittleEndian>()
+            return self.reader.read_u16::<LittleEndian>();
         }
         self.reader.read_u16::<BigEndian>()
     }
@@ -96,7 +96,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_u24(&mut self) -> Result<u32> {
         self.pos += 3;
         if self.is_le {
-            return self.reader.read_u24::<LittleEndian>()
+            return self.reader.read_u24::<LittleEndian>();
         }
         self.reader.read_u24::<BigEndian>()
     }
@@ -104,7 +104,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_u32(&mut self) -> Result<u32> {
         self.pos += 4;
         if self.is_le {
-            return self.reader.read_u32::<LittleEndian>()
+            return self.reader.read_u32::<LittleEndian>();
         }
         self.reader.read_u32::<BigEndian>()
     }
@@ -112,7 +112,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_u64(&mut self) -> Result<u64> {
         self.pos += 8;
         if self.is_le {
-            return self.reader.read_u64::<LittleEndian>()
+            return self.reader.read_u64::<LittleEndian>();
         }
         self.reader.read_u64::<BigEndian>()
     }
@@ -126,7 +126,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_i16(&mut self) -> Result<i16> {
         self.pos += 2;
         if self.is_le {
-            return self.reader.read_i16::<LittleEndian>()
+            return self.reader.read_i16::<LittleEndian>();
         }
         self.reader.read_i16::<BigEndian>()
     }
@@ -134,7 +134,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_i24(&mut self) -> Result<i32> {
         self.pos += 3;
         if self.is_le {
-            return self.reader.read_i24::<LittleEndian>()
+            return self.reader.read_i24::<LittleEndian>();
         }
         self.reader.read_i24::<BigEndian>()
     }
@@ -142,7 +142,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_i32(&mut self) -> Result<i32> {
         self.pos += 4;
         if self.is_le {
-            return self.reader.read_i32::<LittleEndian>()
+            return self.reader.read_i32::<LittleEndian>();
         }
         self.reader.read_i32::<BigEndian>()
     }
@@ -150,7 +150,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_i64(&mut self) -> Result<i64> {
         self.pos += 8;
         if self.is_le {
-            return self.reader.read_i64::<LittleEndian>()
+            return self.reader.read_i64::<LittleEndian>();
         }
         self.reader.read_i64::<BigEndian>()
     }
@@ -158,7 +158,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_f32(&mut self) -> Result<f32> {
         self.pos += 4;
         if self.is_le {
-            return self.reader.read_f32::<LittleEndian>()
+            return self.reader.read_f32::<LittleEndian>();
         }
         self.reader.read_f32::<BigEndian>()
     }
@@ -181,7 +181,7 @@ impl<R: Read + Seek> ByteOrderReader<R> {
     pub fn read_f64(&mut self) -> Result<f64> {
         self.pos += 8;
         if self.is_le {
-            return self.reader.read_f64::<LittleEndian>()
+            return self.reader.read_f64::<LittleEndian>();
         }
         self.reader.read_f64::<BigEndian>()
     }

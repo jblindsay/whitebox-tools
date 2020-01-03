@@ -20,7 +20,7 @@ use std::thread;
 
 /// This tool removes duplicate points from a LiDAR data set. Duplicates are determined
 /// by their x, y, and optionally (`--include_z`) z coordinates.
-/// 
+///
 /// # See Also
 /// `EliminateCoincidentPoints`
 pub struct LidarRemoveDuplicates {

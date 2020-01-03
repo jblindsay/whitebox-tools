@@ -21,20 +21,20 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// The Crispness Index (*C*) provides a means of quantifying the crispness, or fuzziness, of a membership 
-/// probability (MP) image. MP images describe the probability of each grid cell belonging to some feature 
+/// The Crispness Index (*C*) provides a means of quantifying the crispness, or fuzziness, of a membership
+/// probability (MP) image. MP images describe the probability of each grid cell belonging to some feature
 /// or class. MP images contain values ranging from 0 to 1.
-/// 
-/// The index, as described by Lindsay (2006), is the ratio between the sum of the squared differences (from 
-/// the image mean) in the MP image divided by the sum of the squared differences for the Boolean case in which 
+///
+/// The index, as described by Lindsay (2006), is the ratio between the sum of the squared differences (from
+/// the image mean) in the MP image divided by the sum of the squared differences for the Boolean case in which
 /// the total probability, summed for the image, is arranged crisply.
-/// 
-/// *C* is closely related to a family of relative variation coefficients that measure variation in an MP 
-/// image relative to the maximum possible variation (i.e. when the total probability is arranged such that grid 
-/// cells contain only 1s or 0s). Notice that 0 < *C* < 1 and a low *C*-value indicates a nearly uniform spatial 
-/// distribution of any probability value, and *C* = 1 indicates a crisp spatial probability distribution, 
+///
+/// *C* is closely related to a family of relative variation coefficients that measure variation in an MP
+/// image relative to the maximum possible variation (i.e. when the total probability is arranged such that grid
+/// cells contain only 1s or 0s). Notice that 0 < *C* < 1 and a low *C*-value indicates a nearly uniform spatial
+/// distribution of any probability value, and *C* = 1 indicates a crisp spatial probability distribution,
 /// containing only 1's and 0's.
-/// 
+///
 /// *C* is calculated as follows:
 ///
 /// > C = SS_mp ∕ SS_B = [∑(pij − p-bar)^2] ∕ [ ∑pij(1 − p-bar)^2 + p2(RC − ∑pij)]
@@ -47,10 +47,10 @@ use std::thread;
 /// instead of the original:
 ///
 /// > ∑pij(1 - p_bar^2) - p_bar^2 (RC - ∑pij)
-/// 
+///
 /// # References
-/// 
-/// Lindsay, J. B. (2006). Sensitivity of channel mapping techniques to uncertainty in digital elevation data. 
+///
+/// Lindsay, J. B. (2006). Sensitivity of channel mapping techniques to uncertainty in digital elevation data.
 /// International Journal of Geographical Information Science, 20(6), 669-692.
 pub struct CrispnessIndex {
     name: String,

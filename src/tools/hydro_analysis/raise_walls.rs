@@ -15,11 +15,11 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool is used to increment the elevations in a digital elevation model (DEM) along 
-/// the boundaries of a vector lines or polygon layer. The user must specify the name of the 
-/// raster DEM (`--dem`), the vector file (`--input`), the output file name (`--output`), the 
-/// increment height (`--height`), and an optional breach lines vector layer (`--breach`). 
-/// The breach lines layer can be used to breach a whole in the raised walls at intersections 
+/// This tool is used to increment the elevations in a digital elevation model (DEM) along
+/// the boundaries of a vector lines or polygon layer. The user must specify the name of the
+/// raster DEM (`--dem`), the vector file (`--input`), the output file name (`--output`), the
+/// increment height (`--height`), and an optional breach lines vector layer (`--breach`).
+/// The breach lines layer can be used to breach a whole in the raised walls at intersections
 /// with the wall layer.
 pub struct RaiseWalls {
     name: String,

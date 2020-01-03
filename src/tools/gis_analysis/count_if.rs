@@ -13,12 +13,12 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool counts the number of occurrences of a specified value (`--value`) in a stack of input rasters 
-/// (`--inputs`). Each grid cell in the output raster (`--output`) will contain the number of occurrences 
-/// of the specified value in the stack of cooresponding cells in the input image. At least two input rasters 
-/// are required to run this tool. Each of the input rasters must share the same number of rows and columns and 
-/// spatial extent. An error will be issued if this is not the case. 
-/// 
+/// This tool counts the number of occurrences of a specified value (`--value`) in a stack of input rasters
+/// (`--inputs`). Each grid cell in the output raster (`--output`) will contain the number of occurrences
+/// of the specified value in the stack of cooresponding cells in the input image. At least two input rasters
+/// are required to run this tool. Each of the input rasters must share the same number of rows and columns and
+/// spatial extent. An error will be issued if this is not the case.
+///
 /// # See Also
 /// `PickFromList`
 pub struct CountIf {

@@ -18,13 +18,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to add red-green-blue (RGB) colour values to the points contained within an 
+/// This tool can be used to add red-green-blue (RGB) colour values to the points contained within an
 /// input LAS file (`--in_lidar`), based on the pixel values of an input colour image (`--in_image`). Ideally,
 /// the image has been acquired at the same time as the LiDAR point cloud. If this is not the case, one may
-/// expect that transient objects (e.g. cars) in both input data sets will be incorrectly coloured. The 
+/// expect that transient objects (e.g. cars) in both input data sets will be incorrectly coloured. The
 /// input image should overlap in extent with the LiDAR data set. You may use the `LidarTileFootprint` tool
 /// to determine the spatial extent of the LAS file.
-/// 
+///
 /// # See Also
 /// `LidarTileFootprint`
 pub struct LidarColourize {

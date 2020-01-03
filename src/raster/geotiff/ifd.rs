@@ -1,7 +1,7 @@
-use std::fmt;
-use std::io::Cursor;
 use super::geokeys;
 use crate::utils::{ByteOrderReader, Endianness};
+use std::fmt;
+use std::io::Cursor;
 
 #[derive(Default, Clone, Debug)]
 pub struct Ifd {
@@ -33,7 +33,10 @@ impl Ifd {
     }
 
     pub fn interpret_as_u16(&self) -> Vec<u16> {
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         let mut vals: Vec<u16> = vec![];
         let mut val: u16;
         for _ in 0..self.num_values {
@@ -44,7 +47,10 @@ impl Ifd {
     }
 
     pub fn interpret_as_u32(&self) -> Vec<u32> {
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         let mut vals: Vec<u32> = vec![];
         let mut val: u32;
         for _ in 0..self.num_values {
@@ -55,7 +61,10 @@ impl Ifd {
     }
 
     pub fn interpret_as_u64(&self) -> Vec<u64> {
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         let mut vals: Vec<u64> = vec![];
         let mut val: u64;
         for _ in 0..self.num_values {
@@ -66,7 +75,10 @@ impl Ifd {
     }
 
     pub fn interpret_as_i64(&self) -> Vec<i64> {
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         let mut vals: Vec<i64> = vec![];
         let mut val: i64;
         for _ in 0..self.num_values {
@@ -77,7 +89,10 @@ impl Ifd {
     }
 
     pub fn interpret_as_f64(&self) -> Vec<f64> {
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         let mut vals: Vec<f64> = vec![];
         let mut val: f64;
         for _ in 0..self.num_values {
@@ -97,9 +112,14 @@ impl Ifd {
         let s = &self.data[0..(self.data.len() - num_trailing_zeros)];
         let ret = match String::from_utf8(s.to_vec()) {
             Ok(v) => v,
-            Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
+            Err(e) => panic!(
+                "Error converting TAG({}) to ASCII (value={:?}) {}",
+                self.tag,
+                self.data.clone(),
+                e
+            ),
         };
-        return ret.trim().to_owned()
+        return ret.trim().to_owned();
 
         // if self.data[self.data.len() - 1] == 0 {
         //     let s = &self.data[0..self.data.len() - 1];
@@ -108,14 +128,14 @@ impl Ifd {
         //         Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
         //     };
         //     // String::from_utf8(s.to_vec()).unwrap();
-        //     return ret 
+        //     return ret
         // } else {
         //     let ret = match String::from_utf8(self.data.clone()) {
         //         Ok(v) => v,
         //         Err(e) => panic!("Error converting TAG({}) to ASCII (value={:?}) {}", self.tag, self.data.clone(), e),
         //     };
         //     // String::from_utf8(self.data.clone()).unwrap();
-        //     return ret 
+        //     return ret
         // }
     }
 
@@ -126,7 +146,10 @@ impl Ifd {
         } else {
             100u64
         };
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(self.data.clone()), self.byte_order);
+        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(
+            Cursor::new(self.data.clone()),
+            self.byte_order,
+        );
         if self.ifd_type == 2 {
             // ascii
             return String::from_utf8(self.data.clone()).unwrap();
@@ -201,7 +224,7 @@ impl fmt::Display for Ifd {
             } else {
                 String::from("")
             };
-            
+
             let mut d = if self.ifd_type != 2 {
                 format!("{}", self.interpret_data())
             } else {
@@ -237,9 +260,6 @@ impl fmt::Display for Ifd {
         write!(f, "{}", s)
     }
 }
-
-
-
 
 #[derive(Default, Clone, Debug)]
 pub(super) struct IfdEntry {

@@ -19,23 +19,23 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool characterizes the spatial distribution of the average normal vector angular deviation, a measure of
-/// surface roughness. Working in the field of 3D printing, Ko et al. (2016) defined a measure of surface roughness 
-/// based on quantifying the angular deviations in the direction of the normal vector of a real surface from its ideal 
-/// (i.e. smoothed) form. This measure of surface complexity is therefore in units of degrees. Specifically, roughness 
-/// is defined in this study as the neighborhood-averaged difference in the normal vectors of the original DEM and a 
-/// smoothed DEM surface. Smoothed surfaces are derived by applying a Gaussian blur of the same size as the 
+/// surface roughness. Working in the field of 3D printing, Ko et al. (2016) defined a measure of surface roughness
+/// based on quantifying the angular deviations in the direction of the normal vector of a real surface from its ideal
+/// (i.e. smoothed) form. This measure of surface complexity is therefore in units of degrees. Specifically, roughness
+/// is defined in this study as the neighborhood-averaged difference in the normal vectors of the original DEM and a
+/// smoothed DEM surface. Smoothed surfaces are derived by applying a Gaussian blur of the same size as the
 /// neighborhood (`--filter`).
-/// 
+///
 /// The `MultiscaleRoughness` tool calculates the same measure of surface roughness, except that it is designed to
 /// work with multiple spatial scales.
-/// 
+///
 /// # Reference
-/// Ko, M., Kang, H., ulrim Kim, J., Lee, Y., & Hwang, J. E. (2016, July). How to measure quality of affordable 3D 
-/// printing: Cultivating quantitative index in the user community. In International Conference on Human-Computer 
+/// Ko, M., Kang, H., ulrim Kim, J., Lee, Y., & Hwang, J. E. (2016, July). How to measure quality of affordable 3D
+/// printing: Cultivating quantitative index in the user community. In International Conference on Human-Computer
 /// Interaction (pp. 116-121). Springer, Cham.
-/// 
+///
 /// Lindsay, J. B., & Newman, D. R. (2018). Hyper-scale analysis of surface roughness. PeerJ Preprints, 6, e27110v1.
-/// 
+///
 /// # See Also
 /// `MultiscaleRoughness`, `SphericalStdDevOfNormals`, `CircularVarianceOfAspect`
 pub struct AverageNormalVectorAngularDeviation {
@@ -252,8 +252,8 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             let mut filter_size_smooth = 0;
             let mut weight: f64;
             for i in 0..250 {
-                weight =
-                    recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+                weight = recip_root_2_pi_times_sigma_d
+                    * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
                 if weight <= 0.001 {
                     filter_size_smooth = i * 2 + 1;
                     break;
@@ -294,7 +294,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             let d_x = Arc::new(d_x);
             let d_y = Arc::new(d_y);
             let weights = Arc::new(weights);
-            
+
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -346,15 +346,17 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                 wl -= 1;
             } // must be an odd integer
             let wu = wl + 2;
-            let m =
-                ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64)
-                    / (-4 * wl - 4) as f64)
-                    .round() as isize;
-            
+            let m = ((12f64 * sigma * sigma
+                - (n * wl * wl) as f64
+                - (4 * n * wl) as f64
+                - (3 * n) as f64)
+                / (-4 * wl - 4) as f64)
+                .round() as isize;
+
             let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
             let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
             let mut val: f64;
-            
+
             let mut sum: f64;
             let mut sum_n: i32;
             let mut i_prev: f64;
@@ -472,8 +474,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-        
-        
+
         let num_procs = num_cpus::get() as isize;
         let smoothed_dem = Arc::new(smoothed_dem);
         let (tx, rx) = mpsc::channel();
@@ -509,18 +510,22 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                                     n2[c] = z * z_factor;
                                 }
                             }
-                            a1 = -(n1[2] - n1[4] + 2f64 * (n1[1] - n1[5]) + n1[0] - n1[6]) / eight_grid_res;
-                            b1 = -(n1[6] - n1[4] + 2f64 * (n1[7] - n1[3]) + n1[0] - n1[2]) / eight_grid_res;
-                            
-                            a2 = -(n2[2] - n2[4] + 2f64 * (n2[1] - n2[5]) + n2[0] - n2[6]) / eight_grid_res;
-                            b2 = -(n2[6] - n2[4] + 2f64 * (n2[7] - n2[3]) + n2[0] - n2[2]) / eight_grid_res;
+                            a1 = -(n1[2] - n1[4] + 2f64 * (n1[1] - n1[5]) + n1[0] - n1[6])
+                                / eight_grid_res;
+                            b1 = -(n1[6] - n1[4] + 2f64 * (n1[7] - n1[3]) + n1[0] - n1[2])
+                                / eight_grid_res;
+
+                            a2 = -(n2[2] - n2[4] + 2f64 * (n2[1] - n2[5]) + n2[0] - n2[6])
+                                / eight_grid_res;
+                            b2 = -(n2[6] - n2[4] + 2f64 * (n2[7] - n2[3]) + n2[0] - n2[2])
+                                / eight_grid_res;
 
                             dot_product = a1 * a2 + b1 * b2 + 1.0;
 
-                            data[col as usize] = (dot_product / ((a1 * a1 + b1 * b1 + 1.0) * (a2 * a2 + b2 * b2 + 1.0))
-                                                 .sqrt())
-                                                 .acos()
-                                                 .to_degrees();
+                            data[col as usize] = (dot_product
+                                / ((a1 * a1 + b1 * b1 + 1.0) * (a2 * a2 + b2 * b2 + 1.0)).sqrt())
+                            .acos()
+                            .to_degrees();
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -559,16 +564,16 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
-                    angular_diff.set_value(row, col, sum + angular_diff.get_value(row-1, col));
-                    i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
+                    angular_diff.set_value(row, col, sum + angular_diff.get_value(row - 1, col));
+                    i_n.set_value(row, col, sumn + i_n.get_value(row - 1, col));
                 }
             } else {
                 if smoothed_dem.get_value(0, 0) == nodata {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
-                    angular_diff.increment(row, col, angular_diff.get_value(row, col-1));
-                    i_n.increment(row, col, i_n.get_value(row, col-1));
+                    angular_diff.increment(row, col, angular_diff.get_value(row, col - 1));
+                    i_n.increment(row, col, i_n.get_value(row, col - 1));
                     if smoothed_dem.get_value(row, col) == nodata {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
@@ -636,7 +641,8 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                                 - i_n.get_value(y1, x2)
                                 - i_n.get_value(y2, x1)) as f64;
                             if n > 0f64 {
-                                sum = angular_diff.get_value(y2, x2) + angular_diff.get_value(y1, x1)
+                                sum = angular_diff.get_value(y2, x2)
+                                    + angular_diff.get_value(y1, x1)
                                     - angular_diff.get_value(y1, x2)
                                     - angular_diff.get_value(y2, x1);
                                 data[col as usize] = sum / n;
@@ -646,8 +652,13 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                     }
 
                     match tx2.send((row, data)) {
-                        Ok(_) => {},
-                        Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+                        Ok(_) => {}
+                        Err(_) => {
+                            println!(
+                                "Error sending data from thread {} processing row {}.",
+                                tid, row
+                            );
+                        }
                     }
                 }
             });
@@ -660,7 +671,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             match rx2.recv() {
                 Ok(data) => {
                     output.set_row_data(data.0, data.1);
-                },
+                }
                 Err(_) => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -668,7 +679,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                     ));
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {

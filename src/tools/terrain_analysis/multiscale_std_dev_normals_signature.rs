@@ -330,7 +330,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
         let mut series_names = vec![];
         for record_num in 0..points.num_records {
             let record = points.get_record(record_num);
-            let row = ((configs.north - record.points[0].y) / configs.resolution_y).floor() as isize; //input.get_row_from_y(record.points[0].y);
+            let row =
+                ((configs.north - record.points[0].y) / configs.resolution_y).floor() as isize; //input.get_row_from_y(record.points[0].y);
             let col = ((record.points[0].x - configs.west) / configs.resolution_x).floor() as isize; // input.get_column_from_x(record.points[0].x);
             if row >= 0 && col >= 0 && row < rows && col < columns {
                 signature_sites.push((row, col));
@@ -353,7 +354,7 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
         }
 
         // calculate the 'n' itegral image
-        let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?; 
+        let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?;
         let mut sum: u32;
         let mut val: u32;
         for row in 0..rows {
@@ -367,7 +368,7 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
                         0
                     };
-                    i_n.set_value(row, col, sum + i_n.get_value(row-1, col));
+                    i_n.set_value(row, col, sum + i_n.get_value(row - 1, col));
                 }
             } else {
                 if input.get_value(0, 0) != nodata {
@@ -383,21 +384,22 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
                         0
                     };
-                    i_n.set_value(row, col, val + i_n.get_value(row, col-1));
+                    i_n.set_value(row, col, val + i_n.get_value(row, col - 1));
                 }
             }
         }
 
         let i_n = Arc::new(i_n);
         let input = Arc::new(input);
-            
+
         ///////////////////////////////
         // Perform the main analysis //
         ///////////////////////////////
         let num_procs = num_cpus::get() as isize;
-        for s in min_scale..(min_scale+num_steps) {
-            let midpoint = min_scale + ((((s - min_scale) * step) as f32).powf(step_nonlinearity)).floor() as isize;
-            println!("Loop {} / {}", s-min_scale+1, num_steps);
+        for s in min_scale..(min_scale + num_steps) {
+            let midpoint = min_scale
+                + ((((s - min_scale) * step) as f32).powf(step_nonlinearity)).floor() as isize;
+            println!("Loop {} / {}", s - min_scale + 1, num_steps);
 
             let filter_size = midpoint * 2 + 1;
 
@@ -415,8 +417,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                 let mut filter_size_smooth = 0;
                 let mut weight: f32;
                 for i in 0..250 {
-                    weight =
-                        recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f32) / two_sigma_sqr_d).exp();
+                    weight = recip_root_2_pi_times_sigma_d
+                        * (-1.0 * ((i * i) as f32) / two_sigma_sqr_d).exp();
                     if weight <= 0.001 {
                         filter_size_smooth = i * 2 + 1;
                         break;
@@ -438,7 +440,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                 let mut weights = vec![0.0; num_pixels_in_filter];
 
                 // fill the filter d_x and d_y values and the distance-weights
-                let midpoint_smoothed: isize = (filter_size_smooth as f32 / 2f32).floor() as isize + 1;
+                let midpoint_smoothed: isize =
+                    (filter_size_smooth as f32 / 2f32).floor() as isize + 1;
                 let mut a = 0;
                 let (mut x, mut y): (isize, isize);
                 for row in 0..filter_size {
@@ -457,7 +460,7 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                 let d_x = Arc::new(d_x);
                 let d_y = Arc::new(d_y);
                 let weights = Arc::new(weights);
-                
+
                 let (tx, rx) = mpsc::channel();
                 for tid in 0..num_procs {
                     let input = input.clone();
@@ -508,11 +511,13 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                     wl -= 1;
                 } // must be an odd integer
                 let wu = wl + 2;
-                let m =
-                    ((12f32 * sigma * sigma - (n * wl * wl) as f32 - (4 * n * wl) as f32 - (3 * n) as f32)
-                        / (-4 * wl - 4) as f32)
-                        .round() as isize;
-                
+                let m = ((12f32 * sigma * sigma
+                    - (n * wl * wl) as f32
+                    - (4 * n * wl) as f32
+                    - (3 * n) as f32)
+                    / (-4 * wl - 4) as f32)
+                    .round() as isize;
+
                 let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata as f64)?; // Memory requirements: 6.5X
                 let mut val: f32;
                 let mut sum: f64;
@@ -538,7 +543,7 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                                 val = input.get_value(row, col);
                                 if val == nodata {
                                     val = 0f32;
-                                // } else {
+                                    // } else {
                                     // sum_n += 1;
                                 }
                                 sum += val as f64;
@@ -600,7 +605,11 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                                     sum = integral.get_value(y2, x2) + integral.get_value(y1, x1)
                                         - integral.get_value(y1, x2)
                                         - integral.get_value(y2, x1);
-                                    smoothed_dem.set_value(row, col, (sum / num_cells as f64) as f32);
+                                    smoothed_dem.set_value(
+                                        row,
+                                        col,
+                                        (sum / num_cells as f64) as f32,
+                                    );
                                 } else {
                                     // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
                                     smoothed_dem.set_value(row, col, 0f32);
@@ -680,8 +689,6 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
 
             drop(smoothed_dem); // Memory requirements: 9.5X
 
-
-
             ////////////////////////////////////////
             // Convert normals to integral images //
             ////////////////////////////////////////
@@ -695,19 +702,18 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                         sumx += xc.get_value(row, col);
                         sumy += yc.get_value(row, col);
                         sumz += zc.get_value(row, col);
-                        xc.set_value(row, col, sumx + xc.get_value(row-1, col));
-                        yc.set_value(row, col, sumy + yc.get_value(row-1, col));
-                        zc.set_value(row, col, sumz + zc.get_value(row-1, col));
+                        xc.set_value(row, col, sumx + xc.get_value(row - 1, col));
+                        yc.set_value(row, col, sumy + yc.get_value(row - 1, col));
+                        zc.set_value(row, col, sumz + zc.get_value(row - 1, col));
                     }
                 } else {
                     for col in 1..columns {
-                        xc.increment(row, col, xc.get_value(row, col-1));
-                        yc.increment(row, col, yc.get_value(row, col-1));
-                        zc.increment(row, col, zc.get_value(row, col-1));
+                        xc.increment(row, col, xc.get_value(row, col - 1));
+                        yc.increment(row, col, yc.get_value(row, col - 1));
+                        zc.increment(row, col, zc.get_value(row, col - 1));
                     }
                 }
             }
-
 
             ////////////////////////////////////////////////////////////////
             // Calculate the spherical standard deviations of the normals //
@@ -755,8 +761,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                             - zc.get_value(y1, x2)
                             - zc.get_value(y2, x1);
                         mean = ((sumx * sumx + sumy * sumy + sumz * sumz) as f32).sqrt() / n;
-                        if mean > 1f32 { 
-                            mean = 1f32; 
+                        if mean > 1f32 {
+                            mean = 1f32;
                         }
                         xdata[site].push((midpoint) as f64);
                         ydata[site].push((-2f32 * mean.ln()).sqrt().to_degrees() as f64);
@@ -767,7 +773,6 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
             // drop(xc); // Memory requirements: 7.5X (automatically freed at end of scope)
             // drop(yc); // Memory requirements: 5.5X
             // drop(zc); // Memory requirements: 3.5X
-            
 
             // Update progress
             if verbose {
@@ -805,13 +810,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                 .as_bytes(),
         )?;
 
-        writer.write_all(
-            (format!(
-                "<p><strong>Input DEM</strong>: {}<br>",
-                input_file
-            ))
-            .as_bytes(),
-        )?;
+        writer
+            .write_all((format!("<p><strong>Input DEM</strong>: {}<br>", input_file)).as_bytes())?;
 
         writer.write_all(("</p>").as_bytes())?;
 

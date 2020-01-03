@@ -22,11 +22,11 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 
 /// This tool copies LiDAR tiles overlapping with a polygon into an output directory.
-/// 
+///
 /// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
-/// LiDAR format `LAZ`, it is able to read `LAZ` file headers. Because this tool only requires information contained 
-/// in the input file's header (i.e. the bounding box of the data), it is able to take `LAZ` input files. 
-/// 
+/// LiDAR format `LAZ`, it is able to read `LAZ` file headers. Because this tool only requires information contained
+/// in the input file's header (i.e. the bounding box of the data), it is able to take `LAZ` input files.
+///
 /// # See Also
 /// `LidarTileFootprint`
 pub struct SelectTilesByPolygon {
@@ -203,11 +203,11 @@ impl WhiteboxTool for SelectTilesByPolygon {
         if std::path::Path::new(&input_directory).is_dir() {
             for entry in fs::read_dir(input_directory.clone())? {
                 let s = entry?
-                .path()
-                .into_os_string()
-                .to_str()
-                .expect("Error reading path string")
-                .to_string();
+                    .path()
+                    .into_os_string()
+                    .to_str()
+                    .expect("Error reading path string")
+                    .to_string();
                 if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".laz") {
                     inputs.push(s);
                 }
@@ -357,12 +357,13 @@ impl WhiteboxTool for SelectTilesByPolygon {
                             Ok(_) => {
                                 if verbose {
                                     // what's the report_copy status?
-                                    let report_copy = report_copy.lock().expect("Error unlocking mutex");
+                                    let report_copy =
+                                        report_copy.lock().expect("Error unlocking mutex");
                                     if *report_copy {
                                         println!(
-                                        "Copied \"{}\" to \"{}\"",
-                                        input_file.replace(&input_directory, "").clone(),
-                                        output_directory.clone()
+                                            "Copied \"{}\" to \"{}\"",
+                                            input_file.replace(&input_directory, "").clone(),
+                                            output_directory.clone()
                                         )
                                     }
                                 }

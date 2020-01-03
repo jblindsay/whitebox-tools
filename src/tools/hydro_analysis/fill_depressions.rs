@@ -7,8 +7,8 @@ License: MIT
 */
 
 use crate::raster::*;
-use crate::tools::*;
 use crate::structures::Array2D;
+use crate::tools::*;
 use std::cmp::Ordering;
 use std::cmp::Ordering::Equal;
 use std::collections::{BinaryHeap, VecDeque};
@@ -22,38 +22,38 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the
-/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
+/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous
 /// flow from each grid cell to an outlet located along the grid edge. The `FillDepressions` algorithm operates
 /// by first identifying single-cell pits, that is, interior grid cells with no lower neighbouring cells. Each pit
-/// cell is then visited from highest to lowest and a priority region-growing operation is initiated. The area of 
+/// cell is then visited from highest to lowest and a priority region-growing operation is initiated. The area of
 /// monotonically increasing elevation, starting from the pit cell and growing based on flood order, is identified.
 /// Once a cell, that has not been previously visited and possessing a lower elevation than its discovering neighbour
 /// cell, is identified the discovering neighbour is labelled as an outlet (spill point) and the outlet elevation is
 /// noted. The algorithm then back-fills the labelled region, raising the elevation in the output DEM (`--output`) to
-/// that of the outlet. Once this process is completed for each pit cell (noting that nested pit cells are often 
+/// that of the outlet. Once this process is completed for each pit cell (noting that nested pit cells are often
 /// solved by prior pits) the flat regions of filled pits are optionally treated (`--fix_flats`) with an applied
-/// small slope gradient away from outlets (note, more than one outlet cell may exist for each depression). The user 
+/// small slope gradient away from outlets (note, more than one outlet cell may exist for each depression). The user
 /// may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
 /// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
-/// The flat-fixing method applies a small gradient away from outlets using another priority region-growing operation (i.e. 
-/// based on a priority queue operation), where priorities are set by the elevations in the input DEM (`--input`). This 
+/// The flat-fixing method applies a small gradient away from outlets using another priority region-growing operation (i.e.
+/// based on a priority queue operation), where priorities are set by the elevations in the input DEM (`--input`). This
 /// in effect ensures a gradient away from outlet cells but also following the natural pre-conditioned topography internal
 /// to depression areas. For example, if a large filled area occurs upstream of a damming road-embankment, the filled
 /// DEM will possess flow directions that are similar to the un-flooded valley, with flow following the valley bottom.
 /// In fact, the above case is better handled using the `BreachDepressionsLeastCost` tool, which would simply cut through
 /// the road embankment at the likely site of a culvert. However, the flat-fixing method of `FillDepressions` does mean
-/// that this common occurrence in LiDAR DEMs is less problematic. 
-/// 
-/// The `BreachDepressionsLeastCost`, while slightly less efficient than either other hydrological preprocessing methods, 
-/// often provides a lower impact solution to topographic depressions and should be preferred in most applications. In comparison 
-/// with the `BreachDepressionsLeastCost` tool, the depression filling method often provides a less satisfactory, higher impact 
-/// solution. **It is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from their DEMs 
+/// that this common occurrence in LiDAR DEMs is less problematic.
+///
+/// The `BreachDepressionsLeastCost`, while slightly less efficient than either other hydrological preprocessing methods,
+/// often provides a lower impact solution to topographic depressions and should be preferred in most applications. In comparison
+/// with the `BreachDepressionsLeastCost` tool, the depression filling method often provides a less satisfactory, higher impact
+/// solution. **It is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from their DEMs
 /// before using `FillDepressions`**. Nonetheless, there are applications for which full depression filling using the  
 /// `FillDepressions` tool may be preferred.
-/// 
-/// Note that this tool will not fill in NoData regions within the DEM. It is advisable to remove such regions using the 
+///
+/// Note that this tool will not fill in NoData regions within the DEM. It is advisable to remove such regions using the
 /// `FillMissingData` tool prior to application.
-/// 
+///
 /// # See Also
 /// `BreachDepressionsLeastCost`, `BreachDepressions`, `Sink`, `DepthInSink`, `FillMissingData`
 pub struct FillDepressions {
@@ -202,7 +202,7 @@ impl WhiteboxTool for FillDepressions {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem"{
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -283,7 +283,6 @@ impl WhiteboxTool for FillDepressions {
 
         // drop(input); // input is no longer needed.
 
-
         let (mut col, mut row): (isize, isize);
         let (mut rn, mut cn): (isize, isize);
         let (mut z, mut zn): (f64, f64);
@@ -291,7 +290,7 @@ impl WhiteboxTool for FillDepressions {
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         // Find pit cells. This step is parallelized.
-        let num_procs = num_cpus::get() as isize;   
+        let num_procs = num_cpus::get() as isize;
         let output2 = Arc::new(output);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -302,19 +301,21 @@ impl WhiteboxTool for FillDepressions {
                 let mut zn: f64;
                 let mut flag: bool;
                 let mut pits = vec![];
-                for row in (1..rows-1).filter(|r| r % num_procs == tid) {
-                    for col in 1..columns-1 {
+                for row in (1..rows - 1).filter(|r| r % num_procs == tid) {
+                    for col in 1..columns - 1 {
                         z = output2.get_value(row, col);
                         if z != nodata {
                             flag = true;
                             for n in 0..8 {
                                 zn = output2.get_value(row + dy[n], col + dx[n]);
-                                if zn < z || zn == nodata { // It either has a lower neighbour or is an edge cell.
+                                if zn < z || zn == nodata {
+                                    // It either has a lower neighbour or is an edge cell.
                                     flag = false;
                                     break;
                                 }
                             }
-                            if flag { // it's a cell with undefined flow
+                            if flag {
+                                // it's a cell with undefined flow
                                 pits.push((row, col, z));
                             }
                         }
@@ -328,7 +329,7 @@ impl WhiteboxTool for FillDepressions {
         for p in 0..num_procs {
             let mut pits = rx.recv().unwrap();
             undefined_flow_cells.append(&mut pits);
-            
+
             if verbose {
                 progress = (100.0_f64 * (p + 1) as f64 / num_procs as f64) as usize;
                 if progress != old_progress {
@@ -345,7 +346,6 @@ impl WhiteboxTool for FillDepressions {
 
         let num_deps = undefined_flow_cells.len();
 
-
         // Now we need to perform an in-place depression filling
         let mut minheap = BinaryHeap::new();
         let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
@@ -359,7 +359,8 @@ impl WhiteboxTool for FillDepressions {
         while let Some(cell) = undefined_flow_cells.pop() {
             row = cell.0;
             col = cell.1;
-            if flats.get_value(row, col) != 1 { // if it's already in a solved site, don't do it a second time.
+            if flats.get_value(row, col) != 1 {
+                // if it's already in a solved site, don't do it a second time.
                 // First there is a priority region-growing operation to find the outlets.
                 z_pit = output.get_value(row, col);
                 minheap.clear();
@@ -395,15 +396,17 @@ impl WhiteboxTool for FillDepressions {
                                             priority: zn,
                                         });
                                         visited.set_value(rn, cn, 1);
-                                    } else if zn != nodata { // zn < z
-                                        // 'cell' has a lower neighbour that hasn't already passed through minheap. 
+                                    } else if zn != nodata {
+                                        // zn < z
+                                        // 'cell' has a lower neighbour that hasn't already passed through minheap.
                                         // Therefore, 'cell' is a pour point cell.
                                         outlet_found = true;
                                         outlet_z = z;
                                         queue.push_back((cell2.row, cell2.column));
                                         possible_outlets.push((cell2.row, cell2.column));
                                     }
-                                } else if zn == outlet_z { // We've found the outlet but are still looking for additional outlets.
+                                } else if zn == outlet_z {
+                                    // We've found the outlet but are still looking for additional outlets.
                                     minheap.push(GridCell {
                                         row: rn,
                                         column: cn,
@@ -433,7 +436,8 @@ impl WhiteboxTool for FillDepressions {
                                     }
                                 }
                             }
-                            if flag { // it's an outlet
+                            if flag {
+                                // it's an outlet
                                 queue.push_back((cell2.row, cell2.column));
                                 possible_outlets.push((cell2.row, cell2.column));
                             } else {
@@ -489,7 +493,8 @@ impl WhiteboxTool for FillDepressions {
 
         drop(visited);
 
-        if small_num > 0f64 && fix_flats { // fix the flats
+        if small_num > 0f64 && fix_flats {
+            // fix the flats
             if verbose {
                 println!("Fixing flow on flats...");
                 println!("Flats increment value: {}", small_num);
@@ -509,7 +514,8 @@ impl WhiteboxTool for FillDepressions {
                         break;
                     }
                 }
-                if flag { // it's confirmed as an outlet
+                if flag {
+                    // it's confirmed as an outlet
                     minheap.push(GridCell {
                         row: cell.0,
                         column: cell.1,
@@ -530,19 +536,18 @@ impl WhiteboxTool for FillDepressions {
                     flag = true;
                     while flag {
                         match minheap.peek() {
-                        Some(cell2) => { 
+                            Some(cell2) => {
                                 if cell2.priority == z {
                                     flats.set_value(cell2.row, cell2.column, 3);
                                     outlets.push(minheap.pop().unwrap());
                                 } else {
                                     flag = false;
                                 }
-                            },
-                        None => { 
-                                flag = false; 
+                            }
+                            None => {
+                                flag = false;
                             }
                         }
-                        
                     }
                     // let mut queue = VecDeque::new();
                     let mut minheap2 = BinaryHeap::new();
@@ -573,7 +578,7 @@ impl WhiteboxTool for FillDepressions {
                         for n in 0..8 {
                             rn = cell2.row + dy[n];
                             cn = cell2.column + dx[n];
-                            if flats.get_value(rn, cn) != 3 { 
+                            if flats.get_value(rn, cn) != 3 {
                                 zn = output.get_value(rn, cn);
                                 if zn < z + small_num && zn >= cell2.z && zn != nodata {
                                     // queue.push_back((rn, cn, cell2.2));
@@ -594,7 +599,7 @@ impl WhiteboxTool for FillDepressions {
                     //     for n in 0..8 {
                     //         rn = cell2.0 + dy[n];
                     //         cn = cell2.1 + dx[n];
-                    //         if flats.get_value(rn, cn) != 3 { 
+                    //         if flats.get_value(rn, cn) != 3 {
                     //             zn = output.get_value(rn, cn);
                     //             if zn < z + small_num && zn >= cell2.2 && zn != nodata {
                     //                 queue.push_back((rn, cn, cell2.2));
@@ -607,14 +612,14 @@ impl WhiteboxTool for FillDepressions {
                 }
 
                 if verbose {
-                    progress = (100.0_f64 * (1f64 - minheap.len() as f64 / num_outlets as f64)) as usize;
+                    progress =
+                        (100.0_f64 * (1f64 - minheap.len() as f64 / num_outlets as f64)) as usize;
                     if progress != old_progress {
                         println!("Fixing flats: {}%", progress);
                         old_progress = progress;
                     }
                 }
             }
-            
 
             // let mut queue = VecDeque::new();
             // minheap.clear();
@@ -643,7 +648,7 @@ impl WhiteboxTool for FillDepressions {
             // while let Some(cell) = queue.pop_front() {
             //     z = output.get_value(cell.0, cell.1);
             //     flats_value = flats.get_value(cell.0, cell.1);
-            //     if flats_value == 2 { // outlet cell 
+            //     if flats_value == 2 { // outlet cell
             //         for n in 0..8 {
             //             rn = cell.0 + dy[n];
             //             cn = cell.1 + dx[n];
@@ -662,7 +667,7 @@ impl WhiteboxTool for FillDepressions {
             //             rn = cell.0 + dy[n];
             //             cn = cell.1 + dx[n];
             //             flats_value = flats.get_value(rn, cn);
-            //             if flats_value == 0 || flats_value == 1 { 
+            //             if flats_value == 0 || flats_value == 1 {
             //                 zn = output.get_value(rn, cn);
             //                 if zn < z + small_num && zn >= cell.2 && zn != nodata {
             //                     queue.push_back((rn, cn, cell.2));
@@ -676,7 +681,6 @@ impl WhiteboxTool for FillDepressions {
             //     }
             // }
         }
-
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(

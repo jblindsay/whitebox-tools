@@ -523,7 +523,9 @@ impl ToolManager {
             "averageoverlay" => Some(Box::new(gis_analysis::AverageOverlay::new())),
             "blockmaximumgridding" => Some(Box::new(gis_analysis::BlockMaximumGridding::new())),
             "blockminimumgridding" => Some(Box::new(gis_analysis::BlockMinimumGridding::new())),
-            "boundaryshapecomplexity" => Some(Box::new(gis_analysis::BoundaryShapeComplexity::new())),
+            "boundaryshapecomplexity" => {
+                Some(Box::new(gis_analysis::BoundaryShapeComplexity::new()))
+            }
             "bufferraster" => Some(Box::new(gis_analysis::BufferRaster::new())),
             // "buffervector" => Some(Box::new(gis_analysis::BufferVector::new())),
             "centroid" => Some(Box::new(gis_analysis::Centroid::new())),
@@ -586,7 +588,9 @@ impl ToolManager {
             }
             "minimumconvexhull" => Some(Box::new(gis_analysis::MinimumConvexHull::new())),
             "minoverlay" => Some(Box::new(gis_analysis::MinOverlay::new())),
-            "naturalneighbourinterpolation" => Some(Box::new(gis_analysis::NaturalNeighbourInterpolation::new())),
+            "naturalneighbourinterpolation" => {
+                Some(Box::new(gis_analysis::NaturalNeighbourInterpolation::new()))
+            }
             "nearestneighbourgridding" => {
                 Some(Box::new(gis_analysis::NearestNeighbourGridding::new()))
             }
@@ -602,7 +606,9 @@ impl ToolManager {
             "polygonperimeter" => Some(Box::new(gis_analysis::PolygonPerimeter::new())),
             "polygonshortaxis" => Some(Box::new(gis_analysis::PolygonShortAxis::new())),
             "polygonize" => Some(Box::new(gis_analysis::Polygonize::new())),
-            "radialbasisfunctioninterpolation" => Some(Box::new(gis_analysis::RadialBasisFunctionInterpolation::new())),
+            "radialbasisfunctioninterpolation" => Some(Box::new(
+                gis_analysis::RadialBasisFunctionInterpolation::new(),
+            )),
             "radiusofgyration" => Some(Box::new(gis_analysis::RadiusOfGyration::new())),
             "rasterarea" => Some(Box::new(gis_analysis::RasterArea::new())),
             "rastercellassignment" => Some(Box::new(gis_analysis::RasterCellAssignment::new())),
@@ -614,7 +620,9 @@ impl ToolManager {
                 Some(Box::new(gis_analysis::RelatedCircumscribingCircle::new()))
             }
             "shapecomplexityindex" => Some(Box::new(gis_analysis::ShapeComplexityIndex::new())),
-            "shapecomplexityindexraster" => Some(Box::new(gis_analysis::ShapeComplexityIndexRaster::new())),
+            "shapecomplexityindexraster" => {
+                Some(Box::new(gis_analysis::ShapeComplexityIndexRaster::new()))
+            }
             "smoothvectors" => Some(Box::new(gis_analysis::SmoothVectors::new())),
             "splitwithlines" => Some(Box::new(gis_analysis::SplitWithLines::new())),
             "sumoverlay" => Some(Box::new(gis_analysis::SumOverlay::new())),
@@ -633,7 +641,9 @@ impl ToolManager {
             }
             "basins" => Some(Box::new(hydro_analysis::Basins::new())),
             "breachdepressions" => Some(Box::new(hydro_analysis::BreachDepressions::new())),
-            "breachdepressionsleastcost" => Some(Box::new(hydro_analysis::BreachDepressionsLeastCost::new())),
+            "breachdepressionsleastcost" => {
+                Some(Box::new(hydro_analysis::BreachDepressionsLeastCost::new()))
+            }
             "breachsinglecellpits" => Some(Box::new(hydro_analysis::BreachSingleCellPits::new())),
             "burnstreamsatroads" => Some(Box::new(hydro_analysis::BurnStreamsAtRoads::new())),
             "d8flowaccumulation" => Some(Box::new(hydro_analysis::D8FlowAccumulation::new())),
@@ -657,7 +667,9 @@ impl ToolManager {
             "fd8pointer" => Some(Box::new(hydro_analysis::FD8Pointer::new())),
             "fillburn" => Some(Box::new(hydro_analysis::FillBurn::new())),
             "filldepressions" => Some(Box::new(hydro_analysis::FillDepressions::new())),
-            "filldepressionswangandlui" => Some(Box::new(hydro_analysis::FillDepressionsWangAndLui::new())),
+            "filldepressionswangandlui" => {
+                Some(Box::new(hydro_analysis::FillDepressionsWangAndLui::new()))
+            }
             "fillsinglecellpits" => Some(Box::new(hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(hydro_analysis::FindNoFlowCells::new())),
             "findparallelflow" => Some(Box::new(hydro_analysis::FindParallelFlow::new())),
@@ -691,7 +703,9 @@ impl ToolManager {
                 Some(Box::new(hydro_analysis::TraceDownslopeFlowpaths::new()))
             }
             "unnestbasins" => Some(Box::new(hydro_analysis::UnnestBasins::new())),
-            "upslopedepressionstorage" => Some(Box::new(hydro_analysis::UpslopeDepressionStorage::new())),
+            "upslopedepressionstorage" => {
+                Some(Box::new(hydro_analysis::UpslopeDepressionStorage::new()))
+            }
             "watershed" => Some(Box::new(hydro_analysis::Watershed::new())),
 
             // image_analysis
@@ -756,9 +770,9 @@ impl ToolManager {
             }
             "mosaic" => Some(Box::new(image_analysis::Mosaic::new())),
             "mosaicwithfeathering" => Some(Box::new(image_analysis::MosaicWithFeathering::new())),
-            "normalizeddifferenceindex" => Some(Box::new(
-                image_analysis::NormalizedDifferenceIndex::new(),
-            )),
+            "normalizeddifferenceindex" => {
+                Some(Box::new(image_analysis::NormalizedDifferenceIndex::new()))
+            }
             "olympicfilter" => Some(Box::new(image_analysis::OlympicFilter::new())),
             "opening" => Some(Box::new(image_analysis::Opening::new())),
             "panchromaticsharpening" => {
@@ -801,7 +815,9 @@ impl ToolManager {
             // "asciitolas" => Some(Box::new(lidar_analysis::AsciiToLas::new())),
             "lidarblockmaximum" => Some(Box::new(lidar_analysis::LidarBlockMaximum::new())),
             "lidarblockminimum" => Some(Box::new(lidar_analysis::LidarBlockMinimum::new())),
-            "classifybuildingsinlidar" => Some(Box::new(lidar_analysis::ClassifyBuildingsInLidar::new())),
+            "classifybuildingsinlidar" => {
+                Some(Box::new(lidar_analysis::ClassifyBuildingsInLidar::new()))
+            }
             "classifyoverlappoints" => Some(Box::new(lidar_analysis::ClassifyOverlapPoints::new())),
             "cliplidartopolygon" => Some(Box::new(lidar_analysis::ClipLidarToPolygon::new())),
             "erasepolygonfromlidar" => Some(Box::new(lidar_analysis::ErasePolygonFromLidar::new())),
@@ -869,7 +885,9 @@ impl ToolManager {
             "attributecorrelation" => {
                 Some(Box::new(math_stat_analysis::AttributeCorrelation::new()))
             }
-            "attributecorrelationneighbourhoodanalysis" => Some(Box::new(math_stat_analysis::AttributeCorrelationNeighbourhoodAnalysis::new())),
+            "attributecorrelationneighbourhoodanalysis" => Some(Box::new(
+                math_stat_analysis::AttributeCorrelationNeighbourhoodAnalysis::new(),
+            )),
             "attributehistogram" => Some(Box::new(math_stat_analysis::AttributeHistogram::new())),
             "attributescattergram" => {
                 Some(Box::new(math_stat_analysis::AttributeScattergram::new()))
@@ -887,16 +905,16 @@ impl ToolManager {
             "equalto" => Some(Box::new(math_stat_analysis::EqualTo::new())),
             "exp" => Some(Box::new(math_stat_analysis::Exp::new())),
             "exp2" => Some(Box::new(math_stat_analysis::Exp2::new())),
-            "zonalstatistics" => {
-                Some(Box::new(math_stat_analysis::ZonalStatistics::new()))
-            }
+            "zonalstatistics" => Some(Box::new(math_stat_analysis::ZonalStatistics::new())),
             "floor" => Some(Box::new(math_stat_analysis::Floor::new())),
             "greaterthan" => Some(Box::new(math_stat_analysis::GreaterThan::new())),
             "imageautocorrelation" => {
                 Some(Box::new(math_stat_analysis::ImageAutocorrelation::new()))
             }
             "imagecorrelation" => Some(Box::new(math_stat_analysis::ImageCorrelation::new())),
-            "imagecorrelationneighbourhoodanalysis" => Some(Box::new(math_stat_analysis::ImageCorrelationNeighbourhoodAnalysis::new())),
+            "imagecorrelationneighbourhoodanalysis" => Some(Box::new(
+                math_stat_analysis::ImageCorrelationNeighbourhoodAnalysis::new(),
+            )),
             "imageregression" => Some(Box::new(math_stat_analysis::ImageRegression::new())),
             "increment" => Some(Box::new(math_stat_analysis::Increment::new())),
             "inplaceadd" => Some(Box::new(math_stat_analysis::InPlaceAdd::new())),
@@ -952,7 +970,9 @@ impl ToolManager {
                 Some(Box::new(math_stat_analysis::TurningBandsSimulation::new()))
             }
             "twosamplekstest" => Some(Box::new(math_stat_analysis::TwoSampleKsTest::new())),
-            "wilcoxonsignedranktest" => Some(Box::new(math_stat_analysis::WilcoxonSignedRankTest::new())),
+            "wilcoxonsignedranktest" => {
+                Some(Box::new(math_stat_analysis::WilcoxonSignedRankTest::new()))
+            }
             "xor" => Some(Box::new(math_stat_analysis::Xor::new())),
             "zscores" => Some(Box::new(math_stat_analysis::ZScores::new())),
 
@@ -1006,8 +1026,12 @@ impl ToolManager {
 
             // terrain_analysis
             "aspect" => Some(Box::new(terrain_analysis::Aspect::new())),
-            "averagenormalvectorangulardeviation" => Some(Box::new(terrain_analysis::AverageNormalVectorAngularDeviation::new())),
-            "circularvarianceofaspect" => Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new())),
+            "averagenormalvectorangulardeviation" => Some(Box::new(
+                terrain_analysis::AverageNormalVectorAngularDeviation::new(),
+            )),
+            "circularvarianceofaspect" => {
+                Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new()))
+            }
             "devfrommeanelev" => Some(Box::new(terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => Some(Box::new(terrain_analysis::DirectionalRelief::new())),
@@ -1050,10 +1074,16 @@ impl ToolManager {
             "mindownslopeelevchange" => {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
             }
-            "multiscaleelevationpercentile" => Some(Box::new(terrain_analysis::MultiscaleElevationPercentile::new())),
+            "multiscaleelevationpercentile" => Some(Box::new(
+                terrain_analysis::MultiscaleElevationPercentile::new(),
+            )),
             "multiscaleroughness" => Some(Box::new(terrain_analysis::MultiscaleRoughness::new())),
-            "multiscalestddevnormals" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormals::new())),
-            "multiscalestddevnormalssignature" => Some(Box::new(terrain_analysis::MultiscaleStdDevNormalsSignature::new())),
+            "multiscalestddevnormals" => {
+                Some(Box::new(terrain_analysis::MultiscaleStdDevNormals::new()))
+            }
+            "multiscalestddevnormalssignature" => Some(Box::new(
+                terrain_analysis::MultiscaleStdDevNormalsSignature::new(),
+            )),
             "multiscaleroughnesssignature" => Some(Box::new(
                 terrain_analysis::MultiscaleRoughnessSignature::new(),
             )),
@@ -1070,9 +1100,7 @@ impl ToolManager {
             "profilecurvature" => Some(Box::new(terrain_analysis::ProfileCurvature::new())),
             "profile" => Some(Box::new(terrain_analysis::Profile::new())),
             "relativeaspect" => Some(Box::new(terrain_analysis::RelativeAspect::new())),
-            "streampowerindex" => {
-                Some(Box::new(terrain_analysis::StreamPowerIndex::new()))
-            }
+            "streampowerindex" => Some(Box::new(terrain_analysis::StreamPowerIndex::new())),
             "relativetopographicposition" => Some(Box::new(
                 terrain_analysis::RelativeTopographicPosition::new(),
             )),
@@ -1085,7 +1113,9 @@ impl ToolManager {
             }
             "slope" => Some(Box::new(terrain_analysis::Slope::new())),
             "slopevselevationplot" => Some(Box::new(terrain_analysis::SlopeVsElevationPlot::new())),
-            "sphericalstddevofnormals" => Some(Box::new(terrain_analysis::SphericalStdDevOfNormals::new())),
+            "sphericalstddevofnormals" => {
+                Some(Box::new(terrain_analysis::SphericalStdDevOfNormals::new()))
+            }
             "standarddeviationofslope" => {
                 Some(Box::new(terrain_analysis::StandardDeviationOfSlope::new()))
             }

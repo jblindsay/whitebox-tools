@@ -20,7 +20,7 @@ use std::path;
 /// distance. All points that are within the specified tolerance distance will be
 /// eliminated from the output file. A tolerance distance of 0.0 indicates that
 /// points must be exactly coincident to be removed.
-/// 
+///
 /// # See Also
 /// `LidarRemoveDuplicates`
 pub struct EliminateCoincidentPoints {

@@ -20,15 +20,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This image processing tool reduces all polygons in a Boolean raster image to their single-cell wide skeletons. 
-/// This operation is sometimes called line thinning or skeletonization. In fact, the input image need not be truly 
-/// Boolean (i.e. contain only 1's and 0's). All non-zero, positive values are considered to be foreground pixels while 
-/// all zero valued cells are considered background pixels. The `RemoveSpurs` tool is useful for cleaning up an image 
+/// This image processing tool reduces all polygons in a Boolean raster image to their single-cell wide skeletons.
+/// This operation is sometimes called line thinning or skeletonization. In fact, the input image need not be truly
+/// Boolean (i.e. contain only 1's and 0's). All non-zero, positive values are considered to be foreground pixels while
+/// all zero valued cells are considered background pixels. The `RemoveSpurs` tool is useful for cleaning up an image
 /// before performing a line thinning operation.
-/// 
-/// Note: Unlike other filter-based operations in *WhiteboxTools*, this algorithm can't easily be parallelized because 
+///
+/// Note: Unlike other filter-based operations in *WhiteboxTools*, this algorithm can't easily be parallelized because
 /// the output raster must be read and written to during the same loop.
-/// 
+///
 /// # See Also
 /// `RemoveSpurs`, `ThickenRasterLine`
 pub struct LineThinning {

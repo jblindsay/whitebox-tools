@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool assigns grid cells for which both (`--input1` and `--input2`) input rasters (or one raster and 
-/// a constant value) have equal values a new value of 1 (*True*) in the output raster (`--output`). All 
-/// non-equivalent grid cells are assigned a value of zero (*False*). Grid cells containing **NoData** values 
+/// This tool assigns grid cells for which both (`--input1` and `--input2`) input rasters (or one raster and
+/// a constant value) have equal values a new value of 1 (*True*) in the output raster (`--output`). All
+/// non-equivalent grid cells are assigned a value of zero (*False*). Grid cells containing **NoData** values
 /// in either of the inputs will be assigned a **NoData** value in the output raster.
-/// 
+///
 /// # See Also
 /// `NotEqualTo`, `GreaterThan`, `LessThan`
 pub struct EqualTo {

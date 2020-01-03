@@ -10,8 +10,8 @@ use crate::raster::*;
 use crate::structures::Array2D;
 use crate::tools::*;
 use rand::prelude::*;
-use rand_distr::StandardNormal;
 use rand::rngs::SmallRng;
+use rand_distr::StandardNormal;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, VecDeque};
 use std::env;
@@ -24,16 +24,16 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool performs a stochastic analysis of depressions within a DEM, calculating the
-/// probability of each cell belonging to a depression. This land-surface prameter 
+/// probability of each cell belonging to a depression. This land-surface prameter
 /// (p<sub>dep</sub>) has been widely applied in wetland and bottom-land mapping applications.
 ///
 /// This tool differs from the original Whitebox GAT tool in a few significant ways:
 ///
 /// 1. The Whitebox GAT tool took an error histogram as an input. In practice people found
 ///    it difficult to create this input. Usually they just generated a normal distribution
-///    in a spreadsheet using information about the DEM root-mean-square-error (RMSE). As 
-///    such, this tool takes a RMSE input and generates the histogram internally. This is 
-///    more convienent for most applications but loses the flexibility of specifying the 
+///    in a spreadsheet using information about the DEM root-mean-square-error (RMSE). As
+///    such, this tool takes a RMSE input and generates the histogram internally. This is
+///    more convienent for most applications but loses the flexibility of specifying the
 ///    error distribution more completely.
 ///
 /// 2. The Whitebox GAT tool generated the error fields using the turning bands method.
@@ -45,27 +45,27 @@ use std::thread;
 ///    filter method is highly efficient. This results in a significant performance
 ///    increase compared with the original tool.
 ///
-/// 3. Parts of the tool's workflow utilize parallel processing. However, the depression 
-///    filling operation, which is the most time-consuming part of the workflow, is 
+/// 3. Parts of the tool's workflow utilize parallel processing. However, the depression
+///    filling operation, which is the most time-consuming part of the workflow, is
 ///    not parallelized.
-/// 
+///
 /// In addition to the input DEM (`--dem`) and output p<sub>dep</sub> file name (`--output`), the user
-/// must specify the nature of the error model, including the root-mean-square error (`--rmse`) and 
+/// must specify the nature of the error model, including the root-mean-square error (`--rmse`) and
 /// the error field correlation length (`--range`). These parameters determine the statistical frequency
 /// distribution and spatial characteristics of the modeled error fields added to the DEM in each
 /// iteration of the simulation. The user must also specify the number of iterations (`--iterations`).
-/// A larger number of iterations will produce a smoother p<sub>dep</sub> raster. 
-/// 
-/// This tool creates several temporary rasters in memory and, as a result, is very memory hungry. 
+/// A larger number of iterations will produce a smoother p<sub>dep</sub> raster.
+///
+/// This tool creates several temporary rasters in memory and, as a result, is very memory hungry.
 /// This will necessarily limit the size of DEMs that can be processed on more memory-constrained
 /// systems. As a rough guide for usage, **the computer system will need 6-10 times more memory than
-/// the file size of the DEM**. If your computer possesses insufficient memory, you may consider 
+/// the file size of the DEM**. If your computer possesses insufficient memory, you may consider
 /// splitting the input DEM apart into smaller tiles.
-/// 
+///
 /// # Reference
-/// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in 
+/// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in
 /// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.
-/// 
+///
 /// # See Also
 /// `ImpoundmentSizeIndex`, `FastAlmostGaussianFilter`
 pub struct StochasticDepressionAnalysis {
@@ -324,14 +324,17 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         }
 
         if iterations > i16::max_value() as usize {
-            if verbose { 
-                println!("Warning: Iterations cannot be higher than {}.", i16::max_value()); 
+            if verbose {
+                println!(
+                    "Warning: Iterations cannot be higher than {}.",
+                    i16::max_value()
+                );
             }
             iterations = i16::max_value() as usize;
         }
 
         let input1 = Raster::new(&input_file, "r")?;
-        
+
         let start = Instant::now();
 
         let rows = input1.configs.rows as isize;
@@ -344,7 +347,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         let mut output_config = input1.configs.clone();
         output_config.data_type = DataType::F32;
         let mut freq_dep: Array2D<i16> = Array2D::new(rows, columns, 0i16, -1i16).unwrap();
-        
+
         let nodata_i32 = i32::min_value();
         let mut input: Array2D<i32> = Array2D::new(rows, columns, nodata_i32, nodata_i32).unwrap();
         let mut z: f64;
@@ -362,7 +365,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         }
         drop(input1);
 
-        // num_nodata is used by the queue used to initialize the depression filling op. 
+        // num_nodata is used by the queue used to initialize the depression filling op.
         // It needs to be able to hold all of the edge cells in the very least.
         if num_nodata < ((rows + 2) * 2 + (columns + 2) * 2) as usize {
             num_nodata = ((rows + 2) * 2 + (columns + 2) * 2) as usize;
@@ -374,9 +377,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
         let numcells: f64 = (rows * columns) as f64; // used by the histogram matching
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-            
-        for iter_num in 0..iterations {
 
+        for iter_num in 0..iterations {
             if verbose {
                 println!("Iteration {}...", iter_num + 1);
             }
@@ -395,7 +397,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                         let mut data = vec![0i32; columns as usize];
                         for col in 0..columns {
                             sn_val = rng.sample(StandardNormal);
-                            data[col as usize] = (sn_val * multiplier * range_in_cells * 2f64) as i32;
+                            data[col as usize] =
+                                (sn_val * multiplier * range_in_cells * 2f64) as i32;
                         }
 
                         tx.send((row, data)).unwrap();
@@ -403,13 +406,13 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 });
             }
 
-            let mut error_model: Array2D<i32> = Array2D::new(rows, columns, nodata_i32, nodata_i32).unwrap();
+            let mut error_model: Array2D<i32> =
+                Array2D::new(rows, columns, nodata_i32, nodata_i32).unwrap();
             for _ in 0..rows {
                 let (row, data) = rx.recv().unwrap();
                 error_model.set_row_data(row, data);
             }
 
-            
             ////////////////////////////////////////
             // Perform a FastAlmostGaussianFilter //
             ////////////////////////////////////////
@@ -444,7 +447,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 };
 
                 // Create the integral image.
-                let mut integral: Array2D<i32> = Array2D::new(rows, columns, 0, nodata_i32).unwrap();
+                let mut integral: Array2D<i32> =
+                    Array2D::new(rows, columns, 0, nodata_i32).unwrap();
                 for row in 0..rows {
                     sum = 0;
                     for col in 0..columns {
@@ -458,7 +462,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                         }
                     }
                 }
-                
+
                 // Perform Filter
                 let integral = Arc::new(integral);
                 let (tx, rx) = mpsc::channel();
@@ -517,7 +521,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 for _ in 0..rows {
                     let (row, data, val1, val2) = rx.recv().unwrap();
                     error_model.set_row_data(row, data);
-                    if val1 < min_value { 
+                    if val1 < min_value {
                         min_value = val1;
                     }
                     if val2 > max_value {
@@ -531,7 +535,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             ////////////////////////////////////////////
             // Perform a histogram matching operation //
             ////////////////////////////////////////////
-            
+
             let num_bins = (max_value - min_value + 1) as usize;
             let mut histogram = vec![0f64; num_bins];
             let mut bin_num: usize;
@@ -607,7 +611,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             /////////////////////////////////////////////////
             // Fill the depressions in the error-added DEM //
             /////////////////////////////////////////////////
-            
+
             /*
             Find the data edges. This is complicated by the fact that DEMs frequently
             have nodata edges, whereby the DEM does not occupy the full extent of
@@ -633,8 +637,9 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 queue.push_back((-1, col));
                 queue.push_back((rows, col));
             }
-            
-            let mut dep_filled: Array2D<i32> = Array2D::new(rows, columns, background_val, nodata_i32).unwrap();
+
+            let mut dep_filled: Array2D<i32> =
+                Array2D::new(rows, columns, background_val, nodata_i32).unwrap();
             let mut minheap = BinaryHeap::with_capacity((rows * columns) as usize - num_nodata);
             let mut zin_n: i32; // value of neighbour of row, col in input raster
             let mut zout: i32; // value of row, col in output raster
@@ -782,4 +787,3 @@ impl PartialEq for GridCell {
         self.priority == other.priority
     }
 }
-

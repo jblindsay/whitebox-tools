@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool identifies corner patterns in boolean images using hit-and-miss pattern matching. Foreground pixels 
+/// This tool identifies corner patterns in boolean images using hit-and-miss pattern matching. Foreground pixels
 /// in the input image (`--input`) are designated by any positive, non-zero values. Zero-valued and NoData-valued
 /// grid cells are interpreted by the algorithm as background values.
-/// 
+///
 /// # Reference
-/// Fisher, R, Brown, N, Cammas, N, Fitzgibbon, A, Horne, S, Koryllos, K, Murdoch, A, Robertson, J, Sharman, T, Strachan, C, 
+/// Fisher, R, Brown, N, Cammas, N, Fitzgibbon, A, Horne, S, Koryllos, K, Murdoch, A, Robertson, J, Sharman, T, Strachan, C,
 /// 2004. Hypertext Image Processing Resource. online: http://homepages.inf.ed.ac.uk/rbf/HIPR2/hitmiss.htm
 pub struct CornerDetection {
     name: String,

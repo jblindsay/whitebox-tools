@@ -17,15 +17,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will measure the edge proportion, i.e. the proportion of grid cells in a patch that are located along the 
-/// patch's boundary, for an input raster image (`--input`). Edge proportion is an indicator of polygon shape complexity 
-/// and elongation. The user must specify the name of the output raster file (`--output`), which will be raster layer 
-/// containing the input features assigned the edge proportion. The user may also optionally choose to output text data 
+/// This tool will measure the edge proportion, i.e. the proportion of grid cells in a patch that are located along the
+/// patch's boundary, for an input raster image (`--input`). Edge proportion is an indicator of polygon shape complexity
+/// and elongation. The user must specify the name of the output raster file (`--output`), which will be raster layer
+/// containing the input features assigned the edge proportion. The user may also optionally choose to output text data
 /// for easy input to a spreadsheet or database.
-/// 
-/// Objects in the input raster are designated by their unique identifers. Identifer values must 
+///
+/// Objects in the input raster are designated by their unique identifers. Identifer values must
 /// be positive, non-zero whole numbers.
-/// 
+///
 /// # See Also
 /// `ShapeComplexityIndexRaster`, `LinearityIndex`, `ElongationRatio`
 pub struct EdgeProportion {

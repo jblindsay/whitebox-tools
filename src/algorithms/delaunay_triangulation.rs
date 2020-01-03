@@ -44,8 +44,8 @@ println!("{:?}", result.triangles); // [0, 2, 1, 0, 3, 2]
 */
 
 use crate::structures::Point2D;
-use std::f64;
 use std::collections::HashSet;
+use std::f64;
 
 /// Represents the area outside of the triangulation.
 /// Halfedges on the convex hull (which don't have an adjacent halfedge)
@@ -216,7 +216,7 @@ impl Triangulation {
                 }
             }
         }
-        
+
         set.into_iter().map(|i| i).collect()
     }
 

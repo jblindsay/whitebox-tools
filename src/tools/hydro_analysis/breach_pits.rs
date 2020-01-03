@@ -13,14 +13,14 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to remove pits from a digital elevation model (DEM). Pits are single grid cells 
-/// with no downslope neighbours. They are important because they impede overland flow-paths. This tool will 
-/// remove any pit in the input DEM (`--dem`) that can be resolved by lowering one of the eight neighbouring 
-/// cells such that a flow-path can be created linking the pit to a second-order neighbour, i.e. a neighbouring 
-/// cell of a neighbouring cell. Notice that this tool can be a useful pre-processing technique before running 
-/// one of the more robust depression filling or breaching techniques (e.g. `FillDepressions` and 
+/// This tool can be used to remove pits from a digital elevation model (DEM). Pits are single grid cells
+/// with no downslope neighbours. They are important because they impede overland flow-paths. This tool will
+/// remove any pit in the input DEM (`--dem`) that can be resolved by lowering one of the eight neighbouring
+/// cells such that a flow-path can be created linking the pit to a second-order neighbour, i.e. a neighbouring
+/// cell of a neighbouring cell. Notice that this tool can be a useful pre-processing technique before running
+/// one of the more robust depression filling or breaching techniques (e.g. `FillDepressions` and
 /// `BreachDepressions`), which are designed to remove larger depression features.
-/// 
+///
 /// # See Also
 /// `FillDepressions`, `BreachDepressions`, `FillSingleCellPits`
 pub struct BreachSingleCellPits {

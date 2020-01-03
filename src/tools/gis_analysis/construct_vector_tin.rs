@@ -23,11 +23,11 @@ use std::path;
 /// TIN vertex heights can be assigned based on either a field in the vector's attribute table (`--field`),
 /// or alternatively, if the vector is of a z-dimension *ShapeTypeDimension*, the point z-values may be
 /// used for vertex heights (`--use_z`). For LiDAR points, use the `LidarConstructVectorTIN` tool instead.
-/// 
+///
 /// Triangulation often creates very long, narrow triangles near the edges of the data coverage, particularly
-/// in convex regions along the data boundary. To avoid these spurious triangles, the user may optionally 
+/// in convex regions along the data boundary. To avoid these spurious triangles, the user may optionally
 /// specify the maximum allowable edge length of a triangular facet (`--max_triangle_edge_length`).
-/// 
+///
 /// # See Also
 /// `LidarConstructVectorTIN`
 pub struct ConstructVectorTIN {
@@ -372,9 +372,15 @@ impl WhiteboxTool for ConstructVectorTIN {
             p2 = result.triangles[i + 1];
             p3 = result.triangles[i];
 
-            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
-                z_values[p2], z_values[p3]) < max_triangle_edge_length {
-
+            if max_distance_squared(
+                points[p1],
+                points[p2],
+                points[p3],
+                z_values[p1],
+                z_values[p2],
+                z_values[p3],
+            ) < max_triangle_edge_length
+            {
                 let mut tri_points: Vec<Point2D> = Vec::with_capacity(4);
                 tri_points.push(points[p1].clone());
                 tri_points.push(points[p2].clone());
@@ -466,7 +472,14 @@ impl WhiteboxTool for ConstructVectorTIN {
 }
 
 /// Calculate squared Euclidean distance between the point and another.
-pub fn max_distance_squared(p1: Point2D, p2: Point2D, p3: Point2D, z1: f64, z2: f64, z3: f64) -> f64 {
+pub fn max_distance_squared(
+    p1: Point2D,
+    p2: Point2D,
+    p3: Point2D,
+    z1: f64,
+    z2: f64,
+    z3: f64,
+) -> f64 {
     let mut dx = p1.x - p2.x;
     let mut dy = p1.y - p2.y;
     let mut dz = z1 - z2;

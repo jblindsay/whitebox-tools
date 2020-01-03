@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a new raster with the same coordinates and dimensions 
-/// (i.e. rows and columns) as an existing base image. Grid cells in the new raster will be 
-/// assigned either the row or column number or the x- or y-coordinate, depending on the 
-/// selected option (`--assign` flag). The user must also specify the name of the base 
+/// This tool can be used to create a new raster with the same coordinates and dimensions
+/// (i.e. rows and columns) as an existing base image. Grid cells in the new raster will be
+/// assigned either the row or column number or the x- or y-coordinate, depending on the
+/// selected option (`--assign` flag). The user must also specify the name of the base
 /// image (`--input`).
-/// 
+///
 /// # See Also
 /// `NewRasterFromBase`
 pub struct RasterCellAssignment {

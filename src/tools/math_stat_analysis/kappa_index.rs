@@ -20,17 +20,17 @@ use std::path::Path;
 use std::process::Command;
 
 /// This tool calculates the [Kappa index of agreement](https://en.wikipedia.org/wiki/Cohen%27s_kappa) (KIA), or
-/// Cohen's Kappa, for two categorical input raster images (`--input1` and `--input2`). The KIA is a measure of inter-rater 
+/// Cohen's Kappa, for two categorical input raster images (`--input1` and `--input2`). The KIA is a measure of inter-rater
 /// reliability (i.e. classification accuracy) and is widely applied in many fields, notably remote sensing. For example,
 /// The KIA is often used as a means of assessing the accuracy of an image classification analysis. The KIA
 /// can be interpreted as the percentage improvement that the underlying classification has over and above a random
-/// classifier (i.e. random assignment to categories). The user must specify the output HTML file (`--output`). The input 
-/// images must be of a categorical data type, i.e. contain classes. As a measure of classification accuracy, the 
-/// KIA is more robust than the *overall percent agreement* because it takes into account the agreement occurring by 
-/// chance. A KIA of 0 would indicate that the classifier is no better than random class assignment. In addition to the 
-/// KIA, this tool will also output the [producer's and user's accuracy](http://gis.humboldt.edu/OLM/Courses/GSP_216_Online/lesson6-2/metrics.html), 
-/// the overall accuracy, and the error matrix. 
-/// 
+/// classifier (i.e. random assignment to categories). The user must specify the output HTML file (`--output`). The input
+/// images must be of a categorical data type, i.e. contain classes. As a measure of classification accuracy, the
+/// KIA is more robust than the *overall percent agreement* because it takes into account the agreement occurring by
+/// chance. A KIA of 0 would indicate that the classifier is no better than random class assignment. In addition to the
+/// KIA, this tool will also output the [producer's and user's accuracy](http://gis.humboldt.edu/OLM/Courses/GSP_216_Online/lesson6-2/metrics.html),
+/// the overall accuracy, and the error matrix.
+///
 /// # See Also
 /// `CrossTabulation`
 pub struct KappaIndex {

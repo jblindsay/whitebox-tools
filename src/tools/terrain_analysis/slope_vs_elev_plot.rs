@@ -24,17 +24,17 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a slope versus average elevation plot for one or more digital elevation models (DEMs). 
-/// Similary to a hypsometric analysis (`HypsometricAnalysis`), the slope-elevation relation can reveal the basic 
-/// topographic character of a site. The output of this analysis is an HTML document (`--output`) that contains the 
-/// slope-elevation chart. The tool can plot multiple slope-elevation analyses on the same chart by specifying multiple 
-/// input DEM files (`--inputs`). Each input DEM can have an optional watershed in which the slope-elevation analysis is 
-/// confined by specifying the optional `--watershed` flag. If multiple input DEMs are used, and a watershed is used to 
-/// confine the analysis to a sub-area, there must be the same number of input raster watershed files as input DEM files. 
-/// The order of the DEM and watershed files must the be same (i.e. the first DEM file must correspond to the first 
+/// This tool can be used to create a slope versus average elevation plot for one or more digital elevation models (DEMs).
+/// Similary to a hypsometric analysis (`HypsometricAnalysis`), the slope-elevation relation can reveal the basic
+/// topographic character of a site. The output of this analysis is an HTML document (`--output`) that contains the
+/// slope-elevation chart. The tool can plot multiple slope-elevation analyses on the same chart by specifying multiple
+/// input DEM files (`--inputs`). Each input DEM can have an optional watershed in which the slope-elevation analysis is
+/// confined by specifying the optional `--watershed` flag. If multiple input DEMs are used, and a watershed is used to
+/// confine the analysis to a sub-area, there must be the same number of input raster watershed files as input DEM files.
+/// The order of the DEM and watershed files must the be same (i.e. the first DEM file must correspond to the first
 /// watershed file, the second DEM file to the second watershed file, etc.). Each watershed file may contain one or more
 /// watersheds, designated by unique identifiers.
-/// 
+///
 /// # See Also
 /// `HypsometricAnalysis`
 pub struct SlopeVsElevationPlot {

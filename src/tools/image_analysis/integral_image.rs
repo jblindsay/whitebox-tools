@@ -13,16 +13,16 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool transforms an input raster image into an integral image, or summed area table. Integral images are 
-/// the two-dimensional equivalent to a cumulative distribution function. Each pixel contains the sum of all 
-/// pixels contained within the enclosing rectangle above and to the left of a pixel. Images with a very large 
+/// This tool transforms an input raster image into an integral image, or summed area table. Integral images are
+/// the two-dimensional equivalent to a cumulative distribution function. Each pixel contains the sum of all
+/// pixels contained within the enclosing rectangle above and to the left of a pixel. Images with a very large
 /// number of grid cells will likely experience numerical overflow errors when converted to an integral image.
 /// Integral images are used in a wide variety of computer vision and digital image processing applications,
-/// including texture mapping. They allow for the efficient calculation of very large filters and are the 
+/// including texture mapping. They allow for the efficient calculation of very large filters and are the
 /// basis of several of *WhiteboxTools*'s image filters.
-/// 
+///
 /// # Reference
-/// Crow, F. C. (1984, January). Summed-area tables for texture mapping. In ACM SIGGRAPH computer graphics 
+/// Crow, F. C. (1984, January). Summed-area tables for texture mapping. In ACM SIGGRAPH computer graphics
 /// (Vol. 18, No. 3, pp. 207-212). ACM.
 pub struct IntegralImage {
     name: String,

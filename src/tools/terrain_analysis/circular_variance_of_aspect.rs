@@ -21,28 +21,28 @@ use std::thread;
 /// This tool can be used to calculate the circular variance (i.e. one minus the mean resultant length) of aspect
 /// for an input digital elevation model (DEM). This is a measure of how variable slope aspect is within a local
 /// neighbourhood of a specified size (`--filter`). `CircularVarianceOfAspect` is therefore a measure of **surface
-/// shape complexity**, or texture. It will take a value of 0.0 for smooth sites and near 1.0 in areas of high surface 
-/// roughness or complex topography. 
-/// 
+/// shape complexity**, or texture. It will take a value of 0.0 for smooth sites and near 1.0 in areas of high surface
+/// roughness or complex topography.
+///
 /// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
 /// vector dispersion, a related measure of angular variance, increases monotonically with scale. This is the result
-/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the 
-/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity 
-/// associated with specific scale ranges. That is, at large spatial scales, the metric should reflect 
-/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including 
-/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than 
-/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior 
-/// to calculating `CircularVarianceOfAspect`. In this way, the resulting distribution is able to isolate and highlight 
+/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the
+/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity
+/// associated with specific scale ranges. That is, at large spatial scales, the metric should reflect
+/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including
+/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than
+/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior
+/// to calculating `CircularVarianceOfAspect`. In this way, the resulting distribution is able to isolate and highlight
 /// the surface shape complexity associated with landscape features of a similar scale to that of the filter size.
-/// 
-/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a> 
-/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require 
+///
+/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a>
+/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require
 /// substantial memory resources when applied to larger DEMs.
-/// 
+///
 /// # References
-/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the 
+/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the
 /// Midland Valley, Scotland. *IEEE Transactions on Geoscience and Remote Sensing*, 49(4), 1200-1213.
-/// 
+///
 /// # See Also
 /// `Aspect`, `SphericalStdDevOfNormals`, `MultiscaleRoughness`, `EdgeDensity`, `SurfaceAreaRatio`, `RuggednessIndex`
 pub struct CircularVarianceOfAspect {
@@ -255,8 +255,8 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             let mut filter_size_smooth = 0;
             let mut weight: f64;
             for i in 0..250 {
-                weight =
-                    recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+                weight = recip_root_2_pi_times_sigma_d
+                    * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
                 if weight <= 0.001 {
                     filter_size_smooth = i * 2 + 1;
                     break;
@@ -297,7 +297,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             let d_x = Arc::new(d_x);
             let d_y = Arc::new(d_y);
             let weights = Arc::new(weights);
-            
+
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -349,15 +349,17 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 wl -= 1;
             } // must be an odd integer
             let wu = wl + 2;
-            let m =
-                ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64)
-                    / (-4 * wl - 4) as f64)
-                    .round() as isize;
-            
+            let m = ((12f64 * sigma * sigma
+                - (n * wl * wl) as f64
+                - (4 * n * wl) as f64
+                - (3 * n) as f64)
+                / (-4 * wl - 4) as f64)
+                .round() as isize;
+
             let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
             let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
             let mut val: f64;
-            
+
             let mut sum: f64;
             let mut sum_n: i32;
             let mut i_prev: f64;
@@ -476,8 +478,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-        
-        
+
         let num_procs = num_cpus::get() as isize;
         let smoothed_dem = Arc::new(smoothed_dem);
         let (tx, rx) = mpsc::channel();
@@ -506,7 +507,8 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                             }
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
-                                fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
+                                fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2])
+                                    / eight_grid_res;
                                 z = (fx * fx + fy * fy).sqrt();
                                 xdata[col as usize] = fx / z;
                                 ydata[col as usize] = fy / z;
@@ -548,26 +550,28 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                 for col in 0..columns {
                     sumx += xc.get_value(row, col);
                     sumy += yc.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata || 
-                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                    if smoothed_dem.get_value(row, col) == nodata
+                        || (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64)
+                    {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
-                    xc.set_value(row, col, sumx + xc.get_value(row-1, col));
-                    yc.set_value(row, col, sumy + yc.get_value(row-1, col));
-                    i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
+                    xc.set_value(row, col, sumx + xc.get_value(row - 1, col));
+                    yc.set_value(row, col, sumy + yc.get_value(row - 1, col));
+                    i_n.set_value(row, col, sumn + i_n.get_value(row - 1, col));
                 }
             } else {
                 if smoothed_dem.get_value(0, 0) == nodata {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
-                    xc.increment(row, col, xc.get_value(row, col-1));
-                    yc.increment(row, col, yc.get_value(row, col-1));
-                    i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata || 
-                        (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
+                    xc.increment(row, col, xc.get_value(row, col - 1));
+                    yc.increment(row, col, yc.get_value(row, col - 1));
+                    i_n.increment(row, col, i_n.get_value(row, col - 1));
+                    if smoothed_dem.get_value(row, col) == nodata
+                        || (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64)
+                    {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
@@ -644,8 +648,8 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                                     - yc.get_value(y1, x2)
                                     - yc.get_value(y2, x1);
                                 mean = (sumx * sumx + sumy * sumy).sqrt() / n;
-                                if mean > 1f64 { 
-                                    mean = 1f64; 
+                                if mean > 1f64 {
+                                    mean = 1f64;
                                 }
                                 data[col as usize] = 1f64 - mean;
                             }
@@ -653,8 +657,13 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     }
 
                     match tx2.send((row, data)) {
-                        Ok(_) => {},
-                        Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+                        Ok(_) => {}
+                        Err(_) => {
+                            println!(
+                                "Error sending data from thread {} processing row {}.",
+                                tid, row
+                            );
+                        }
                     }
                 }
             });
@@ -668,7 +677,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             match rx2.recv() {
                 Ok(data) => {
                     output.set_row_data(data.0, data.1);
-                },
+                }
                 Err(_) => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -676,7 +685,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
                     ));
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {

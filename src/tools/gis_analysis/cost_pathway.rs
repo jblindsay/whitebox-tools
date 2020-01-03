@@ -13,17 +13,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to map the least-cost pathway connecting each destination grid cell 
-/// in a cost-distance analysis to a source cell. The user must specify the names of the input 
-/// *destination* and *back-link* raster files. Destination cells (i.e. end points for the 
-/// least-cost path analysis) are designated as all positive, non-zero valued grid cells in the 
-/// *destination* raster. A *back-link* raster file can be created using the `CostDistance` 
-/// tool and is conceptually similar to the D8 flow-direction pointer raster grid in that it 
-/// describes the connectivity between neighbouring cells on the accumulated cost surface. All 
+/// This tool can be used to map the least-cost pathway connecting each destination grid cell
+/// in a cost-distance analysis to a source cell. The user must specify the names of the input
+/// *destination* and *back-link* raster files. Destination cells (i.e. end points for the
+/// least-cost path analysis) are designated as all positive, non-zero valued grid cells in the
+/// *destination* raster. A *back-link* raster file can be created using the `CostDistance`
+/// tool and is conceptually similar to the D8 flow-direction pointer raster grid in that it
+/// describes the connectivity between neighbouring cells on the accumulated cost surface. All
 /// background grid cells in the output image are assigned the NoData value.
-/// 
+///
 /// NoData values in the input *back-link* image are assigned NoData values in the output image.
-/// 
+///
 /// # See Also
 /// `CostDistance`, `CostAllocation`
 pub struct CostPathway {

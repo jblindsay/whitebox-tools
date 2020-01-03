@@ -18,9 +18,9 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool calculates the maximum elevation drop between each grid cell and its neighbouring cells within
-/// a digital elevation model (DEM). The user must specify the name of the input DEM (`--dem`) and the output 
+/// a digital elevation model (DEM). The user must specify the name of the input DEM (`--dem`) and the output
 /// (`--output`) raster name.
-/// 
+///
 /// # See Also
 /// `MinDownslopeElevChange`, `NumDownslopeNeighbours`
 pub struct MaxDownslopeElevChange {

@@ -36,7 +36,7 @@ use std::path;
 ///
 /// The SCI values calculated for each vector polygon feature will be placed in the
 /// accompanying database file (.dbf) as a complexity field (COMPLEXITY).
-/// 
+///
 /// # See Also
 /// `ShapeComplexityIndexRaster`
 pub struct ShapeComplexityIndex {

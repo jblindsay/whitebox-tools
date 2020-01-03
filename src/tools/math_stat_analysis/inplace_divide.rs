@@ -13,17 +13,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool performs an in-place division operation (i.e. `input1 /= input2`). The 
+/// This tool performs an in-place division operation (i.e. `input1 /= input2`). The
 /// user must specify the names of two input images (`--input1` and `--input2`) and the tool will
 /// divide the `input1` raster by the `input2` values on a pixel-by-pixel basis. Therefore, the
 /// `input1` raster is modified by this tool. Note that `input2` may either be an existing raster
 /// file or a non-zero constant value. If `input2` is a raster, it must have the same dimensions (rows and
-/// columns) as `input1`. Zero-valued pixels in `input2` will be assigned the NoData value in 
+/// columns) as `input1`. Zero-valued pixels in `input2` will be assigned the NoData value in
 /// `input1` after this operation.
-/// 
+///
 /// The difference between this tool and the `Divide` tool is that `Divide` does not modify either of its
 /// two operands, and instead creates a new output raster to save the resultant value into.
-/// 
+///
 /// # See Also
 /// `Divide`, `InPlaceAdd`, `InPlaceMultiply`, `InPlaceSubtract`
 pub struct InPlaceDivide {

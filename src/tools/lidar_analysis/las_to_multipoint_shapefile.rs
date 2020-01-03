@@ -184,11 +184,11 @@ impl WhiteboxTool for LasToMultipointShapefile {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zip") {

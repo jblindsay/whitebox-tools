@@ -17,10 +17,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to express the elevation of a grid cell in a digital elevation model (DEM) as a 
+/// This tool can be used to express the elevation of a grid cell in a digital elevation model (DEM) as a
 /// percentage of the relief between the DEM minimum and maximum values. As such, it provides a basic
 /// measure of relative topographic position.
-/// 
+///
 /// # See Also
 /// `ElevRelativeToWatershedMinMax`, `ElevationAboveStream`, `ElevAbovePit`
 pub struct ElevRelativeToMinMax {

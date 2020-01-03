@@ -18,12 +18,12 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// This tool locates the lowest and/or highest cells in a raster and outputs these locations to a vector 
-/// points file. The user must specify the name of the input raster (`--input`) and the name of the output 
-/// vector file (`--output`). The user also has the option (`--out_type`) to locate either the lowest value, 
-/// highest value, or both values. The output vector's attribute table will contain fields for the points 
+/// This tool locates the lowest and/or highest cells in a raster and outputs these locations to a vector
+/// points file. The user must specify the name of the input raster (`--input`) and the name of the output
+/// vector file (`--output`). The user also has the option (`--out_type`) to locate either the lowest value,
+/// highest value, or both values. The output vector's attribute table will contain fields for the points
 /// XY coordinates and their values.
-/// 
+///
 /// # See Also
 /// `ExtractRasterValuesAtPoints`
 pub struct FindLowestOrHighestPoints {

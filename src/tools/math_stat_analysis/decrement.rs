@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to decrease the values of each grid cell in an input raster (`--input`) 
+/// This tool can be used to decrease the values of each grid cell in an input raster (`--input`)
 /// by 1.0. Note that this tool will modify the input raster. If you would rather create a new
 /// raster file, leaving the input unmodified, use the `Subtract` tool instead.
-/// 
-/// # See Also 
+///
+/// # See Also
 /// `InPlaceSubtract`, `Subtract`, `Increment`
 pub struct Decrement {
     name: String,

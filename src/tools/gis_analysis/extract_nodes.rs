@@ -12,8 +12,8 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool converts vector lines or polygons into vertex points. The user must specify the 
-/// name of the input vector, which must be of a polyline or polygon base shape type, and 
+/// This tool converts vector lines or polygons into vertex points. The user must specify the
+/// name of the input vector, which must be of a polyline or polygon base shape type, and
 /// the name of the output point-type vector.
 pub struct ExtractNodes {
     name: String,

@@ -13,10 +13,10 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to find the minimum absolute (non-negative) value in each cell of a grid from a set of 
-/// input images (`--inputs`). NoData values in any of the input images will result in a NoData pixel in the output 
-/// image. 
-/// 
+/// This tool can be used to find the minimum absolute (non-negative) value in each cell of a grid from a set of
+/// input images (`--inputs`). NoData values in any of the input images will result in a NoData pixel in the output
+/// image.
+///
 /// # Warning
 /// Each of the input rasters must have the same spatial extent and number of rows
 /// and columns.

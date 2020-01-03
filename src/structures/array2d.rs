@@ -8,9 +8,9 @@ use std::ops::{AddAssign, Index, IndexMut, SubAssign};
 /// A simple in-memory 2-D raster data structure that is not connected to a file.
 /// Pixel values can contain any data type or structure that implements the Copy,
 /// AddAssign, and SubAssign traits.
-/// 
+///
 /// Example:
-/// 
+///
 /// ```
 /// let rows = 100;
 /// let columns = 500;
@@ -33,9 +33,9 @@ where
     T: Copy + AddAssign + SubAssign,
 {
     /// The constructor function used to create a new Array2D object.
-    /// 
+    ///
     /// Example:
-    /// 
+    ///
     /// ```
     /// let rows = 100;
     /// let columns = 500;

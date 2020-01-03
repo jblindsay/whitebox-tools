@@ -14,20 +14,20 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to identify an area of interest within a specified distance of 
-/// features of interest in a raster data set. 
-/// 
-/// The Euclidean distance (i.e. straight-line distance) is calculated between each grid 
+/// This tool can be used to identify an area of interest within a specified distance of
+/// features of interest in a raster data set.
+///
+/// The Euclidean distance (i.e. straight-line distance) is calculated between each grid
 /// cell and the nearest 'target cell' in the input image. Distance is calcualted using the
-/// efficient method of Shih and Wu (2004). Target cells are all non-zero, 
-/// non-NoData grid cells. Because NoData values in the input image are assigned the NoData 
+/// efficient method of Shih and Wu (2004). Target cells are all non-zero,
+/// non-NoData grid cells. Because NoData values in the input image are assigned the NoData
 /// value in the output image, the only valid background value in the input image is zero.
-/// 
-/// The user must specify the input and output image names, the desired buffer size (`--size`), and, 
-/// optionally, whether the distance units are measured in grid cells (i.e. `--gridcells` flag). 
-/// If the `--gridcells` flag is not specified, the linear units of the raster's coordinate 
+///
+/// The user must specify the input and output image names, the desired buffer size (`--size`), and,
+/// optionally, whether the distance units are measured in grid cells (i.e. `--gridcells` flag).
+/// If the `--gridcells` flag is not specified, the linear units of the raster's coordinate
 /// reference system will be used.
-/// 
+///
 /// # Reference
 /// Shih FY and Wu Y-T (2004), Fast Euclidean distance transformation in two scans using a 3 x 3
 /// neighborhood, *Computer Vision and Image Understanding*, 93: 195-205.

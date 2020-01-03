@@ -14,31 +14,31 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to assign the Hack stream order to each link in a stream network. According to this common 
-/// stream numbering system, the main stream is assigned an order of one. All tributaries to the main stream (i.e. the trunk) 
-/// are assigned an order of two; tributaries to second-order links are assigned an order of three, and so on. The trunk or 
-/// main stream of the stream network can be defined either based on the furthest upstream distance, at each bifurcation 
+/// This tool can be used to assign the Hack stream order to each link in a stream network. According to this common
+/// stream numbering system, the main stream is assigned an order of one. All tributaries to the main stream (i.e. the trunk)
+/// are assigned an order of two; tributaries to second-order links are assigned an order of three, and so on. The trunk or
+/// main stream of the stream network can be defined either based on the furthest upstream distance, at each bifurcation
 /// (i.e. network junction).
-/// 
-/// Stream order is often used in hydro-geomorphic and ecological studies to quantify the relative size and importance of a 
-/// stream segment to the overall river system. Unlike some other stream ordering systems, e.g. Horton-Strahler stream order 
-/// (`StrahlerStreamOrder`) and Shreve's stream magnitude (`ShreveStreamMagnitude`), Hack's stream ordering method increases 
-/// from the catchment outlet towards the channel heads. This has the main advantage that the catchment outlet is likely to 
+///
+/// Stream order is often used in hydro-geomorphic and ecological studies to quantify the relative size and importance of a
+/// stream segment to the overall river system. Unlike some other stream ordering systems, e.g. Horton-Strahler stream order
+/// (`StrahlerStreamOrder`) and Shreve's stream magnitude (`ShreveStreamMagnitude`), Hack's stream ordering method increases
+/// from the catchment outlet towards the channel heads. This has the main advantage that the catchment outlet is likely to
 /// be accurately located while the channel network extent may be less accurately mapped.
-/// 
-/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells 
-/// are designated in the streams image as all positive, nonzero values. Thus all non-stream or background grid cells are 
-/// commonly assigned either zeros or NoData values. The pointer image is used to traverse the stream network and should only 
-/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the 
+///
+/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells
+/// are designated in the streams image as all positive, nonzero values. Thus all non-stream or background grid cells are
+/// commonly assigned either zeros or NoData values. The pointer image is used to traverse the stream network and should only
+/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the
 /// `--zero_background` parameter is used, in which case non-stream cells will be assinged zero values in the output.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// # Reference
-/// Hack, J. T. (1957). Studies of longitudinal stream profiles in Virginia and Maryland (Vol. 294). US Government 
+/// Hack, J. T. (1957). Studies of longitudinal stream profiles in Virginia and Maryland (Vol. 294). US Government
 /// Printing Office.
-/// 
+///
 /// # See Also
 /// `HortonStreamOrder`, `StrahlerStreamOrder`, `ShreveStreamMagnitude`, `TopologicalStreamOrder`
 pub struct HackStreamOrder {

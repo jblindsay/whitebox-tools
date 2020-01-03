@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to identify areas of NoData values within an input image.The user must specify the name 
-/// of the input and output (`--input` and `--output`) raster images. Grid cells containing the NoData value in 
-/// the input image will be assigned a value of 1.0 in the output image. All non-NoData valued grid cells will 
+/// This tool can be used to identify areas of NoData values within an input image.The user must specify the name
+/// of the input and output (`--input` and `--output`) raster images. Grid cells containing the NoData value in
+/// the input image will be assigned a value of 1.0 in the output image. All non-NoData valued grid cells will
 /// be assigned 0.0 in the output image.
-/// 
+///
 /// # See Also
 /// `SetNodataValue`, `ConvertNodataToZero`
 pub struct IsNoData {

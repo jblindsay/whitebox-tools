@@ -21,10 +21,10 @@ use std::thread;
 
 /// This tool performs a range filter on an input image (`--input`). A range filter assigns to each cell in the output grid
 /// (`--output`) the range (maximum - minimum) of the values contained within a moving window centred on each grid cell.
-/// 
-/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` 
+///
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`
 /// flags. These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
-/// 
+///
 /// # See Also
 /// `TotalFilter`
 pub struct RangeFilter {

@@ -23,29 +23,29 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to estimate the Pearson product-moment correlation coefficient (*r*) between two or
-/// more input images (`--inputs`). The *r*-value is a measure of the linear association in the variation of 
-/// the input variables (images, in this case). The coefficient ranges from -1.0, indicated a perfect negative 
-/// linear association, to 1.0, indicated a perfect positive linear association. An *r*-value of 0.0 indicates 
+/// more input images (`--inputs`). The *r*-value is a measure of the linear association in the variation of
+/// the input variables (images, in this case). The coefficient ranges from -1.0, indicated a perfect negative
+/// linear association, to 1.0, indicated a perfect positive linear association. An *r*-value of 0.0 indicates
 /// no correlation between the test variables.
 ///
-/// Note that this index is a measure of the linear association; two variables may be strongly related by a 
-/// non-linear association (e.g. a power function curve) which will lead to an apparent weak association based 
-/// on the Pearson coefficient. In fact, non-linear associations are very common among spatial variables, 
-/// e.g. terrain indices such as slope and contributing area. In such cases, it is advisable that the input 
-/// images are transformed prior to the estimation of the Pearson coefficient, or that an alternative, 
+/// Note that this index is a measure of the linear association; two variables may be strongly related by a
+/// non-linear association (e.g. a power function curve) which will lead to an apparent weak association based
+/// on the Pearson coefficient. In fact, non-linear associations are very common among spatial variables,
+/// e.g. terrain indices such as slope and contributing area. In such cases, it is advisable that the input
+/// images are transformed prior to the estimation of the Pearson coefficient, or that an alternative,
 /// non-parametric statistic be used, e.g. the Spearman rank correlation coefficient.
-/// 
-/// The user must specify the names of two or more input images (`--inputs`). All input images must share the 
-/// same grid, as the coefficient requires a comparison of a pair of images on a grid-cell-by-grid-cell basis. 
-/// If more than two image names are selected, the correlation coefficient will be calculated for each pair of 
-/// images and reported in the HTML output report (`--output`) as a correlation matrix. Caution must be 
-/// exercised when attempted to estimate the significance of a correlation coefficient derived from image data. 
-/// The very high *N*-value (essentially the number of pixels in the image pair) means that even small correlation 
+///
+/// The user must specify the names of two or more input images (`--inputs`). All input images must share the
+/// same grid, as the coefficient requires a comparison of a pair of images on a grid-cell-by-grid-cell basis.
+/// If more than two image names are selected, the correlation coefficient will be calculated for each pair of
+/// images and reported in the HTML output report (`--output`) as a correlation matrix. Caution must be
+/// exercised when attempted to estimate the significance of a correlation coefficient derived from image data.
+/// The very high *N*-value (essentially the number of pixels in the image pair) means that even small correlation
 /// coefficients can be found to be statistically significant, despite being practically insignificant.
-/// 
-/// **NoData** values in either of the two input images are ignored during the calculation of the correlation 
+///
+/// **NoData** values in either of the two input images are ignored during the calculation of the correlation
 /// between images.
-/// 
+///
 /// # See Also
 /// `ImageCorrelationNeighbourhoodAnalysis`, `ImageRegression`, `ImageAutocorrelation`
 pub struct ImageCorrelation {

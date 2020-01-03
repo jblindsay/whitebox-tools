@@ -17,14 +17,14 @@ use std::sync::mpsc;
 use std::thread;
 
 /// This tool can be used to create a new raster with values that are determined by the equation of a simple plane. The user
-/// must specify the name of a base raster (`--base`) from which the output raster coordinate and dimensional information 
-/// will be taken. In addition the user must specify the values of the planar slope gradient (S; `--gradient`; `--aspect`) 
-/// in degrees, the planar slope direction or aspect (A; 0 to 360 degrees), and an constant value (k; `--constant`). The 
+/// must specify the name of a base raster (`--base`) from which the output raster coordinate and dimensional information
+/// will be taken. In addition the user must specify the values of the planar slope gradient (S; `--gradient`; `--aspect`)
+/// in degrees, the planar slope direction or aspect (A; 0 to 360 degrees), and an constant value (k; `--constant`). The
 /// equation of the plane is as follows:
-/// 
-/// > Z = tan(S) × sin(A - 180) × X + tan(S) × cos(A - 180) × Y + k 
-/// 
-/// where X and Y are the X and Y coordinates of each grid cell in the grid. Notice that A is the direction, 
+///
+/// > Z = tan(S) × sin(A - 180) × X + tan(S) × cos(A - 180) × Y + k
+///
+/// where X and Y are the X and Y coordinates of each grid cell in the grid. Notice that A is the direction,
 /// or azimuth, that the plane is facing
 pub struct CreatePlane {
     name: String,

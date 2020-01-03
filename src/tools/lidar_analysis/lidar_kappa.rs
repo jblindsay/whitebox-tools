@@ -19,19 +19,19 @@ use std::path;
 use std::path::Path;
 use std::process::Command;
 
-/// This tool performs a kappa index of agreement (KIA) analysis on the classification values of two LiDAR 
-/// (LAS) files. The output report HTML file should be displayed automatically but can also be displayed 
-/// afterwards in any web browser. As a measure of overall classification accuracy, the KIA is more robust 
-/// than the percent agreement calculation because it takes into account the agreement occurring by random 
-/// chance. In addition to the KIA, the tool will output the producer's and user's accuracy, the overall 
-/// accuracy, and the error matrix. The KIA is often used as a means of assessing the accuracy of an image 
-/// classification analysis; however the `LidarKappaIndex` tool performs the analysis on a point-to-point 
-/// basis, comparing the class values of the points in one input LAS file with the corresponding nearest 
+/// This tool performs a kappa index of agreement (KIA) analysis on the classification values of two LiDAR
+/// (LAS) files. The output report HTML file should be displayed automatically but can also be displayed
+/// afterwards in any web browser. As a measure of overall classification accuracy, the KIA is more robust
+/// than the percent agreement calculation because it takes into account the agreement occurring by random
+/// chance. In addition to the KIA, the tool will output the producer's and user's accuracy, the overall
+/// accuracy, and the error matrix. The KIA is often used as a means of assessing the accuracy of an image
+/// classification analysis; however the `LidarKappaIndex` tool performs the analysis on a point-to-point
+/// basis, comparing the class values of the points in one input LAS file with the corresponding nearest
 /// points in the second input LAS file.
-/// 
+///
 /// The user must also specify the name and resolution of an output raster file, which is used to show the
-/// spatial distribution of class accuracy. Each grid cell contains the overall accuracy, i.e. the points 
-/// correctly classified divided by the total number of points contained within the cell, expressed as a 
+/// spatial distribution of class accuracy. Each grid cell contains the overall accuracy, i.e. the points
+/// correctly classified divided by the total number of points contained within the cell, expressed as a
 /// percentage.
 pub struct LidarKappaIndex {
     name: String,
@@ -289,7 +289,8 @@ impl WhiteboxTool for LidarKappaIndex {
         class_accuracy.reinitialize_values(0f64);
 
         // Create an Array2D to store the number of points in each grid cell
-        let mut num_points_cell: Array2D<u32> = Array2D::new(rows as isize, columns as isize, 0u32, u32::max_value())?;
+        let mut num_points_cell: Array2D<u32> =
+            Array2D::new(rows as isize, columns as isize, 0u32, u32::max_value())?;
 
         // Place all the input1 points into a FixedRadiusSearch3D
         let mut p1: PointData;
@@ -324,10 +325,10 @@ impl WhiteboxTool for LidarKappaIndex {
                 active_class[class1] = true;
                 active_class[class2] = true;
 
-                col = (((columns - 1) as f64 * (p1.x - west - half_grid_res) / ew_range)
-                    .round()) as isize;
-                row = (((rows - 1) as f64 * (north - half_grid_res - p1.y) / ns_range)
-                    .round()) as isize;
+                col = (((columns - 1) as f64 * (p1.x - west - half_grid_res) / ew_range).round())
+                    as isize;
+                row = (((rows - 1) as f64 * (north - half_grid_res - p1.y) / ns_range).round())
+                    as isize;
 
                 num_points_cell.increment(row, col, 1);
                 if class1 == class2 {
@@ -693,7 +694,8 @@ impl WhiteboxTool for LidarKappaIndex {
         ));
         class_accuracy.add_metadata_entry(format!("Input file 1: {}", input_file1));
         class_accuracy.add_metadata_entry(format!("Input file 2: {}", input_file2));
-        class_accuracy.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        class_accuracy
+            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")

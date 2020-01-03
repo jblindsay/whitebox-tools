@@ -20,31 +20,31 @@ use std::path;
 
 /// This tool can be used to remove the depressions in a digital elevation model (DEM), a
 /// common requirement of spatial hydrological operations such as flow accumulation
-/// and watershed modelling. The tool based on on the efficient hybrid depression 
-/// breaching algorithm described by Lindsay (2016). It uses a breach-first, fill-second 
+/// and watershed modelling. The tool based on on the efficient hybrid depression
+/// breaching algorithm described by Lindsay (2016). It uses a breach-first, fill-second
 /// approach to resolving continous flowpaths through depressions.
-/// 
+///
 /// Notice that when the input DEM (`--dem`) contains deep, single-cell pits, it can be useful
-/// to raise the pits elevation to that of the lowest neighbour (`--fill_pits`), to avoid the 
+/// to raise the pits elevation to that of the lowest neighbour (`--fill_pits`), to avoid the
 /// creation of deep breach trenches. Deep pits can be common in DEMs containing speckle-type noise.
 /// This option, however, does add slightly to the computation time of the tool.
-/// 
+///
 /// The user may optionally (`--flat_increment`) override the default value applied to increment elevations on
 /// flat areas (often formed by the subsequent depression filling operation). The default value is
 /// dependent upon the elevation range in the input DEM and is generally a very small elevation value (e.g.
-/// 0.001). It may be necessary to override the default elevation increment value in landscapes where there 
-/// are extensive flat areas resulting from depression filling (and along breach channels). Values in the range 
-/// 0.00001 to 0.01 are generally appropriate. increment values that are too large can result in obvious artifacts 
-/// along flattened sites, which may extend beyond the flats, and values that are too small (i.e. smaller than the 
+/// 0.001). It may be necessary to override the default elevation increment value in landscapes where there
+/// are extensive flat areas resulting from depression filling (and along breach channels). Values in the range
+/// 0.00001 to 0.01 are generally appropriate. increment values that are too large can result in obvious artifacts
+/// along flattened sites, which may extend beyond the flats, and values that are too small (i.e. smaller than the
 /// numerical precision) may result in the presence of grid cells with no downslope neighbour in the
 /// output DEM. The output DEM will always use 64-bit floating point values for storing elevations because of
 /// the need to precisely represent small elevation differences along flats. Therefore, if the input DEM is stored
 /// at a lower level of precision (e.g. 32-bit floating point elevations), this may result in a doubling of
 /// the size of the DEM.
-/// 
+///
 /// In comparison with the `BreachDepressionsLeastCost` tool, this breaching method often provides a less
 /// satisfactory, higher impact, breaching solution and is often less efficient. **It has been provided to users for
-/// legacy reasons and it is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from 
+/// legacy reasons and it is advisable that users try the `BreachDepressionsLeastCost` tool to remove depressions from
 /// their DEMs first**. The `BreachDepressionsLeastCost` tool is particularly
 /// well suited to breaching through road embankments. Nonetheless, there are applications for which full depression filling
 /// using the  `FillDepressions` tool may be preferred.
@@ -121,9 +121,7 @@ impl BreachDepressions {
         parameters.push(ToolParameter {
             name: "Fill single-cell pits?".to_owned(),
             flags: vec!["--fill_pits".to_owned()],
-            description:
-                "Optional flag indicating whether to fill single-cell pits."
-                    .to_owned(),
+            description: "Optional flag indicating whether to fill single-cell pits.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
             optional: true,
@@ -299,16 +297,16 @@ impl WhiteboxTool for BreachDepressions {
         };
 
         let mut z: f64;
-        let mut z_n: f64;        
+        let mut z_n: f64;
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         if fill_pits {
-            // Fill the single-cell pits before breaching. This can prevent the creation of 
+            // Fill the single-cell pits before breaching. This can prevent the creation of
             // very deep breach trenches.
             let mut min_zn: f64;
             let mut flag: bool;
-            for row in 1..rows-1 {
-                for col in 1..columns-1 {
+            for row in 1..rows - 1 {
+                for col in 1..columns - 1 {
                     z = input.get_value(row, col);
                     if z != nodata {
                         flag = true;
@@ -479,7 +477,9 @@ impl WhiteboxTool for BreachDepressions {
                                 for n2 in 0..8 {
                                     let row2 = cell.0 + dy[n2];
                                     let col2 = cell.1 + dx[n2];
-                                    if input.get_value(row2, col2) == nodata && output.get_value(row2, col2) == background_val {
+                                    if input.get_value(row2, col2) == nodata
+                                        && output.get_value(row2, col2) == background_val
+                                    {
                                         if row2 >= 0 && row2 < rows && col2 >= 0 && col2 < columns {
                                             output.set_value(row2, col2, nodata);
                                             num_solved_cells += 1;
@@ -621,7 +621,7 @@ impl WhiteboxTool for BreachDepressions {
                                     //             // backlink.set_value(j, k, 0);
                                     //         } else if zn >= zout {
                                     //             cost1 = zn - zout;
-                                    //             if cost1 < max_depth { 
+                                    //             if cost1 < max_depth {
                                     //                 cost.set_value(j, k, zn - zout);
                                     //             } else {
                                     //                 cost.set_value(j, k, large_value);
@@ -671,7 +671,7 @@ impl WhiteboxTool for BreachDepressions {
 
                                     //     }
                                     // } else {
-                                        unresolved_pits = true;
+                                    unresolved_pits = true;
                                     // }
                                 }
                             }
@@ -686,7 +686,9 @@ impl WhiteboxTool for BreachDepressions {
                                 for n2 in 0..8 {
                                     let row2 = cell.0 + dy[n2];
                                     let col2 = cell.1 + dx[n2];
-                                    if input.get_value(row2, col2) == nodata && output.get_value(row2, col2) == background_val {
+                                    if input.get_value(row2, col2) == nodata
+                                        && output.get_value(row2, col2) == background_val
+                                    {
                                         if row2 >= 0 && row2 < rows && col2 >= 0 && col2 < columns {
                                             output.set_value(row2, col2, nodata);
                                             num_solved_cells += 1;
@@ -745,7 +747,6 @@ impl WhiteboxTool for BreachDepressions {
                     }
                 }
             }
-
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);

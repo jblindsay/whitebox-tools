@@ -18,25 +18,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool is used to generate a flow pointer grid (i.e. flow direction) using the D-infinity 
-/// (Tarboton, 1997) algorithm. Dinf is a multiple-flow-direction (MFD) method because the flow 
-/// entering each grid cell is routed one or two downslope neighbours, i.e. flow divergence is permitted. 
-/// The user must specify the name of a digital elevation model (DEM; `--dem`) that has been hydrologically 
-/// corrected to remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`). 
-/// DEM pre-processing is usually achieved using the `BreachDepressions` or `FillDepressions` tool1. Flow 
-/// directions are specified in the output flow-pointer grid (`--output`) as azimuth degrees measured from 
-/// north, i.e. any value between 0 and 360 degrees is possible. A pointer value of -1 is used to designate 
-/// a grid cell with no flow-pointer. This occurs when a grid cell has no downslope neighbour, i.e. a pit 
-/// cell or topographic depression. Like aspect grids, Dinf flow-pointer grids are best visualized using 
+/// This tool is used to generate a flow pointer grid (i.e. flow direction) using the D-infinity
+/// (Tarboton, 1997) algorithm. Dinf is a multiple-flow-direction (MFD) method because the flow
+/// entering each grid cell is routed one or two downslope neighbours, i.e. flow divergence is permitted.
+/// The user must specify the name of a digital elevation model (DEM; `--dem`) that has been hydrologically
+/// corrected to remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`).
+/// DEM pre-processing is usually achieved using the `BreachDepressions` or `FillDepressions` tool1. Flow
+/// directions are specified in the output flow-pointer grid (`--output`) as azimuth degrees measured from
+/// north, i.e. any value between 0 and 360 degrees is possible. A pointer value of -1 is used to designate
+/// a grid cell with no flow-pointer. This occurs when a grid cell has no downslope neighbour, i.e. a pit
+/// cell or topographic depression. Like aspect grids, Dinf flow-pointer grids are best visualized using
 /// a circular greyscale palette.
-/// 
-/// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output 
+///
+/// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output
 /// image. The output raster is of the float data type and continuous data scale.
-/// 
+///
 /// # Reference
-/// Tarboton, D. G. (1997). A new method for the determination of flow directions and upslope areas in 
+/// Tarboton, D. G. (1997). A new method for the determination of flow directions and upslope areas in
 /// grid digital elevation models. Water resources research, 33(2), 309-319.
-/// 
+///
 /// # See Also
 /// `DInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`
 pub struct DInfPointer {

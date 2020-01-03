@@ -13,11 +13,11 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to remove points within a LAS LiDAR file that possess certain 
-/// specified class values. The user must input the names of the input (`--input`) and 
-/// output (`--output`) LAS files and the class values to be excluded (`--exclude_cls`). 
-/// Class values are specified by their numerical values, such that: 
-/// 
+/// This tool can be used to remove points within a LAS LiDAR file that possess certain
+/// specified class values. The user must input the names of the input (`--input`) and
+/// output (`--output`) LAS files and the class values to be excluded (`--exclude_cls`).
+/// Class values are specified by their numerical values, such that:
+///
 /// | Classification Value  | Meaning                              |
 /// | :-------------------- | :------------------------------------|
 /// | 0                     | Created never classified
@@ -39,13 +39,13 @@ use std::path;
 /// | 16                    | Wire-structure Connector (e.g. Insulator)
 /// | 17                    | Bridge Deck
 /// | 18                    | High noise
-/// 
-/// Thus, to filter out low and high noise points from a point cloud, specify 
-/// `--exclude_cls='7,18'`. Notice that usage of this tool assumes that the 
+///
+/// Thus, to filter out low and high noise points from a point cloud, specify
+/// `--exclude_cls='7,18'`. Notice that usage of this tool assumes that the
 /// LAS file has underwent a comprehensive point classification, which not all
-/// point clouds have had. Use the `LidarInfo` tool determine the distribution 
+/// point clouds have had. Use the `LidarInfo` tool determine the distribution
 /// of various class values in your file.
-/// 
+///
 /// # See Also
 /// `LidarInfo`
 pub struct FilterLidarClasses {
@@ -61,7 +61,8 @@ impl FilterLidarClasses {
         // public constructor
         let name = "FilterLidarClasses".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Removes points in a LAS file with certain specified class values.".to_string();
+        let description =
+            "Removes points in a LAS file with certain specified class values.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -158,7 +159,6 @@ impl WhiteboxTool for FilterLidarClasses {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
         let mut include_class_vals = vec![true; 256];
-        
 
         // read the arguments
         if args.len() == 0 {

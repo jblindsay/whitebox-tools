@@ -19,16 +19,16 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Elevation percentile (EP) is a measure of local topographic position (LTP). It expresses the vertical 
+/// Elevation percentile (EP) is a measure of local topographic position (LTP). It expresses the vertical
 /// position for a digital elevation model (DEM) grid cell (z<sub>0</sub>) as the percentile of the
 /// elevation distribution within the filter window, such that:
-/// 
+///
 /// > EP = count<sub>i&isin;C</sub>(z<sub>i</sub> > z<sub>0</sub>) x (100 / n<sub>C</sub>)
-/// 
+///
 /// where z<sub>0</sub> is the elevation of the window's center grid cell, z<sub>i</sub> is the elevation
 /// of cell *i* contained within the neighboring set C, and n<sub>C</sub> is the number
 /// of grid cells contained within the window.
-/// 
+///
 /// EP is unsigned and expressed as a percentage, bound between 0%
 /// and 100%. Quantile-based estimates (e.g., the median and interquartile
 /// range) are often used in nonparametric statistics to provide data
@@ -40,22 +40,22 @@ use std::thread;
 /// distributions, where the occurrence of elevation errors can often result
 /// in distribution outliers. Thus, based on these statistical characteristics,
 /// EP is considered one of the most robust representation of LTP.
-/// 
-/// The algorithm implemented by this tool uses the relatively efficient running-histogram filtering algorithm of Huang 
+///
+/// The algorithm implemented by this tool uses the relatively efficient running-histogram filtering algorithm of Huang
 /// et al. (1979). Because most DEMs contain floating point data, elevation values must be rounded to be binned. The
-/// `--sig_digits` parameter is used to determine the level of precision preserved during this binning process. The 
-/// algorithm is parallelized to further aid with computational efficiency. 
-/// 
-/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`flags. 
+/// `--sig_digits` parameter is used to determine the level of precision preserved during this binning process. The
+/// algorithm is parallelized to further aid with computational efficiency.
+///
+/// Neighbourhood size, or filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery`flags.
 /// These dimensions should be odd, positive integer values (e.g. 3, 5, 7, 9, etc.).
-/// 
+///
 /// # References
-/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic position
 /// for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
-/// 
-/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE 
+///
+/// Huang, T., Yang, G.J.T.G.Y. and Tang, G., 1979. A fast two-dimensional median filtering algorithm. IEEE
 /// Transactions on Acoustics, Speech, and Signal Processing, 27(1), pp.13-18.
-/// 
+///
 /// # See Also
 /// `DevFromMeanElev`, `DiffFromMeanElev`
 pub struct ElevPercentile {

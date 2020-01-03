@@ -19,9 +19,9 @@ use std::path;
 
 /// This tool can be used to create a hexagonal vector grid. The extent of the hexagonal
 /// grid is based on the extent of a user-specified base file (any supported raster format,
-/// shapefiles, or LAS files). The user must also specify the hexagonal cell width (`--width`) 
+/// shapefiles, or LAS files). The user must also specify the hexagonal cell width (`--width`)
 /// and whether the hexagonal orientation (`--orientation`) is `horizontal` or `vertical`.
-/// 
+///
 /// # See Also
 /// `CreateRectangularVectorGrid`
 pub struct CreateHexagonalVectorGrid {

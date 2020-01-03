@@ -16,20 +16,20 @@ use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to convert one or more LAS file, containing LiDAR data, into ASCII files. The user must 
+/// This tool can be used to convert one or more LAS file, containing LiDAR data, into ASCII files. The user must
 /// specify the name(s) of the input LAS file(s) (`--inputs`). Each input file will have a coorespondingly named
 /// output file with a `.csv` file extension. CSV files are comma separated value files and contain tabular data
-/// with each column cooresponding to a field in the table and each row a point value. Fields are separated by 
+/// with each column cooresponding to a field in the table and each row a point value. Fields are separated by
 /// commas in the ASCII formated file. The output point data, each on a seperate line, will take the format:
-/// 
+///
 /// ```
 /// X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE
 /// ```
-/// 
+///
 /// If the LAS file has a point format that contains RGB data, the final three columns will contain the RED,
-/// GREEN, and BLUE values respectively. Use the `AsciiToLas` tool to convert a text file containing LiDAR 
+/// GREEN, and BLUE values respectively. Use the `AsciiToLas` tool to convert a text file containing LiDAR
 /// point data into a LAS file.
-/// 
+///
 /// # See Also
 /// `AsciiToLas`
 pub struct LasToAscii {
@@ -197,9 +197,14 @@ impl WhiteboxTool for LasToAscii {
                 let n_points = input.header.number_of_points as usize;
 
                 if !has_rgb {
-                    writer.write_all("X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE\n".as_bytes())?;
+                    writer.write_all(
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE\n".as_bytes(),
+                    )?;
                 } else {
-                    writer.write_all("X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n".as_bytes())?;
+                    writer.write_all(
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n"
+                            .as_bytes(),
+                    )?;
                 }
                 for k in 0..n_points {
                     let pd = input[k];

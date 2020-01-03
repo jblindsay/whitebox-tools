@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool assigns each cell in the output grid the number of different values in a moving window centred on 
-/// each grid cell in the input raster. The input image should contain integer values but floating point data 
-/// are allowable and will be handled by multiplying pixel values by 1000 and rounding. Neighbourhood size, or 
-/// filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` flags. These 
-/// dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9... If the kernel filter size is the same 
+/// This tool assigns each cell in the output grid the number of different values in a moving window centred on
+/// each grid cell in the input raster. The input image should contain integer values but floating point data
+/// are allowable and will be handled by multiplying pixel values by 1000 and rounding. Neighbourhood size, or
+/// filter size, is specified in the x and y dimensions using the `--filterx` and `--filtery` flags. These
+/// dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9... If the kernel filter size is the same
 /// in the x and y dimensions, the silent `--filter` flag may be used instead (command-line interface only).
-/// 
+///
 /// # See Also
 /// `MajorityFilter`
 pub struct DiversityFilter {

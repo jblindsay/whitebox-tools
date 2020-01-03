@@ -23,8 +23,8 @@ use std::path;
 ///
 /// Also note, for small values of sigma (< 1.8), you should probably just use the
 /// regular GaussianFilter tool.
-/// 
-/// # Reference 
+///
+/// # Reference
 /// P. Kovesi 2010 Fast Almost-Gaussian Filtering, Digital Image Computing:
 /// Techniques and Applications (DICTA), 2010 International Conference on.
 pub struct FastAlmostGaussianFilter {

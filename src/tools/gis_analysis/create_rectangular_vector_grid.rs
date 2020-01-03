@@ -19,9 +19,9 @@ use std::path;
 
 /// This tool can be used to create a rectangular vector grid. The extent of the rectangular
 /// grid is based on the extent of a user-specified base file (any supported raster format,
-/// shapefiles, or LAS files). The user must also specify the origin of the grid (`--xorig` 
+/// shapefiles, or LAS files). The user must also specify the origin of the grid (`--xorig`
 /// and `--yorig`) and the grid cell width and height (`--width` and `--height`).
-/// 
+///
 /// # See Also
 /// `CreateHexagonalVectorGrid`
 pub struct CreateRectangularVectorGrid {

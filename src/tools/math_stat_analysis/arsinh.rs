@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
-/// [inverse hyperbolic sine](https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions) (arsinh) of the 
-/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in 
-/// radian, in the range [-&pi;/2, &pi;/2]  or **NoData** if the number is outside the range [-1, 1]. If desired, 
-/// you can convert radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input 
-/// raster will be assigned **NoData** values in the output raster. 
-/// 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the
+/// [inverse hyperbolic sine](https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions) (arsinh) of the
+/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in
+/// radian, in the range [-&pi;/2, &pi;/2]  or **NoData** if the number is outside the range [-1, 1]. If desired,
+/// you can convert radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input
+/// raster will be assigned **NoData** values in the output raster.
+///
 /// # See Also
 /// `Arcosh`, `Artanh`, `ToDegrees`
 pub struct Arsinh {

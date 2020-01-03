@@ -23,9 +23,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs an [Analysis of variance](https://en.wikipedia.org/wiki/Analysis_of_variance) (ANOVA) 
-/// test on the distribution of values in a raster (`--input`) among a group of features (`--features`). The 
-/// ANOVA report is written to an output HTML report (`--output`). 
+/// This tool performs an [Analysis of variance](https://en.wikipedia.org/wiki/Analysis_of_variance) (ANOVA)
+/// test on the distribution of values in a raster (`--input`) among a group of features (`--features`). The
+/// ANOVA report is written to an output HTML report (`--output`).
 pub struct Anova {
     name: String,
     description: String,

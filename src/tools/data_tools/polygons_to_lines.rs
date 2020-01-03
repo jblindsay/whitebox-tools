@@ -12,8 +12,8 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool converts vector polygons into polylines, simply by modifying the Shapefile geometry type. 
-/// 
+/// This tool converts vector polygons into polylines, simply by modifying the Shapefile geometry type.
+///
 /// # See Also
 /// `LinesToPolygons`
 pub struct PolygonsToLines {

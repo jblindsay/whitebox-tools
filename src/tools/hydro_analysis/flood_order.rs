@@ -18,22 +18,22 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool takes an input digital elevation model (DEM) and creates an output raster where every grid cell 
-/// contains the flood order of that cell within the DEM. The flood order is the sequence of grid cells that 
-/// are encountered during a search, starting from the raster grid edges and the lowest grid cell, moving inward 
-/// at increasing elevations. This is in fact similar to how the highly efficient Wang and Liu (2006) depression 
-/// filling algorithm and the Breach Depressions (Fast) operates. The output flood order raster contains the 
+/// This tool takes an input digital elevation model (DEM) and creates an output raster where every grid cell
+/// contains the flood order of that cell within the DEM. The flood order is the sequence of grid cells that
+/// are encountered during a search, starting from the raster grid edges and the lowest grid cell, moving inward
+/// at increasing elevations. This is in fact similar to how the highly efficient Wang and Liu (2006) depression
+/// filling algorithm and the Breach Depressions (Fast) operates. The output flood order raster contains the
 /// sequential order, from lowest edge cell to the highest pixel in the DEM.
-/// 
-/// Like the `FillDepressions` tool, `FloodOrder` will read the entire DEM into memory. This may make the 
-/// algorithm ill suited to processing massive DEMs except where the user's computer has substantial memory 
+///
+/// Like the `FillDepressions` tool, `FloodOrder` will read the entire DEM into memory. This may make the
+/// algorithm ill suited to processing massive DEMs except where the user's computer has substantial memory
 /// (RAM) resources.
-/// 
+///
 /// # Reference
-/// Wang, L., and Liu, H. (2006). An efficient method for identifying and filling surface depressions in digital 
-/// elevation models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 
+/// Wang, L., and Liu, H. (2006). An efficient method for identifying and filling surface depressions in digital
+/// elevation models for hydrologic analysis and modelling. International Journal of Geographical Information Science,
 /// 20(2), 193-213.
-/// 
+///
 /// # See Also
 /// `FillDepressions`
 pub struct FloodOrder {

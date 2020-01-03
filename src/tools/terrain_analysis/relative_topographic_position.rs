@@ -18,33 +18,33 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Relative topographic position (RTP) is an index of local topographic position (i.e. how 
-/// elevated or low-lying a site is relative to its surroundings) and is a modification of percent 
-/// elevation range (PER; `PercentElevRange`) and accounts for the elevation distribution. Rather than 
-/// positioning the central cell's elevation solely between the filter extrema, RTP is a piece-wise 
-/// function that positions the central elevation relative to the minimum (z<sub>min</sub>), mean (&mu;), 
-/// and maximum values (z<sub>max</sub>), within a local neighbourhood of a user-specified size (`--filterx`, 
+/// Relative topographic position (RTP) is an index of local topographic position (i.e. how
+/// elevated or low-lying a site is relative to its surroundings) and is a modification of percent
+/// elevation range (PER; `PercentElevRange`) and accounts for the elevation distribution. Rather than
+/// positioning the central cell's elevation solely between the filter extrema, RTP is a piece-wise
+/// function that positions the central elevation relative to the minimum (z<sub>min</sub>), mean (&mu;),
+/// and maximum values (z<sub>max</sub>), within a local neighbourhood of a user-specified size (`--filterx`,
 /// `--filtery`), such that:
-/// 
+///
 /// > RTP = (z<sub>0</sub> − &mu;) / (&mu; − z<sub>min</sub>), if z<sub>0</sub> < &mu;
-/// > 
+/// >
 /// > OR
-/// > 
+/// >
 /// > RTP = (z<sub>0</sub> − &mu;) / (z<sub>max</sub> - &mu;), if z<sub>0</sub> >= &mu;
 /// 
-/// 
+///
 /// The resulting index is bound by the interval [−1, 1], where the sign indicates if the cell is above or below
 /// than the filter mean. Although RTP uses the mean to define two linear functions, the reliance on the filter
-/// extrema is expected to result in sensitivity to outliers. Furthermore, the use of the mean implies assumptions 
-/// of unimodal and symmetrical elevation distribution. 
-/// 
-/// In many cases, Elevation Percentile (`ElevPercentile`) and deviation from mean elevation (`DevFromMeanElev`) 
+/// extrema is expected to result in sensitivity to outliers. Furthermore, the use of the mean implies assumptions
+/// of unimodal and symmetrical elevation distribution.
+///
+/// In many cases, Elevation Percentile (`ElevPercentile`) and deviation from mean elevation (`DevFromMeanElev`)
 /// provide more suitable and robust measures of relative topographic position.
-/// 
+///
 /// # Reference
-/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic 
+/// Newman, D. R., Lindsay, J. B., and Cockburn, J. M. H. (2018). Evaluating metrics of local topographic
 /// position for multiscale geomorphometric analysis. Geomorphology, 312, 40-50.
-/// 
+///
 /// # See Also
 /// `DevFromMeanElev`, `DiffFromMeanElev`, `ElevPercentile`, `PercentElevRange`
 pub struct RelativeTopographicPosition {

@@ -14,24 +14,24 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to convert a vector points file into a raster grid. The user must 
-/// specify the name of the input vector and the output raster file. The field name (`--field`) 
-/// is the field from the attributes table from which the tool will retrieve the information to 
-/// assign to grid cells in the output raster. The field must contain numerical data. If the user does not 
-/// supply a field name parameter, each feature in the raster will be assigned the record number 
-/// of the feature. The assignment operation determines how the situation of multiple points 
-/// contained within the same grid cell is handled. The background value is zero by default 
+/// This tool can be used to convert a vector points file into a raster grid. The user must
+/// specify the name of the input vector and the output raster file. The field name (`--field`)
+/// is the field from the attributes table from which the tool will retrieve the information to
+/// assign to grid cells in the output raster. The field must contain numerical data. If the user does not
+/// supply a field name parameter, each feature in the raster will be assigned the record number
+/// of the feature. The assignment operation determines how the situation of multiple points
+/// contained within the same grid cell is handled. The background value is zero by default
 /// but can be set to `NoData` optionally using the `--nodata` value.
-/// 
-/// If the user optionally specifies the grid cell size parameter (`--cell_size`) then the coordinates 
-/// will be determined by the input vector (i.e. the bounding box) and the specified cell size. This 
-/// will also determine the number of rows and columns in the output raster. If the user instead 
-/// specifies the optional base raster file parameter (`--base`), the output raster's coordinates (i.e. 
-/// north, south, east, west) and row and column count will be the same as the base file. 
-/// 
+///
+/// If the user optionally specifies the grid cell size parameter (`--cell_size`) then the coordinates
+/// will be determined by the input vector (i.e. the bounding box) and the specified cell size. This
+/// will also determine the number of rows and columns in the output raster. If the user instead
+/// specifies the optional base raster file parameter (`--base`), the output raster's coordinates (i.e.
+/// north, south, east, west) and row and column count will be the same as the base file.
+///
 /// In the case that multiple points are contained within a single grid cell, the output can be
 /// assigned (`--assign`) the first, last (default), min, max, or sum of the contained points.
-/// 
+///
 /// # See Also
 /// `VectorPolygonsToRaster`, `VectorLinesToRaster`
 pub struct VectorPointsToRaster {

@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to the sine (sin) of the corresponding 
-/// grid cell in an input raster (`--input`). The input raster image should contain angular data measured in radians. 
-/// You may convert a raster containing degrees to radians using the `ToRadians` tool. Grid cells with **NoData** values 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the sine (sin) of the corresponding
+/// grid cell in an input raster (`--input`). The input raster image should contain angular data measured in radians.
+/// You may convert a raster containing degrees to radians using the `ToRadians` tool. Grid cells with **NoData** values
 /// in the input raster will be assigned **NoData** values in the output raster.
-/// 
+///
 /// # See Also
 /// `Cos`, `Tan`, `ArcSin`, `ToRadians`
 pub struct Sin {

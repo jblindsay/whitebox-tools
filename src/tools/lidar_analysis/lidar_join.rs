@@ -13,10 +13,10 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to merge multiple LiDAR LAS files into a single output LAS file. Due to their large size, 
+/// This tool can be used to merge multiple LiDAR LAS files into a single output LAS file. Due to their large size,
 /// LiDAR data sets are often tiled into smaller, non-overlapping tiles. Sometimes it is more convenient to combine
-/// multiple tiles together for data processing and `LidarJoin` can be used for this purpose. 
-/// 
+/// multiple tiles together for data processing and `LidarJoin` can be used for this purpose.
+///
 /// # See Also
 /// `LidarTile`
 pub struct LidarJoin {

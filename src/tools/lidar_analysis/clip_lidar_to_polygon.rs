@@ -11,22 +11,22 @@ use crate::lidar::*;
 use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::{ShapeType, Shapefile};
+use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use num_cpus;
-use std::sync::{Arc, mpsc};
+use std::sync::{mpsc, Arc};
 use std::thread;
 
 /// This tool can be used to isolate, or clip, all of the LiDAR points in a LAS file (`--input`) contained within
-/// one or more vector polygon features. The user must specify the name of the input clip file (--polygons), wich 
-/// must be a vector of a Polygon base shape type. The clip file may contain multiple polygon features and polygon hole 
-/// parts will be respected during clipping, i.e. LiDAR points within polygon holes will be removed from the output LAS 
+/// one or more vector polygon features. The user must specify the name of the input clip file (--polygons), wich
+/// must be a vector of a Polygon base shape type. The clip file may contain multiple polygon features and polygon hole
+/// parts will be respected during clipping, i.e. LiDAR points within polygon holes will be removed from the output LAS
 /// file.
-/// 
+///
 /// Use the `ErasePolygonFromLidar` tool to perform the complementary operation of removing points from a LAS file
 /// that are contained within a set of polygons.
-/// 
+///
 /// # See Also
 /// `ErasePolygonFromLidar`, `Clip`, `ClipRasterToPolygon`
 pub struct ClipLidarToPolygon {
@@ -227,12 +227,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
         let mut record_nums = Vec::with_capacity(num_records);
         for record_num in 0..polygons.num_records {
             let record = polygons.get_record(record_num);
-            feature_bb = BoundingBox::new(
-                record.x_min,
-                record.x_max,
-                record.y_min,
-                record.y_max,
-            );
+            feature_bb = BoundingBox::new(record.x_min, record.x_max, record.y_min, record.y_max);
             if feature_bb.overlaps(lidar_bb) {
                 bb.push(feature_bb);
                 record_nums.push(record_num);
@@ -245,9 +240,9 @@ impl WhiteboxTool for ClipLidarToPolygon {
 
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
-        
+
         let num_procs = num_cpus::get();
-        let input = Arc::new(input); 
+        let input = Arc::new(input);
         let polygons = Arc::new(polygons);
         let record_nums = Arc::new(record_nums);
         let bb = Arc::new(bb);
@@ -314,8 +309,11 @@ impl WhiteboxTool for ClipLidarToPolygon {
                         }
                     }
                     match tx.send((point_in_poly, point_num)) {
-                        Ok(_) => {}, // do nothing
-                        Err(_) => panic!("Error performing clipping operation on point num. {}", point_num),
+                        Ok(_) => {} // do nothing
+                        Err(_) => panic!(
+                            "Error performing clipping operation on point num. {}",
+                            point_num
+                        ),
                     };
                 }
             });
@@ -416,7 +414,11 @@ impl WhiteboxTool for ClipLidarToPolygon {
         }
         if output.header.number_of_points > 0 {
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Complete!") },
+                Ok(_) => {
+                    if verbose {
+                        println!("Complete!")
+                    }
+                }
                 Err(e) => println!("error while writing: {:?}", e),
             };
         } else {

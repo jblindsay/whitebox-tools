@@ -1,4 +1,4 @@
-/* 
+/*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Simon Gudim and Dr. John Lindsay
 Created: 19/12/2019
@@ -6,31 +6,31 @@ Last Modified: 22/12/2019
 License: MIT
 */
 
-use std::cmp::Ordering::Equal;
-use std::env;
-use std::path;
-use std::f64;
+use crate::tools::*;
 use crate::vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use std::io::{Error, ErrorKind};
-use crate::tools::*;
 use statrs::distribution::{StudentsT, Univariate};
+use std::cmp::Ordering::Equal;
+use std::env;
+use std::f64;
+use std::io::{Error, ErrorKind};
+use std::path;
 
-/// This tool can be used to perform nieghbourhood-based (i.e. using roving search windows applied to each 
+/// This tool can be used to perform nieghbourhood-based (i.e. using roving search windows applied to each
 /// grid cell) correlation analysis on two continuous attributes (`--field1` and `--field2`) of an input vector
-/// (`--input`). The tool outputs correlation value and a significance (p-value) fields (`CORREL` and `PVALUE`) to 
-/// the input vector's attribute table. Additionally,the user must specify the size of the search window (`--filter`) 
-/// and the correlation statistic (`--stat`). Options for the correlation statistic include 
-/// [`pearson`](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient), 
-/// [`kendall`](https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient), and 
+/// (`--input`). The tool outputs correlation value and a significance (p-value) fields (`CORREL` and `PVALUE`) to
+/// the input vector's attribute table. Additionally,the user must specify the size of the search window (`--filter`)
+/// and the correlation statistic (`--stat`). Options for the correlation statistic include
+/// [`pearson`](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient),
+/// [`kendall`](https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient), and
 /// [`spearman`](https://en.wikipedia.org/wiki/Spearman%27s_rank_correlation_coefficient). Notice that Pearson's *r* is the
 /// most computationally efficient of the three correlation metrics but is unsuitable when the input distributions are
-/// non-linearly associated, in which case, either Spearman's Rho or Kendall's tau-b correlations are more suited. 
-/// Both Spearman and Kendall correlations evaluate monotonic associations without assuming linearity in the relation. 
-/// Kendall's tau-b is by far the most computationally expensive of the three statistics and may not be suitable to 
+/// non-linearly associated, in which case, either Spearman's Rho or Kendall's tau-b correlations are more suited.
+/// Both Spearman and Kendall correlations evaluate monotonic associations without assuming linearity in the relation.
+/// Kendall's tau-b is by far the most computationally expensive of the three statistics and may not be suitable to
 /// larger sized search windows.
-/// 
+///
 /// # See Also
 /// `AttributeCorrelation`, `ImageCorrelationNeighbourhoodAnalysis`
 pub struct AttributeCorrelationNeighbourhoodAnalysis {
@@ -63,7 +63,8 @@ impl AttributeCorrelationNeighbourhoodAnalysis {
         parameters.push(ToolParameter {
             name: "Field Name 1".to_owned(),
             flags: vec!["--field1".to_owned()],
-            description: "First input field name (dependent variable) in attribute table.".to_owned(),
+            description: "First input field name (dependent variable) in attribute table."
+                .to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
                 AttributeType::Number,
                 "--input".to_string(),
@@ -75,7 +76,8 @@ impl AttributeCorrelationNeighbourhoodAnalysis {
         parameters.push(ToolParameter {
             name: "Field Name 2".to_owned(),
             flags: vec!["--field2".to_owned()],
-            description: "Second input field name (independent variable) in attribute table.".to_owned(),
+            description: "Second input field name (independent variable) in attribute table."
+                .to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
                 AttributeType::Number,
                 "--input".to_string(),
@@ -106,7 +108,11 @@ impl AttributeCorrelationNeighbourhoodAnalysis {
             name: "Correlation Statistic Type".to_owned(),
             flags: vec!["--stat".to_owned()],
             description: "Correlation type; one of 'pearson' (default) and 'spearman'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["pearson".to_owned(), "kendall".to_owned(), "spearman".to_owned()]),
+            parameter_type: ParameterType::OptionList(vec![
+                "pearson".to_owned(),
+                "kendall".to_owned(),
+                "spearman".to_owned(),
+            ]),
             default_value: Some("pearson".to_owned()),
             optional: true,
         });
@@ -114,7 +120,8 @@ impl AttributeCorrelationNeighbourhoodAnalysis {
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
-        let mut short_exe = e.replace(&p, "")
+        let mut short_exe = e
+            .replace(&p, "")
             .replace(".exe", "")
             .replace(".", "")
             .replace(&sep, "");
@@ -140,7 +147,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
-    
+
     fn get_tool_name(&self) -> String {
         self.name.clone()
     }
@@ -171,20 +178,24 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         self.toolbox.clone()
     }
 
-    fn run<'a>(&self,
-               args: Vec<String>,
-               working_directory: &'a str,
-               verbose: bool)
-               -> Result<(), Error> {
+    fn run<'a>(
+        &self,
+        args: Vec<String>,
+        working_directory: &'a str,
+        verbose: bool,
+    ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut field_name1 = String::new();
         let mut field_name2 = String::new();
         let mut radius = 0f64;
         let mut min_points = 0usize;
         let mut stat_type = String::from("pearson");
-        
+
         if args.len() == 0 {
-            return Err(Error::new(ErrorKind::InvalidInput, "Tool run with no parameters."));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no parameters.",
+            ));
         }
 
         for i in 0..args.len() {
@@ -201,7 +212,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
-                    args[i+1].to_string()
+                    args[i + 1].to_string()
                 };
             } else if flag_val == "-field1" {
                 field_name1 = if keyval {
@@ -233,16 +244,15 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                 } else {
                     args[i + 1].to_lowercase()
                 };
-                stat_type = if val.contains("son") { 
-                    "pearson".to_string() 
-                } else if val.contains("kendall") { 
+                stat_type = if val.contains("son") {
+                    "pearson".to_string()
+                } else if val.contains("kendall") {
                     "kendall".to_string()
                 } else {
                     "spearman".to_string()
                 };
             }
         }
-
 
         if verbose {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
@@ -257,9 +267,11 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
 
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
-        } 
+        }
 
-        if verbose { println!("Reading data...") };
+        if verbose {
+            println!("Reading data...")
+        };
 
         let mut input = Shapefile::read(&input_file)?;
         input.file_mode = "rw".to_string(); // we need to be able to modify the attributes table
@@ -288,12 +300,8 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
             if record.shape_type != ShapeType::Null {
                 for i in 0..record.num_points as usize {
                     z = match input.attributes.get_value(record_num, &field_name1) {
-                        FieldData::Int(val) => {
-                            val as f64
-                        }
-                        FieldData::Real(val) => {
-                            val
-                        }
+                        FieldData::Int(val) => val as f64,
+                        FieldData::Real(val) => val,
                         _ => {
                             return Err(Error::new(
                                 ErrorKind::InvalidInput,
@@ -304,12 +312,8 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     attr1_values.push(z);
 
                     z = match input.attributes.get_value(record_num, &field_name2) {
-                        FieldData::Int(val) => {
-                            val as f64
-                        }
-                        FieldData::Real(val) => {
-                            val
-                        }
+                        FieldData::Int(val) => val as f64,
+                        FieldData::Real(val) => val,
                         _ => {
                             return Err(Error::new(
                                 ErrorKind::InvalidInput,
@@ -319,14 +323,14 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     };
                     attr2_values.push(z);
                     points.push((record.points[i].x, record.points[i].y));
-                    tree.add([record.points[i].x, record.points[i].y], p).unwrap();
+                    tree.add([record.points[i].x, record.points[i].y], p)
+                        .unwrap();
                     p += 1;
                 }
             }
 
             if verbose {
-                progress =
-                    (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
+                progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
                 if progress != old_progress {
                     println!("Reading points: {}%", progress);
                     old_progress = progress;
@@ -335,18 +339,18 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         }
 
         input.attributes.add_field(&AttributeField::new(
-            "CORREL", 
-            FieldDataType::Real, 
-            12u8, 
-            6u8)
-        );
+            "CORREL",
+            FieldDataType::Real,
+            12u8,
+            6u8,
+        ));
 
         input.attributes.add_field(&AttributeField::new(
-            "PVALUE", 
-            FieldDataType::Real, 
-            12u8, 
-            6u8)
-        );
+            "PVALUE",
+            FieldDataType::Real,
+            12u8,
+            6u8,
+        ));
 
         let (mut x, mut y): (f64, f64);
         for record_num in 0..points.len() {
@@ -354,7 +358,9 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
             y = points[record_num].1;
             let mut ret = tree.within(&[x, y], radius, &squared_euclidean).unwrap();
             if ret.len() < min_points {
-                ret = tree.nearest(&[x, y], min_points, &squared_euclidean).unwrap();
+                ret = tree
+                    .nearest(&[x, y], min_points, &squared_euclidean)
+                    .unwrap();
             }
             if ret.len() > 0 {
                 if stat_type == "pearson" {
@@ -392,32 +398,30 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     }
 
                     // Finally, calculate r for the neighbourhood.
-                    let r = if total_deviation1 != 0f64 && total_deviation2 != 0f64 && num_vals > 2 {
+                    let r = if total_deviation1 != 0f64 && total_deviation2 != 0f64 && num_vals > 2
+                    {
                         product_deviations / (total_deviation1 * total_deviation2).sqrt()
                     } else {
                         // You can't divide by zero
                         0f64
                     };
-                    input.attributes.set_value(
-                        record_num,
-                        "CORREL",
-                        FieldData::Real(r),
-                    );
+                    input
+                        .attributes
+                        .set_value(record_num, "CORREL", FieldData::Real(r));
 
                     let df = num_vals - 2;
                     let pvalue = if df > 2 {
-                        let tvalue = r * (df as f64 / (1f64 - r * r)).sqrt(); 
+                        let tvalue = r * (df as f64 / (1f64 - r * r)).sqrt();
                         let t = StudentsT::new(0.0, 1.0, df as f64).unwrap();
                         2f64 * (1f64 - t.cdf(tvalue.abs()))
                     } else {
                         0f64
                     };
-                    input.attributes.set_value(
-                        record_num,
-                        "PVALUE",
-                        FieldData::Real(pvalue),
-                    );
-                } else if stat_type == "kendall" { // Perform Kendall's Tau-b correlation
+                    input
+                        .attributes
+                        .set_value(record_num, "PVALUE", FieldData::Real(pvalue));
+                } else if stat_type == "kendall" {
+                    // Perform Kendall's Tau-b correlation
                     let (mut z_n1, mut z_n2): (f64, f64);
                     let mut rank2: f64;
                     let mut upper_range: usize;
@@ -437,7 +441,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                         v2.push((z_n2, num_vals, 0f64));
                     }
                     let num_vals_f64 = num_vals as f64;
-                    
+
                     // Sort both lists based on value
                     v1.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
                     v2.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
@@ -450,7 +454,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                             if i < num_vals - 1 {
                                 // are there any ties above this one?
                                 upper_range = i;
-                                for j in i+1..num_vals {
+                                for j in i + 1..num_vals {
                                     if v1[i].0 == v1[j].0 {
                                         upper_range = j;
                                     } else {
@@ -483,7 +487,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                             if i < num_vals - 1 {
                                 // are there any ties above this one?
                                 upper_range = i;
-                                for j in i+1..num_vals {
+                                for j in i + 1..num_vals {
                                     if v2[i].0 == v2[j].0 {
                                         upper_range = j;
                                     } else {
@@ -511,7 +515,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     // Sort both lists based on index
                     v1.sort_by(|a, b| a.1.cmp(&b.1));
                     v2.sort_by(|a, b| a.1.cmp(&b.1));
-                    
+
                     ////////////////////////////////////////////////////////////////////////////
                     // This block of code is O(n^2) and is a serious performance killer. There
                     // is a O(nlogn) solution based on swaps in a merge-sort but I have yet to
@@ -521,35 +525,36 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     ////////////////////////////////////////////////////////////////////////////
                     let mut numer = 0f64;
                     for i in 0..num_vals {
-                        for j in i+1..num_vals {
+                        for j in i + 1..num_vals {
                             if v1[i].2 != v1[j].2 && v2[i].2 != v2[j].2 {
-                                numer += (v1[i].2 - v1[j].2).signum() * (v2[i].2 - v2[j].2).signum();
+                                numer +=
+                                    (v1[i].2 - v1[j].2).signum() * (v2[i].2 - v2[j].2).signum();
                             }
                         }
                     }
-                    
+
                     let n0 = num_vals as f64 * (num_vals as f64 - 1f64) / 2f64;
-                    let tau = numer / ((n0 - nt1)*(n0 - nt2)).sqrt();
-                    input.attributes.set_value(
-                        record_num,
-                        "CORREL",
-                        FieldData::Real(tau),
-                    );
+                    let tau = numer / ((n0 - nt1) * (n0 - nt2)).sqrt();
+                    input
+                        .attributes
+                        .set_value(record_num, "CORREL", FieldData::Real(tau));
 
                     let df = num_vals_f64 - 2f64;
                     let pvalue = if df > 2f64 {
-                        let zvalue = 3f64 * numer / (num_vals_f64*(num_vals_f64-1f64)*(2f64*num_vals_f64+5f64) / 2f64).sqrt();
+                        let zvalue = 3f64 * numer
+                            / (num_vals_f64 * (num_vals_f64 - 1f64) * (2f64 * num_vals_f64 + 5f64)
+                                / 2f64)
+                                .sqrt();
                         let t = StudentsT::new(0.0, 1.0, df as f64).unwrap(); // create a student's t distribution
                         2f64 * (1f64 - t.cdf(zvalue.abs()))
                     } else {
                         0f64
                     };
-                    input.attributes.set_value(
-                        record_num,
-                        "PVALUE",
-                        FieldData::Real(pvalue),
-                    );
-                } else { // Calculate Spearman's Rho correlation
+                    input
+                        .attributes
+                        .set_value(record_num, "PVALUE", FieldData::Real(pvalue));
+                } else {
+                    // Calculate Spearman's Rho correlation
                     let (mut z_n1, mut z_n2): (f64, f64);
                     let mut rank2: f64;
                     let mut upper_range: usize;
@@ -568,7 +573,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                         v2.push((z_n2, num_vals, 0f64));
                     }
                     let num_vals_f64 = num_vals as f64;
-                    
+
                     // Sort both lists based on value
                     v1.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
                     v2.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
@@ -580,7 +585,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                             if i < num_vals - 1 {
                                 // are there any ties above this one?
                                 upper_range = i;
-                                for j in i+1..num_vals {
+                                for j in i + 1..num_vals {
                                     if v1[i].0 == v1[j].0 {
                                         upper_range = j;
                                     } else {
@@ -610,7 +615,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                             if i < num_vals - 1 {
                                 // are there any ties above this one?
                                 upper_range = i;
-                                for j in i+1..num_vals {
+                                for j in i + 1..num_vals {
                                     if v2[i].0 == v2[j].0 {
                                         upper_range = j;
                                     } else {
@@ -636,37 +641,34 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                     // Sort both lists based on index
                     v1.sort_by(|a, b| a.1.cmp(&b.1));
                     v2.sort_by(|a, b| a.1.cmp(&b.1));
-                    
+
                     let mut rank_diff_sqrd = 0f64;
-                    for i in 0..num_vals { 
+                    for i in 0..num_vals {
                         rank_diff_sqrd += (v1[i].2 - v2[i].2) * (v1[i].2 - v2[i].2);
                     }
-                    
-                    let rho = 1f64 - (6f64 * rank_diff_sqrd / (num_vals_f64 * num_vals_f64 * num_vals_f64 - num_vals_f64));
-                    input.attributes.set_value(
-                        record_num,
-                        "CORREL",
-                        FieldData::Real(rho),
-                    );
+
+                    let rho = 1f64
+                        - (6f64 * rank_diff_sqrd
+                            / (num_vals_f64 * num_vals_f64 * num_vals_f64 - num_vals_f64));
+                    input
+                        .attributes
+                        .set_value(record_num, "CORREL", FieldData::Real(rho));
 
                     let df = num_vals_f64 - 2f64; // calculate degrees of freedom (Anthony Comment)
                     let pvalue = if df > 2f64 {
-                        let tvalue = rho * (df / (1f64 - rho * rho)).sqrt(); 
+                        let tvalue = rho * (df / (1f64 - rho * rho)).sqrt();
                         let t = StudentsT::new(0.0, 1.0, df as f64).unwrap(); // create a student's t distribution
                         2f64 * (1f64 - t.cdf(tvalue.abs()))
                     } else {
                         0f64
                     };
-                    input.attributes.set_value(
-                        record_num,
-                        "PVALUE",
-                        FieldData::Real(pvalue),
-                    );
-
+                    input
+                        .attributes
+                        .set_value(record_num, "PVALUE", FieldData::Real(pvalue));
                 }
             }
             if verbose {
-                progress =  (100.0_f64 * (record_num + 1) as f64 / points.len() as f64) as usize;
+                progress = (100.0_f64 * (record_num + 1) as f64 / points.len() as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -693,8 +695,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
         }
-        
-        
+
         // } else if stat_type == "kendall" { // Perform Kendall's Tau-b correlation
         //     let (tx, rx) = mpsc::channel();
         //     for tid in 0..num_procs {
@@ -753,7 +754,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                             }
         //                         }
         //                         num_cells_f64 = num_cells as f64;
-                                
+
         //                         // Sort both lists based on value
         //                         v1.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
         //                         v2.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
@@ -828,7 +829,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                         // Sort both lists based on index
         //                         v1.sort_by(|a, b| a.1.cmp(&b.1));
         //                         v2.sort_by(|a, b| a.1.cmp(&b.1));
-                                
+
         //                         ////////////////////////////////////////////////////////////////////////////
         //                         // This block of code is O(n^2) and is a serious performance killer. There
         //                         // is a O(nlogn) solution based on swaps in a merge-sort but I have yet to
@@ -844,7 +845,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                                 }
         //                             }
         //                         }
-                                
+
         //                         n0 = num_cells as f64 * (num_cells as f64 - 1f64) / 2f64;
         //                         tau = numer / ((n0 - nt1)*(n0 - nt2)).sqrt();
         //                         data1[col as usize] = tau;
@@ -857,7 +858,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                             data2[col as usize] = pvalue;
         //                         } else {
         //                             data2[col as usize] = 0f64;
-        //                         }                                    
+        //                         }
         //                     }
         //                 }
         //                 tx.send((row, data1, data2)).unwrap();
@@ -869,7 +870,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //         let (row, data1, data2) = rx.recv().unwrap();
         //         output_val.set_row_data(row, data1);
         //         output_sig.set_row_data(row, data2);
-                
+
         //         if verbose {
         //             progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
         //             if progress != old_progress {
@@ -933,7 +934,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                             }
         //                         }
         //                         num_cells_f64 = num_cells as f64;
-                                
+
         //                         // Sort both lists based on value
         //                         v1.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
         //                         v2.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
@@ -1005,25 +1006,25 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //                         // Sort both lists based on index
         //                         v1.sort_by(|a, b| a.1.cmp(&b.1));
         //                         v2.sort_by(|a, b| a.1.cmp(&b.1));
-                                
+
         //                         let mut rank_diff_sqrd = 0f64;
-        //                         for i in 0..num_cells { 
+        //                         for i in 0..num_cells {
         //                             rank_diff_sqrd += (v1[i].2 - v2[i].2) * (v1[i].2 - v2[i].2);
         //                         }
-                                
+
         //                         rho = 1f64 - (6f64 * rank_diff_sqrd / (num_cells_f64 * num_cells_f64 * num_cells_f64 - num_cells_f64));
         //                         data1[col as usize] = rho;
         //                         df = num_cells_f64 - 2f64; // calculate degrees of freedom (Anthony Comment)
 
         //                         if df > 2f64 {
-        //                             tvalue = rho * (df / (1f64 - rho * rho)).sqrt(); 
+        //                             tvalue = rho * (df / (1f64 - rho * rho)).sqrt();
         //                             let t = StudentsT::new(0.0, 1.0, df as f64).unwrap(); // create a student's t distribution
         //                             pvalue =  2f64 * (1f64 - t.cdf(tvalue.abs())); // calculate the p-value (significance)
         //                             data2[col as usize] = pvalue;
         //                         } else {
         //                             data2[col as usize] = 0f64;
-        //                         }      
-                                
+        //                         }
+
         //                         if max_num_ties < num_ties_test { max_num_ties = num_ties_test; }
         //                     }
         //                 }
@@ -1040,7 +1041,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //         output_sig.set_row_data(row, data2);
         //         num_ties += ties;
         //         if max_row_ties > max_ties { max_ties = max_row_ties; }
-                
+
         //         if verbose {
         //             progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
         //             if progress != old_progress {
@@ -1054,9 +1055,7 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
         //         println!("Warning: There was a maximum of {} ties in a test and as a result p-values \nmay be misleading. You may want to consider using Kendall's Tau instead.", max_ties);
         //     }
         // }
-        
-        
+
         Ok(())
     }
-
 }

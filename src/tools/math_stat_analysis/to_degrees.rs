@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool converts the [radians](https://en.wikipedia.org/wiki/Radian) values contained within an 
-/// input raster (`--input`) to degrees in the output raster (`--output`). 
+/// This tool converts the [radians](https://en.wikipedia.org/wiki/Radian) values contained within an
+/// input raster (`--input`) to degrees in the output raster (`--output`).
 /// One degree is approximately 0.017453293 (&pi; / 180) radians. Conversion between degrees and radians
 /// is common when working with trigonometric functions.
-/// 
+///
 /// # See Also
 /// `ToRadians`
 pub struct ToDegrees {

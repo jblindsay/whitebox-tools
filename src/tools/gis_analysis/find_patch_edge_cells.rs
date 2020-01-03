@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will identify all grid cells situated along the edges of patches or class features within an 
+/// This tool will identify all grid cells situated along the edges of patches or class features within an
 /// input raster (`--input`). Edge cells in the output raster (`--output`) will have the patch identifier value
-/// assigned in the correponding grid cell. All non-edge cells will be assigned zero in the output raster. 
-/// Patches (or classes) are designated by positive, non-zero values in the input image. Zero-valued 
-/// and NoData-valued grid cells are interpreted as background cells by the tool. 
-/// 
+/// assigned in the correponding grid cell. All non-edge cells will be assigned zero in the output raster.
+/// Patches (or classes) are designated by positive, non-zero values in the input image. Zero-valued
+/// and NoData-valued grid cells are interpreted as background cells by the tool.
+///
 /// # See Also
 /// `EdgeProportion`
 pub struct FindPatchOrClassEdgeCells {

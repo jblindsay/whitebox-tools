@@ -13,13 +13,13 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to find the maximum value in each cell of a grid from a set of input images (`--inputs`). 
-/// NoData values in any of the input images will result in a NoData pixel in the output image (`--output`). It is 
+/// This tool can be used to find the maximum value in each cell of a grid from a set of input images (`--inputs`).
+/// NoData values in any of the input images will result in a NoData pixel in the output image (`--output`). It is
 /// similar to the `Max` mathematical tool, except that it will accept more than two input images.
-/// 
+///
 /// # Warning
 /// Each of the input rasters must have the same spatial extent and number of rows and columns.
-/// 
+///
 /// # See Also
 /// `MinOverlay`, `MaxAbsoluteOverlay`, `MinAbsoluteOverlay`, `Max`
 pub struct MaxOverlay {

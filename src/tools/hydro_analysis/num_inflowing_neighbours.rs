@@ -18,14 +18,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the number of inflowing neighbours for each grid cell in a raster file. The user 
-/// must specify the names of an input digital elevation model (DEM) file (`--dem`) and the output raster 
+/// This tool calculates the number of inflowing neighbours for each grid cell in a raster file. The user
+/// must specify the names of an input digital elevation model (DEM) file (`--dem`) and the output raster
 /// file (`--output`). The tool calculates the D8 pointer file internally in order to identify inflowing
-/// neighbouring cells. 
-/// 
-/// Grid cells in the input DEM that contain the NoData value will be assigned the NoData value in the 
+/// neighbouring cells.
+///
+/// Grid cells in the input DEM that contain the NoData value will be assigned the NoData value in the
 /// output image. The output image is of the integer data type and continuous data scale.
-/// 
+///
 /// # See Also
 /// `NumDownslopeNeighbours`, `NumUpslopeNeighbours`
 pub struct NumInflowingNeighbours {

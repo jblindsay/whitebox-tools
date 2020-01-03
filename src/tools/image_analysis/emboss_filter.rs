@@ -17,80 +17,80 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform one of eight 3x3 emboss filters on a raster image. Like the `SobelFilter` and 
-/// `PrewittFilter`, the `EmbossFilter` is often applied in edge-detection applications. While these other two 
-/// common edge-detection filters approximate the slope magnitude of the local neighbourhood surrounding each 
-/// grid cell, the `EmbossFilter` can be used to estimate the directional slope. The kernel weights for each of 
+/// This tool can be used to perform one of eight 3x3 emboss filters on a raster image. Like the `SobelFilter` and
+/// `PrewittFilter`, the `EmbossFilter` is often applied in edge-detection applications. While these other two
+/// common edge-detection filters approximate the slope magnitude of the local neighbourhood surrounding each
+/// grid cell, the `EmbossFilter` can be used to estimate the directional slope. The kernel weights for each of
 /// the eight available filters are as follows:
 ///
 /// North (`n`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  -1 | 0  |
 /// | 0  |  0  | 0  |
 /// | 0  |  1  | 0  |
-/// 
+///
 /// Northeast (`ne`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  0  | -1 |
 /// | 0  |  0  | 0  |
 /// | -1 |  0  | 0  |
-/// 
-/// 
+///
+///
 /// East (`e`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  0  | 0  |
 /// | 1  |  0  | -1 |
 /// | 0  |  0  | 0  |
-/// 
+///
 /// Southeast (`se`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 1  |  0  | 0  |
 /// | 0  |  0  | 0  |
 /// | 0  |  0  | -1 |
-/// 
+///
 /// South (`s`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  1  | 0  |
 /// | 1  |  0  | 0  |
 /// | 0  |  -1 | 0  |
-/// 
+///
 /// Southwest (`sw`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  0  | 1  |
 /// | 0  |  0  | 0  |
 /// | -1 |  0  | 0  |
-/// 
+///
 /// West (`w`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 0  |  0  | 0  |
 /// | -1 |  0  | 1  |
 /// | 0  |  0  | 0  |
-/// 
+///
 /// Northwest (`nw`)
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | -1 |  0  | 0  |
 /// | 0  |  0  | 0  |
 /// | 0  |  0  | 1  |
-/// 
+///
 /// The user must specify the `--direction`, options include 'n', 's', 'e', 'w', 'ne', 'se', 'nw', 'sw'. The user may also optionally
 /// clip the output image distribution tails by a specified amount (e.g. 1%).
-/// 
+///
 /// # See Also
 /// `SobelFilter`, `PrewittFilter`
 pub struct EmbossFilter {

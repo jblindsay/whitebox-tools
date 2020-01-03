@@ -7,8 +7,8 @@ License: MIT
 */
 
 use crate::raster::*;
-use crate::tools::*;
 use crate::structures::Array2D;
+use crate::tools::*;
 use std::cmp::Ordering;
 use std::cmp::Ordering::Equal;
 use std::collections::{BinaryHeap, VecDeque};
@@ -20,21 +20,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool measures the depth that each grid cell in an input (`--dem`) raster digital elevation model (DEM) 
-/// lies within a sink feature, i.e. a closed topographic depression. A sink, or depression, is a bowl-like 
-/// landscape feature, which is characterized by interior drainage and groundwater recharge. The `DepthInSink` tool 
-/// operates by differencing a filled DEM, using the same depression filling method as `FillDepressions`, and the 
+/// This tool measures the depth that each grid cell in an input (`--dem`) raster digital elevation model (DEM)
+/// lies within a sink feature, i.e. a closed topographic depression. A sink, or depression, is a bowl-like
+/// landscape feature, which is characterized by interior drainage and groundwater recharge. The `DepthInSink` tool
+/// operates by differencing a filled DEM, using the same depression filling method as `FillDepressions`, and the
 /// original surface model.
-/// 
-/// In addition to the names of the input DEM (`--dem`) and the output raster (`--output`), the user must specify 
-/// whether the background value (i.e. the value assigned to grid cells that are not contained within sinks) should be 
-/// set to 0.0 (`--zero_background`) Without this optional parameter specified, the tool will use the NoData value 
+///
+/// In addition to the names of the input DEM (`--dem`) and the output raster (`--output`), the user must specify
+/// whether the background value (i.e. the value assigned to grid cells that are not contained within sinks) should be
+/// set to 0.0 (`--zero_background`) Without this optional parameter specified, the tool will use the NoData value
 /// as the background value.
-/// 
+///
 /// # Reference
-/// Antonić, O., Hatic, D., & Pernar, R. (2001). DEM-based depth in sink as an environmental estimator. Ecological 
+/// Antonić, O., Hatic, D., & Pernar, R. (2001). DEM-based depth in sink as an environmental estimator. Ecological
 /// Modelling, 138(1-3), 247-254.
-/// 
+///
 /// # See Also
 /// `FillDepressions`
 pub struct DepthInSink {
@@ -214,7 +214,7 @@ impl WhiteboxTool for DepthInSink {
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
 
         // Find pit cells. This step is parallelized.
-        let num_procs = num_cpus::get() as isize;   
+        let num_procs = num_cpus::get() as isize;
         let filled_dem2 = Arc::new(filled_dem);
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -225,19 +225,21 @@ impl WhiteboxTool for DepthInSink {
                 let mut zn: f64;
                 let mut flag: bool;
                 let mut pits = vec![];
-                for row in (1..rows-1).filter(|r| r % num_procs == tid) {
-                    for col in 1..columns-1 {
+                for row in (1..rows - 1).filter(|r| r % num_procs == tid) {
+                    for col in 1..columns - 1 {
                         z = filled_dem2.get_value(row, col);
                         if z != nodata {
                             flag = true;
                             for n in 0..8 {
                                 zn = filled_dem2.get_value(row + dy[n], col + dx[n]);
-                                if zn < z || zn == nodata { // It either has a lower neighbour or is an edge cell.
+                                if zn < z || zn == nodata {
+                                    // It either has a lower neighbour or is an edge cell.
                                     flag = false;
                                     break;
                                 }
                             }
-                            if flag { // it's a cell with undefined flow
+                            if flag {
+                                // it's a cell with undefined flow
                                 pits.push((row, col, z));
                             }
                         }
@@ -251,7 +253,7 @@ impl WhiteboxTool for DepthInSink {
         for p in 0..num_procs {
             let mut pits = rx.recv().unwrap();
             undefined_flow_cells.append(&mut pits);
-            
+
             if verbose {
                 progress = (100.0_f64 * (p + 1) as f64 / num_procs as f64) as usize;
                 if progress != old_progress {
@@ -282,7 +284,8 @@ impl WhiteboxTool for DepthInSink {
         while let Some(cell) = undefined_flow_cells.pop() {
             row = cell.0;
             col = cell.1;
-            if flats.get_value(row, col) != 1 { // if it's already in a solved site, don't do it a second time.
+            if flats.get_value(row, col) != 1 {
+                // if it's already in a solved site, don't do it a second time.
                 // First there is a priority region-growing operation to find the outlets.
                 z = filled_dem.get_value(row, col);
                 minheap.clear();
@@ -314,15 +317,17 @@ impl WhiteboxTool for DepthInSink {
                                             priority: zn,
                                         });
                                         visited.set_value(rn, cn, 1);
-                                    } else if zn != nodata { // zn < z
-                                        // 'cell' has a lower neighbour that hasn't already passed through minheap. 
+                                    } else if zn != nodata {
+                                        // zn < z
+                                        // 'cell' has a lower neighbour that hasn't already passed through minheap.
                                         // Therefore, 'cell' is a pour point cell.
                                         outlet_found = true;
                                         outlet_z = z;
                                         queue.push_back((cell2.row, cell2.column));
                                         possible_outlets.push((cell2.row, cell2.column));
                                     }
-                                } else if zn == outlet_z { // We've found the outlet but are still looking for additional outlets.
+                                } else if zn == outlet_z {
+                                    // We've found the outlet but are still looking for additional outlets.
                                     minheap.push(GridCell {
                                         row: rn,
                                         column: cn,
@@ -352,7 +357,8 @@ impl WhiteboxTool for DepthInSink {
                                     }
                                 }
                             }
-                            if flag { // it's an outlet
+                            if flag {
+                                // it's an outlet
                                 queue.push_back((cell2.row, cell2.column));
                                 possible_outlets.push((cell2.row, cell2.column));
                             } else {
@@ -427,7 +433,8 @@ impl WhiteboxTool for DepthInSink {
                 }
             }
             if verbose {
-                progress = (100.0_f64 * (1.0 - possible_outlets.len() as f64 / num_outlets as f64)) as usize;
+                progress = (100.0_f64 * (1.0 - possible_outlets.len() as f64 / num_outlets as f64))
+                    as usize;
                 if progress != old_progress {
                     println!("Estimating depths: {}%", progress);
                     old_progress = progress;
@@ -486,7 +493,6 @@ impl Ord for GridCell {
     }
 }
 
-
 // /*
 // This tool is part of the WhiteboxTools geospatial analysis library.
 // Authors: Dr. John Lindsay
@@ -494,7 +500,6 @@ impl Ord for GridCell {
 // Last Modified: 18/10/2019
 // License: MIT
 // */
-
 // use crate::raster::*;
 // use crate::tools::*;
 // use std::cmp::Ordering;
@@ -506,21 +511,21 @@ impl Ord for GridCell {
 // use std::io::{Error, ErrorKind};
 // use std::path;
 
-// /// This tool measures the depth that each grid cell in an input (`--dem`) raster digital elevation model (DEM) 
-// /// lies within a sink feature, i.e. a closed topographic depression. A sink, or depression, is a bowl-like 
-// /// landscape feature, which is characterized by interior drainage and groundwater recharge. The `DepthInSink` tool 
-// /// operates by differencing a filled DEM, using the same depression filling method as `FillDepressions`, and the 
+// /// This tool measures the depth that each grid cell in an input (`--dem`) raster digital elevation model (DEM)
+// /// lies within a sink feature, i.e. a closed topographic depression. A sink, or depression, is a bowl-like
+// /// landscape feature, which is characterized by interior drainage and groundwater recharge. The `DepthInSink` tool
+// /// operates by differencing a filled DEM, using the same depression filling method as `FillDepressions`, and the
 // /// original surface model.
-// /// 
-// /// In addition to the names of the input DEM (`--dem`) and the output raster (`--output`), the user must specify 
-// /// whether the background value (i.e. the value assigned to grid cells that are not contained within sinks) should be 
-// /// set to 0.0 (`--zero_background`) Without this optional parameter specified, the tool will use the NoData value 
+// ///
+// /// In addition to the names of the input DEM (`--dem`) and the output raster (`--output`), the user must specify
+// /// whether the background value (i.e. the value assigned to grid cells that are not contained within sinks) should be
+// /// set to 0.0 (`--zero_background`) Without this optional parameter specified, the tool will use the NoData value
 // /// as the background value.
-// /// 
+// ///
 // /// # Reference
-// /// Antonić, O., Hatic, D., & Pernar, R. (2001). DEM-based depth in sink as an environmental estimator. Ecological 
+// /// Antonić, O., Hatic, D., & Pernar, R. (2001). DEM-based depth in sink as an environmental estimator. Ecological
 // /// Modelling, 138(1-3), 247-254.
-// /// 
+// ///
 // /// # See Also
 // /// `FillDepressions`
 // pub struct DepthInSink {
@@ -711,7 +716,6 @@ impl Ord for GridCell {
 //         the approach used here is to perform a region-growing operation, looking
 //         for nodata values along the raster's edges.
 //         */
-
 //         let mut queue: VecDeque<(isize, isize)> =
 //             VecDeque::with_capacity((rows * columns) as usize);
 //         for row in 0..rows {

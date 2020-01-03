@@ -31,11 +31,11 @@ use std::thread;
 /// of classes and then merges classes that have cluster centres that are separated by less
 /// than a user-defined threshold. The main difference between this algorithm and the ISODATA
 /// technique is that clusters can not be broken apart into two smaller clusters.
-/// 
+///
 /// # Reference
-/// Mather, P. M., & Koch, M. (2011). Computer processing of remotely-sensed images: an 
+/// Mather, P. M., & Koch, M. (2011). Computer processing of remotely-sensed images: an
 /// introduction. John Wiley & Sons.
-/// 
+///
 /// # See Also
 /// `KMeansClustering`
 pub struct ModifiedKMeansClustering {
@@ -765,7 +765,6 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 writer.write_all(s.as_bytes())?;
             }
             writer.write_all("</table></p>".as_bytes())?;
-
 
             //////////////////////
             // convergence plot //

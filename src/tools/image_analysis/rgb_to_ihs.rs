@@ -18,34 +18,34 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool transforms three raster images of multispectral data (red, green, and blue channels) into their equivalent 
-/// intensity, hue, and saturation (IHS; sometimes HSI or HIS) images. Intensity refers to the brightness of a color, hue 
-/// is related to the dominant wavelength of light and is perceived as color, and saturation is the purity of the color 
-/// (Koutsias et al., 2000). There are numerous algorithms for performing a red-green-blue (RGB) to IHS transformation. 
-/// This tool uses the transformation described by Haydn (1982). Note that, based on this transformation, the output 
+/// This tool transforms three raster images of multispectral data (red, green, and blue channels) into their equivalent
+/// intensity, hue, and saturation (IHS; sometimes HSI or HIS) images. Intensity refers to the brightness of a color, hue
+/// is related to the dominant wavelength of light and is perceived as color, and saturation is the purity of the color
+/// (Koutsias et al., 2000). There are numerous algorithms for performing a red-green-blue (RGB) to IHS transformation.
+/// This tool uses the transformation described by Haydn (1982). Note that, based on this transformation, the output
 /// IHS values follow the ranges:
-/// 
-/// > 0 < I < 1 
-/// > 
-/// > 0 < H < 2PI 
-/// > 
+///
+/// > 0 < I < 1
+/// >
+/// > 0 < H < 2PI
+/// >
 /// > 0 < S < 1
-/// 
-/// The user must specify the names of the red, green, and blue images (`--red`, `--green`, `--blue`). Importantly, these 
-/// images need not necessarily correspond with the specific regions of the electromagnetic spectrum that are red, green, 
-/// and blue. Rather, the input images are three multispectral images that could be used to create a RGB color composite. 
-/// The user must also specify the names of the output intensity, hue, and saturation images (`--intensity`, `--hue`, 
-/// `--saturation`). Image enhancements, such as contrast stretching, are often performed on the IHS components, which are 
+///
+/// The user must specify the names of the red, green, and blue images (`--red`, `--green`, `--blue`). Importantly, these
+/// images need not necessarily correspond with the specific regions of the electromagnetic spectrum that are red, green,
+/// and blue. Rather, the input images are three multispectral images that could be used to create a RGB color composite.
+/// The user must also specify the names of the output intensity, hue, and saturation images (`--intensity`, `--hue`,
+/// `--saturation`). Image enhancements, such as contrast stretching, are often performed on the IHS components, which are
 /// then inverse transformed back in RGB components to then create an improved color composite image.
 ///
 /// # References
-/// Haydn, R., Dalke, G.W. and Henkel, J. (1982) Application of the IHS color transform to the processing of multisensor 
-/// data and image enhancement. Proc. of the Inter- national Symposium on Remote Sensing of Arid and Semiarid Lands, 
+/// Haydn, R., Dalke, G.W. and Henkel, J. (1982) Application of the IHS color transform to the processing of multisensor
+/// data and image enhancement. Proc. of the Inter- national Symposium on Remote Sensing of Arid and Semiarid Lands,
 /// Cairo, 599-616.
-/// 
-/// Koutsias, N., Karteris, M., and Chuvico, E. (2000). The use of intensity-hue-saturation transformation of Landsat-5 Thematic 
+///
+/// Koutsias, N., Karteris, M., and Chuvico, E. (2000). The use of intensity-hue-saturation transformation of Landsat-5 Thematic
 /// Mapper data for burned land mapping. Photogrammetric Engineering and Remote Sensing, 66(7), 829-840.
-/// 
+///
 /// # See Also
 /// `IhsToRgb`, `BalanceContrastEnhancement`, `DirectDecorrelationStretch`
 pub struct RgbToIhs {

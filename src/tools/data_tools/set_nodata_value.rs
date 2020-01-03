@@ -20,19 +20,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will re-assign a user-defined background value in an input raster image the **NoData** value. 
+/// This tool will re-assign a user-defined background value in an input raster image the **NoData** value.
 /// More precisely, the NoData value will be changed to the specified background value and any existing
 /// grid cells containing the previous NoData value, if it had been defined, will be changed to this new
-/// value. Most WhiteboxTools tools recognize NoData grid cells and treat them specially. NoData grid cells 
+/// value. Most WhiteboxTools tools recognize NoData grid cells and treat them specially. NoData grid cells
 /// are also often displayed transparently by GIS software. The user must specify the names of the input and
-/// output rasters and the background value. The default background value is zero, although any numeric 
+/// output rasters and the background value. The default background value is zero, although any numeric
 /// value is possible.
-/// 
+///
 /// This tool differs from the `ModifyNoDataValue` tool in that it simply updates the NoData value in the raster
 /// header, without modifying pixel values. The `ModifyNoDataValue` tool will update the value in the header,
 /// and then modify each existing NoData pixel to contain this new value. Also, `SetNodataValue` does not
 /// overwrite the input file, while the `ModifyNoDataValue` tool does.
-/// 
+///
 /// # See Also
 /// `ModifyNoDataValue`, `ConvertNodataToZero`, `IsNoData`
 pub struct SetNodataValue {

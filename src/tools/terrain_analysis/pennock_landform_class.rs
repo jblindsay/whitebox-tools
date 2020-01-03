@@ -19,15 +19,15 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Tool can be used to perform a simple landform classification based on measures of slope gradient 
-/// and curvature derived from a user-specified digital elevation model (DEM). The classification 
-/// scheme is based on the method proposed by Pennock, Zebarth, and DeJong (1987). The scheme divides 
-/// a landscape into seven element types, including: convergent footslopes (CFS), divergent footslopes 
-/// (DFS), convergent shoulders (CSH), divergent shoulders (DSH), convergent backslopes (CBS), divergent 
-/// backslopes (DBS), and level terrain (L). The output raster image will record each of these base element 
+/// Tool can be used to perform a simple landform classification based on measures of slope gradient
+/// and curvature derived from a user-specified digital elevation model (DEM). The classification
+/// scheme is based on the method proposed by Pennock, Zebarth, and DeJong (1987). The scheme divides
+/// a landscape into seven element types, including: convergent footslopes (CFS), divergent footslopes
+/// (DFS), convergent shoulders (CSH), divergent shoulders (DSH), convergent backslopes (CBS), divergent
+/// backslopes (DBS), and level terrain (L). The output raster image will record each of these base element
 /// types as:
-/// 
-///  Element Type  |  Code 
+///
+///  Element Type  |  Code
 ///  ------------- | -------
 ///  CFS           |  1
 ///  DFS           |  2
@@ -36,10 +36,10 @@ use std::thread;
 ///  CBS           |  5
 ///  DBS           |  6
 ///  L             |  7
-/// 
-/// The definition of each of the elements, based on the original Pennock et al. (1987) paper, is 
+///
+/// The definition of each of the elements, based on the original Pennock et al. (1987) paper, is
 /// as follows:
-/// 
+///
 /// |    PROFILE             |   GRADIENT    |   PLAN         |  Element |
 /// |:-----------------------|:--------------|:---------------|:-------- |
 /// | Concave ( -0.10)       |  High >3.0    | Concave 0.0    |  CFS     |
@@ -49,20 +49,20 @@ use std::thread;
 /// | Linear (-0.10...0.10)  |  High >3.0    | Concave 0.0    |  CBS     |
 /// | Linear (-0.10...0.10)  |  High >3.0    | Convex >0.0    |  DBS     |
 /// | --                     |  Low 3.0      | --             |  L       |
-/// 
-/// 
-/// Where PROFILE is profile curvature, GRADIENT is the slope gradient, and PLAN is the plan curvature. 
-/// Note that these values are likely landscape and data specific and can be adjusted by the user. 
-/// Landscape classification schemes that are based on terrain attributes are highly sensitive to 
-/// short-range topographic variability (i.e. roughness) and can benefit from pre-processing the DEM 
-/// with a smoothing filter to reduce the effect of surface roughness and emphasize the longer-range 
+///
+///
+/// Where PROFILE is profile curvature, GRADIENT is the slope gradient, and PLAN is the plan curvature.
+/// Note that these values are likely landscape and data specific and can be adjusted by the user.
+/// Landscape classification schemes that are based on terrain attributes are highly sensitive to
+/// short-range topographic variability (i.e. roughness) and can benefit from pre-processing the DEM
+/// with a smoothing filter to reduce the effect of surface roughness and emphasize the longer-range
 /// topographic signal. The `FeaturePreservingSmoothing` tool
 /// offers excellent performance in smoothing DEMs without removing the sharpness of breaks-in-slope.
-/// 
+///
 /// # Reference
-/// Pennock, D.J., Zebarth, B.J., and DeJong, E. (1987) Landform classification and soil distribution 
+/// Pennock, D.J., Zebarth, B.J., and DeJong, E. (1987) Landform classification and soil distribution
 /// in hummocky terrain, Saskatchewan, Canada. Geoderma, 40: 297-315.
-/// 
+///
 /// # See Also
 /// `FeaturePreservingSmoothing`
 pub struct PennockLandformClass {

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/07/2019
-Last Modified: 22/10/2019
+Last Modified: 29/12/2019
 License: MIT
 */
 // extern crate kdtree;
@@ -24,15 +24,29 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool uses the [random sample concensus (RANSAC)](https://en.wikipedia.org/wiki/Random_sample_consensus) 
-/// method to identify points within a LiDAR point cloud that belong to linear planes. RANSAC is a common
-/// method used in the field of computer vision to identify a subset of inliner points in a noisy data set 
+/// This tool uses the [random sample consensus (RANSAC)](https://en.wikipedia.org/wiki/Random_sample_consensus)
+/// method to identify points within a LiDAR point cloud that belong to planar surfaces. RANSAC is a common
+/// method used in the field of computer vision to identify a subset of inlier points in a noisy data set
 /// containing abundant outlier points. Because LiDAR point clouds often contain vegetation points that do not
 /// form planar surfaces, this tool can be used to largely strip vegetation points from the point cloud, leaving
 /// behind the ground returns, buildings, and other points belonging to planar surfaces. If the `--classify` flag
-/// is used, non-planar points will not be removed but rather will be assigned a different class (1) than the 
+/// is used, non-planar points will not be removed but rather will be assigned a different class (1) than the
 /// planar points (0).
-/// 
+///
+/// The algorithm selects a random sample, of a specified size (`--num_samples`) of the points from within the
+/// neighbourhood (`--radius`) surrounding each LiDAR point. The sample is then used to parameterize a planar
+/// best-fit model. The distance between each neighbouring point and the plane is then evaluated; inliers are
+/// those neighbouring points within a user-specified distance threshold (`--threshold`). Models with at least
+/// a minimum number of inlier points (`--model_size`) are then accepted. This process of selecting models is
+/// iterated a number of user-specified times (`--num_iter`).
+///
+/// One of the challenges with identifying planar surfaces in LiDAR point clouds is that these data are usually
+/// collected along scan lines. Therefore, each scan line can potentially yield a vertical planar surface, which
+/// is one reason that some vegetation points remain after applying the RANSAC plane-fitting method. To cope
+/// with this problem, the tool allows the user to specify a maximum planar slope (`--max_slope`) parameter.
+/// Planes that have slopes greater than this threshold are rejected by the algorithm. This has the side-effect
+/// of removing building walls however.
+///
 /// # See Also
 /// `LidarGroundPointFilter`
 pub struct LidarRansacPlanes {
@@ -49,7 +63,7 @@ impl LidarRansacPlanes {
         let name = "LidarRansacPlanes".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description =
-            "Removes outliers (high and low points) in a LiDAR point cloud.".to_string();
+            "Performs a RANSAC analysis to identify points within a LiDAR point cloud that belong to linear planes.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -98,9 +112,9 @@ impl LidarRansacPlanes {
         });
 
         parameters.push(ToolParameter {
-            name: "Inliner Threshold".to_owned(),
+            name: "Inlier Threshold".to_owned(),
             flags: vec!["--threshold".to_owned()],
-            description: "Threshold used to determine inliner points.".to_owned(),
+            description: "Threshold used to determine inlier points.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.35".to_owned()),
             optional: true,
@@ -112,6 +126,15 @@ impl LidarRansacPlanes {
             description: "Acceptable model size.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("8".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Maximum Planar Slope".to_owned(),
+            flags: vec!["--max_slope".to_owned()],
+            description: "Maximum planar slope.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("80.0".to_owned()),
             optional: true,
         });
 
@@ -135,7 +158,7 @@ impl LidarRansacPlanes {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --num_iter=10 --num_samples=5 --threshold=0.25", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --num_iter=10 --num_samples=5 --threshold=0.25 --max_slope=70.0", short_exe, name).replace("*", &sep);
 
         LidarRansacPlanes {
             name: name,
@@ -196,6 +219,7 @@ impl WhiteboxTool for LidarRansacPlanes {
         let mut threshold = 0.15;
         let mut acceptable_model_size = 30;
         let mut filter = true;
+        let mut max_slope = 75f64;
 
         // read the arguments
         if args.len() == 0 {
@@ -256,6 +280,12 @@ impl WhiteboxTool for LidarRansacPlanes {
                 } else {
                     args[i + 1].to_string().parse::<usize>().unwrap()
                 };
+            } else if flag_val == "-max_slope" {
+                max_slope = if keyval {
+                    vec[1].to_string().parse::<f64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<f64>().unwrap()
+                };
             } else if flag_val == "-classify" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     filter = false;
@@ -299,6 +329,8 @@ impl WhiteboxTool for LidarRansacPlanes {
             }
         }
 
+        let larger_of_two_samples = num_samples.max(acceptable_model_size);
+
         // if acceptable_model_size < num_samples {
         //     acceptable_model_size = num_samples;
         //     if verbose {
@@ -317,7 +349,8 @@ impl WhiteboxTool for LidarRansacPlanes {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch3D<usize> = FixedRadiusSearch3D::new(search_radius, DistanceMetric::SquaredEuclidean);
+        let mut frs: FixedRadiusSearch3D<usize> =
+            FixedRadiusSearch3D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for (i, p) in (&input).into_iter().enumerate() {
             frs.insert(p.x, p.y, p.z, i);
             if verbose {
@@ -344,7 +377,7 @@ impl WhiteboxTool for LidarRansacPlanes {
         // }
 
         let frs = Arc::new(frs); // wrap FRS in an Arc
-        // let kdtree = Arc::new(kdtree);
+                                 // let kdtree = Arc::new(kdtree);
         let input = Arc::new(input); // wrap input in an Arc
         let num_procs = num_cpus::get();
         let (tx, rx) = mpsc::channel();
@@ -359,23 +392,29 @@ impl WhiteboxTool for LidarRansacPlanes {
                 let mut p2: PointData;
                 let mut index: usize;
                 let mut rng = &mut rand::thread_rng();
-
+                let mut model: Plane;
+                let mut better_model: Plane;
+                let mut center_point: Vector3<f64>;
+                let mut rmse: f64;
+                let mut min_rmse: f64;
+                let mut model_contains_center_point: bool;
                 for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
+                    // find the best fitting planar model that contains this point
                     p1 = input.get_point_info(point_num);
+                    center_point = Vector3::new(p1.x, p1.y, p1.z);
                     let ret = frs.search(p1.x, p1.y, p1.z);
                     // let ret = kdtree
                     //             .within(&[p1.x, p1.y], search_radius, &squared_euclidean)
                     //             .unwrap();
                     n = ret.len();
                     let mut points: Vec<Vector3<f64>> = Vec::with_capacity(n);
-                    let mut model: Plane;
-                    let mut better_model: Plane;
-                    let mut best_model: Plane = Plane{..Default::default()};
-                    let mut rmse: f64;
-                    let mut min_rmse: f64;
+                    let mut best_model: Plane = Plane {
+                        ..Default::default()
+                    };
                     // let mut best_model_num_points = 0;
                     let mut model_found = false;
-                    if n > num_samples {
+                    let mut model_points: Vec<usize> = Vec::with_capacity(n);
+                    if n > larger_of_two_samples {
                         for j in 0..n {
                             index = ret[j].0;
                             // index = *ret[j].1;
@@ -387,52 +426,65 @@ impl WhiteboxTool for LidarRansacPlanes {
                         let v: Vec<usize> = (0..n).collect();
                         for _ in 0..num_iter {
                             // select n random samples.
-                            let samples: Vec<usize> = v.choose_multiple(&mut rng, num_samples).cloned().collect();
-                            let data: Vec<Vector3<f64>> = samples.into_iter().map(|a| { points[a] } ).collect();
+                            let samples: Vec<usize> =
+                                v.choose_multiple(&mut rng, num_samples).cloned().collect();
+                            let data: Vec<Vector3<f64>> =
+                                samples.into_iter().map(|a| points[a]).collect();
                             // get the best-fit plane
-                            model = plane_from_points(&data);
-                            let mut inliners: Vec<Vector3<f64>> = Vec::with_capacity(n);
-                            for j in 0..n {
-                                if model.residual(points[j]).abs() <= threshold {
-                                    inliners.push(points[j]);
-                                }
-                            }
-                            if inliners.len() >= acceptable_model_size {
-                                better_model = plane_from_points(&inliners);
-                                rmse = better_model.rmse(&inliners);
-                                if rmse < min_rmse {
-                                    min_rmse = rmse;
-                                    best_model = better_model;
-                                    model_found = true;
-                                    if min_rmse == 0f64 {
-                                        // You can't get any better than that.
-                                        break;
+                            model = Plane::from_points(&data);
+                            if model.slope() < max_slope {
+                                let mut inliers: Vec<Vector3<f64>> = Vec::with_capacity(n);
+                                for j in 0..n {
+                                    if model.residual(&points[j]) < threshold {
+                                        inliers.push(points[j]);
                                     }
                                 }
-                                // if inliners.len() > best_model_num_points {
-                                //     best_model_num_points = inliners.len();
-                                //     best_model = better_model;
-                                // }
+                                if inliers.len() >= acceptable_model_size {
+                                    better_model = Plane::from_points(&inliers);
+                                    rmse = better_model.rmse(&inliers);
+                                    model_contains_center_point =
+                                        better_model.residual(&center_point) < threshold;
+                                    if rmse < min_rmse && model_contains_center_point {
+                                        min_rmse = rmse;
+                                        best_model = better_model;
+                                        model_found = true;
+                                        if inliers.len() == n || min_rmse == 0f64 {
+                                            // You can't get any better than that.
+                                            break;
+                                        }
+                                    }
+                                    // if inliers.len() > best_model_num_points {
+                                    //     best_model_num_points = inliers.len();
+                                    //     best_model = better_model;
+                                    // }
+                                }
                             }
                         }
                     }
                     if model_found {
-                        if best_model.residual(Vector3::new(p1.x, p1.y, p1.z)) <= threshold {
-                            tx.send((point_num, true)).unwrap();
-                        } else {
-                            tx.send((point_num, false)).unwrap();
+                        for j in 0..n {
+                            index = ret[j].0;
+                            if best_model.residual(&points[j]) <= threshold {
+                                model_points.push(index);
+                            }
                         }
-                    } else {
-                        tx.send((point_num, false)).unwrap();
+                        if model_points.len() < acceptable_model_size {
+                            model_points.clear();
+                        }
                     }
+                    tx.send(model_points).unwrap();
                 }
             });
         }
 
         let mut is_a_planar_surface = vec![false; n_points];
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
-            is_a_planar_surface[data.0] = data.1;
+            // let data = rx.recv().unwrap();
+            // is_a_planar_surface[data.0] = data.1;
+            let model_points = rx.recv().unwrap();
+            for index in model_points {
+                is_a_planar_surface[index] = true;
+            }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {
@@ -607,7 +659,7 @@ impl WhiteboxTool for LidarRansacPlanes {
             }
             num_points_filtered = 1; // so it passes the saving
         }
-        
+
         let elapsed_time = get_formatted_elapsed_time(start);
 
         if num_points_filtered == 0 {
@@ -634,73 +686,6 @@ impl WhiteboxTool for LidarRansacPlanes {
     }
 }
 
-// Constructs a plane from a collection of points
-// so that the summed squared distance to all points is minimzized
-fn plane_from_points(points: &Vec<Vector3<f64>>) -> Plane {
-    let n = points.len();
-    // assert!(n >= 3, "At least three points required");
-    if n < 3 {
-        return Plane::zero();
-    }
-
-    let mut sum = Vector3::new(0.0, 0.0, 0.0);
-    for p in points {
-        sum = sum + *p;
-    }
-    let centroid = sum * (1.0 / (n as f64));
-
-    // Calc full 3x3 covariance matrix, excluding symmetries:
-    let mut xx = 0.0;
-    let mut xy = 0.0;
-    let mut xz = 0.0;
-    let mut yy = 0.0;
-    let mut yz = 0.0;
-    let mut zz = 0.0;
-
-    for p in points {
-        let r = p - &centroid;
-        xx += r.x * r.x;
-        xy += r.x * r.y;
-        xz += r.x * r.z;
-        yy += r.y * r.y;
-        yz += r.y * r.z;
-        zz += r.z * r.z;
-    }
-
-    let det_x = yy * zz - yz * yz;
-    let det_y = xx * zz - xz * xz;
-    let det_z = xx * yy - xy * xy;
-
-    let det_max = det_x.max(det_y).max(det_z);
-
-    // Pick path with best conditioning:
-    let (a, b, c) = if det_max == det_x {
-        (1.0,
-        (xz * yz - xy * zz) / det_x,
-        (xy * yz - xz * yy) / det_x)
-        // Vector3::new(1.0, a, b)
-    } else if det_max == det_y {
-        ((yz * xz - xy * zz) / det_y,
-        1.0,
-        (xy * xz - yz * xx) / det_y)
-        // Vector3::new(a, 1.0, b)
-    } else {
-        ((yz * xy - xz * yy) / det_z,
-        (xz * xy - yz * xx) / det_z,
-        1.0)
-        // Vector3::new(a, b, 1.0)
-    };
-
-    // Derive the plane from the a,b,c normal and the centroid (x0, y0, z0)
-
-    // a(x−x0)+b(y−y0)+c(z−z0)=0
-    // d = -a*x0 + -b*y0 + -c*z0
-    let d = -a*centroid.x + -b*centroid.y + -c*centroid.z;
-
-    Plane::new(a, b, c, d)
-    // normalize(dir)
-}
-
 // fn normalize(v: Vector3<f64>) -> Vector3<f64> {
 //     let norm = (v.x * v.x + v.y * v.y + v.z * v.z).sqrt();
 //     Vector3::new(v.x / norm, v.y / norm, v.z / norm)
@@ -713,39 +698,168 @@ struct Plane {
     a: f64,
     b: f64,
     c: f64,
-    d: f64
+    d: f64,
 }
 
 impl Plane {
     fn new(a: f64, b: f64, c: f64, d: f64) -> Plane {
-        Plane { a: a, b: b, c: c, d: d }
+        Plane {
+            a: a,
+            b: b,
+            c: c,
+            d: d,
+        }
     }
 
     fn zero() -> Plane {
-        Plane { a: 0f64, b: 0f64, c: 0f64, d: 0f64 }
+        Plane {
+            a: 0f64,
+            b: 0f64,
+            c: 0f64,
+            d: 0f64,
+        }
+    }
+
+    // Constructs a plane from a collection of points
+    // so that the summed squared distance to all points is minimized
+    fn from_points(points: &Vec<Vector3<f64>>) -> Plane {
+        let n = points.len();
+        // assert!(n >= 3, "At least three points required");
+        if n < 3 {
+            return Plane::zero();
+        }
+
+        let mut sum = Vector3::new(0.0, 0.0, 0.0);
+        for p in points {
+            sum = sum + *p;
+        }
+        let centroid = sum * (1.0 / (n as f64));
+
+        // Calc full 3x3 covariance matrix, excluding symmetries:
+        let mut xx = 0.0;
+        let mut xy = 0.0;
+        let mut xz = 0.0;
+        let mut yy = 0.0;
+        let mut yz = 0.0;
+        let mut zz = 0.0;
+
+        for p in points {
+            let r = p - &centroid;
+            xx += r.x * r.x;
+            xy += r.x * r.y;
+            xz += r.x * r.z;
+            yy += r.y * r.y;
+            yz += r.y * r.z;
+            zz += r.z * r.z;
+        }
+
+        let det_x = yy * zz - yz * yz;
+        let det_y = xx * zz - xz * xz;
+        let det_z = xx * yy - xy * xy;
+
+        let det_max = det_x.max(det_y).max(det_z);
+
+        // Pick path with best conditioning:
+        let (mut a, mut b, mut c) = if det_max == det_x {
+            (
+                1.0,
+                (xz * yz - xy * zz) / det_x,
+                (xy * yz - xz * yy) / det_x,
+            )
+        } else if det_max == det_y {
+            (
+                (yz * xz - xy * zz) / det_y,
+                1.0,
+                (xy * xz - yz * xx) / det_y,
+            )
+        } else {
+            (
+                (yz * xy - xz * yy) / det_z,
+                (xz * xy - yz * xx) / det_z,
+                1.0,
+            )
+        };
+
+        // Derive the plane from the a,b,c normal and the centroid (x0, y0, z0)
+        // a(x−x0)+b(y−y0)+c(z−z0)=0
+        // d = -a*x0 + -b*y0 + -c*z0
+
+        let norm = (a * a + b * b + c * c).sqrt();
+        a /= norm;
+        b /= norm;
+        c /= norm;
+        let d = -a * centroid.x + -b * centroid.y + -c * centroid.z;
+        Plane::new(a, b, c, d)
     }
 
     // // solves for the value of z at point (x0,y0)
     // // z = -(d + ax + by) / c
-    // fn solve_xy(&self, x0: f64, y0: f64) -> f64 {
-    //     -(self.d + self.a*x0 + self.b*y0) / self.c
+    // fn solve_xy(&self, x0: f64, y0: f64) -> Option<f64> {
+    //     if self.c != 0f64 {
+    //         return Some(-(self.d + self.a * x0 + self.b * y0) / self.c);
+    //     }
+    //     None
     // }
 
     // calculates the residual z value at point (x0,y0,z0)
     // z = -(d + ax0 + by0) / c
     // residual = z0 - z
-    fn residual(&self, p: Vector3<f64>) -> f64 {
-        let z = -(self.d + self.a*p.x + self.b*p.y) / self.c;
-        p.z - z
+    fn residual(&self, p: &Vector3<f64>) -> f64 {
+        // let z = -(self.d + self.a*p.x + self.b*p.y) / self.c;
+        // p.z - z
+
+        // We need to use the reduced major axis distance instead of z residuals because the later can't handle a
+        // vertical plane, of which there may be many in a point cloud.
+        (self.a * p.x + self.b * p.y + self.c * p.z + self.d).abs() / self.norm_length()
     }
 
     fn rmse(&self, points: &Vec<Vector3<f64>>) -> f64 {
         let mut rmse = 0f64;
         let mut z: f64;
+        // for p in points {
+        //     z = -(self.d + self.a*p.x + self.b*p.y) / self.c;
+        //     rmse += (p.z - z)*(p.z - z);
+        // }
+        // (rmse / points.len() as f64).sqrt()
+
+        // We need to use the reduced major axis distance instead of z residuals because the later can't handle a
+        // vertical plane, of which there may be many in a point cloud.
+        let norm = self.norm_length();
         for p in points {
-            z = -(self.d + self.a*p.x + self.b*p.y) / self.c;
-            rmse += (p.z - z)*(p.z - z);
+            z = (self.a * p.x + self.b * p.y + self.c * p.z + self.d) / norm;
+            rmse += z * z;
         }
         (rmse / points.len() as f64).sqrt()
     }
+
+    fn norm_length(&self) -> f64 {
+        (self.a * self.a + self.b * self.b + self.c * self.c).sqrt()
+    }
+
+    fn slope(&self) -> f64 {
+        // (self.a*self.a + self.b*self.b).sqrt().atan().to_degrees()
+        self.c.abs().acos().to_degrees()
+    }
 }
+
+// impl AddAssign for Plane {
+//     fn add_assign(&mut self, other: Self) {
+//         *self = Self {
+//             a: self.a + other.a,
+//             b: self.b + other.b,
+//             c: self.c + other.c,
+//             d: self.d + other.d,
+//         };
+//     }
+// }
+
+// impl SubAssign for Plane {
+//     fn sub_assign(&mut self, other: Self) {
+//         *self = Self {
+//             a: self.a - other.a,
+//             b: self.b - other.b,
+//             c: self.c - other.c,
+//             d: self.d - other.d,
+//         };
+//     }
+// }

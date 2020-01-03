@@ -21,24 +21,24 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform a mass flux calculation using DEM-based surface flow-routing techniques. 
-/// For example, it could be used to model the distribution of sediment or phosphorous within a catchment. 
-/// Flow-routing is based on a D8 flow pointer (i.e. flow direction) derived from an input depresionless DEM 
-/// (`--dem`). The user must also specify the names of loading (`--loading`), efficiency (`--efficiency`), and 
-/// absorption (`--absorption`) rasters, as well as the output raster. Mass Flux operates very much like a 
-/// flow-accumulation operation except that rather than accumulating catchment areas the algorithm routes a 
-/// quantity of mass, the spatial distribution of which is specified within the loading image. The efficiency and 
-/// absorption rasters represent spatial distributions of losses to the accumulation process, the difference 
-/// being that the efficiency raster is a proportional loss (e.g. only 50% of material within a particular grid 
-/// cell will be directed downslope) and the absorption raster is an loss specified as a quantity in the same 
-/// units as the loading image. The efficiency image can range from 0 to 1, or alternatively, can be expressed as 
+/// This tool can be used to perform a mass flux calculation using DEM-based surface flow-routing techniques.
+/// For example, it could be used to model the distribution of sediment or phosphorous within a catchment.
+/// Flow-routing is based on a D8 flow pointer (i.e. flow direction) derived from an input depresionless DEM
+/// (`--dem`). The user must also specify the names of loading (`--loading`), efficiency (`--efficiency`), and
+/// absorption (`--absorption`) rasters, as well as the output raster. Mass Flux operates very much like a
+/// flow-accumulation operation except that rather than accumulating catchment areas the algorithm routes a
+/// quantity of mass, the spatial distribution of which is specified within the loading image. The efficiency and
+/// absorption rasters represent spatial distributions of losses to the accumulation process, the difference
+/// being that the efficiency raster is a proportional loss (e.g. only 50% of material within a particular grid
+/// cell will be directed downslope) and the absorption raster is an loss specified as a quantity in the same
+/// units as the loading image. The efficiency image can range from 0 to 1, or alternatively, can be expressed as
 /// a percentage. The equation for determining the mass sent from one grid cell to a neighbouring grid cell is:
-/// 
+///
 /// > *Outflowing Mass* = (*Loading* - *Absorption* + *Inflowing Mass*) &times; *Efficiency*
-/// 
-/// This tool assumes that each of the three input rasters have the same number of rows and columns and that any 
+///
+/// This tool assumes that each of the three input rasters have the same number of rows and columns and that any
 /// **NoData** cells present are the same among each of the inputs.
-/// 
+///
 /// # See Also
 /// `DInfMassFlux`
 pub struct D8MassFlux {

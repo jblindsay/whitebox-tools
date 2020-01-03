@@ -21,21 +21,21 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
-/// This tool will perform a two-sample Kolmogorov-Smirnov (K-S) test to evaluate whether a significant 
-/// statistical difference exists between the frequency distributions of two rasters. The null hypothesis 
+/// This tool will perform a two-sample Kolmogorov-Smirnov (K-S) test to evaluate whether a significant
+/// statistical difference exists between the frequency distributions of two rasters. The null hypothesis
 /// is that both samples come from a population with the same distribution. Note that this test evaluates
-/// the two input rasters for differences in their overall distribution shape, with no assumption of normality. 
+/// the two input rasters for differences in their overall distribution shape, with no assumption of normality.
 /// If there is need to compare the per-pixel differences between two input rasters, a paired-samples test
 /// such as the `PairedSampleTTest` or the non-parametric `WilcoxonSignedRankTest` should be used instead.
-/// 
-/// The user must 
+///
+/// The user must
 /// specify the name of the two input raster images (`--input1` and `--input2`) and the output report
-/// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
-/// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance 
+/// HTML file (`--output`). The test can be performed optionally on the entire image or on a random
+/// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance
 /// of the test, it is important to keep in mind that given a sufficiently large sample, extremely small and
 /// non-notable differences can be found to be statistically significant. Furthermore
 /// statistical significance says nothing about the practical significance of a difference.
-/// 
+///
 /// # See Also
 /// `KSTestForNormality`, `PairedSampleTTest`, `WilcoxonSignedRankTest`
 pub struct TwoSampleKsTest {
@@ -52,7 +52,8 @@ impl TwoSampleKsTest {
         let name = "TwoSampleKsTest".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Performs a 2-sample K-S test for significant differences on two input rasters.".to_string();
+            "Performs a 2-sample K-S test for significant differences on two input rasters."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -229,9 +230,13 @@ impl WhiteboxTool for TwoSampleKsTest {
         let input2 = Raster::new(&input_file2, "r")?;
         let input2_name = input2.get_short_filename();
 
-        if input1.configs.rows != input2.configs.rows || input1.configs.columns != input2.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input files must have the same number of rows and columns and spatial extent."));
+        if input1.configs.rows != input2.configs.rows
+            || input1.configs.columns != input2.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let start = Instant::now();
@@ -359,8 +364,12 @@ impl WhiteboxTool for TwoSampleKsTest {
         let en = (en1 * en2 / (en1 + en2)).sqrt();
 
         let mut p_value = calculate_p_value(en * dmax);
-        if p_value < 0f64 { p_value = 0f64; }
-        if p_value > 1f64 { p_value = 1f64; }
+        if p_value < 0f64 {
+            p_value = 0f64;
+        }
+        if p_value > 1f64 {
+            p_value = 1f64;
+        }
 
         // create the cdf's
         let mut xdata = vec![];
@@ -368,19 +377,23 @@ impl WhiteboxTool for TwoSampleKsTest {
         let mut series_names = vec![];
         let num_bins = 100usize;
         let mut min_val = data1[0];
-        let mut max_val = data1[n1-1];
+        let mut max_val = data1[n1 - 1];
         let mut bin_size = (max_val - min_val) / num_bins as f64;
         let mut bin: usize;
-        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
+        let profile_xdata = (0..num_bins)
+            .map(|x| min_val + x as f64 * bin_size)
+            .collect::<Vec<f64>>();
         let mut profile_ydata = vec![0f64; num_bins];
         // bin frequency data
         for val in &data1 {
             bin = ((val - min_val) / bin_size).floor() as usize;
-            if bin > num_bins -1 { bin = num_bins - 1; }
+            if bin > num_bins - 1 {
+                bin = num_bins - 1;
+            }
             profile_ydata[bin] += 1f64;
         }
         for bin in 1..num_bins {
-            profile_ydata[bin] += profile_ydata[bin-1];
+            profile_ydata[bin] += profile_ydata[bin - 1];
         }
         for bin in 0..num_bins {
             profile_ydata[bin] /= en1;
@@ -390,18 +403,22 @@ impl WhiteboxTool for TwoSampleKsTest {
         series_names.push(input1_name.clone());
 
         min_val = data2[0];
-        max_val = data2[n2-1];
+        max_val = data2[n2 - 1];
         bin_size = (max_val - min_val) / num_bins as f64;
-        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
+        let profile_xdata = (0..num_bins)
+            .map(|x| min_val + x as f64 * bin_size)
+            .collect::<Vec<f64>>();
         profile_ydata = vec![0f64; num_bins];
         // bin frequency data
         for val in &data2 {
             bin = ((val - min_val) / bin_size).floor() as usize;
-            if bin > num_bins -1 { bin = num_bins - 1; }
+            if bin > num_bins - 1 {
+                bin = num_bins - 1;
+            }
             profile_ydata[bin] += 1f64;
         }
         for bin in 1..num_bins {
-            profile_ydata[bin] += profile_ydata[bin-1];
+            profile_ydata[bin] += profile_ydata[bin - 1];
         }
         for bin in 0..num_bins {
             profile_ydata[bin] /= en2;
@@ -410,7 +427,6 @@ impl WhiteboxTool for TwoSampleKsTest {
         ydata.push(profile_ydata.clone());
         series_names.push(input2_name.clone());
 
-        
         ///////////////////////
         // Output the report //
         ///////////////////////
@@ -435,10 +451,16 @@ impl WhiteboxTool for TwoSampleKsTest {
                 .as_bytes(),
         )?;
 
-        writer.write_all(&format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 1 (n1)</strong>: {:.0}<br>", n1).as_bytes())?;
-        writer.write_all(&format!("<strong>Sample size 2 (n2)</strong>: {:.0}<br>", n2).as_bytes())?;
+        writer.write_all(
+            &format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes(),
+        )?;
+        writer
+            .write_all(&format!("<strong>Sample size 1 (n1)</strong>: {:.0}<br>", n1).as_bytes())?;
+        writer
+            .write_all(&format!("<strong>Sample size 2 (n2)</strong>: {:.0}<br>", n2).as_bytes())?;
         writer.write_all(
             &format!(
                 "<strong>Test Statistic (D<sub>max</sub>)</strong>: {:.4}<br>",
@@ -491,7 +513,6 @@ impl WhiteboxTool for TwoSampleKsTest {
         writer.write_all(
             &format!("<div id='graph' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
         )?;
-
 
         writer.write_all("</body>".as_bytes())?;
         writer.write_all("</html>".as_bytes())?;
@@ -546,7 +567,7 @@ fn calculate_p_value(alam: f64) -> f64 {
     let eps1 = 0.001f64;
     let eps2 = 1.0e-8f64;
     let a2 = -2.0 * alam * alam;
-    for j in 1..= 100 {
+    for j in 1..=100 {
         term = fac * (a2 * (j * j) as f64).exp();
         sum += term;
         if term.abs() <= eps1 * termbf || term.abs() <= eps2 * sum {
@@ -555,5 +576,5 @@ fn calculate_p_value(alam: f64) -> f64 {
         fac = -fac;
         termbf = term.abs();
     }
-    return 1.0
+    return 1.0;
 }

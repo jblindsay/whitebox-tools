@@ -14,22 +14,22 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool will identify the catchment areas to each link in a user-specified stream network, i.e. the 
+/// This tool will identify the catchment areas to each link in a user-specified stream network, i.e. the
 /// network's sub-basins. `Subbasins` effectively performs a stream link ID operation (`StreamLinkIdentifier`) followed by
-/// a `Watershed` operation. The user must specify the name of a flow pointer (flow direction) raster (`--d8_pntr`), 
-/// a streams raster (`--streams`), and the output raster (`--output`). The flow pointer and streams rasters should 
-/// be generated using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either 
-/// the `BreachDepressions` or `FillDepressions` tool. 
-/// 
-/// `Hillslopes` are conceptually similar to sub-basins, except that sub-basins do not distinguish between the 
-/// right-bank and left-bank catchment areas of stream links. The Sub-basins tool simply assigns a unique identifier 
+/// a `Watershed` operation. The user must specify the name of a flow pointer (flow direction) raster (`--d8_pntr`),
+/// a streams raster (`--streams`), and the output raster (`--output`). The flow pointer and streams rasters should
+/// be generated using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either
+/// the `BreachDepressions` or `FillDepressions` tool.
+///
+/// `Hillslopes` are conceptually similar to sub-basins, except that sub-basins do not distinguish between the
+/// right-bank and left-bank catchment areas of stream links. The Sub-basins tool simply assigns a unique identifier
 /// to each stream link in a stream network.
 ///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// NoData values in the input flow pointer raster are assigned NoData values in the output image.
-/// 
+///
 /// # See Also
 /// `StreamLinkIdentifier`, `Watershed`, `Hillslopes`, `D8Pointer`, `BreachDepressions`, `FillDepressions`
 pub struct Subbasins {

@@ -190,7 +190,8 @@ impl Point2D {
 
     pub fn nearly_equals(&self, other: &Self) -> bool {
         // (self.x - other.x).abs() <= EPSILON && (self.y - other.y).abs() <= EPSILON
-        ((self.x - other.x)*(self.x - other.x) + (self.y - other.y)*(self.y - other.y)) <= EPSILON_SQRD
+        ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+            <= EPSILON_SQRD
     }
 
     /// Tests if a point is Left|On|Right of an infinite line,

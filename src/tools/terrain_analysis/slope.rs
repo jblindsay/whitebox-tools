@@ -17,41 +17,41 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates slope gradient (i.e. slope steepness in degrees) for each grid cell 
-/// in an input digital elevation model (DEM). The user must specify the name of the input 
-/// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important 
-/// when the vertical and horizontal units are not the same in the DEM. When this is the case, 
-/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the 
-/// DEM is in the geographic coordinate system (latitude and longitude), the following equation 
+/// This tool calculates slope gradient (i.e. slope steepness in degrees) for each grid cell
+/// in an input digital elevation model (DEM). The user must specify the name of the input
+/// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
+/// when the vertical and horizontal units are not the same in the DEM. When this is the case,
+/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
+/// DEM is in the geographic coordinate system (latitude and longitude), the following equation
 /// is used:
-/// 
+///
 /// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
-/// 
+///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
-/// 
-/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given 
+///
+/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given
 /// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),
-/// 
+///
 /// |  7  |  8  |  1  | \
 /// |  6  |  9  |  2  | \
 /// |  5  |  4  |  3  |
-/// 
+///
 /// > slope = arctan(f<sub>x</sub><sup>2</sup> + f<sub>y</sub><sup>2</sup>)<sup>0.5</sup>
-/// 
+///
 /// where,
-/// 
+///
 /// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
-/// 
+///
 ///  and,
-/// 
+///
 /// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / * &Delta;y
-/// 
+///
 /// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
-/// 
+///
 /// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
-/// 
+///
 /// # See Also
 /// `Aspect`, `PlanCurvature`, `ProfileCurvature`
 pub struct Slope {

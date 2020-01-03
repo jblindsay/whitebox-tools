@@ -17,31 +17,31 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool is used to generate a flow pointer grid using the simple D8 (O'Callaghan and Mark, 1984) algorithm. The 
-/// user must specify the name (`--dem`) of a digital elevation model (DEM) that has been hydrologically 
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using 
-/// either the `BreachDepressions` or `FillDepressions` tool. The local drainage direction raster output (`--output`) 
-/// by this tool serves as a necessary input for several other spatial hydrology and stream network analysis tools 
+/// This tool is used to generate a flow pointer grid using the simple D8 (O'Callaghan and Mark, 1984) algorithm. The
+/// user must specify the name (`--dem`) of a digital elevation model (DEM) that has been hydrologically
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using
+/// either the `BreachDepressions` or `FillDepressions` tool. The local drainage direction raster output (`--output`)
+/// by this tool serves as a necessary input for several other spatial hydrology and stream network analysis tools
 /// in the toolset. Some tools will calculate this flow pointer raster directly from the input DEM.
-/// 
+///
 /// By default, D8 flow pointers use the following clockwise, base-2 numeric index convention:
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 64 | 128 | 1  |
 /// | 32 |  0  | 2  |
 /// | 16 |  8  | 4  |
-/// 
-/// Notice that grid cells that have no lower neighbours are assigned a flow direction of zero. In a DEM that has been 
+///
+/// Notice that grid cells that have no lower neighbours are assigned a flow direction of zero. In a DEM that has been
 /// pre-processed to remove all depressions and flat areas, this condition will only occur along the edges of the grid.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output image.
-/// 
+///
 /// # Reference
-/// O'Callaghan, J. F., & Mark, D. M. (1984). The extraction of drainage networks from digital elevation data. 
+/// O'Callaghan, J. F., & Mark, D. M. (1984). The extraction of drainage networks from digital elevation data.
 /// Computer vision, graphics, and image processing, 28(3), 323-344.
-/// 
+///
 /// # See Also
 /// `DInfPointer`, `FD8Pointer`, `BreachDepressions`, `FillDepressions`
 pub struct D8Pointer {

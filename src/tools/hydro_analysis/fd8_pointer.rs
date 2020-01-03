@@ -17,30 +17,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool is used to generate a flow pointer grid (i.e. flow direction) using the FD8 (Freeman, 1991) algorithm. 
-/// FD8 is a multiple-flow-direction (MFD) method because the flow entering each grid cell is routed one or more 
-/// downslope neighbours, i.e. flow divergence is permitted. The user must specify the name of a digital elevation model 
-/// (DEM; `--dem`) that has been hydrologically corrected to remove all spurious depressions and flat areas. 
+/// This tool is used to generate a flow pointer grid (i.e. flow direction) using the FD8 (Freeman, 1991) algorithm.
+/// FD8 is a multiple-flow-direction (MFD) method because the flow entering each grid cell is routed one or more
+/// downslope neighbours, i.e. flow divergence is permitted. The user must specify the name of a digital elevation model
+/// (DEM; `--dem`) that has been hydrologically corrected to remove all spurious depressions and flat areas.
 /// DEM pre-processing is usually achived using the `BreachDepressions` or `FillDepressions` tools.
-/// 
+///
 /// By default, D8 flow pointers use the following clockwise, base-2 numeric index convention:
-/// 
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 64 | 128 | 1  |
 /// | 32 |  0  | 2  |
 /// | 16 |  8  | 4  |
 ///
-/// In the case of the FD8 algorithm, some portion of the flow entering a grid cell will be sent to each downslope 
-/// neighbour. Thus, the FD8 flow-pointer value is the sum of each of the individual pointers for all downslope neighbours. 
-/// For example, if a grid cell has downslope neighbours to the northeast, east, and south the corresponding FD8 
-/// flow-pointer value will be 1 + 2 + 8 = 11. Using the naming convention above, this is the only combination of 
-/// flow-pointers that will result in the combined value of 11. Using the base-2 naming convention allows for the 
-/// storage of complex combinations of flow-points using a single numeric value, which is the reason for using this 
+/// In the case of the FD8 algorithm, some portion of the flow entering a grid cell will be sent to each downslope
+/// neighbour. Thus, the FD8 flow-pointer value is the sum of each of the individual pointers for all downslope neighbours.
+/// For example, if a grid cell has downslope neighbours to the northeast, east, and south the corresponding FD8
+/// flow-pointer value will be 1 + 2 + 8 = 11. Using the naming convention above, this is the only combination of
+/// flow-pointers that will result in the combined value of 11. Using the base-2 naming convention allows for the
+/// storage of complex combinations of flow-points using a single numeric value, which is the reason for using this
 /// somewhat odd convention.
-/// 
+///
 /// # Reference
-/// Freeman, T. G. (1991). Calculating catchment area with divergent flow based on a regular grid. Computers and 
+/// Freeman, T. G. (1991). Calculating catchment area with divergent flow based on a regular grid. Computers and
 /// Geosciences, 17(3), 413-422.
 ///
 /// # See Also

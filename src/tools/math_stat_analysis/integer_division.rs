@@ -17,14 +17,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
-/// [integer division](https://en.wikipedia.org/wiki/Division_(mathematics)#Of_integers) of the corresponding 
-/// grid cells in two input rasters or constant values (`--input1` and `--input2`). The calculation differs 
-/// from regular division in that the result is always an integer value (rounded by truncation). If the 
-/// second raster / constant is zero the corresponding grid cell in the output raster will be assigned 
-/// the **NoData** value. Grid cells containing **NoData** values in either of the inputs will be assigned 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the
+/// [integer division](https://en.wikipedia.org/wiki/Division_(mathematics)#Of_integers) of the corresponding
+/// grid cells in two input rasters or constant values (`--input1` and `--input2`). The calculation differs
+/// from regular division in that the result is always an integer value (rounded by truncation). If the
+/// second raster / constant is zero the corresponding grid cell in the output raster will be assigned
+/// the **NoData** value. Grid cells containing **NoData** values in either of the inputs will be assigned
 /// a **NoData** value in the output raster.
-/// 
+///
 /// # See Also
 /// `Divide`
 pub struct IntegerDivision {

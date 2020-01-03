@@ -9,8 +9,8 @@ License: MIT
 use crate::raster::*;
 use crate::structures::Array2D;
 use crate::tools::*;
-use std::cmp::Ordering::Equal;
 use std::cmp::Ordering;
+use std::cmp::Ordering::Equal;
 use std::collections::{BinaryHeap, VecDeque};
 use std::env;
 use std::f64;
@@ -21,74 +21,74 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform a type of optimal depression breaching to prepare a 
+/// This tool can be used to perform a type of optimal depression breaching to prepare a
 /// digital elevation model (DEM) for hydrological analysis. Depression breaching is a common
 /// alternative to depression filling (`FillDepression`) and often offers a lower-impact
-/// solution to the removal of topographic depressions. This tool implements a method that is 
+/// solution to the removal of topographic depressions. This tool implements a method that is
 /// loosely based on the algorithm described by Lindsay and Dhun (2015), furthering the earlier
 /// algorithm with efficiency optimizations and other significant enhancements. The approach uses a least-cost
-/// path analysis to identify the breach channel that connects pit cells (i.e. grid cells for 
-/// which there is no lower neighbour) to some distant lower cell. Here, the cost of a breach 
-/// path is determined by the amount of elevation lowering needed to cut the breach channel 
-/// through the surrounding topography. 
-/// 
+/// path analysis to identify the breach channel that connects pit cells (i.e. grid cells for
+/// which there is no lower neighbour) to some distant lower cell. Here, the cost of a breach
+/// path is determined by the amount of elevation lowering needed to cut the breach channel
+/// through the surrounding topography.
+///
 /// The user must specify the name of the input DEM file (`--dem`), the output breached DEM
 /// file (`--output`), the maximum search window radius (`--radius`), the optional maximum breach
 /// cost (`--max_cost`), and an optional flat height increment value (`--flat_increment`). Notice that **if the
-/// `--flat_increment` parameter is not specified, the small number used to ensure flow across flats will be 
-/// calculated automatically, which should be preferred in most applications** of the tool. 
+/// `--flat_increment` parameter is not specified, the small number used to ensure flow across flats will be
+/// calculated automatically, which should be preferred in most applications** of the tool.
 /// The tool operates by performing a least-cost path analysis within a neighbourhood surround
-/// each pit cell, where the neighbourhood size begins small (9 &times; 9; radius = 4) and iteratively increases (by doubling) 
+/// each pit cell, where the neighbourhood size begins small (9 &times; 9; radius = 4) and iteratively increases (by doubling)
 /// until it reaches the maximum breach length parameter. If a value is specified for the optional
 /// `--max_cost` parameter, then least-cost breach paths that would require digging a channel that is more costly
-/// than this value will be left to see if the pit cell can be resolved with a longer but shallower (less costly) breach 
+/// than this value will be left to see if the pit cell can be resolved with a longer but shallower (less costly) breach
 /// channel in an additional iteration (i.e. a larger search window). The flat increment value is used
 /// to ensure that there is a monotonically descending path along breach channels to satisfy the necessary
 /// condition of a downslope gradient for flowpath modelling. It is best for this value to be a small
-/// value. If left unspecified, the tool with determine an appropriate value based on the range of 
-/// elevation values in the input DEM. Notice that the need to specify these very small elevation 
+/// value. If left unspecified, the tool with determine an appropriate value based on the range of
+/// elevation values in the input DEM. Notice that the need to specify these very small elevation
 /// increment values is one of the reasons why the output DEM will always be of a 64-bit floating-point
 /// data type, which will often double the storage requirements of a DEM (DEMs are often store with 32-bit
-/// precision). Lastly, the user may optionally choose to apply depression filling (`--fill`) on any depressions 
-/// that remain unresolved by the earlier depression breaching operation. This filling step uses an efficient 
+/// precision). Lastly, the user may optionally choose to apply depression filling (`--fill`) on any depressions
+/// that remain unresolved by the earlier depression breaching operation. This filling step uses an efficient
 /// filling method based on flooding depressions from their pit cells until outlets are identified and then
 /// raising the elevations of flooded cells back and away from the outlets.
-/// 
+///
 /// The tool can be run in two modes, based on whether the `--min_dist` is specified. If the `--min_dist` flag
-/// is specified, the accumulated cost (accum<sub>2</sub>) of breaching from *cell1* to *cell2* along a channel 
+/// is specified, the accumulated cost (accum<sub>2</sub>) of breaching from *cell1* to *cell2* along a channel
 /// issuing from *pit* is calculated using the traditional cost-distance function:
-/// 
+///
 /// > cost<sub>1</sub> = z<sub>1</sub> - (z<sub>pit</sub> + *l* &times; *s*)
 /// >
 /// > cost<sub>2</sub> = z<sub>2</sub> - [z<sub>pit</sub> + (*l* + 1)*s*]
 /// >
 /// > accum<sub>2</sub> = accum<sub>1</sub> + *g*(cost<sub>1</sub> + cost<sub>2</sub>) / 2.0
-/// 
-/// where cost<sub>1</sub> and cost<sub>2</sub> are the costs associated with moving through *cell1* and *cell2* 
-/// respectively, z<sub>1</sub> and z<sub>2</sub> are the elevations of the two cells, z<sub>pit</sub> is the elevation 
-/// of the pit cell, *l* is the length of the breach channel to *cell1*, *g* is the grid cell distance between 
-/// cells (accounting for diagonal distances), and *s* is the small number used to ensure flow 
+///
+/// where cost<sub>1</sub> and cost<sub>2</sub> are the costs associated with moving through *cell1* and *cell2*
+/// respectively, z<sub>1</sub> and z<sub>2</sub> are the elevations of the two cells, z<sub>pit</sub> is the elevation
+/// of the pit cell, *l* is the length of the breach channel to *cell1*, *g* is the grid cell distance between
+/// cells (accounting for diagonal distances), and *s* is the small number used to ensure flow
 /// across flats. If the `--min_dist` flag is not present, the accumulated cost is calculated as:
-/// 
+///
 /// > accum<sub>2</sub> = accum<sub>1</sub> + cost<sub>2</sub>
-/// 
-/// That is, without the `--min_dist` flag, the tool works to minimize elevation changes to the DEM caused by 
-/// breaching, without considering the distance of breach channels. Notice that the value `--max_cost`, if 
+///
+/// That is, without the `--min_dist` flag, the tool works to minimize elevation changes to the DEM caused by
+/// breaching, without considering the distance of breach channels. Notice that the value `--max_cost`, if
 /// specified, should account for this difference in the way cost/cost-distances are calculated. The first cell
 /// in the least-cost accumulation operation that is identified for which cost<sub>2</sub> <= 0.0 is the target
 /// cell to which the breach channel will connect the pit along the least-cost path.
-/// 
+///
 /// In comparison with the `BreachDepressions` tool, this breaching method often provides a more
-/// satisfactory, lower impact, breaching solution and is often more efficient. It is therefore advisable that users 
+/// satisfactory, lower impact, breaching solution and is often more efficient. It is therefore advisable that users
 /// try the `BreachDepressionsLeastCost` tool to remove depressions from their DEMs first. This tool is particularly
 /// well suited to breaching through road embankments. There are instances when a breaching solution is inappropriate, e.g.
 /// when a very deep depression such as an open-pit mine occurs in the DEM and long, deep breach paths are created. Often
-/// restricting breaching with the `--max_cost` parameter, combined with subsequent depression filling (`--fill`) can 
+/// restricting breaching with the `--max_cost` parameter, combined with subsequent depression filling (`--fill`) can
 /// provide an adequate solution in these cases. Nonetheless, there are applications for which full depression filling
 /// using the  `FillDepressions` tool may be preferred.
 ///
 /// # Reference
-/// Lindsay J, Dhun K. 2015. Modelling surface drainage patterns in altered landscapes using LiDAR. 
+/// Lindsay J, Dhun K. 2015. Modelling surface drainage patterns in altered landscapes using LiDAR.
 /// *International Journal of Geographical Information Science*, 29: 1-15. DOI: 10.1080/13658816.2014.975715
 ///
 /// # See Also
@@ -106,7 +106,8 @@ impl BreachDepressionsLeastCost {
         // public constructor
         let name = "BreachDepressionsLeastCost".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Breaches the depressions in a DEM using a least-cost pathway method.".to_string();
+        let description =
+            "Breaches the depressions in a DEM using a least-cost pathway method.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -130,8 +131,7 @@ impl BreachDepressionsLeastCost {
         parameters.push(ToolParameter {
             name: "Maximum Search Window Radius (cells)".to_owned(),
             flags: vec!["--radius".to_owned()],
-            description: ""
-                .to_owned(),
+            description: "".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
             optional: false,
@@ -149,7 +149,8 @@ impl BreachDepressionsLeastCost {
         parameters.push(ToolParameter {
             name: "Minimize breach distances?".to_owned(),
             flags: vec!["--min_dist".to_owned()],
-            description: "Optional flag indicating whether to minimize breach distances.".to_owned(),
+            description: "Optional flag indicating whether to minimize breach distances."
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_string()),
             optional: true,
@@ -167,7 +168,9 @@ impl BreachDepressionsLeastCost {
         parameters.push(ToolParameter {
             name: "Fill unbreached depressions?".to_owned(),
             flags: vec!["--fill".to_owned()],
-            description: "Optional flag indicating whether to fill any remaining unbreached depressions.".to_owned(),
+            description:
+                "Optional flag indicating whether to fill any remaining unbreached depressions."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_string()),
             optional: true,
@@ -241,7 +244,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let mut flat_increment = f64::NAN;
         let mut fill_deps = false;
         let mut minimize_dist = false;
-                    
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -331,7 +334,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let (mut col, mut row): (isize, isize);
         let (mut rn, mut cn): (isize, isize);
         let mut accum: f64;
-        let (mut z, mut zn, mut zout): (f64, f64, f64); 
+        let (mut z, mut zn, mut zout): (f64, f64, f64);
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let mut flag: bool;
@@ -342,13 +345,13 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let resy = input.configs.resolution_y;
         let diagres = (resx * resx + resy * resy).sqrt();
         let cost_dist = [diagres, resx, diagres, resy, diagres, resx, diagres, resy];
-        let mut cost1: f64;   
+        let mut cost1: f64;
         let mut cost2: f64;
         let mut new_cost: f64;
         let mut length: i16;
         let mut b: usize;
-        let num_procs = num_cpus::get() as isize;              
-              
+        let num_procs = num_cpus::get() as isize;
+
         let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
             flat_increment
         } else {
@@ -359,7 +362,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         // Even if the input is f32, the output will need to be 64-bit to represent the small elevation differences
-        output.configs.data_type = DataType::F64; 
+        output.configs.data_type = DataType::F64;
         let display_min = input.configs.display_min;
         let display_max = input.configs.display_max;
 
@@ -385,11 +388,13 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                                 if zn < min_zn {
                                     min_zn = zn;
                                 }
-                                if zn == nodata { // It's an edge cell.
+                                if zn == nodata {
+                                    // It's an edge cell.
                                     flag = false;
-                                    break; 
+                                    break;
                                 }
-                                if zn < z { // There's a lower neighbour
+                                if zn < z {
+                                    // There's a lower neighbour
                                     flag = false;
                                     break;
                                 }
@@ -407,7 +412,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         for r in 0..rows {
             let (row, data) = rx.recv().unwrap();
             output.set_row_data(row, data);
-            
+
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -418,7 +423,6 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         }
 
         // drop(input); // input is no longer needed.
-
 
         //////////////////////////////////////////////////////////////////////////////////////
         // We will process the pits iteratively with increasing neighbourhood size. This is //
@@ -444,7 +448,10 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let mut undefined_flow_cells2 = vec![];
         for neighbourhood_radius in iterations {
             if verbose {
-                println!("Iteration {} of {} (search radius={} cells)", i, num_iterations, neighbourhood_radius);
+                println!(
+                    "Iteration {} of {} (search radius={} cells)",
+                    i, num_iterations, neighbourhood_radius
+                );
             }
             i += 1;
 
@@ -454,9 +461,9 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             let neighbourhood_size = 2 * neighbourhood_radius + 1;
             let filter_size = (neighbourhood_size * neighbourhood_size) as usize;
 
-            //////////////////////////////////////////////////  
+            //////////////////////////////////////////////////
             // Find all cells with no downslope neighbours. //
-            //////////////////////////////////////////////////  
+            //////////////////////////////////////////////////
             if neighbourhood_radius == 4 {
                 let output2 = Arc::new(output);
                 let (tx, rx) = mpsc::channel();
@@ -467,20 +474,22 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                         let mut z: f64;
                         let mut zn: f64;
                         let mut flag: bool;
-                        for row in (1..rows-1).filter(|r| r % num_procs == tid) {
+                        for row in (1..rows - 1).filter(|r| r % num_procs == tid) {
                             let mut pits = vec![];
-                            for col in 1..columns-1 {
+                            for col in 1..columns - 1 {
                                 z = output2.get_value(row, col);
                                 if z != nodata {
                                     flag = true;
                                     for n in 0..8 {
                                         zn = output2.get_value(row + dy[n], col + dx[n]);
-                                        if zn < z || zn == nodata { // It either has a lower neighbour or is an edge cell.
+                                        if zn < z || zn == nodata {
+                                            // It either has a lower neighbour or is an edge cell.
                                             flag = false;
                                             break;
                                         }
                                     }
-                                    if flag { // it's a cell with undefined flow
+                                    if flag {
+                                        // it's a cell with undefined flow
                                         pits.push((row, col, z));
                                     }
                                 }
@@ -490,10 +499,10 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                     });
                 }
 
-                for r in 0..rows-2 {
+                for r in 0..rows - 2 {
                     let mut pits = rx.recv().unwrap();
                     undefined_flow_cells2.append(&mut pits);
-                    
+
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows - 3) as f64) as usize;
                         if progress != old_progress {
@@ -508,16 +517,16 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                     Err(_) => panic!("Error unwrapping 'output'"),
                 };
             }
-            
+
             ////////////////////////////////////////////////////////////////////////////////////////////
-            // We need to visit and (potentially) solve each undefined-flow cell in order from lowest // 
+            // We need to visit and (potentially) solve each undefined-flow cell in order from lowest //
             // to highest. This is because some higher pits can be solved, or partially solved using  //
             // the breach paths of lower pits.                                                        //
             ////////////////////////////////////////////////////////////////////////////////////////////
             let mut undefined_flow_cells = undefined_flow_cells2.clone();
             undefined_flow_cells2.clear();
             /* Vec is a stack and so if we want to pop the values from lowest to highest, we need to sort
-               them from highest to lowest. */
+            them from highest to lowest. */
             undefined_flow_cells.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(Equal));
             let num_deps = undefined_flow_cells.len();
             if num_deps == 0 {
@@ -541,7 +550,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                 flag = true;
                 for n in 0..8 {
                     zn = output.get_value(row + dy[n], col + dx[n]);
-                    if zn < z && zn != nodata { // It has a lower non-nodata cell
+                    if zn < z && zn != nodata {
+                        // It has a lower non-nodata cell
                         // Resolving some other pit cell resulted in a solution for this one.
                         num_solved += 1;
                         overall_num_solved += 1;
@@ -552,9 +562,12 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                 if flag {
                     // Perform the cost-accumulation operation.
                     let mut minheap = BinaryHeap::with_capacity(filter_size);
-                    let mut backlink: Array2D<i8> = Array2D::new(neighbourhood_size, neighbourhood_size, -1, -2)?;
-                    let mut encountered: Array2D<i8> = Array2D::new(neighbourhood_size, neighbourhood_size, 0, -1)?;
-                    let mut path_length: Array2D<i16> = Array2D::new(neighbourhood_size, neighbourhood_size, 0, -1)?;
+                    let mut backlink: Array2D<i8> =
+                        Array2D::new(neighbourhood_size, neighbourhood_size, -1, -2)?;
+                    let mut encountered: Array2D<i8> =
+                        Array2D::new(neighbourhood_size, neighbourhood_size, 0, -1)?;
+                    let mut path_length: Array2D<i16> =
+                        Array2D::new(neighbourhood_size, neighbourhood_size, 0, -1)?;
                     encountered.set_value(neighbourhood_radius, neighbourhood_radius, 1i8);
                     minheap.push(GridCell {
                         row: neighbourhood_radius,
@@ -565,23 +578,31 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                     while !minheap.is_empty() && flag {
                         let cell = minheap.pop().unwrap();
                         accum = cell.priority;
-                        if accum > max_cost { // There isn't a breach channel cheap enough
+                        if accum > max_cost {
+                            // There isn't a breach channel cheap enough
                             undefined_flow_cells2.push((row, col, z)); // Add it to the list for the next iteration
                             num_unsolved += 1;
                             flag = false;
                             break;
                         }
                         length = path_length.get_value(cell.row, cell.column);
-                        zn = output.get_value(row + (cell.row - neighbourhood_radius), col + (cell.column - neighbourhood_radius));
+                        zn = output.get_value(
+                            row + (cell.row - neighbourhood_radius),
+                            col + (cell.column - neighbourhood_radius),
+                        );
                         cost1 = zn - z + length as f64 * small_num;
                         for n in 0..8 {
                             cn = cell.column + dx[n];
                             rn = cell.row + dy[n];
-                            if encountered.get_value(rn, cn) == 0i8 { // not yet encountered
+                            if encountered.get_value(rn, cn) == 0i8 {
+                                // not yet encountered
                                 length += 1;
                                 path_length.set_value(rn, cn, length);
                                 backlink.set_value(rn, cn, backlink_dir[n]);
-                                zn = output.get_value(row + (rn - neighbourhood_radius), col + (cn - neighbourhood_radius));
+                                zn = output.get_value(
+                                    row + (rn - neighbourhood_radius),
+                                    col + (cn - neighbourhood_radius),
+                                );
                                 zout = z - (length as f64 * small_num);
                                 if zn > zout {
                                     cost2 = zn - zout;
@@ -620,21 +641,24 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                                     }
                                     num_solved += 1;
                                     overall_num_solved += 1;
-                        
+
                                     break; // don't check any more neighbours.
                                 }
                             }
                         }
                     }
 
-                    if flag { // Didn't find any lower cells.
+                    if flag {
+                        // Didn't find any lower cells.
                         undefined_flow_cells2.push((row, col, z)); // Add it to the list for the next iteration
                         num_unsolved += 1;
                     }
                 }
 
                 if verbose {
-                    progress = (100.0_f64 * (1f64 - (undefined_flow_cells.len()) as f64 / (num_deps - 1) as f64)) as usize;
+                    progress = (100.0_f64
+                        * (1f64 - (undefined_flow_cells.len()) as f64 / (num_deps - 1) as f64))
+                        as usize;
                     if progress != old_progress {
                         println!("Breaching: {}%", progress);
                         old_progress = progress;
@@ -650,7 +674,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         if overall_num_solved > 0 && verbose {
             println!("Overall num. solved pits: {}", overall_num_solved);
             println!("Overall num. unsolved pits: {}", num_unsolved);
-        } else if verbose{
+        } else if verbose {
             println!("No depressions found.");
         }
 
@@ -669,19 +693,21 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                     let mut zn: f64;
                     let mut flag: bool;
                     let mut pits = vec![];
-                    for row in (1..rows-1).filter(|r| r % num_procs == tid) {
-                        for col in 1..columns-1 {
+                    for row in (1..rows - 1).filter(|r| r % num_procs == tid) {
+                        for col in 1..columns - 1 {
                             z = output2.get_value(row, col);
                             if z != nodata {
                                 flag = true;
                                 for n in 0..8 {
                                     zn = output2.get_value(row + dy[n], col + dx[n]);
-                                    if zn < z || zn == nodata { // It either has a lower neighbour or is an edge cell.
+                                    if zn < z || zn == nodata {
+                                        // It either has a lower neighbour or is an edge cell.
                                         flag = false;
                                         break;
                                     }
                                 }
-                                if flag { // it's a cell with undefined flow
+                                if flag {
+                                    // it's a cell with undefined flow
                                     pits.push((row, col, z));
                                 }
                             }
@@ -695,7 +721,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             for p in 0..num_procs {
                 let mut pits = rx.recv().unwrap();
                 undefined_flow_cells.append(&mut pits);
-                
+
                 if verbose {
                     progress = (100.0_f64 * (p + 1) as f64 / num_procs as f64) as usize;
                     if progress != old_progress {
@@ -724,7 +750,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             while let Some(cell) = undefined_flow_cells.pop() {
                 row = cell.0;
                 col = cell.1;
-                if flats.get_value(row, col) != 1 { // if it's already in a solved site, don't do it a second time.
+                if flats.get_value(row, col) != 1 {
+                    // if it's already in a solved site, don't do it a second time.
                     // First there is a priority region-growing operation to find the outlets.
                     z = output.get_value(row, col);
                     minheap.clear();
@@ -756,15 +783,17 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                                                 priority: zn,
                                             });
                                             visited.set_value(rn, cn, 1);
-                                        } else if zn != nodata { // zn < z
-                                            // 'cell' has a lower neighbour that hasn't already passed through minheap. 
+                                        } else if zn != nodata {
+                                            // zn < z
+                                            // 'cell' has a lower neighbour that hasn't already passed through minheap.
                                             // Therefore, 'cell' is a pour point cell.
                                             outlet_found = true;
                                             outlet_z = z;
                                             queue.push_back((cell2.row, cell2.column));
                                             possible_outlets.push((cell2.row, cell2.column));
                                         }
-                                    } else if zn == outlet_z { // We've found the outlet but are still looking for additional outlets.
+                                    } else if zn == outlet_z {
+                                        // We've found the outlet but are still looking for additional outlets.
                                         minheap.push(GridCell {
                                             row: rn,
                                             column: cn,
@@ -794,7 +823,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                                         }
                                     }
                                 }
-                                if flag { // it's an outlet
+                                if flag {
+                                    // it's an outlet
                                     queue.push_back((cell2.row, cell2.column));
                                     possible_outlets.push((cell2.row, cell2.column));
                                 } else {
@@ -838,7 +868,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
 
             drop(visited);
 
-            if small_num > 0f64 { // fix the flats
+            if small_num > 0f64 {
+                // fix the flats
                 if verbose {
                     println!("Fixing flow on flats...");
                     println!("Flats increment value: {}", small_num);
@@ -858,7 +889,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                             break;
                         }
                     }
-                    if flag { // it's confirmed as an outlet
+                    if flag {
+                        // it's confirmed as an outlet
                         minheap.push(GridCell {
                             row: cell.0,
                             column: cell.1,
@@ -866,9 +898,9 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                         });
                     }
                 }
-    
+
                 let num_outlets = minheap.len();
-    
+
                 while let Some(cell) = minheap.pop() {
                     if flats.get_value(cell.row, cell.column) != 3 {
                         z = output.get_value(cell.row, cell.column);
@@ -879,19 +911,18 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                         flag = true;
                         while flag {
                             match minheap.peek() {
-                            Some(cell2) => { 
+                                Some(cell2) => {
                                     if cell2.priority == z {
                                         flats.set_value(cell2.row, cell2.column, 3);
                                         outlets.push(minheap.pop().unwrap());
                                     } else {
                                         flag = false;
                                     }
-                                },
-                            None => { 
-                                    flag = false; 
+                                }
+                                None => {
+                                    flag = false;
                                 }
                             }
-                            
                         }
                         // let mut queue = VecDeque::new();
                         let mut minheap2 = BinaryHeap::new();
@@ -922,7 +953,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                             for n in 0..8 {
                                 rn = cell2.row + dy[n];
                                 cn = cell2.column + dx[n];
-                                if flats.get_value(rn, cn) != 3 { 
+                                if flats.get_value(rn, cn) != 3 {
                                     zn = output.get_value(rn, cn);
                                     if zn < z + small_num && zn >= cell2.z && zn != nodata {
                                         // queue.push_back((rn, cn, cell2.2));
@@ -939,9 +970,10 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
                             }
                         }
                     }
-    
+
                     if verbose {
-                        progress = (100.0_f64 * (1f64 - minheap.len() as f64 / num_outlets as f64)) as usize;
+                        progress = (100.0_f64 * (1f64 - minheap.len() as f64 / num_outlets as f64))
+                            as usize;
                         if progress != old_progress {
                             println!("Fixing flats: {}%", progress);
                             old_progress = progress;
@@ -951,155 +983,151 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             }
         }
 
-        
-            // // Now we need to perform an in-place depression filling
-            // let mut minheap = BinaryHeap::new();
-            // let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
-            // let mut outlet_visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
-            // undefined_flow_cells2.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(Equal));
-            // let num_deps = undefined_flow_cells2.len();
-            // let mut pit_id = 1;
-            // let mut num_dep_cells: usize;
-            // while !undefined_flow_cells2.is_empty() {
-            //     let cell = undefined_flow_cells2.pop().unwrap();
-            //     row = cell.0;
-            //     col = cell.1;
-            //     if outlet_visited.get_value(row, col) != 1 { // if it's already in a solved site, don't do it a second time.
-            //         z = output.get_value(row, col);
-            //         minheap.clear();
-            //         minheap.push(GridCell {
-            //             row: row,
-            //             column: col,
-            //             priority: z,
-            //         });
-            //         visited.set_value(row, col, 1);
-            //         num_dep_cells = 1;
-            //         flag = true;
-            //         while !minheap.is_empty() && flag {
-            //             let cell = minheap.pop().unwrap();
-            //             z = cell.priority;
-            //             for n in 0..8 {
-            //                 cn = cell.column + dx[n];
-            //                 rn = cell.row + dy[n];
-            //                 if visited.get_value(rn, cn) == 0 {
-            //                     zn = output.get_value(rn, cn);
-            //                     if zn >= z {
-            //                         minheap.push(GridCell {
-            //                             row: rn,
-            //                             column: cn,
-            //                             priority: zn,
-            //                         });
-            //                         visited.set_value(rn, cn, 1);
-            //                         num_dep_cells += 1;
-            //                     } else {
-            //                         // 'cell' has a lower neighbour that hasn't already passed through minheap. 
-            //                         // 'cell' therefore is a pour point cell.
-            //                         visited.set_value(cell.row, cell.column, 0);
-            //                         outlet_visited.set_value(cell.row, cell.column, 1);
-            //                         let mut queue = VecDeque::with_capacity(num_dep_cells);
-            //                         queue.push_back((cell.row, cell.column));
-            //                         while let Some(cell2) = queue.pop_front() {
-            //                             z = output.get_value(cell2.0, cell2.1);
-            //                             for n in 0..8 {
-            //                                 rn = cell2.0 + dy[n];
-            //                                 cn = cell2.1 + dx[n];
-            //                                 if visited.get_value(rn, cn) == 1 {
-            //                                     visited.set_value(rn, cn, 0);
-            //                                     zn = output.get_value(rn, cn);
-            //                                     if zn < z + small_num {
-            //                                         queue.push_back((rn, cn));
-            //                                         output.set_value(rn, cn, z + small_num);
-            //                                         outlet_visited.set_value(rn, cn, 1);
-            //                                     }
-            //                                 }
-            //                             }
-            //                         }
-            //                         flag = false;
-            //                         break;
-            //                     }
-            //                 }
-            //             }
-            //         }
-            //     }
+        // // Now we need to perform an in-place depression filling
+        // let mut minheap = BinaryHeap::new();
+        // let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
+        // let mut outlet_visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
+        // undefined_flow_cells2.sort_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(Equal));
+        // let num_deps = undefined_flow_cells2.len();
+        // let mut pit_id = 1;
+        // let mut num_dep_cells: usize;
+        // while !undefined_flow_cells2.is_empty() {
+        //     let cell = undefined_flow_cells2.pop().unwrap();
+        //     row = cell.0;
+        //     col = cell.1;
+        //     if outlet_visited.get_value(row, col) != 1 { // if it's already in a solved site, don't do it a second time.
+        //         z = output.get_value(row, col);
+        //         minheap.clear();
+        //         minheap.push(GridCell {
+        //             row: row,
+        //             column: col,
+        //             priority: z,
+        //         });
+        //         visited.set_value(row, col, 1);
+        //         num_dep_cells = 1;
+        //         flag = true;
+        //         while !minheap.is_empty() && flag {
+        //             let cell = minheap.pop().unwrap();
+        //             z = cell.priority;
+        //             for n in 0..8 {
+        //                 cn = cell.column + dx[n];
+        //                 rn = cell.row + dy[n];
+        //                 if visited.get_value(rn, cn) == 0 {
+        //                     zn = output.get_value(rn, cn);
+        //                     if zn >= z {
+        //                         minheap.push(GridCell {
+        //                             row: rn,
+        //                             column: cn,
+        //                             priority: zn,
+        //                         });
+        //                         visited.set_value(rn, cn, 1);
+        //                         num_dep_cells += 1;
+        //                     } else {
+        //                         // 'cell' has a lower neighbour that hasn't already passed through minheap.
+        //                         // 'cell' therefore is a pour point cell.
+        //                         visited.set_value(cell.row, cell.column, 0);
+        //                         outlet_visited.set_value(cell.row, cell.column, 1);
+        //                         let mut queue = VecDeque::with_capacity(num_dep_cells);
+        //                         queue.push_back((cell.row, cell.column));
+        //                         while let Some(cell2) = queue.pop_front() {
+        //                             z = output.get_value(cell2.0, cell2.1);
+        //                             for n in 0..8 {
+        //                                 rn = cell2.0 + dy[n];
+        //                                 cn = cell2.1 + dx[n];
+        //                                 if visited.get_value(rn, cn) == 1 {
+        //                                     visited.set_value(rn, cn, 0);
+        //                                     zn = output.get_value(rn, cn);
+        //                                     if zn < z + small_num {
+        //                                         queue.push_back((rn, cn));
+        //                                         output.set_value(rn, cn, z + small_num);
+        //                                         outlet_visited.set_value(rn, cn, 1);
+        //                                     }
+        //                                 }
+        //                             }
+        //                         }
+        //                         flag = false;
+        //                         break;
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     }
 
-            //     if verbose {
-            //         progress = (100.0_f64 * pit_id as f64 / num_deps as f64) as usize;
-            //         if progress != old_progress {
-            //             println!("Filling remaining depressions: {}%", progress);
-            //             old_progress = progress;
-            //         }
-            //     }
-            //     pit_id += 1;
-            // }
+        //     if verbose {
+        //         progress = (100.0_f64 * pit_id as f64 / num_deps as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Filling remaining depressions: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        //     pit_id += 1;
+        // }
 
+        // // Start by finding all cells that neighbour NoData cells.
+        // let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
+        // let mut minheap = BinaryHeap::with_capacity((rows * columns) as usize);
+        // let mut num_cells_visited = 0;
+        // for row in 0..rows {
+        //     for col in 0..columns {
+        //         z = output.get_value(row, col);
+        //         if z != nodata {
+        //             for n in 0..8 {
+        //                 if output.get_value(row + dy[n], col + dx[n]) == nodata {
+        //                     minheap.push(GridCell {
+        //                         row: row,
+        //                         column: col,
+        //                         priority: z,
+        //                     });
+        //                     visited.set_value(row, col, 1);
+        //                     num_cells_visited += 1;
+        //                     break;
+        //                 }
+        //             }
+        //         } else {
+        //             visited.set_value(row, col, 1);
+        //             num_cells_visited += 1;
+        //         }
+        //     }
+        //     if verbose {
+        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Finding edges: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
-
-            // // Start by finding all cells that neighbour NoData cells.
-            // let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
-            // let mut minheap = BinaryHeap::with_capacity((rows * columns) as usize);
-            // let mut num_cells_visited = 0;
-            // for row in 0..rows {
-            //     for col in 0..columns {
-            //         z = output.get_value(row, col);
-            //         if z != nodata {
-            //             for n in 0..8 {
-            //                 if output.get_value(row + dy[n], col + dx[n]) == nodata {
-            //                     minheap.push(GridCell {
-            //                         row: row,
-            //                         column: col,
-            //                         priority: z,
-            //                     });
-            //                     visited.set_value(row, col, 1);
-            //                     num_cells_visited += 1;
-            //                     break;
-            //                 }
-            //             }
-            //         } else {
-            //             visited.set_value(row, col, 1);
-            //             num_cells_visited += 1;
-            //         }
-            //     }
-            //     if verbose {
-            //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-            //         if progress != old_progress {
-            //             println!("Finding edges: {}%", progress);
-            //             old_progress = progress;
-            //         }
-            //     }
-            // }
-
-            // while !minheap.is_empty() {
-            //     let cell = minheap.pop().unwrap();
-            //     row = cell.row;
-            //     col = cell.column;
-            //     z = output.get_value(row, col);
-            //     for n in 0..8 {
-            //         rn = row + dy[n];
-            //         cn = col + dx[n];
-            //         if visited.get_value(rn, cn) == 0i8 {
-            //             zn = output.get_value(rn, cn);
-            //             if zn < z + small_num {
-            //                 zn = z + small_num;
-            //                 output.set_value(rn, cn, zn);
-            //             }
-            //             minheap.push(GridCell {
-            //                 row: rn,
-            //                 column: cn,
-            //                 priority: zn,
-            //             });
-            //             visited.set_value(rn, cn, 1);
-            //             num_cells_visited += 1;
-            //         }
-            //     }
-            //     if verbose {
-            //         progress = (100.0_f64 * num_cells_visited as f64 / (rows*columns - 1) as f64) as usize;
-            //         if progress != old_progress {
-            //             println!("Filling: {}%", progress);
-            //             old_progress = progress;
-            //         }
-            //     }
-            // }
-
+        // while !minheap.is_empty() {
+        //     let cell = minheap.pop().unwrap();
+        //     row = cell.row;
+        //     col = cell.column;
+        //     z = output.get_value(row, col);
+        //     for n in 0..8 {
+        //         rn = row + dy[n];
+        //         cn = col + dx[n];
+        //         if visited.get_value(rn, cn) == 0i8 {
+        //             zn = output.get_value(rn, cn);
+        //             if zn < z + small_num {
+        //                 zn = z + small_num;
+        //                 output.set_value(rn, cn, zn);
+        //             }
+        //             minheap.push(GridCell {
+        //                 row: rn,
+        //                 column: cn,
+        //                 priority: zn,
+        //             });
+        //             visited.set_value(rn, cn, 1);
+        //             num_cells_visited += 1;
+        //         }
+        //     }
+        //     if verbose {
+        //         progress = (100.0_f64 * num_cells_visited as f64 / (rows*columns - 1) as f64) as usize;
+        //         if progress != old_progress {
+        //             println!("Filling: {}%", progress);
+        //             old_progress = progress;
+        //         }
+        //     }
+        // }
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = display_min;

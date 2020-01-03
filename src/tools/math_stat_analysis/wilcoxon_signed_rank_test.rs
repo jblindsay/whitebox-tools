@@ -13,6 +13,7 @@ use crate::rendering::LineGraph;
 use crate::tools::*;
 use rand::prelude::*;
 use statrs;
+use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -24,24 +25,23 @@ use std::process::Command;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::cmp::Ordering::Equal;
 
-/// This tool will perform a Wilcoxon signed-rank test to evaluate whether a significant 
-/// statistical difference exists between the two rasters. The Wilcoxon signed-rank test is often used as a 
+/// This tool will perform a Wilcoxon signed-rank test to evaluate whether a significant
+/// statistical difference exists between the two rasters. The Wilcoxon signed-rank test is often used as a
 /// non-parametric equivalent to the paired-samples Student's t-test, and is used when the distribution of
-/// sample difference values between the paired inputs is non-Gaussian. The null hypothesis of this test is that 
-/// difference between the sample pairs follow a symmetric distribution around zero. i.e. that the median difference 
+/// sample difference values between the paired inputs is non-Gaussian. The null hypothesis of this test is that
+/// difference between the sample pairs follow a symmetric distribution around zero. i.e. that the median difference
 /// between pairs of observations is zero.
-/// 
+///
 /// The user must specify the name of the two input raster images (`--input1` and `--input2`) and the output report
-/// HTML file (`--output`). The test can be performed optionally on the entire image or on a random 
-/// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance 
+/// HTML file (`--output`). The test can be performed optionally on the entire image or on a random
+/// sub-sample of pixel values of a user-specified size (`--num_samples`). In evaluating the significance
 /// of the test, it is important to keep in mind that given a sufficiently large sample, extremely small and
 /// non-notable differences can be found to be statistically significant. Furthermore
 /// statistical significance says nothing about the practical significance of a difference. Note that cells
 /// with a difference of zero are excluded from the ranking and tied difference values are assigned their average
 /// rank values.
-/// 
+///
 /// # See Also
 /// `PairedSampleTTest`, `TwoSampleKsTest`
 pub struct WilcoxonSignedRankTest {
@@ -58,7 +58,8 @@ impl WilcoxonSignedRankTest {
         let name = "WilcoxonSignedRankTest".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Performs a 2-sample K-S test for significant differences on two input rasters.".to_string();
+            "Performs a 2-sample K-S test for significant differences on two input rasters."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -235,9 +236,13 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
         let input2 = Arc::new(Raster::new(&input_file2, "r")?);
         let input2_name = input2.get_short_filename();
 
-        if input1.configs.rows != input2.configs.rows || input1.configs.columns != input2.configs.columns {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The input files must have the same number of rows and columns and spatial extent."));
+        if input1.configs.rows != input2.configs.rows
+            || input1.configs.columns != input2.configs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
         }
 
         let start = Instant::now();
@@ -315,7 +320,6 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
             mean = sum / n as f64;
             variance = sq_sum / n as f64 - mean * mean;
             std_dev = variance.sqrt();
-
         } else {
             // Note that this is sampling with replacement, which is not ideal.
             diffs = Vec::with_capacity(num_samples);
@@ -371,7 +375,7 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
                     if i < diffs.len() - 1 {
                         // are there any ties above this one?
                         upper_range = i;
-                        for j in i+1..diffs.len() {
+                        for j in i + 1..diffs.len() {
                             if diffs[j].abs() == diffs[i].abs() {
                                 upper_range = j
                             } else {
@@ -392,19 +396,23 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
                         ranks[i] = r * diffs[i].signum();
                     }
                 }
-                // else do nothing, it was sorted in a previous iteration
+            // else do nothing, it was sorted in a previous iteration
             } else {
                 ranks[i] = 0f64;
             }
         }
         let w: f64 = ranks.iter().sum();
-        let w_pos = ranks.iter().fold(0f64, |acc, &x| if x > 0f64 { acc + x } else { acc + 0f64 } );
-        let w_neg = ranks.iter().fold(0f64, |acc, &x| if x < 0f64 { acc + x } else { acc + 0f64 } );
+        let w_pos = ranks
+            .iter()
+            .fold(0f64, |acc, &x| if x > 0f64 { acc + x } else { acc + 0f64 });
+        let w_neg = ranks
+            .iter()
+            .fold(0f64, |acc, &x| if x < 0f64 { acc + x } else { acc + 0f64 });
         let sigma_w = ((nr * (nr + 1) * (2 * nr + 1) / 6) as f64).sqrt(); // be careful of numerical overflow
         let z_value = w / sigma_w;
         let distribution = Normal::new(0.0, 1.0).unwrap();
         let p_value = 2f64 * (1f64 - distribution.cdf(z_value.abs()));
-        
+
         // let's see the pdf of differences compared with a normal
         diffs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
         let mut xdata = vec![];
@@ -416,15 +424,19 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
             100usize
         };
         let min_val = diffs[0];
-        let max_val = diffs[n-1];
+        let max_val = diffs[n - 1];
         let bin_size = (max_val - min_val) / num_bins as f64;
         let mut bin: usize;
-        let profile_xdata = (0..num_bins).map(|x| min_val + x as f64 * bin_size).collect::<Vec<f64>>();
+        let profile_xdata = (0..num_bins)
+            .map(|x| min_val + x as f64 * bin_size)
+            .collect::<Vec<f64>>();
         let mut profile_ydata = vec![0f64; num_bins];
         // bin frequency data
         for val in &diffs {
             bin = ((val - min_val) / bin_size).floor() as usize;
-            if bin > num_bins -1 { bin = num_bins - 1; }
+            if bin > num_bins - 1 {
+                bin = num_bins - 1;
+            }
             profile_ydata[bin] += 1f64;
         }
         // for bin in 1..num_bins {
@@ -437,7 +449,6 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
         ydata.push(profile_ydata.clone());
         series_names.push(String::from("Paired Differences"));
 
-        
         ///////////////////////
         // Output the report //
         ///////////////////////
@@ -462,15 +473,37 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
                 .as_bytes(),
         )?;
 
-        writer.write_all(&format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes())?;
-        writer.write_all(&format!("<strong>Mean of the differences</strong>: {:.4}<br>", mean).as_bytes())?;
-        writer.write_all(&format!("<strong>Standard deviation of the differences</strong>: {:.4}<br>", std_dev).as_bytes())?;
+        writer.write_all(
+            &format!("<strong>Image 1</strong>: {}<br>", input1_name.clone()).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!("<strong>Image 2</strong>: {}<br>", input2_name.clone()).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!("<strong>Mean of the differences</strong>: {:.4}<br>", mean).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!(
+                "<strong>Standard deviation of the differences</strong>: {:.4}<br>",
+                std_dev
+            )
+            .as_bytes(),
+        )?;
         writer.write_all(&format!("<strong>Sample size (n)</strong>: {:.0}<br>", nr).as_bytes())?;
-        writer.write_all(&format!("<strong>Sum of positive ranks</strong>: {:.4}<br>", w_pos).as_bytes())?;
-        writer.write_all(&format!("<strong>Sum of negative ranks</strong>: {:.4}<br>", w_neg).as_bytes())?;
+        writer.write_all(
+            &format!("<strong>Sum of positive ranks</strong>: {:.4}<br>", w_pos).as_bytes(),
+        )?;
+        writer.write_all(
+            &format!("<strong>Sum of negative ranks</strong>: {:.4}<br>", w_neg).as_bytes(),
+        )?;
         writer.write_all(&format!("<strong>Sum of ranks</strong>: {:.4}<br>", w).as_bytes())?;
-        writer.write_all(&format!("<strong>Test Statistic (<em>z</em>)</strong>: {:.4}<br>", z_value).as_bytes())?;
+        writer.write_all(
+            &format!(
+                "<strong>Test Statistic (<em>z</em>)</strong>: {:.4}<br>",
+                z_value
+            )
+            .as_bytes(),
+        )?;
         if p_value > 0.001f64 {
             writer.write_all(
                 &format!(
@@ -497,7 +530,7 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
         writer.write_all("<p><strong>Caveats</strong>: <ol>
         <li>Given a sufficiently large sample, extremely small and non-notable differences can be found to be statistically significant, and statistical significance says nothing about the practical significance of a difference.</li> 
         <li>The presence of spatial autocorrelation implies a lack of independence in the data sample, which violates an assumption of the test, potentially affecting the reliability of the result.</li></ol></p>".to_string().as_bytes())?;
-        
+
         let graph = LineGraph {
             parent_id: "graph".to_string(),
             width: 700f64,

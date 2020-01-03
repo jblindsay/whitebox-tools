@@ -680,7 +680,7 @@ impl WhiteboxTool for Union {
                         }
                     }
                 }
-                
+
                 // Remove any single-point lines result from above.
                 let mut features_polylines2: Vec<Polyline> = vec![];
                 for i in (0..features_polylines.len()).rev() {
@@ -756,8 +756,13 @@ impl WhiteboxTool for Union {
                             for a in 0..ret.len() {
                                 index = *ret[a].1;
                                 j = index / 2;
-                                if j != i && features_polylines[j].source_file != features_polylines[i].source_file {
-                                    if features_polylines[i].nearly_equals(&features_polylines[j], precision) {
+                                if j != i
+                                    && features_polylines[j].source_file
+                                        != features_polylines[i].source_file
+                                {
+                                    if features_polylines[i]
+                                        .nearly_equals(&features_polylines[j], precision)
+                                    {
                                         duplicate[i] = true;
                                         duplicate[j] = true;
                                         duplicate_partner[i] = j;
@@ -769,17 +774,17 @@ impl WhiteboxTool for Union {
                         }
                     }
                     if verbose {
-                        progress = (100.0_f64 * (i + 1) as f64 / features_polylines.len() as f64) as usize;
+                        progress =
+                            (100.0_f64 * (i + 1) as f64 / features_polylines.len() as f64) as usize;
                         if progress != old_progress {
-                            println!("Finding duplicate polylines ({}): {}%", num_duplicates, progress);
+                            println!(
+                                "Finding duplicate polylines ({}): {}%",
+                                num_duplicates, progress
+                            );
                             old_progress = progress;
                         }
                     }
                 }
-
-
-
-
 
                 let mut fid = 1i32;
                 for i in 0..features_polylines.len() {

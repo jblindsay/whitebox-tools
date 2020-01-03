@@ -104,5 +104,4 @@ mod test {
         ];
         assert_eq!(hull, hull_should_be);
     }
-
 }

@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is calculated as the base-2 
-/// [logarithm](https://en.wikipedia.org/wiki/Logarithm) of the value of the corresponding grid cell in the input 
-/// raster (`--input`). Negative values in the input raster will be assigned the **NoData** value in the output 
+/// This tool creates a new raster (`--output`) in which each grid cell is calculated as the base-2
+/// [logarithm](https://en.wikipedia.org/wiki/Logarithm) of the value of the corresponding grid cell in the input
+/// raster (`--input`). Negative values in the input raster will be assigned the **NoData** value in the output
 /// raster. **NoData** values in the input image will be assigned the **NoData** value in the output image.
-/// 
+///
 /// # See Also
 /// `Ln`, `Log10`, `Exp2`
 pub struct Log2 {

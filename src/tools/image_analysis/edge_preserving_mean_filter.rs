@@ -18,20 +18,20 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a type of edge-preserving mean filter operation on an input image (`--input`). The filter, a 
-/// type of low-pass filter, can be used to emphasize the longer-range variability in an image, effectively acting to 
-/// smooth the image and to reduce noise in the image. The algorithm calculates the average value in a moving window 
+/// This tool performs a type of edge-preserving mean filter operation on an input image (`--input`). The filter, a
+/// type of low-pass filter, can be used to emphasize the longer-range variability in an image, effectively acting to
+/// smooth the image and to reduce noise in the image. The algorithm calculates the average value in a moving window
 /// centred on each grid cell, including in the averaging only the set of neighbouring values for which the absolute
-/// value difference with the centre value is less than a specified threshold value (`--threshold`). It is, therefore, 
+/// value difference with the centre value is less than a specified threshold value (`--threshold`). It is, therefore,
 /// similar to the `BilateralFilter`, except all neighbours within the threshold difference are equally weighted and
-/// neighbour distance is not accounted for. Filter kernels are always square, and filter size, is specified using 
+/// neighbour distance is not accounted for. Filter kernels are always square, and filter size, is specified using
 /// the `--filter` parameter. This dimensions should be odd, positive integer values, e.g. 3, 5, 7, 9...
-/// 
-/// This tool works with both greyscale and red-green-blue (RGB) input images. RGB images are decomposed into 
-/// intensity-hue-saturation (IHS) and the filter is applied to the intensity channel. If an RGB image is input, the 
-/// threshold value must be in the range 0.0-1.0 (more likely less than 0.15), where a value of 1.0 would result in an ordinary mean filter 
+///
+/// This tool works with both greyscale and red-green-blue (RGB) input images. RGB images are decomposed into
+/// intensity-hue-saturation (IHS) and the filter is applied to the intensity channel. If an RGB image is input, the
+/// threshold value must be in the range 0.0-1.0 (more likely less than 0.15), where a value of 1.0 would result in an ordinary mean filter
 /// (`MeanFilter`). NoData values in the input image are ignored during filtering.
-/// 
+///
 /// # See Also
 /// `MeanFilter`, `BilateralFilter`, `EdgePreservingMeanFilter`, `GaussianFilter`, `MedianFilter`, `RgbToIhs`
 pub struct EdgePreservingMeanFilter {

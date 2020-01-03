@@ -17,20 +17,20 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tools estimates the area of each category, polygon, or patch in an input raster. The input raster must be categorical 
-/// in data scale. Rasters with floating-point cell values are not good candidates for an area analysis. The user must specify 
-/// whether the output is given in `grid cells` or `map units` (`--units`). Map Units are physical units, e.g. if the rasters's 
-/// scale is in metres, areas will report in square-metres. Notice that square-metres can be converted into hectares by dividing 
-/// by 10,000 and into square-kilometres by dividing by 1,000,000. If the input raster is in geographic coordinates (i.e. 
+/// This tools estimates the area of each category, polygon, or patch in an input raster. The input raster must be categorical
+/// in data scale. Rasters with floating-point cell values are not good candidates for an area analysis. The user must specify
+/// whether the output is given in `grid cells` or `map units` (`--units`). Map Units are physical units, e.g. if the rasters's
+/// scale is in metres, areas will report in square-metres. Notice that square-metres can be converted into hectares by dividing
+/// by 10,000 and into square-kilometres by dividing by 1,000,000. If the input raster is in geographic coordinates (i.e.
 /// latitude and longitude) a warning will be issued and areas will be estimated based on per-row calculated degree lengths.
-/// 
+///
 /// The tool can be run with a raster output (`--output`), a text output (`--out_text`), or both. If niether outputs are specified,
-/// the tool will automatically output a raster named `area.tif`. 
-/// 
+/// the tool will automatically output a raster named `area.tif`.
+///
 /// Zero values in the input raster may be excluded from the area analysis if the `--zero_back` flag is used.
-/// 
+///
 /// To calculate the area of vector polygons, use the `PolygonArea` tool instead.
-/// 
+///
 /// # See Also
 /// `PolygonArea`, `RasterHistogram`
 pub struct RasterArea {
@@ -47,8 +47,7 @@ impl RasterArea {
         let name = "RasterArea".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "Calculates the area of polygons or classes within a raster image."
-                .to_string();
+            "Calculates the area of polygons or classes within a raster image.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -72,20 +71,22 @@ impl RasterArea {
         parameters.push(ToolParameter {
             name: "Output text?".to_owned(),
             flags: vec!["--out_text".to_owned()],
-            description: "Would you like to output polygon areas to text?"
-                .to_owned(),
+            description: "Would you like to output polygon areas to text?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
             optional: false,
         });
 
-        parameters.push(ToolParameter{
-            name: "Units".to_owned(), 
-            flags: vec!["--units".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Units".to_owned(),
+            flags: vec!["--units".to_owned()],
             description: "Area units; options include 'grid cells' and 'map units'.".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["grid cells".to_owned(), "map units".to_owned()]),
+            parameter_type: ParameterType::OptionList(vec![
+                "grid cells".to_owned(),
+                "map units".to_owned(),
+            ]),
             default_value: Some("grid cells".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -254,12 +255,8 @@ impl WhiteboxTool for RasterArea {
         let max_val = input.configs.display_max;
         let range = max_val - min_val + 0.00001f64; // otherwise the max value is outside the range
         let num_bins = range.ceil() as usize;
-        let back_val = if zero_back {
-            0f64
-        } else {
-            nodata
-        };
-        
+        let back_val = if zero_back { 0f64 } else { nodata };
+
         if is_grid_cell_units {
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
@@ -273,7 +270,8 @@ impl WhiteboxTool for RasterArea {
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         for col in 0..columns {
                             val = input.get_value(row, col);
-                            if val != nodata && val != back_val && val >= min_val && val <= max_val {
+                            if val != nodata && val != back_val && val >= min_val && val <= max_val
+                            {
                                 bin = (val - min_val).floor() as usize;
                                 freq_data[bin] += 1;
                             }
@@ -300,7 +298,7 @@ impl WhiteboxTool for RasterArea {
             }
 
             let mut val: f64;
-            let mut bin: usize;  
+            let mut bin: usize;
             if output_raster {
                 let mut output = Raster::initialize_using_file(&output_file, &input);
                 let out_nodata = -999f64;
@@ -331,7 +329,8 @@ impl WhiteboxTool for RasterArea {
                     self.get_tool_name()
                 ));
                 output.add_metadata_entry(format!("Input file: {}", input_file));
-                output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+                output
+                    .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
                 if verbose {
                     println!("Saving data...")
@@ -354,7 +353,8 @@ impl WhiteboxTool for RasterArea {
                     }
                 }
             }
-        } else { // map units
+        } else {
+            // map units
             let is_geographic = input.is_in_geographic_coordinates();
             if is_geographic && verbose {
                 println!("Warning: the input file does not appear to be in a projected coordinate system. Area values will only be estimates.");
@@ -382,7 +382,8 @@ impl WhiteboxTool for RasterArea {
                         }
                         for col in 0..columns {
                             val = input.get_value(row, col);
-                            if val != nodata && val != back_val && val >= min_val && val <= max_val {
+                            if val != nodata && val != back_val && val >= min_val && val <= max_val
+                            {
                                 bin = (val - min_val).floor() as usize;
                                 area_data[bin] += cell_area;
                             }
@@ -443,7 +444,8 @@ impl WhiteboxTool for RasterArea {
                     self.get_tool_name()
                 ));
                 output.add_metadata_entry(format!("Input file: {}", input_file));
-                output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+                output
+                    .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
                 if verbose {
                     println!("Saving data...")

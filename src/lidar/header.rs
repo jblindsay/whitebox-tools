@@ -154,7 +154,8 @@ impl LasHeader {
             header.project_id_used = false;
         }
 
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
+        let mut bor =
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buffer), Endianness::LittleEndian);
 
         bor.seek(0);
         header.file_signature = bor.read_utf8(4);

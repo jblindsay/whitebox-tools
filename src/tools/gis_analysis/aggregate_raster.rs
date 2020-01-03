@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to reduce the grid resolution of a raster by a user specified amount. For example, using 
-/// an aggregation factor (`--agg_factor`) of 2 would result in a raster with half the number of rows and columns. 
-/// The grid cell values (`--type`) in the output image will consist of the mean, sum, maximum, minimum, or range 
+/// This tool can be used to reduce the grid resolution of a raster by a user specified amount. For example, using
+/// an aggregation factor (`--agg_factor`) of 2 would result in a raster with half the number of rows and columns.
+/// The grid cell values (`--type`) in the output image will consist of the mean, sum, maximum, minimum, or range
 /// of the overlapping grid cells in the input raster (four cells in the case of an aggregation factor of 2).
-/// 
+///
 /// # See Also
 /// `Resample`
 pub struct AggregateRaster {

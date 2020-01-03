@@ -19,17 +19,17 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points
-/// and linear interpolation within each triangular-shaped plane. The TIN creation algorithm is based on 
+/// and linear interpolation within each triangular-shaped plane. The TIN creation algorithm is based on
 /// [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation).
 ///
 /// The user must specify the attribute field containing point values (`--field`). Alternatively, if the input Shapefile
-/// contains z-values, the interpolation may be based on these values (`--use_z`). Either an output grid resolution 
+/// contains z-values, the interpolation may be based on these values (`--use_z`). Either an output grid resolution
 /// (`--cell_size`) must be specified or alternatively an existing base file (`--base`) can be used to determine the
-/// output raster's (`--output`) resolution and spatial extent. Natural neighbour interpolation generally produces a 
-/// satisfactorily smooth surface within the region of data points but can produce spurious breaks in the surface 
+/// output raster's (`--output`) resolution and spatial extent. Natural neighbour interpolation generally produces a
+/// satisfactorily smooth surface within the region of data points but can produce spurious breaks in the surface
 /// outside of this region. Thus, it is recommended that the output surface be clipped to the convex hull of the input
 /// points (`--clip`).
-/// 
+///
 /// # See Also
 /// `LidarTINGridding`, `ConstructVectorTIN`, `NaturalNeighbourInterpolation`
 pub struct TINGridding {
@@ -464,9 +464,15 @@ impl WhiteboxTool for TINGridding {
             p1 = delaunay.triangles[i];
             p2 = delaunay.triangles[i + 1];
             p3 = delaunay.triangles[i + 2];
-            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
-                z_values[p2], z_values[p3]) < max_triangle_edge_length {
-
+            if max_distance_squared(
+                points[p1],
+                points[p2],
+                points[p3],
+                z_values[p1],
+                z_values[p2],
+                z_values[p3],
+            ) < max_triangle_edge_length
+            {
                 tri_points[0] = points[p1].clone();
                 tri_points[1] = points[p2].clone();
                 tri_points[2] = points[p3].clone();
@@ -482,7 +488,9 @@ impl WhiteboxTool for TINGridding {
                 norm = (b - a).cross(&(c - a));
 
                 if norm.z != 0f64 {
-                    k = -(tri_points[0].x * norm.x + tri_points[0].y * norm.y + norm.z * z_values[p1]);
+                    k = -(tri_points[0].x * norm.x
+                        + tri_points[0].y * norm.y
+                        + norm.z * z_values[p1]);
 
                     // find grid intersections with this triangle
                     bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
@@ -551,7 +559,14 @@ impl WhiteboxTool for TINGridding {
 }
 
 /// Calculate squared Euclidean distance between the point and another.
-pub fn max_distance_squared(p1: Point2D, p2: Point2D, p3: Point2D, z1: f64, z2: f64, z3: f64) -> f64 {
+pub fn max_distance_squared(
+    p1: Point2D,
+    p2: Point2D,
+    p3: Point2D,
+    z1: f64,
+    z2: f64,
+    z3: f64,
+) -> f64 {
     let mut dx = p1.x - p2.x;
     let mut dy = p1.y - p2.y;
     let mut dz = z1 - z2;

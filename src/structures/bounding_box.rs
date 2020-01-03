@@ -308,5 +308,4 @@ mod test {
             BoundingBox::new(0f64, 5f64, -10f64, 0f64)
         );
     }
-
 }

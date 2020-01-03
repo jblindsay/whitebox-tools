@@ -17,29 +17,29 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the plan curvature (i.e. contour curvature), or the rate of change in 
-/// aspect along a contour line, from a digital elevation model (DEM). Curvature is the second 
-/// derivative of the topographic surface defined by a DEM. Plan curvature characterizes the 
-/// degree of flow convergence or divergence within the landscape (Gallant and Wilson, 2000). 
-/// The user must specify the name of the input DEM (`--dem`) and the output raster image. 
-/// WhiteboxTools reports curvature in degrees multiplied by 100 for easier interpretation. The 
-/// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units 
-/// are not the same in the DEM. When this is the case, the algorithm will multiply each 
-/// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate 
+/// This tool calculates the plan curvature (i.e. contour curvature), or the rate of change in
+/// aspect along a contour line, from a digital elevation model (DEM). Curvature is the second
+/// derivative of the topographic surface defined by a DEM. Plan curvature characterizes the
+/// degree of flow convergence or divergence within the landscape (Gallant and Wilson, 2000).
+/// The user must specify the name of the input DEM (`--dem`) and the output raster image.
+/// WhiteboxTools reports curvature in degrees multiplied by 100 for easier interpretation. The
+/// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units
+/// are not the same in the DEM. When this is the case, the algorithm will multiply each
+/// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate
 /// system (latitude and longitude), the following equation is used:
-/// 
+///
 /// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
-/// 
+///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
-/// 
-/// The algorithm uses the same formula for the calculation of plan curvature as Gallant and 
-/// Wilson (2000). Plan curvature is negative for diverging flow along ridges and positive for 
+///
+/// The algorithm uses the same formula for the calculation of plan curvature as Gallant and
+/// Wilson (2000). Plan curvature is negative for diverging flow along ridges and positive for
 /// convergent areas, e.g. along valley bottoms.
-/// 
+///
 /// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
-/// 
+///
 /// # See Also
 /// `ProfileCurvature`, `TangentialCurvature`, `TotalCurvature`, `Slope`, `Aspect`
 pub struct PlanCurvature {

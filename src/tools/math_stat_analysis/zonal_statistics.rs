@@ -28,13 +28,13 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to extract common descriptive statistics associated with the distribution
-/// of some underlying data raster based on feature units defined by a feature definition raster. 
+/// of some underlying data raster based on feature units defined by a feature definition raster.
 /// For example, this tool can be used to measure the maximum or average slope gradient (data image)
 /// for each of a group of watersheds (feature definitions). Although the data raster can contain any
 /// type of data, the feature definition raster must be categorical, i.e. it must define area entities
 /// using integer values.
-/// 
-/// The `--stat` parameter can take the values, 'mean', 'median', 'minimum', 'maximum', 'range', 
+///
+/// The `--stat` parameter can take the values, 'mean', 'median', 'minimum', 'maximum', 'range',
 /// 'standard deviation', or 'total'.
 ///
 /// If an output image name is specified, the tool will assign the descriptive statistic value to
@@ -46,7 +46,7 @@ use std::thread;
 ///
 /// NoData values in either of the two input images are ignored during the calculation of the
 /// descriptive statistic.
-/// 
+///
 /// # See Also
 /// `RasterSummaryStats`
 pub struct ZonalStatistics {
@@ -422,7 +422,7 @@ impl WhiteboxTool for ZonalStatistics {
             if features_n[id] > 1f64 {
                 features_std_deviation[id] =
                     (features_total_deviation[id] / (features_n[id] - 1f64)).sqrt();
-                
+
                 features_data[id].sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
                 let num_cells_in_class = features_data[id].len();
                 if num_cells_in_class % 2 != 0 {
@@ -430,7 +430,9 @@ impl WhiteboxTool for ZonalStatistics {
                     features_median[id] = features_data[id][num_cells_in_class / 2];
                 } else {
                     // even num cells
-                    features_median[id] = (features_data[id][num_cells_in_class / 2] + features_data[id][num_cells_in_class / 2 - 1]) / 2f64;
+                    features_median[id] = (features_data[id][num_cells_in_class / 2]
+                        + features_data[id][num_cells_in_class / 2 - 1])
+                        / 2f64;
                 }
             }
         }
@@ -444,7 +446,7 @@ impl WhiteboxTool for ZonalStatistics {
                 features_average.clone()
             } else if stat_type.contains("median") {
                 features_median.clone()
-            }  else if stat_type.contains("min") {
+            } else if stat_type.contains("min") {
                 features_min.clone()
             } else if stat_type.contains("max") {
                 features_max.clone()

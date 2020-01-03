@@ -14,13 +14,13 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
 
-/// This tool can be used to break a LiDAR LAS file into multiple, non-overlapping tiles, each saved as a 
+/// This tool can be used to break a LiDAR LAS file into multiple, non-overlapping tiles, each saved as a
 /// single LAS file. The user must specify the parameter of the tile grid, including its origin (`--origin_x` and
 /// `--origin_y`) and the tile width and height (`--width` and `--height`). Tiles containing fewer points than
 /// specified in the `--min_points` parameter will not be output. This can be useful when tiling terrestrial LiDAR
 /// datasets because the low point density at the edges of the point cloud (i.e. most distant from the scan
-/// station) can result in poorly populated tiles containing relatively few points. 
-/// 
+/// station) can result in poorly populated tiles containing relatively few points.
+///
 /// # See Also
 /// `LidarJoin`, `LidarTileFootprint`
 pub struct LidarTile {

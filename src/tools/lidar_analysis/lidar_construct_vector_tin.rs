@@ -22,12 +22,12 @@ use std::{env, f64, fs, path, thread};
 
 /// This tool creates a vector triangular irregular network (TIN) for a set of LiDAR points (`--input`)
 /// using a 2D [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation) algorithm.
-/// LiDAR points may be excluded from the triangulation operation based on a number of criteria, 
-/// include the point return number (`--returns`), point classification value (`--exclude_cls`), or 
-/// a minimum (`--minz`) or maximum (`--maxz`) elevation. 
-/// 
-/// For vector points, use the `ConstructVectorTIN` tool instead. 
-/// 
+/// LiDAR points may be excluded from the triangulation operation based on a number of criteria,
+/// include the point return number (`--returns`), point classification value (`--exclude_cls`), or
+/// a minimum (`--minz`) or maximum (`--maxz`) elevation.
+///
+/// For vector points, use the `ConstructVectorTIN` tool instead.
+///
 /// # See Also
 /// `ConstructVectorTIN`
 pub struct LidarConstructVectorTIN {
@@ -306,11 +306,11 @@ impl WhiteboxTool for LidarConstructVectorTIN {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                         outputs.push(

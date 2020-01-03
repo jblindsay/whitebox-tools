@@ -8,8 +8,8 @@ License: MIT
 
 use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
 use crate::raster::*;
-use crate::tools::*;
 use crate::rendering::Scattergram;
+use crate::tools::*;
 use num_cpus;
 use rand::prelude::*;
 use statrs;
@@ -26,24 +26,24 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a bivariate linear regression analysis on two input raster images. The first image 
-/// (`--i1`) is considered to be the independent variable while the second image (`--i2`) is considered to 
-/// be the dependent variable in the analysis. Both input images must share the same grid, as the coefficient 
-/// requires a comparison of a pair of images on a grid-cell-by-grid-cell basis. The tool will output an HTML 
-/// report (`--output`) summarizing the regression model, an Analysis of Variance (ANOVA), and the 
-/// significance of the regression coefficients. The regression residuals can optionally be output as a new 
-/// raster image (`--out_residuals`) and the user can also optionally specify to standardize the residuals 
+/// This tool performs a bivariate linear regression analysis on two input raster images. The first image
+/// (`--i1`) is considered to be the independent variable while the second image (`--i2`) is considered to
+/// be the dependent variable in the analysis. Both input images must share the same grid, as the coefficient
+/// requires a comparison of a pair of images on a grid-cell-by-grid-cell basis. The tool will output an HTML
+/// report (`--output`) summarizing the regression model, an Analysis of Variance (ANOVA), and the
+/// significance of the regression coefficients. The regression residuals can optionally be output as a new
+/// raster image (`--out_residuals`) and the user can also optionally specify to standardize the residuals
 /// (`--standardize`).
 ///
-/// Note that the analysis performs a linear regression; two variables may be strongly related by a non-linear 
-/// association (e.g. a power function curve) which will lead to an apparently weak fitting regression model. 
-/// In fact, non-linear relations are very common among spatial variables, e.g. terrain indices such as slope 
-/// and contributing area. In such cases, it is advisable that the input images are transformed prior to the 
+/// Note that the analysis performs a linear regression; two variables may be strongly related by a non-linear
+/// association (e.g. a power function curve) which will lead to an apparently weak fitting regression model.
+/// In fact, non-linear relations are very common among spatial variables, e.g. terrain indices such as slope
+/// and contributing area. In such cases, it is advisable that the input images are transformed prior to the
 /// analysis.
-/// 
-/// **NoData** values in either of the two input images are ignored during the calculation of the correlation 
+///
+/// **NoData** values in either of the two input images are ignored during the calculation of the correlation
 /// between images.
-/// 
+///
 /// # See Also
 /// `ImageCorrelation`, `ImageCorrelationNeighbourhoodAnalysis`
 pub struct ImageRegression {
@@ -110,8 +110,7 @@ impl ImageRegression {
         parameters.push(ToolParameter {
             name: "Output scattergram?".to_owned(),
             flags: vec!["--scattergram".to_owned()],
-            description: "Optional flag indicating whether to output a scattergram."
-                .to_owned(),
+            description: "Optional flag indicating whether to output a scattergram.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
             optional: true,
@@ -478,7 +477,10 @@ impl WhiteboxTool for ImageRegression {
                 "Created by whitebox_tools\' {} tool",
                 self.get_tool_name()
             ));
-            output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", get_formatted_elapsed_time(start)));
+            output.add_metadata_entry(format!(
+                "Elapsed Time (excluding I/O): {}",
+                get_formatted_elapsed_time(start)
+            ));
 
             if verbose {
                 println!("Saving data...")
@@ -737,8 +739,8 @@ impl WhiteboxTool for ImageRegression {
             let mut sample_num = 0usize;
             let (mut x, mut y): (f64, f64);
             while sample_num < num_samples {
-                let row = rng.gen_range(0, rows as isize); 
-                let col = rng.gen_range(0, columns as isize); 
+                let row = rng.gen_range(0, rows as isize);
+                let col = rng.gen_range(0, columns as isize);
                 x = input1.get_value(row, col);
                 y = input2.get_value(row, col);
                 if x != nodata1 && y != nodata2 {
@@ -768,7 +770,11 @@ impl WhiteboxTool for ImageRegression {
             };
 
             writer.write_all(
-                &format!("<div id='scattergram' align=\"center\">{}</div>", graph.get_svg()).as_bytes(),
+                &format!(
+                    "<div id='scattergram' align=\"center\">{}</div>",
+                    graph.get_svg()
+                )
+                .as_bytes(),
             )?;
         }
 

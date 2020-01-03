@@ -13,17 +13,17 @@ use num_cpus;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::env;
-use std::f64;
 use std::f32;
+use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool estimates the average upslope depression storage depth using the FD8 flow algorithm. 
+/// This tool estimates the average upslope depression storage depth using the FD8 flow algorithm.
 /// The input DEM (`--dem`) need not be hydrologically corrected; the tool will internally map depression
-/// storage and resolve flowpaths using depression filling. This input elevation model should be of a 
+/// storage and resolve flowpaths using depression filling. This input elevation model should be of a
 /// fine resolution (< 2 m), and is ideally derived using LiDAR. The tool calculates the total upslope
 /// depth of depression storage, which is divided by the number of upslope cells in the final step
 /// of the process, yielding the average upslope depression depth. Roughened surfaces tend to have higher
@@ -128,7 +128,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -192,7 +192,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         let (mut col, mut row): (isize, isize);
         let (mut rn, mut cn): (isize, isize);
         let mut z: f32;
-        let mut zn: f32;        
+        let mut zn: f32;
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         // let back_link = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
@@ -218,7 +218,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         let elev_digits = (input.configs.maximum as i64).to_string().len();
         let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
         let small_num = 1.0_f32 / elev_multiplier as f32;
-              
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         // drop(input); // input is no longer needed.
@@ -274,7 +274,12 @@ impl WhiteboxTool for UpslopeDepressionStorage {
                     if zn < (z + small_num) {
                         // output.set_value(rn, cn, (z - zn) as f64); // * cell_area);
                         if (zn as f64) < (input.get_value(row, col) + output.get_value(row, col)) {
-                            output.set_value(rn, cn, (input.get_value(row, col) + output.get_value(row, col)) - zn as f64);
+                            output.set_value(
+                                rn,
+                                cn,
+                                (input.get_value(row, col) + output.get_value(row, col))
+                                    - zn as f64,
+                            );
                         } else {
                             output.set_value(rn, cn, 0f64);
                         }
@@ -293,7 +298,8 @@ impl WhiteboxTool for UpslopeDepressionStorage {
                 }
             }
             if verbose {
-                progress = (100.0_f64 * num_cells_visited as f64 / (rows*columns - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * num_cells_visited as f64 / (rows * columns - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Filling: {}%", progress);
                     old_progress = progress;
@@ -358,7 +364,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         //         }
         //     }
         // }
-        
+
         // let mut area: Array2D<i32> = Array2D::new(rows, columns, 1, -1)?;
         // let mut fa: f64;
         // let mut fa2: i32;
@@ -406,8 +412,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         //             old_progress = progress;
         //         }
         //     }
-        // } 
-
+        // }
 
         // calculate the number of inflowing cells
         let filled = Arc::new(filled);
@@ -515,7 +520,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
 
             if verbose {
                 num_solved += 1;
-                progress = (100.0_f64 * num_solved as f64 / (rows*columns - 1) as f64) as usize;
+                progress = (100.0_f64 * num_solved as f64 / (rows * columns - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Flow accumulation: {}%", progress);
                     old_progress = progress;
@@ -527,11 +532,16 @@ impl WhiteboxTool for UpslopeDepressionStorage {
             for col in 0..columns {
                 z = filled.get_value(row, col);
                 if z != nodata {
-                    output.set_value(row, col, output.get_value(row, col) / area.get_value(row, col));
+                    output.set_value(
+                        row,
+                        col,
+                        output.get_value(row, col) / area.get_value(row, col),
+                    );
                 }
             }
             if verbose {
-                progress = (100.0_f64 * num_cells_visited as f64 / (rows*columns - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * num_cells_visited as f64 / (rows * columns - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Final calculation: {}%", progress);
                     old_progress = progress;

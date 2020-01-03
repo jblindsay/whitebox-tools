@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster in which each grid cell is equal to the division of the corresponding grid 
+/// This tool creates a new raster in which each grid cell is equal to the division of the corresponding grid
 /// cells in two input rasters or one input raster and a constant value. If two images are input, both
-/// images must possess the same number of rows and columns and spatial extent, as the analysis will be 
-/// carried out on a cell-by-cell basis. If a grid cell contains a **NoData** value in either of the input 
+/// images must possess the same number of rows and columns and spatial extent, as the analysis will be
+/// carried out on a cell-by-cell basis. If a grid cell contains a **NoData** value in either of the input
 /// images, the cell will be excluded from the analysis.
-/// 
+///
 /// # See Also
 /// `Multiply`, `Add`, `Subtract`, `InPlaceDivide`
 pub struct Divide {
@@ -266,12 +266,16 @@ impl WhiteboxTool for Divide {
 
             let mut output = Raster::initialize_using_file(&output_file, &in2);
             if input2_constant.trunc() != input2_constant {
-                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                if output.configs.data_type != DataType::F32
+                    && output.configs.data_type != DataType::F64
+                {
                     output.configs.data_type = DataType::F32;
                 }
             }
             if input1_constant.trunc() != input1_constant {
-                if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
+                if output.configs.data_type != DataType::F32
+                    && output.configs.data_type != DataType::F64
+                {
                     output.configs.data_type = DataType::F32;
                 }
             }

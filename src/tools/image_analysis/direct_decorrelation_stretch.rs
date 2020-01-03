@@ -18,27 +18,27 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// The Direct Decorrelation Stretch (DDS) is a simple type of saturation stretch. The stretch is 
-/// applied to a colour composite image and is used to improve the saturation, or colourfulness, 
-/// of the image. The DDS operates by reducing the achromatic (grey) component of a pixel's colour 
-/// by a scale factor (*k*), such that the red (r), green (g), and blue (b) components of the output 
+/// The Direct Decorrelation Stretch (DDS) is a simple type of saturation stretch. The stretch is
+/// applied to a colour composite image and is used to improve the saturation, or colourfulness,
+/// of the image. The DDS operates by reducing the achromatic (grey) component of a pixel's colour
+/// by a scale factor (*k*), such that the red (r), green (g), and blue (b) components of the output
 /// colour are defined as:
-/// 
+///
 /// r<sub>*k*</sub> = r - *k* min(r, g, b)
-/// 
+///
 /// g<sub>*k*</sub> = g - *k* min(r, g, b)
-/// 
+///
 /// b<sub>*k*</sub> = b - *k* min(r, g, b)
-/// 
-/// The achromatic factor (*k*) can range between 0 (no effect) and 1 (full saturation stretch), 
-/// although typical values range from 0.3 to 0.7. A linear stretch is used afterwards to adjust 
-/// overall image brightness. Liu and Moore (1996) recommend applying a colour balance stretch, 
+///
+/// The achromatic factor (*k*) can range between 0 (no effect) and 1 (full saturation stretch),
+/// although typical values range from 0.3 to 0.7. A linear stretch is used afterwards to adjust
+/// overall image brightness. Liu and Moore (1996) recommend applying a colour balance stretch,
 /// such as `BalanceContrastEnhancement` before using the DDS.
-/// 
+///
 /// # Reference
-/// Liu, J.G., and Moore, J. (1996) Direct decorrelation stretch technique for RGB colour composition. 
+/// Liu, J.G., and Moore, J. (1996) Direct decorrelation stretch technique for RGB colour composition.
 /// International Journal of Remote Sensing, 17:5, 1005-1018.
-/// 
+///
 /// # See Also
 /// `CreateColourComposite`, `BalanceContrastEnhancement`
 pub struct DirectDecorrelationStretch {

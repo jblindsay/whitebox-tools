@@ -17,9 +17,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool truncates the values in an input raster (`--input`); truncation limits the number of digits right of the decimal point. For 
-/// example, trunc(3.2) = 3 and trunc(5.8) = 5 The output raster (`--output`) will be of an I32 data type. 
-/// 
+/// This tool truncates the values in an input raster (`--input`); truncation limits the number of digits right of the decimal point. For
+/// example, trunc(3.2) = 3 and trunc(5.8) = 5 The output raster (`--output`) will be of an I32 data type.
+///
 /// # See Also
 /// `Round`, `Ceil`, `Floor`
 pub struct Truncate {

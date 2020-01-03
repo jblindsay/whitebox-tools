@@ -17,23 +17,23 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to create a bare-earth DEM from a fine-resolution digital surface model. The 
-/// tool is typically applied to LiDAR DEMs which frequently contain numerous off-terrain objects (OTOs) such 
-/// as buildings, trees and other vegetation, cars, fences and other anthropogenic objects. The algorithm 
-/// works by finding and removing steep-sided peaks within the DEM. All peaks within a sub-grid, with a 
-/// dimension of the user-specified maximum OTO size (`--filter`), in pixels, are identified and removed. 
-/// Each of the edge cells of the peaks are then examined to see if they have a slope that is less than the 
-/// user-specified minimum OTO edge slope (`--slope`) and a back-filling procedure is used. This ensures that 
-/// OTOs are distinguished from natural topographic features such as hills. The DEM is preprocessed using a 
+/// This tool can be used to create a bare-earth DEM from a fine-resolution digital surface model. The
+/// tool is typically applied to LiDAR DEMs which frequently contain numerous off-terrain objects (OTOs) such
+/// as buildings, trees and other vegetation, cars, fences and other anthropogenic objects. The algorithm
+/// works by finding and removing steep-sided peaks within the DEM. All peaks within a sub-grid, with a
+/// dimension of the user-specified maximum OTO size (`--filter`), in pixels, are identified and removed.
+/// Each of the edge cells of the peaks are then examined to see if they have a slope that is less than the
+/// user-specified minimum OTO edge slope (`--slope`) and a back-filling procedure is used. This ensures that
+/// OTOs are distinguished from natural topographic features such as hills. The DEM is preprocessed using a
 /// white top-hat transform, such that elevations are normalized for the underlying ground surface.
-/// 
+///
 /// Note that this tool is appropriate to apply to rasterized LiDAR DEMs. Use the `LidarGroundPointFilter`
 /// tool to remove or classify OTOs within a LiDAR point-cloud.
-/// 
+///
 /// # Reference
-/// J.B. Lindsay (2018) A new method for the removal of off-terrain objects from LiDAR-derived raster surface 
+/// J.B. Lindsay (2018) A new method for the removal of off-terrain objects from LiDAR-derived raster surface
 /// models. Available online, DOI: [10.13140/RG.2.2.21226.62401](https://www.researchgate.net/publication/323003064_A_new_method_for_the_removal_of_off-terrain_objects_from_LiDAR-derived_raster_surface_models)
-/// 
+///
 /// # See Also
 /// `TophatTransform`, `LidarGroundPointFilter`
 pub struct RemoveOffTerrainObjects {
@@ -443,12 +443,14 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         );
         for row in 0..rows {
             for col in 0..columns {
-                if tophat.get_value(row, col) != nodata && out.get_value(row, col) != initial_value {
+                if tophat.get_value(row, col) != nodata && out.get_value(row, col) != initial_value
+                {
                     for i in 0..8 {
                         row_n = row + d_y[i];
                         col_n = col + d_x[i];
-                        if tophat.get_value(row_n, col_n) != nodata 
-                            && out.get_value(row_n, col_n) == initial_value {
+                        if tophat.get_value(row_n, col_n) != nodata
+                            && out.get_value(row_n, col_n) == initial_value
+                        {
                             frs.insert(
                                 col as f64,
                                 row as f64,
@@ -494,7 +496,11 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
                         out.set_value(row, col, nodata);
                     }
                 } else {
-                    out.set_value(row, col, opening.get_value(row, col) + tophat.get_value(row, col));
+                    out.set_value(
+                        row,
+                        col,
+                        opening.get_value(row, col) + tophat.get_value(row, col),
+                    );
                 }
             }
             if verbose {
@@ -512,7 +518,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         let mut output = Raster::initialize_using_config(&output_file, &configs); // Raster::initialize_using_file(&output_file, &input);
         for row in 0..rows {
             for col in 0..columns {
-                if out.get_value(row, col) != initial_value && tophat.get_value(row, col) != nodata {
+                if out.get_value(row, col) != initial_value && tophat.get_value(row, col) != nodata
+                {
                     output.set_value(row, col, out[(row, col)]);
                 } else {
                     output.set_value(row, col, nodata);

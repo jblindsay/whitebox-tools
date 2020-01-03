@@ -20,11 +20,11 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// This tool creates several rasters summarizing the distribution of LiDAR points in a LAS data file. 
-/// The user must specify the name of an input LAS file (`--input`) and the output raster grid 
+/// This tool creates several rasters summarizing the distribution of LiDAR points in a LAS data file.
+/// The user must specify the name of an input LAS file (`--input`) and the output raster grid
 /// resolution (`--resolution`). Additionally, the user must specify one or more of the possible
-/// output rasters to create using the various available flags, which include: 
-/// 
+/// output rasters to create using the various available flags, which include:
+///
 /// | Flag                     | Meaning                                               |
 /// | :----------------------- | :-----------------------------------------------------|
 /// | `--num_points`           | Number of points (returns) in each grid cell          |
@@ -33,24 +33,24 @@ use std::thread;
 /// | `--z_range`              | Elevation range within each grid cell                 |
 /// | `--intensity_range`      | Intensity range within each grid cell                 |
 /// | `--predom_class`         | Predominant class value within each grid cell         |
-/// 
+///
 /// If no output raster flags are specified, all of the output rasters will be created. All output
-/// rasters will have the same base name as the input LAS file but will have a suffix that 
+/// rasters will have the same base name as the input LAS file but will have a suffix that
 /// reflects the statistic type (e.g. _num_pnts, _num_pulses, _avg_points_per_pulse, etc.). Output
 /// files will be in the GeoTIFF (*.tif) file format.
-/// 
-/// When the input/output parameters are not specified, the tool works on all LAS files contained within 
+///
+/// When the input/output parameters are not specified, the tool works on all LAS files contained within
 /// the working directory.
-/// 
+///
 /// **Notes**:
 /// 1. The num_pulses output is actually the number of pulses with at lease one return; specifically it is
 ///    the sum of the early returns (first and only) in a grid cell. In areas of low reflectance, such as
 ///    over water surfaces, the system may have emited a significantly higher pulse rate but far fewer
 ///    returns are observed.
-/// 2. The memory requirement of this tool is high, particulalry if the grid resolution is fine and 
+/// 2. The memory requirement of this tool is high, particulalry if the grid resolution is fine and
 ///    the spatial extent is large.
-/// 
-/// 
+///
+///
 /// # See Also
 /// `LidarBlockMinimum`, `LidarBlockMaximum`
 pub struct LidarPointStats {
@@ -90,8 +90,9 @@ impl LidarPointStats {
         parameters.push(ToolParameter {
             name: "Output number of points?".to_owned(),
             flags: vec!["--num_points".to_owned()],
-            description: "Flag indicating whether or not to output the number of points (returns) raster."
-                .to_owned(),
+            description:
+                "Flag indicating whether or not to output the number of points (returns) raster."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("True".to_owned()),
             optional: true,
@@ -284,7 +285,13 @@ impl WhiteboxTool for LidarPointStats {
         let start = Instant::now();
 
         // check to see if all of the outputs are false and if so, set them all the true
-        if !num_points && !num_pulses && !avg_points_per_pulse && !z_range && !intensity_range && !predominant_class {
+        if !num_points
+            && !num_pulses
+            && !avg_points_per_pulse
+            && !z_range
+            && !intensity_range
+            && !predominant_class
+        {
             num_points = true;
             num_pulses = true;
             avg_points_per_pulse = true;
@@ -302,11 +309,11 @@ impl WhiteboxTool for LidarPointStats {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zip") {
@@ -434,15 +441,23 @@ impl WhiteboxTool for LidarPointStats {
                         };
 
                         if avg_points_per_pulse {
-                            let out_file_avg_points_per_pulse =
-                                input_file.replace(".las", "_avg_points_per_pulse.tif").clone();
-                            let mut out_avg_points_per_pulse =
-                                Raster::initialize_using_config(&out_file_avg_points_per_pulse, &configs);
+                            let out_file_avg_points_per_pulse = input_file
+                                .replace(".las", "_avg_points_per_pulse.tif")
+                                .clone();
+                            let mut out_avg_points_per_pulse = Raster::initialize_using_config(
+                                &out_file_avg_points_per_pulse,
+                                &configs,
+                            );
 
                             for row in 0..rows as isize {
                                 for col in 0..columns as isize {
                                     if out_num_pulses.get_value(row, col) > 0f64 {
-                                        out_avg_points_per_pulse.set_value(row, col, out_num_pnts.get_value(row, col) / out_num_pulses.get_value(row, col));
+                                        out_avg_points_per_pulse.set_value(
+                                            row,
+                                            col,
+                                            out_num_pnts.get_value(row, col)
+                                                / out_num_pulses.get_value(row, col),
+                                        );
                                     } else {
                                         out_avg_points_per_pulse.set_value(row, col, 0f64);
                                     }
@@ -496,12 +511,19 @@ impl WhiteboxTool for LidarPointStats {
                             let _ = out_num_pulses.write().unwrap();
                         }
                         drop(out_num_pulses);
-                        
                     }
 
                     if z_range || intensity_range {
-                        let mut min_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata).unwrap();
-                        let mut max_z: Array2D<f64> = Array2D::new(rows as isize, columns as isize, f64::NEG_INFINITY, nodata).unwrap();
+                        let mut min_z: Array2D<f64> =
+                            Array2D::new(rows as isize, columns as isize, f64::INFINITY, nodata)
+                                .unwrap();
+                        let mut max_z: Array2D<f64> = Array2D::new(
+                            rows as isize,
+                            columns as isize,
+                            f64::NEG_INFINITY,
+                            nodata,
+                        )
+                        .unwrap();
                         let out_file_elev_range =
                             input_file.replace(".las", "_elev_range.tif").clone();
                         let mut out_elev_range =

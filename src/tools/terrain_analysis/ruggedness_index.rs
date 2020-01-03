@@ -17,10 +17,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// The terrain ruggedness index (TRI) is a measure of local topographic relief. The TRI calculates 
-/// the root-mean-square-deviation (RMSD) for each grid cell in a digital elevation model (DEM), 
+/// The terrain ruggedness index (TRI) is a measure of local topographic relief. The TRI calculates
+/// the root-mean-square-deviation (RMSD) for each grid cell in a digital elevation model (DEM),
 /// calculating the residuals (i.e. elevation differences) between a grid cell and its eight neighbours.
-/// Notice that, unlike the output of this tool, the original Riley et al. (1999) TRI did not normalize 
+/// Notice that, unlike the output of this tool, the original Riley et al. (1999) TRI did not normalize
 /// for the number of cells in the local window (i.e. it is a root-square-deviation only). However,
 /// using the mean has the advantage of allowing for the varying number of neighbouring cells along
 /// the grid edges and in areas bordering NoData cells. This modification does however imply that the
@@ -28,9 +28,9 @@ use std::thread;
 /// terrain provided in Riley et al. (1999)
 ///
 /// # Reference
-/// Riley, S. J., DeGloria, S. D., and Elliot, R. (1999). Index that quantifies topographic heterogeneity. 
+/// Riley, S. J., DeGloria, S. D., and Elliot, R. (1999). Index that quantifies topographic heterogeneity.
 /// *Intermountain Journal of Sciences*, 5(1-4), 23-27.
-/// 
+///
 /// # See Also
 /// `RelativeTopographicPosition`, `DevFromMeanElev`
 pub struct RuggednessIndex {

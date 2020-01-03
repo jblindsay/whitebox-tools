@@ -216,7 +216,7 @@ impl fmt::Display for PointData {
 
 impl PointData {
     /// This function provides a lossy mechanism for transfering a 64-bit LiDAR point payload into
-    /// a 32-bit payload. The returns include a 32-bit formated point_bit_field and class_bit_field. 
+    /// a 32-bit payload. The returns include a 32-bit formated point_bit_field and class_bit_field.
     /// If the point data utilizes higher return numbers information
     /// will be lost in the translationt to the 32-bit format.
     pub fn get_32bit_from_64bit(&self) -> (u8, u8) {
@@ -232,17 +232,17 @@ impl PointData {
         } else {
             0b0000_0000u8
         };
-        let point_bit_field = edge_of_flight_val | 
-            scan_direction_val | 
-            ((self.number_of_returns() << 3u8) & 0b0011_1000u8) | 
-            (self.return_number() & 0b0000_0111u8);
+        let point_bit_field = edge_of_flight_val
+            | scan_direction_val
+            | ((self.number_of_returns() << 3u8) & 0b0011_1000u8)
+            | (self.return_number() & 0b0000_0111u8);
 
         let withheld_val = if self.withheld() {
             0b1000_0000u8
         } else {
             0b0000_0000u8
         };
-        
+
         let keypoint_val = if self.keypoint() {
             0b0100_0000u8
         } else {
@@ -254,11 +254,9 @@ impl PointData {
         } else {
             0b0000_0000u8
         };
-        
-        let class_bit_field = withheld_val | 
-            keypoint_val | 
-            synthetic_val | 
-            (self.classification() & 0b0001_1111u8);
+
+        let class_bit_field =
+            withheld_val | keypoint_val | synthetic_val | (self.classification() & 0b0001_1111u8);
 
         (point_bit_field, class_bit_field)
     }

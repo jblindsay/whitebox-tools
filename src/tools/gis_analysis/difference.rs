@@ -742,7 +742,8 @@ impl WhiteboxTool for Difference {
                             // Break the polygons up into lines at junction points.
                             let dimensions = 2;
                             let capacity_per_node = 64;
-                            let mut snap_tree = KdTree::with_capacity(dimensions, capacity_per_node);
+                            let mut snap_tree =
+                                KdTree::with_capacity(dimensions, capacity_per_node);
                             let mut p: Point2D;
                             for i in 0..polygons.len() {
                                 for j in 0..polygons[i].len() {

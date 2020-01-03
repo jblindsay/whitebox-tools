@@ -336,11 +336,11 @@ impl WhiteboxTool for LidarTINGridding {
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
-                    .path()
-                    .into_os_string()
-                    .to_str()
-                    .expect("Error reading path string")
-                    .to_string();
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
                         outputs.push(
@@ -765,14 +765,20 @@ impl WhiteboxTool for LidarTINGridding {
                             p2 = result.triangles[i + 1];
                             p3 = result.triangles[i + 2];
 
-                            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
-                                z_values[p2], z_values[p3]) < max_triangle_edge_length {
-
+                            if max_distance_squared(
+                                points[p1],
+                                points[p2],
+                                points[p3],
+                                z_values[p1],
+                                z_values[p2],
+                                z_values[p3],
+                            ) < max_triangle_edge_length
+                            {
                                 tri_points[0] = points[p1].clone();
                                 tri_points[1] = points[p2].clone();
                                 tri_points[2] = points[p3].clone();
                                 tri_points[3] = points[p1].clone();
-                                
+
                                 // get the equation of the plane
                                 a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
                                 b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
@@ -806,8 +812,9 @@ impl WhiteboxTool for LidarTINGridding {
                                 }
 
                                 if verbose && num_tiles == 1 {
-                                    progress =
-                                        (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as i32;
+                                    progress = (100.0_f64 * triangle as f64
+                                        / (num_triangles - 1) as f64)
+                                        as i32;
                                     if progress != old_progress {
                                         println!("Progress: {}%", progress);
                                         old_progress = progress;
@@ -817,7 +824,11 @@ impl WhiteboxTool for LidarTINGridding {
                         }
                     } else {
                         let (mut k_r, mut k_g, mut k_b): (f64, f64, f64);
-                        let (mut norm_r, mut norm_g, mut norm_b): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
+                        let (mut norm_r, mut norm_g, mut norm_b): (
+                            Vector3<f64>,
+                            Vector3<f64>,
+                            Vector3<f64>,
+                        );
                         let (mut red, mut green, mut blue): (f64, f64, f64);
                         for triangle in 0..num_triangles {
                             i = triangle * 3;
@@ -825,14 +836,20 @@ impl WhiteboxTool for LidarTINGridding {
                             p2 = result.triangles[i + 1];
                             p3 = result.triangles[i + 2];
 
-                            if max_distance_squared(points[p1], points[p2], points[p3], z_values[p1], 
-                                z_values[p2], z_values[p3]) < max_triangle_edge_length {
-
+                            if max_distance_squared(
+                                points[p1],
+                                points[p2],
+                                points[p3],
+                                z_values[p1],
+                                z_values[p2],
+                                z_values[p3],
+                            ) < max_triangle_edge_length
+                            {
                                 tri_points[0] = points[p1].clone();
                                 tri_points[1] = points[p2].clone();
                                 tri_points[2] = points[p3].clone();
                                 tri_points[3] = points[p1].clone();
-                                
+
                                 // get the equation of the plane
                                 red = (z_values[p1] as u32 & 0xFF) as f64;
                                 a = Vector3::new(tri_points[0].x, tri_points[0].y, red);
@@ -887,15 +904,20 @@ impl WhiteboxTool for LidarTINGridding {
                                             red = -(norm_r.x * x + norm_r.y * y + k_r) / norm_r.z;
                                             green = -(norm_g.x * x + norm_g.y * y + k_g) / norm_g.z;
                                             blue = -(norm_b.x * x + norm_b.y * y + k_b) / norm_b.z;
-                                            zn = ((255u32 << 24) | ((blue.round() as u32) << 16) | ((green.round() as u32) << 8) | (red.round() as u32)) as f64;
+                                            zn = ((255u32 << 24)
+                                                | ((blue.round() as u32) << 16)
+                                                | ((green.round() as u32) << 8)
+                                                | (red.round() as u32))
+                                                as f64;
                                             output.set_value(row, col, zn);
                                         }
                                     }
                                 }
 
                                 if verbose && num_tiles == 1 {
-                                    progress =
-                                        (100.0_f64 * triangle as f64 / (num_triangles - 1) as f64) as i32;
+                                    progress = (100.0_f64 * triangle as f64
+                                        / (num_triangles - 1) as f64)
+                                        as i32;
                                     if progress != old_progress {
                                         println!("Progress: {}%", progress);
                                         old_progress = progress;
@@ -973,7 +995,14 @@ impl WhiteboxTool for LidarTINGridding {
 }
 
 /// Calculate squared Euclidean distance between the point and another.
-pub fn max_distance_squared(p1: Point2D, p2: Point2D, p3: Point2D, z1: f64, z2: f64, z3: f64) -> f64 {
+pub fn max_distance_squared(
+    p1: Point2D,
+    p2: Point2D,
+    p3: Point2D,
+    z1: f64,
+    z2: f64,
+    z3: f64,
+) -> f64 {
     let mut dx = p1.x - p2.x;
     let mut dy = p1.y - p2.y;
     let mut dz = z1 - z2;

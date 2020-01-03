@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to change the value within the grid cells of a raster file (`--input`) that contain 
-/// NoData to zero. The most common reason for using this tool is to change the background region of a raster 
-/// image such that it can be included in analysis since NoData values are usually ignored by by most tools. 
-/// This change, however, will result in the background no longer displaying transparently in most GIS. This 
+/// This tool can be used to change the value within the grid cells of a raster file (`--input`) that contain
+/// NoData to zero. The most common reason for using this tool is to change the background region of a raster
+/// image such that it can be included in analysis since NoData values are usually ignored by by most tools.
+/// This change, however, will result in the background no longer displaying transparently in most GIS. This
 /// change can be reversed using the `SetNoDataValue` tool.
-/// 
+///
 /// # See Also
 /// `SetNoDataValue`, `IsNoData`
 pub struct ConvertNodataToZero {

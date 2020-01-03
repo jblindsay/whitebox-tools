@@ -15,16 +15,16 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool calculates the percentage of a raster stack (`--inputs`) that have cell values greater than an input *comparison*
-/// raster. The user must specify the name of the value raster (`--comparison`), the names of the raster files contained 
-/// in the stack, and an output raster file name (`--output`). The tool, working on a cell-by-cell basis, will count the 
-/// number of rasters within the stack with larger grid cell values greater than the corresponding grid cell in the *comparison* 
-/// raster. This count is then expressed as a percentage of the number of rasters contained within the stack and output. 
-/// If any of the rasters within the stack contain the NoData value, the corresponding grid cell in the output raster will 
+/// raster. The user must specify the name of the value raster (`--comparison`), the names of the raster files contained
+/// in the stack, and an output raster file name (`--output`). The tool, working on a cell-by-cell basis, will count the
+/// number of rasters within the stack with larger grid cell values greater than the corresponding grid cell in the *comparison*
+/// raster. This count is then expressed as a percentage of the number of rasters contained within the stack and output.
+/// If any of the rasters within the stack contain the NoData value, the corresponding grid cell in the output raster will
 /// be assigned NoData.
-/// 
+///
 /// # Warning
 /// Each of the input rasters must have the same spatial extent and number of rows and columns.
-/// 
+///
 /// # See Also
 /// `PercentLessThan`, `PercentEqualTo`
 pub struct PercentGreaterThan {

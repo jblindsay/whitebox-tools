@@ -14,16 +14,16 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to remove stream links in a stream network that are shorter than a user-specified length (`--min_length`). 
-/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells 
-/// are designated in the streams raster as all positive, nonzero values. Thus all non-stream or background grid cells are 
-/// commonly assigned either zeros or NoData values. The pointer raster is used to traverse the stream network and should only 
-/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the 
+/// This tool can be used to remove stream links in a stream network that are shorter than a user-specified length (`--min_length`).
+/// The user must specify the names of a streams raster image (`--streams`) and D8 pointer image (`--d8_pntr`). Stream cells
+/// are designated in the streams raster as all positive, nonzero values. Thus all non-stream or background grid cells are
+/// commonly assigned either zeros or NoData values. The pointer raster is used to traverse the stream network and should only
+/// be created using the D8 algorithm. Background cells will be assigned the NoData value in the output image, unless the
 /// `--zero_background` parameter is used, in which case non-stream cells will be assinged zero values in the output.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// # See Also
 /// `ExtractStreams`
 pub struct RemoveShortStreams {

@@ -6,15 +6,15 @@ Last Modified: 10/12/2019
 License: MIT
 */
 
-use crate::raster::*;
 use crate::algorithms::{convex_hull, point_in_poly};
-use crate::structures::{Basis, RadialBasisFunction, Point2D};
+use crate::raster::*;
+use crate::structures::{Basis, Point2D, RadialBasisFunction};
 use crate::tools::*;
 use crate::vector::{FieldData, ShapeType, Shapefile};
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use num_cpus;
 use nalgebra::DVector;
+use num_cpus;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -116,19 +116,18 @@ impl RadialBasisFunctionInterpolation {
             optional: true
         });
 
-        parameters.push(ToolParameter{
-            name: "Polynomial Order".to_owned(), 
-            flags: vec!["--poly_order".to_owned()], 
-            description: "Polynomial order; options are 'none' (default), 'constant', 'affine'.".to_owned(),
-            parameter_type: ParameterType::OptionList(
-                vec![
-                    "none".to_owned(), 
-                    "constant".to_owned(), 
-                    "affine".to_owned()
-                ]
-            ),
+        parameters.push(ToolParameter {
+            name: "Polynomial Order".to_owned(),
+            flags: vec!["--poly_order".to_owned()],
+            description: "Polynomial order; options are 'none' (default), 'constant', 'affine'."
+                .to_owned(),
+            parameter_type: ParameterType::OptionList(vec![
+                "none".to_owned(),
+                "constant".to_owned(),
+                "affine".to_owned(),
+            ]),
             default_value: Some("none".to_owned()),
-            optional: true
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -256,7 +255,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                 } else {
                     args[i + 1].to_string()
                 };
-                // use_field = true;
+            // use_field = true;
             } else if flag_val == "-use_z" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     use_z = true;
@@ -334,11 +333,12 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
             Basis::ThinPlateSpine(weight)
         } else if func_type.contains("PolyHarmonic") {
             Basis::PolyHarmonic(weight as i32)
-        }  else if func_type.contains("Gaussian") {
+        } else if func_type.contains("Gaussian") {
             Basis::Gaussian(weight)
-        }  else if func_type.contains("MultiQuadric") {
+        } else if func_type.contains("MultiQuadric") {
             Basis::MultiQuadric(weight)
-        }  else { //if func_type.contains("InverseMultiQuadric") {
+        } else {
+            //if func_type.contains("InverseMultiQuadric") {
             Basis::InverseMultiQuadric(weight)
         };
 
@@ -380,18 +380,17 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
             let record = input.get_record(record_num);
             if record.shape_type != ShapeType::Null {
                 for i in 0..record.num_points as usize {
-                    points.push(DVector::from_vec(vec![record.points[i].x, record.points[i].y]));
+                    points.push(DVector::from_vec(vec![
+                        record.points[i].x,
+                        record.points[i].y,
+                    ]));
                     points_for_hull.push(Point2D::new(record.points[i].x, record.points[i].y));
                     z = if use_z {
                         record.z_array[i]
                     } else {
                         let val = match input.attributes.get_value(record_num, &field_name) {
-                            FieldData::Int(val) => {
-                                val as f64
-                            }
-                            FieldData::Real(val) => {
-                                val
-                            }
+                            FieldData::Int(val) => val as f64,
+                            FieldData::Real(val) => val,
                             _ => {
                                 return Err(Error::new(
                                     ErrorKind::InvalidInput,
@@ -402,9 +401,14 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                         val
                     };
                     z_values.push(DVector::from_vec(vec![z]));
-                    if z < min_value { min_value = z; }
-                    if z > max_value { max_value = z; }
-                    tree.add([record.points[i].x, record.points[i].y], p).unwrap();
+                    if z < min_value {
+                        min_value = z;
+                    }
+                    if z > max_value {
+                        max_value = z;
+                    }
+                    tree.add([record.points[i].x, record.points[i].y], p)
+                        .unwrap();
                     p += 1;
                 }
             }
@@ -421,7 +425,8 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
 
         if z_values.len() == 0 {
             return Err(Error::new(
-                ErrorKind::InvalidInput, "Error in reading the input point value data.",
+                ErrorKind::InvalidInput,
+                "Error in reading the input point value data.",
             ));
         }
 
@@ -513,19 +518,24 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                         if point_in_poly(&Point2D::new(x, y), &hull) {
                             let mut ret = tree.within(&[x, y], radius, &squared_euclidean).unwrap();
                             if ret.len() < min_points {
-                                ret = tree.nearest(&[x, y], min_points, &squared_euclidean).unwrap();
+                                ret = tree
+                                    .nearest(&[x, y], min_points, &squared_euclidean)
+                                    .unwrap();
                             }
                             if ret.len() > 0 {
                                 let mut centers: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
-                                let mut vals: Vec<DVector<f64>> = Vec::with_capacity(ret.len());        
+                                let mut vals: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
                                 for p in ret {
                                     point_num = *(p.1);
                                     centers.push(points[point_num].clone());
                                     vals.push(z_values[point_num].clone());
                                 }
-                                let rbf = RadialBasisFunction::create(centers, vals, basis_func, poly_order);
+                                let rbf = RadialBasisFunction::create(
+                                    centers, vals, basis_func, poly_order,
+                                );
                                 z = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                if (z - mid_point).abs() < range_threshold { // if the estimated value is well outside of the range of values in the input points, don't output it.
+                                if (z - mid_point).abs() < range_threshold {
+                                    // if the estimated value is well outside of the range of values in the input points, don't output it.
                                     data[col as usize] = z;
                                 }
                             }

@@ -6,27 +6,27 @@ Last Modified: 17/02/2019
 License: MIT
 */
 
-use crate::structures::Array2D;
 use crate::raster::*;
+use crate::structures::Array2D;
 use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tools calculates a type of shape narrowness index (*NI*) for raster objects. The index is equal to: 
-/// 
+/// This tools calculates a type of shape narrowness index (*NI*) for raster objects. The index is equal to:
+///
 /// > *NI* = *A* / (&#960;*MD*<sup>2</sup>)
-/// 
+///
 /// where *A* is the patch area and *MD* is the maximum distance-to-edge of the patch. Circular-shaped patches
-/// will have a narrowness index near 1.0, while more narrow patche shapes will have higher index values. The 
+/// will have a narrowness index near 1.0, while more narrow patche shapes will have higher index values. The
 /// index may be conceptualized as the ratio of the patch area to the area of the largest contained circle,
 /// although in practice the circle defined by the radius of the maximum distance-to-edge will often fall
 /// outside the patch boundaries.
-/// 
-/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values must 
+///
+/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values must
 /// be positive, non-zero whole numbers.
-/// 
+///
 /// # See Also
 /// `LinearityIndex`, `ElongationRatio`
 pub struct NarrownessIndex {
@@ -42,9 +42,7 @@ impl NarrownessIndex {
         // public constructor
         let name = "NarrownessIndex".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
-        let description =
-            "Calculates the narrowness of raster polygons."
-                .to_string();
+        let description = "Calculates the narrowness of raster polygons.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -128,7 +126,7 @@ impl WhiteboxTool for NarrownessIndex {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -198,7 +196,6 @@ impl WhiteboxTool for NarrownessIndex {
         let num_bins = range.ceil() as usize;
         let mut bin: usize;
 
-
         // calcuate the distance from an edge
         if verbose {
             println!("Calculating maximum distance from edge for each patch...");
@@ -216,7 +213,7 @@ impl WhiteboxTool for NarrownessIndex {
 
         let mut area_data = vec![0usize; num_bins];
         let mut max_width = vec![0f64; num_bins];
-        
+
         let mut h: f64;
         let mut which_cell: usize;
         let inf_val = f64::INFINITY;
@@ -355,8 +352,8 @@ impl WhiteboxTool for NarrownessIndex {
                     if z != 0f64 {
                         output[(row, col)] = output[(row, col)].sqrt() * cell_size;
                         bin = (z - min_val).floor() as usize;
-                        if output[(row, col)] > max_width[bin] { 
-                            max_width[bin] = output[(row, col)]; 
+                        if output[(row, col)] > max_width[bin] {
+                            max_width[bin] = output[(row, col)];
                         }
                     } else {
                         output[(row, col)] = 0f64;
@@ -373,10 +370,11 @@ impl WhiteboxTool for NarrownessIndex {
                 }
             }
         }
-        
+
         let cell_area = cell_size * cell_size;
         for bin in 1..num_bins {
-            max_width[bin] = (area_data[bin] as f64 * cell_area) / (f64::consts::PI * max_width[bin] * max_width[bin]);
+            max_width[bin] = (area_data[bin] as f64 * cell_area)
+                / (f64::consts::PI * max_width[bin] * max_width[bin]);
         }
 
         for row in 0..rows {
@@ -396,8 +394,6 @@ impl WhiteboxTool for NarrownessIndex {
             }
         }
 
-
-        
         // let num_procs = num_cpus::get() as isize;
         // let (tx, rx) = mpsc::channel();
         // for tid in 0..num_procs {
@@ -420,7 +416,7 @@ impl WhiteboxTool for NarrownessIndex {
         //                     // n2 = input.get_value(row, col + 1);
 
         //                     bin = (val - min_val).floor() as usize;
-                            
+
         //                     if val != n1 {
         //                         freq_data[bin] += 1;
         //                     }
@@ -475,7 +471,7 @@ impl WhiteboxTool for NarrownessIndex {
         //     }
         // }
 
-        // let mut bin: usize;  
+        // let mut bin: usize;
         // let mut index_values = vec![0f64; num_bins];
         // for bin in 1..num_bins {
         //     if freq_data[bin] > 0 {

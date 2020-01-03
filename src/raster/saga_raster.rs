@@ -14,7 +14,11 @@ pub fn read_saga(
 ) -> Result<(), Error> {
     // read the header file
     // let header_file = file_name.replace(".sdat", ".sgrd");
-    let header_file = Path::new(&file_name).with_extension("sgrd").into_os_string().into_string().unwrap();
+    let header_file = Path::new(&file_name)
+        .with_extension("sgrd")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let f = File::open(header_file)?;
     let f = BufReader::new(f);
     let mut data_file_offset = 0u64;
@@ -144,7 +148,8 @@ pub fn read_saga(
     configs.north = configs.south + configs.resolution_y * configs.rows as f64;
     configs.east = configs.west + configs.resolution_x * configs.columns as f64;
 
-    if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64) {
+    if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64)
+    {
         configs.data_type = DataType::F32;
     }
 
@@ -154,10 +159,14 @@ pub fn read_saga(
     }
 
     data.reserve(configs.rows * configs.columns);
-    
+
     // read the data file
     // let data_file = file_name.replace(".sgrd", ".sdat");
-    let data_file = Path::new(&file_name).with_extension("sdat").into_os_string().into_string().unwrap();
+    let data_file = Path::new(&file_name)
+        .with_extension("sdat")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let mut f = File::open(data_file.clone())?;
     f.seek(SeekFrom::Start(data_file_offset))?;
 
@@ -370,14 +379,20 @@ pub fn read_saga(
     ///////////////////////////////////////////
     // Read the projection file if it exists //
     ///////////////////////////////////////////
-    let prj_file = Path::new(&file_name).with_extension("prj").into_os_string().into_string().unwrap();
+    let prj_file = Path::new(&file_name)
+        .with_extension("prj")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     match File::open(prj_file) {
         Ok(f) => {
             configs.projection = String::new();
             let f = BufReader::new(f);
             for line in f.lines() {
                 let line_unwrapped = line.unwrap();
-                configs.projection.push_str(&format!("{}\n", line_unwrapped));
+                configs
+                    .projection
+                    .push_str(&format!("{}\n", line_unwrapped));
             }
         }
         Err(_) => println!("Warning: Projection file not located."),
@@ -409,7 +424,11 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     // Save the header file
     // let header_file = r.file_name.replace(".sdat", ".sgrd");
-    let header_file = Path::new(&r.file_name).with_extension("sgrd").into_os_string().into_string().unwrap();
+    let header_file = Path::new(&r.file_name)
+        .with_extension("sgrd")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let f = File::create(header_file.clone())?;
     let mut writer = BufWriter::new(f);
 
@@ -503,7 +522,11 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
     // write the data file
     // let data_file = r.file_name.replace(".sgrd", ".sdat");
-    let data_file = Path::new(&r.file_name).with_extension("sdat").into_os_string().into_string().unwrap();
+    let data_file = Path::new(&r.file_name)
+        .with_extension("sdat")
+        .into_os_string()
+        .into_string()
+        .unwrap();
     let f = File::create(&data_file)?;
     let mut writer = BufWriter::new(f);
 
@@ -589,7 +612,11 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     ///////////////////////////////
 
     if !r.configs.projection.is_empty() {
-        let prj_file = Path::new(&r.file_name).with_extension("prj").into_os_string().into_string().unwrap();
+        let prj_file = Path::new(&r.file_name)
+            .with_extension("prj")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         let f = File::create(&prj_file)?;
         let mut writer = BufWriter::new(f);
         writer.write_all(r.configs.projection.as_bytes())?;

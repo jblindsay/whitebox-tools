@@ -16,17 +16,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to identify the 'catchment area' of each source grid cell in a 
-/// cost-distance analysis. The user must specify the names of the input *source* and 
-/// *back-link* raster files. Source cells (i.e. starting points for the cost-distance or 
-/// least-cost path analysis) are designated as all positive, non-zero valued grid cells 
-/// in the *source* raster. A *back-link* raster file can be created using the `CostDistance` 
-/// tool and is conceptually similar to the D8 flow-direction pointer raster grid in that 
+/// This tool can be used to identify the 'catchment area' of each source grid cell in a
+/// cost-distance analysis. The user must specify the names of the input *source* and
+/// *back-link* raster files. Source cells (i.e. starting points for the cost-distance or
+/// least-cost path analysis) are designated as all positive, non-zero valued grid cells
+/// in the *source* raster. A *back-link* raster file can be created using the `CostDistance`
+/// tool and is conceptually similar to the D8 flow-direction pointer raster grid in that
 /// it describes the connectivity between neighbouring cells on the accumulated cost surface.
-/// 
-/// NoData values in the input *back-link* image are assigned NoData values in the output 
-/// image. 
-/// 
+///
+/// NoData values in the input *back-link* image are assigned NoData values in the output
+/// image.
+///
 /// # See Also
 /// `CostDistance`, `CostPathway`, `EuclideanAllocation`
 pub struct CostAllocation {

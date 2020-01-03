@@ -19,12 +19,12 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
-/// This tool can be used to create a [scattergram](https://en.wikipedia.org/wiki/Scatter_plot) for 
-/// two numerical fields (`--fieldx` and `--fieldy`) contained within an input vector's attribute 
-/// table (`--input`). The user must specify the name of an input shapefile and the name of two of 
-/// the fields contained it the associated attribute table. The tool output (`--output`) is an 
+/// This tool can be used to create a [scattergram](https://en.wikipedia.org/wiki/Scatter_plot) for
+/// two numerical fields (`--fieldx` and `--fieldy`) contained within an input vector's attribute
+/// table (`--input`). The user must specify the name of an input shapefile and the name of two of
+/// the fields contained it the associated attribute table. The tool output (`--output`) is an
 /// HTML formated report containing a graphical scattergram plot.
-/// 
+///
 /// # See Also
 /// `AttributeHistogram`, `AttributeCorrelation`
 pub struct AttributeScattergram {

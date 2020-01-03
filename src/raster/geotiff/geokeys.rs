@@ -1,10 +1,10 @@
 use super::Ifd;
-use crate::utils::{ByteOrderReader, Endianness};
 use crate::spatial_ref_system;
+use crate::utils::{ByteOrderReader, Endianness};
 use std::collections::HashMap;
 use std::fmt;
-use std::mem::transmute;
 use std::io::Cursor;
+use std::mem::transmute;
 
 macro_rules! hashmap {
     ($( $key: expr => $val: expr ),*) => {{
@@ -32,7 +32,8 @@ pub struct GeoKeys {
 impl GeoKeys {
     pub fn add_key_directory(&mut self, data: &Vec<u8>, byte_order: Endianness) {
         // convert the binary data to an array of u16's
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
+        let mut bor =
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
         let mut i: usize = 0;
         while i < data.len() as usize {
             let k: u16 = bor.read_u16().unwrap();
@@ -43,7 +44,8 @@ impl GeoKeys {
 
     pub fn add_double_params(&mut self, data: &Vec<u8>, byte_order: Endianness) {
         let mut i: usize = 0;
-        let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
+        let mut bor =
+            ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(data.clone()), byte_order);
         while i < data.len() as usize {
             let k: f64 = bor.read_f64().unwrap();
             i += 8;
@@ -101,7 +103,6 @@ impl GeoKeys {
                     data.push(byte_array[i]);
                 }
             } else {
-
             }
 
             let ifd = Ifd::new(
@@ -208,11 +209,15 @@ impl GeoKeys {
                         Some(hm) => match hm.get(&value_offset) {
                             Some(v) => {
                                 value = if key_code == 3072 || key_code == 2048 {
-                                    format!("{} ({})", v.to_string(), spatial_ref_system::esri_wkt_from_epsg(value_offset))
+                                    format!(
+                                        "{} ({})",
+                                        v.to_string(),
+                                        spatial_ref_system::esri_wkt_from_epsg(value_offset)
+                                    )
                                 } else {
                                     format!("{} ({})", v.to_string(), value_offset)
                                 };
-                            },
+                            }
                             None => {
                                 value = if key_code == 3072 || key_code == 2048 {
                                     spatial_ref_system::esri_wkt_from_epsg(value_offset)

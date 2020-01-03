@@ -19,43 +19,43 @@ use std::thread;
 
 /// This tool can be used to calculate a normalized difference index (NDI) from two bands of multispectral image data.
 /// A NDI of two band images (`image1` and `image2`) takes the general form:
-/// 
+///
 /// > NDI = (image1 - image2) / (image1 + image2 + *c*)
-/// 
+///
 /// Where *c* is a correction factor sometimes used to avoid division by zero. It is, however, often set to 0.0. In fact,
-/// the `NormalizedDifferenceIndex` tool will set all pixels where `image1 + image2 = 0` to 0.0 in the output image. While 
-/// this is not strictly mathematically correct (0 / 0 = infinity), it is often the intended output in these cases. 
-/// 
-/// NDIs generally takes the value range -1.0 to 1.0, although in practice the range of values for a particular image scene 
-/// may be more restricted than this. 
-/// 
-/// NDIs have two important properties that make them particularly useful for remote sensing applications. First, they 
-/// emphasize certain aspects of the shape of the spectral signatures of different land covers. Secondly, they can be 
-/// used to de-emphasize the effects of variable illumination within a scene. NDIs are therefore frequently used in the 
+/// the `NormalizedDifferenceIndex` tool will set all pixels where `image1 + image2 = 0` to 0.0 in the output image. While
+/// this is not strictly mathematically correct (0 / 0 = infinity), it is often the intended output in these cases.
+///
+/// NDIs generally takes the value range -1.0 to 1.0, although in practice the range of values for a particular image scene
+/// may be more restricted than this.
+///
+/// NDIs have two important properties that make them particularly useful for remote sensing applications. First, they
+/// emphasize certain aspects of the shape of the spectral signatures of different land covers. Secondly, they can be
+/// used to de-emphasize the effects of variable illumination within a scene. NDIs are therefore frequently used in the
 /// field of remote sensing to create vegetation indices and other indices for emphasizing various land-covers and as inputs
-/// to analytical operations like image classification. For example, the normalized difference vegetation index (NDVI), 
+/// to analytical operations like image classification. For example, the normalized difference vegetation index (NDVI),
 /// one of the most common image-derived products in remote sensing, is calculated as:
-/// 
+///
 /// > NDVI = (NIR - RED) / (NIR + RED)
-/// 
+///
 /// The optimal soil adjusted vegetation index (OSAVI) is:
-/// 
+///
 /// > OSAVI = (NIR - RED) / (NIR + RED + 0.16)
-/// 
+///
 /// The normalized difference water index (NDWI), or normalized difference moisture index (NDMI), is:
-/// 
+///
 /// > NDWI = (NIR - SWIR) / (NIR + SWIR)
-/// 
+///
 /// The normalized burn ratio 1 (NBR1) and normalized burn ration 2 (NBR2) are:
-/// 
+///
 /// > NBR1 = (NIR - SWIR2) / (NIR + SWIR2)
 /// >
 /// > NBR2 = (SWIR1 - SWIR2) / (SWIR1 + SWIR2)
-/// 
-/// In addition to NDIs, *Simple Ratios* of image bands, are also commonly used as inputs to other remote sensing 
-/// applications like image classification. Simple ratios can be calculated using the `Divide` tool. Division by zero, 
+///
+/// In addition to NDIs, *Simple Ratios* of image bands, are also commonly used as inputs to other remote sensing
+/// applications like image classification. Simple ratios can be calculated using the `Divide` tool. Division by zero,
 /// in this case, will result in an output NoData value.
-/// 
+///
 /// # See Also
 /// `Divide`
 pub struct NormalizedDifferenceIndex {
@@ -122,8 +122,8 @@ impl NormalizedDifferenceIndex {
         });
 
         // parameters.push(ToolParameter{
-        //     name: "Use the optimized soil-adjusted veg index (OSAVI)?".to_owned(), 
-        //     flags: vec!["--osavi".to_owned()], 
+        //     name: "Use the optimized soil-adjusted veg index (OSAVI)?".to_owned(),
+        //     flags: vec!["--osavi".to_owned()],
         //     description: "Optional flag indicating whether the optimized soil-adjusted veg index (OSAVI) should be used.".to_owned(),
         //     parameter_type: ParameterType::Boolean,
         //     default_value: None,
@@ -254,12 +254,11 @@ impl WhiteboxTool for NormalizedDifferenceIndex {
                 };
             }
             // } else if flag_val == "-osavi" {
-                // if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+            // if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
             //     osavi_mode = true;
             //     correction_factor = 0.16;
-                // }
             // }
-            
+            // }
         }
 
         if verbose {

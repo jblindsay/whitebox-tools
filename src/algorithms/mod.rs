@@ -25,8 +25,8 @@ pub use self::line_ops::{
 };
 pub use self::minimum_bounding_box::{minimum_bounding_box, MinimizationCriterion};
 pub use self::poly_area::polygon_area;
-pub use self::poly_perimeter::polygon_perimeter;
 pub use self::poly_ops::{
     interior_point, point_in_poly, poly_in_poly, poly_is_convex, poly_overlaps_poly, winding_number,
 };
+pub use self::poly_perimeter::polygon_perimeter;
 pub use self::smallest_enclosing_circle::smallest_enclosing_circle;

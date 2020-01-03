@@ -28,7 +28,7 @@ use std::process::Command;
 /// important to keep in mind that given a sufficiently large sample, extremely small and
 /// non-notable differences can be found to be statistically significant. Furthermore
 /// statistical significance says nothing about the practical significance of a difference.
-/// 
+///
 /// # See Also
 /// `TwoSampleKsTest`
 pub struct KsTestForNormality {

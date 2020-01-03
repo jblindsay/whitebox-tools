@@ -18,12 +18,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will calculate the elevation of each grid cell in a digital elevation model (DEM) above the nearest 
-/// downslope pit cell or grid edge cell, depending on which is encountered first during the flow-path traverse. 
-/// The resulting image is therefore a measure of relative landscape position. The user must specify the names of 
-/// a D8 flow pointer grid, a DEM file, and the output file. The flow pointer grid must be derived using the D8 
+/// This tool will calculate the elevation of each grid cell in a digital elevation model (DEM) above the nearest
+/// downslope pit cell or grid edge cell, depending on which is encountered first during the flow-path traverse.
+/// The resulting image is therefore a measure of relative landscape position. The user must specify the names of
+/// a D8 flow pointer grid, a DEM file, and the output file. The flow pointer grid must be derived using the D8
 /// flow algorithm.
-/// 
+///
 /// # See Also
 /// `ElevationAboveStream`
 pub struct ElevAbovePit {

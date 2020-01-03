@@ -18,13 +18,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the average slope gradient (i.e. slope steepness in degrees) of the flowpaths that 
-/// pass through each grid cell in an input digital elevation model (DEM). The user must specify the name of 
+/// This tool calculates the average slope gradient (i.e. slope steepness in degrees) of the flowpaths that
+/// pass through each grid cell in an input digital elevation model (DEM). The user must specify the name of
 /// a DEM raster (`--dem`). It is important that this DEM is pre-processed to remove all topographic depressions and
-/// flat areas using a tool such as `BreachDepressions`. Several intermediate rasters are created and stored in 
+/// flat areas using a tool such as `BreachDepressions`. Several intermediate rasters are created and stored in
 /// memory during the operation of this tool, which may limit the size of DEM that can be processed, depending
 /// on available system resources.
-/// 
+///
 /// # See Also
 /// `AverageUpslopeFlowpathLength`, `BreachDepressions`
 pub struct AverageFlowpathSlope {

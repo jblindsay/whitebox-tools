@@ -15,12 +15,12 @@ use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to set values an input raster (`--input`) to a NoData background value with a vector 
-/// erasing polygon (`--polygons`). The input erase polygon file must be a vector of a Polygon base shape type. 
-/// The erase file may contain multiple polygon features. Polygon hole parts will be respected during clipping, i.e. 
-/// polygon holes will not be removed from the output raster. Raster grid cells that fall inside of a polygons in 
+/// This tool can be used to set values an input raster (`--input`) to a NoData background value with a vector
+/// erasing polygon (`--polygons`). The input erase polygon file must be a vector of a Polygon base shape type.
+/// The erase file may contain multiple polygon features. Polygon hole parts will be respected during clipping, i.e.
+/// polygon holes will not be removed from the output raster. Raster grid cells that fall inside of a polygons in
 /// the erase file will be assigned the NoData background value in the output file.
-/// 
+///
 /// # See Also
 /// `ClipRasterToPolygon`
 pub struct ErasePolygonFromRaster {

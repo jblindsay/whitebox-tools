@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool reclassifies the values in an input raster (`--input`) file based on an equal-interval scheme, where the 
-/// user must specify the reclass interval value (`--interval`), the starting value (`--start_val`), and optionally, 
-/// the ending value (`--end_val`). Grid cells containing values that fall outside of the range defined by the starting 
-/// and ending values, will be assigned their original values in the output grid. If the user does not specify an ending 
+/// This tool reclassifies the values in an input raster (`--input`) file based on an equal-interval scheme, where the
+/// user must specify the reclass interval value (`--interval`), the starting value (`--start_val`), and optionally,
+/// the ending value (`--end_val`). Grid cells containing values that fall outside of the range defined by the starting
+/// and ending values, will be assigned their original values in the output grid. If the user does not specify an ending
 /// value, the tool will assign a very large positive value.
-/// 
+///
 /// # See Also
 /// `Reclass`, `ReclassFromFile`
 pub struct ReclassEqualInterval {

@@ -17,23 +17,23 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::path::Path;
 
-/// This tool can be used to calculate the impoundment size index (ISI) from a digital elevation model (DEM). 
-/// The ISI is a land-surface parameter related to the size of the impoundment that would result from inserting 
-/// a dam of a user-specified maximum length (`--damlength`) into each DEM grid cell. In addition to an 
-/// output dam-height raster (same name as `--output` file but with an *_dam_height* suffix appended), the tool outputs 
+/// This tool can be used to calculate the impoundment size index (ISI) from a digital elevation model (DEM).
+/// The ISI is a land-surface parameter related to the size of the impoundment that would result from inserting
+/// a dam of a user-specified maximum length (`--damlength`) into each DEM grid cell. In addition to an
+/// output dam-height raster (same name as `--output` file but with an *_dam_height* suffix appended), the tool outputs
 /// a measure of impoundment size (`--out_type`) related to impoundment average depth, total volume, or flooded area.
-/// 
+///
 /// Please note that this tool performs an extremely complex and computationally intensive flow-accumulation operation.
 /// As such, it may take a substantial amount of processing time and may encounter issues (including memory issues) when
 /// applied to very large DEMs. It is not necessary to pre-process the input DEM (`--dem`) to remove topographic depressions
 /// and flat areas. The internal flow-accumulation operation will not be confounded by the presence of these features.
-/// 
+///
 /// # Reference
-/// Lindsay, JB (2015) Modelling the spatial pattern of potential impoundment size from DEMs. 
+/// Lindsay, JB (2015) Modelling the spatial pattern of potential impoundment size from DEMs.
 /// Online resource: [Whitebox Blog](https://whiteboxgeospatial.wordpress.com/2015/04/29/modelling-the-spatial-pattern-of-potential-impoundment-size-from-dems/)
-/// 
+///
 /// # See Also
-/// `StochasticDepressionAnalysis` 
+/// `StochasticDepressionAnalysis`
 pub struct ImpoundmentSizeIndex {
     name: String,
     description: String,

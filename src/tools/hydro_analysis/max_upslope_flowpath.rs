@@ -18,11 +18,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the maximum length of the flowpaths that run through each grid cell (in map horizontal 
-/// units) in an input digital elevation model (`--dem`). The tool works by first calculating the D8 flow pointer 
-/// (`D8Pointer`) from the input DEM. The DEM must be depressionless and should have been pre-processed using 
+/// This tool calculates the maximum length of the flowpaths that run through each grid cell (in map horizontal
+/// units) in an input digital elevation model (`--dem`). The tool works by first calculating the D8 flow pointer
+/// (`D8Pointer`) from the input DEM. The DEM must be depressionless and should have been pre-processed using
 /// the `BreachDepressions` or `FillDepressions` tool. The user must also specify the name of output raster (`--output`).
-/// 
+///
 /// # See Also
 /// `D8Pointer`, `BreachDepressions`, `FillDepressions`, `AverageUpslopeFlowpathLength`, `DownslopeFlowpathLength`, `DownslopeDistanceToStream`
 pub struct MaxUpslopeFlowpathLength {

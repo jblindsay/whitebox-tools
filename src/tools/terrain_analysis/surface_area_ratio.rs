@@ -19,14 +19,14 @@ use std::thread;
 
 /// This tool calculates the ratio between the surface area and planar area of grid cells within digital elevation models (DEMs).
 /// The tool uses the method of Jenness (2004) to estimate the surface area of a DEM grid cell based on the elevations
-/// contained within the 3 x 3 neighbourhood surrounding each cell. The surface area ratio has a lower bound of 1.0 for 
+/// contained within the 3 x 3 neighbourhood surrounding each cell. The surface area ratio has a lower bound of 1.0 for
 /// perfectly flat grid cells and is greater than 1.0 for other conditions. In particular, surface area ratio is a measure of
 /// neighbourhood surface shape complexity (texture) and elevation variability (local slope).
-/// 
+///
 /// # Reference
-/// Jenness, J. S. (2004). Calculating landscape surface area from digital elevation models. Wildlife Society 
+/// Jenness, J. S. (2004). Calculating landscape surface area from digital elevation models. Wildlife Society
 /// Bulletin, 32(3), 829-839.
-/// 
+///
 /// # See Also
 /// `RuggednessIndex`, `MultiscaleRoughness`, `CircularVarianceOfAspect`, `EdgeDensity`
 pub struct SurfaceAreaRatio {
@@ -42,7 +42,8 @@ impl SurfaceAreaRatio {
         // public constructor
         let name = "SurfaceAreaRatio".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates a the surface area ratio of each grid cell in an input DEM.".to_string();
+        let description =
+            "Calculates a the surface area ratio of each grid cell in an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -210,7 +211,7 @@ impl WhiteboxTool for SurfaceAreaRatio {
                     | 0 | 1 | 2 |
                     | 3 | 4 | 5 |
                     | 6 | 7 | 8 |
-                */ 
+                */
                 let dx = [-1, 0, 1, -1, 0, 1, -1, 0, 1];
                 let dy = [-1, -1, -1, 0, 0, 0, 1, 1, 1];
                 // let mut z: f64;
@@ -244,9 +245,9 @@ impl WhiteboxTool for SurfaceAreaRatio {
                     [2, 6, 12],
                     [3, 8, 13],
                     [2, 9, 14],
-                    [3, 11, 15], 
+                    [3, 11, 15],
                     [4, 10, 14],
-                    [5, 10, 15]
+                    [5, 10, 15],
                 ];
 
                 let mut resx = input.configs.resolution_x;
@@ -264,12 +265,10 @@ impl WhiteboxTool for SurfaceAreaRatio {
                     let eigth_area = cell_area / 8.0;
 
                     let dist_planar: [f64; 16] = [
-                        resx, resx, resx, resx, 
-                        resx, resx, resy, resy, 
-                        resy, resy, resy, resy, 
-                        res_diag, res_diag, res_diag, res_diag
+                        resx, resx, resx, resx, resx, resx, resy, resy, resy, resy, resy, resy,
+                        res_diag, res_diag, res_diag, res_diag,
                     ];
-                
+
                     let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         if input.get_value(row, col) != nodata {
@@ -280,9 +279,14 @@ impl WhiteboxTool for SurfaceAreaRatio {
 
                             // calculate the distances
                             for c in 0..16 {
-                                if zvals[dist_pairs[c][0]] != nodata && zvals[dist_pairs[c][1]] != nodata {
-                                    zdiff = (zvals[dist_pairs[c][0]] - zvals[dist_pairs[c][1]]).abs();
-                                    distances[c] = (dist_planar[c] * dist_planar[c] + zdiff * zdiff).sqrt() / 2f64;
+                                if zvals[dist_pairs[c][0]] != nodata
+                                    && zvals[dist_pairs[c][1]] != nodata
+                                {
+                                    zdiff =
+                                        (zvals[dist_pairs[c][0]] - zvals[dist_pairs[c][1]]).abs();
+                                    distances[c] =
+                                        (dist_planar[c] * dist_planar[c] + zdiff * zdiff).sqrt()
+                                            / 2f64;
                                 } else {
                                     distances[c] = 0f64;
                                 }

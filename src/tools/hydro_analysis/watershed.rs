@@ -15,42 +15,42 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool will perform a watershedding operation based on a group of input vector pour points (`--pour_pts`), 
-/// i.e. outlets or points-of-interest. Watershedding is a procedure that identifies all of the cells upslope of 
-/// a cell of interest (pour point) that are connected to the pour point by a flow-path. The user must specify the 
-/// name of a D8-derived flow pointer (flow direction) raster (`--d8_pntr`), a vector pour point file (`--pour_pts`), 
-/// and the output raster (`--output`). The pour points must be of a Point ShapeType (i.e. Point, PointZ, PointM, 
-/// MultiPoint, MultiPointZ, MultiPointM). Watersheds will be assigned the input pour point FID value. The flow 
+/// This tool will perform a watershedding operation based on a group of input vector pour points (`--pour_pts`),
+/// i.e. outlets or points-of-interest. Watershedding is a procedure that identifies all of the cells upslope of
+/// a cell of interest (pour point) that are connected to the pour point by a flow-path. The user must specify the
+/// name of a D8-derived flow pointer (flow direction) raster (`--d8_pntr`), a vector pour point file (`--pour_pts`),
+/// and the output raster (`--output`). The pour points must be of a Point ShapeType (i.e. Point, PointZ, PointM,
+/// MultiPoint, MultiPointZ, MultiPointM). Watersheds will be assigned the input pour point FID value. The flow
 /// pointer raster must be generated using the D8 algorithm, `D8Pointer`.
-/// 
-/// Pour point vectors can be attained by on-screen digitizing to designate these points-of-interest locations. 
-/// Because pour points are usually, although not always, situated on a stream network, it is recommended that you 
+///
+/// Pour point vectors can be attained by on-screen digitizing to designate these points-of-interest locations.
+/// Because pour points are usually, although not always, situated on a stream network, it is recommended that you
 /// use Jenson's method (`JensonSnapPourPoints`) to snap pour points on the stream network. This will ensure that
 /// the digitized outlets are coincident with the digital stream contained within the DEM flowpaths. If this is not
 /// done prior to inputting a pour-point set to the `Watershed` tool, anomalously small watersheds may be ouput, as
-/// pour points that fall off of the main flow path (even by one cell) in the D8 pointer will yield very different 
+/// pour points that fall off of the main flow path (even by one cell) in the D8 pointer will yield very different
 /// catchment areas.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
-/// There are several tools that perform similar watershedding operations in WhiteboxTools. `Watershed` is appropriate 
-/// to use when you have a set of specific locations for which you need to derive the watershed areas. Use the `Basins` 
-/// tool instead when you simply want to find the watersheds draining to each outlet situated along the edge of a 
+///
+/// There are several tools that perform similar watershedding operations in WhiteboxTools. `Watershed` is appropriate
+/// to use when you have a set of specific locations for which you need to derive the watershed areas. Use the `Basins`
+/// tool instead when you simply want to find the watersheds draining to each outlet situated along the edge of a
 /// DEM. The `Isobasins` tool can be used to divide a landscape into roughly equally sized watersheds. The `Subbasins`
-/// and `StrahlerOrderBasins` are useful when you need to find the areas draining to each link within a stream network. 
+/// and `StrahlerOrderBasins` are useful when you need to find the areas draining to each link within a stream network.
 /// Finally, `Hillslopes` can be used to idenfity the areas draining the each of the left and right banks of a stream
 /// network.
-/// 
+///
 /// # Reference
-/// Jenson, S. K. (1991), Applications of hydrological information automati-cally extracted from digital elevation 
-/// models, Hydrological Processes, 5, 31–44, doi:10.1002/hyp.3360050104. 
-/// 
-/// Lindsay JB, Rothwell JJ, and Davies H. 2008. Mapping outlet points used for watershed delineation onto DEM-derived 
+/// Jenson, S. K. (1991), Applications of hydrological information automati-cally extracted from digital elevation
+/// models, Hydrological Processes, 5, 31–44, doi:10.1002/hyp.3360050104.
+///
+/// Lindsay JB, Rothwell JJ, and Davies H. 2008. Mapping outlet points used for watershed delineation onto DEM-derived
 /// stream networks, Water Resources Research, 44, W08442, doi:10.1029/2007WR006507.
-/// 
+///
 /// # See Also
-/// `D8Pointer`, `Basins`, `Subbasins`, `Isobasins`, `StrahlerOrderBasins`, `Hillslopes`, `JensonSnapPourPoints`, 
+/// `D8Pointer`, `Basins`, `Subbasins`, `Isobasins`, `StrahlerOrderBasins`, `Hillslopes`, `JensonSnapPourPoints`,
 /// `BreachDepressions`, `FillDepressions`
 pub struct Watershed {
     name: String,

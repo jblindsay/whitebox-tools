@@ -17,23 +17,23 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the total curvature, which measures the curvature of the topographic surface rather 
+/// This tool calculates the total curvature, which measures the curvature of the topographic surface rather
 /// than the curvature of a line across the surface in some direction (Gallant and Wilson, 2000). Total
-/// curvature can be positive or negative, with zero curvature indicating that the surface is either flat 
-/// or the convexity in one direction is balanced by the concavity in another direction, as would occur at 
-/// a saddle point. Curvature is a second derivative of the topographic surface defined by a digital elevation 
-/// model (DEM). The user must specify the name of the input DEM (`--dem`) and the output raster image (`--output`). The output reports curvature 
-/// in degrees multiplied by 100 for easier interpretation, as curvature values are often very small. The Z 
-/// Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the 
-/// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the 
-/// Z Conversion Factor. If the DEM is in the geographic coordinate system (latitude and longitude), with 
+/// curvature can be positive or negative, with zero curvature indicating that the surface is either flat
+/// or the convexity in one direction is balanced by the concavity in another direction, as would occur at
+/// a saddle point. Curvature is a second derivative of the topographic surface defined by a digital elevation
+/// model (DEM). The user must specify the name of the input DEM (`--dem`) and the output raster image (`--output`). The output reports curvature
+/// in degrees multiplied by 100 for easier interpretation, as curvature values are often very small. The Z
+/// Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the
+/// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
+/// Z Conversion Factor. If the DEM is in the geographic coordinate system (latitude and longitude), with
 /// XY units measured in degrees, an appropriate Z Conversion Factor is calculated internally based on
 /// site latitude.
-/// 
+///
 /// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
-/// 
+///
 /// `PlanCurvature`, `ProfileCurvature`, `TangentialCurvature`, `Slope`, `Aspect`
 pub struct TotalCurvature {
     name: String,

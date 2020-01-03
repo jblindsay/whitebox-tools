@@ -17,12 +17,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tools calculates a type of shape complexity index for raster objects. The index is equal to the average 
+/// This tools calculates a type of shape complexity index for raster objects. The index is equal to the average
 /// number of intersections of the group of vertical and horizontal transects passing through an object. Simple
 /// objects will have a shape complexity index of 1.0 and more complex shapes, including those containing numberous
-/// holes or are winding in shape, will have higher index values. Objects in the input raster (`--input`) are 
+/// holes or are winding in shape, will have higher index values. Objects in the input raster (`--input`) are
 /// designated by their unique identifers. Identifer values should be positive, non-zero whole numbers.
-/// 
+///
 /// # See Also
 /// `ShapeComplexityIndex`, `BoundaryShapeComplexity`
 pub struct ShapeComplexityIndexRaster {
@@ -38,9 +38,7 @@ impl ShapeComplexityIndexRaster {
         // public constructor
         let name = "ShapeComplexityIndexRaster".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
-        let description =
-            "Calculates the complexity of raster polygons or classes."
-                .to_string();
+        let description = "Calculates the complexity of raster polygons or classes.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -124,7 +122,7 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -190,7 +188,7 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
         let max_val = input.configs.maximum;
         let range = max_val - min_val + 0.00001f64; // otherwise the max value is outside the range
         let num_bins = range.ceil() as usize;
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -213,15 +211,23 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
                             // n2 = input.get_value(row, col + 1);
 
                             bin = (val - min_val).floor() as usize;
-                            
+
                             if val != n1 {
                                 freq_data[bin] += 1;
                             }
 
-                            if row < min_row[bin] { min_row[bin] = row; }
-                            if row > max_row[bin] { max_row[bin] = row; }
-                            if col < min_col[bin] { min_col[bin] = col; }
-                            if col > max_col[bin] { max_col[bin] = col; }
+                            if row < min_row[bin] {
+                                min_row[bin] = row;
+                            }
+                            if row > max_row[bin] {
+                                max_row[bin] = row;
+                            }
+                            if col < min_col[bin] {
+                                min_col[bin] = col;
+                            }
+                            if col > max_col[bin] {
+                                max_col[bin] = col;
+                            }
                         }
                     }
                 }
@@ -240,7 +246,8 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
                     }
                 }
 
-                tx.send((freq_data, min_row, max_row, min_col, max_col)).unwrap();
+                tx.send((freq_data, min_row, max_row, min_col, max_col))
+                    .unwrap();
             });
         }
 
@@ -253,10 +260,18 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
             let (data1, data2, data3, data4, data5) = rx.recv().unwrap();
             for bin in 0..num_bins {
                 freq_data[bin] += data1[bin];
-                if data2[bin] < min_row[bin] { min_row[bin] = data2[bin]; }
-                if data3[bin] > max_row[bin] { max_row[bin] = data3[bin]; }
-                if data4[bin] < min_col[bin] { min_col[bin] = data4[bin]; }
-                if data5[bin] > max_col[bin] { max_col[bin] = data5[bin]; }
+                if data2[bin] < min_row[bin] {
+                    min_row[bin] = data2[bin];
+                }
+                if data3[bin] > max_row[bin] {
+                    max_row[bin] = data3[bin];
+                }
+                if data4[bin] < min_col[bin] {
+                    min_col[bin] = data4[bin];
+                }
+                if data5[bin] > max_col[bin] {
+                    max_col[bin] = data5[bin];
+                }
             }
 
             if verbose {
@@ -268,11 +283,13 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
             }
         }
 
-        let mut bin: usize;  
+        let mut bin: usize;
         let mut index_values = vec![0f64; num_bins];
         for bin in 1..num_bins {
             if freq_data[bin] > 0 {
-                index_values[bin] = freq_data[bin] as f64 / ((max_row[bin] - min_row[bin] + 1) + (max_col[bin] - min_col[bin] + 1)) as f64;
+                index_values[bin] = freq_data[bin] as f64
+                    / ((max_row[bin] - min_row[bin] + 1) + (max_col[bin] - min_col[bin] + 1))
+                        as f64;
             }
         }
 

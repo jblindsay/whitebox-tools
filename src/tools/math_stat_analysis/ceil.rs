@@ -17,10 +17,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a ceiling (ceil) operation on the values in an input raster (`--input`) to the nearest integer value. 
-/// The `ceil` function calculates the smallest integer greater than or equal to the input value (e.g. ceil(0.5) = 1, ceil(-4.5) = -5). 
-/// The output raster (`--output`) will be of an I32 data type. 
-/// 
+/// This tool performs a ceiling (ceil) operation on the values in an input raster (`--input`) to the nearest integer value.
+/// The `ceil` function calculates the smallest integer greater than or equal to the input value (e.g. ceil(0.5) = 1, ceil(-4.5) = -5).
+/// The output raster (`--output`) will be of an I32 data type.
+///
 /// # See Also
 /// `Round`, `Floor`, `Truncate`
 pub struct Ceil {

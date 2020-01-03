@@ -22,25 +22,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a sigmoidal stretch on a raster image. This is a transformation where the input image value for a 
+/// This tool performs a sigmoidal stretch on a raster image. This is a transformation where the input image value for a
 /// grid cell (z<sub>in</sub>) is transformed to an output value zout such that:
-/// 
+///
 /// > z<sub>out</sub> = (1.0 / (1.0 + exp(*gain*(*cutoff* - z))) - *a* ) / *b* x *num_tones*
-/// 
+///
 /// where,
-/// 
+///
 /// > z = (z<sub>in</sub> - *MIN*) / *RANGE*,
-/// 
+///
 /// > *a* = 1.0 / (1.0 + exp(*gain* x *cutoff*)),
-/// 
+///
 /// > *b* = 1.0 / (1.0 + exp(*gain* x (*cutoff* - 1.0))) - 1.0 / (1.0 + exp(*gain* x *cutoff*)),
-/// 
-/// *MIN* and *RANGE* are the minimum value and data range in the input image respectively and *gain* and *cutoff* are 
+///
+/// *MIN* and *RANGE* are the minimum value and data range in the input image respectively and *gain* and *cutoff* are
 /// user specified parameters (`--gain`, `--cutoff`).
-/// 
+///
 /// Like all of *WhiteboxTools*'s contrast enhancement tools, this operation will work on either greyscale or RGB input
 /// images.
-/// 
+///
 /// # See Also
 /// `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
 /// `StandardDeviationContrastStretch`

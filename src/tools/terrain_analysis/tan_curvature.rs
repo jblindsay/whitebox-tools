@@ -17,21 +17,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the tangential curvature, which is the curvature of an inclined plan perpendicular 
-/// to both the direction of flow and the surface (Gallant and Wilson, 2000). Curvature is a second 
+/// This tool calculates the tangential curvature, which is the curvature of an inclined plan perpendicular
+/// to both the direction of flow and the surface (Gallant and Wilson, 2000). Curvature is a second
 /// derivative of the topographic surface defined by a digital elevation model (DEM). The user must specify
-/// the name of the input DEM (`--dem`) and the output raster image (`--output`). The output reports curvature 
-/// in degrees multiplied by 100 for easier interpretation, as curvature values are often very small. The Z 
-/// Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the 
-/// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the 
-/// Z Conversion Factor. If the DEM is in the geographic coordinate system (latitude and longitude), with 
+/// the name of the input DEM (`--dem`) and the output raster image (`--output`). The output reports curvature
+/// in degrees multiplied by 100 for easier interpretation, as curvature values are often very small. The Z
+/// Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the
+/// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
+/// Z Conversion Factor. If the DEM is in the geographic coordinate system (latitude and longitude), with
 /// XY units measured in degrees, an appropriate Z Conversion Factor is calculated internally based on
 /// site latitude.
-/// 
+///
 /// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles 
+/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
-/// 
+///
 /// `PlanCurvature`, `ProfileCurvature`, `TotalCurvature`, `Slope`, `Aspect`
 pub struct TangentialCurvature {
     name: String,

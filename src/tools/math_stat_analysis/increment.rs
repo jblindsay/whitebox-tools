@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to increase the values of each grid cell in an input raster (`--input`) 
+/// This tool can be used to increase the values of each grid cell in an input raster (`--input`)
 /// by 1.0. Note that this tool will modify the input raster. If you would rather create a new
 /// raster file, leaving the input unmodified, use the `Add` tool instead.
-/// 
-/// # See Also 
+///
+/// # See Also
 /// `InPlaceAdd`, `Add`, `Decrement`
 pub struct Increment {
     name: String,

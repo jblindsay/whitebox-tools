@@ -17,25 +17,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to calculate the relative stream power (*RSP*) index. This index is directly related 
-/// to the stream power if the assumption can be made that discharge is directly proportional to upslope 
+/// This tool can be used to calculate the relative stream power (*RSP*) index. This index is directly related
+/// to the stream power if the assumption can be made that discharge is directly proportional to upslope
 /// contributing area (*A<sub>s</sub>*; `--sca`). The index is calculated as:
 ///
 /// > *RSP* = *A<sub>s</sub>*<sup>*p*</sup> &times; tan(&beta;)
 ///
-/// where *A<sub>s</sub>* is the specific catchment area (i.e. the upslope contributing area per unit 
-/// contour length) estimated using one of the available flow accumulation algorithms; &beta; is the local 
-/// slope gradient in degrees (`--slope`); and, *p* (`--exponent`) is a user-defined exponent term that 
-/// controls the location-specific relation between contributing area and discharge. Notice that 
-/// *A<sub>s</sub>* must not be log-transformed prior to being used; *A<sub>s</sub>* is commonly 
-/// log-transformed to enhance visualization of the data. The slope raster can be created from the base 
+/// where *A<sub>s</sub>* is the specific catchment area (i.e. the upslope contributing area per unit
+/// contour length) estimated using one of the available flow accumulation algorithms; &beta; is the local
+/// slope gradient in degrees (`--slope`); and, *p* (`--exponent`) is a user-defined exponent term that
+/// controls the location-specific relation between contributing area and discharge. Notice that
+/// *A<sub>s</sub>* must not be log-transformed prior to being used; *A<sub>s</sub>* is commonly
+/// log-transformed to enhance visualization of the data. The slope raster can be created from the base
 /// digital elevation model (DEM) using the `Slope` tool. The input images must have the same grid dimensions.
-/// 
+///
 /// # Reference
-/// Moore, I. D., Grayson, R. B., and Ladson, A. R. (1991). Digital terrain modelling: 
-/// a review of hydrological, geomorphological, and biological applications. *Hydrological 
+/// Moore, I. D., Grayson, R. B., and Ladson, A. R. (1991). Digital terrain modelling:
+/// a review of hydrological, geomorphological, and biological applications. *Hydrological
 /// processes*, 5(1), 3-30.
-/// 
+///
 /// # See Also
 /// `SedimentTransportIndex`, `Slope`, `D8FlowAccumulation` `DInfFlowAccumulation`, `FD8FlowAccumulation`
 pub struct StreamPowerIndex {

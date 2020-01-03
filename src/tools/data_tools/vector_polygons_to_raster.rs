@@ -11,11 +11,11 @@ use crate::raster::*;
 use crate::structures::{Array2D, BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::{FieldData, ShapeType, Shapefile};
+use std::collections::HashMap;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::collections::HashMap;
 
 pub struct VectorPolygonsToRaster {
     name: String,
@@ -265,8 +265,8 @@ impl WhiteboxTool for VectorPolygonsToRaster {
         if !vector_data.attributes.is_field_numeric(field_index) {
             // Warn user of non-numeric
             // if verbose {
-                println!("Warning: Non-numeric attributes cannot be directly assigned to raster data. A key will be established.");
-                println!("\nKey, Value");
+            println!("Warning: Non-numeric attributes cannot be directly assigned to raster data. A key will be established.");
+            println!("\nKey, Value");
             // }
             // field_name = "FID".to_string(); // Can't use non-numeric field; use FID instead.
             let mut id = 1f64;
@@ -350,7 +350,7 @@ impl WhiteboxTool for VectorPolygonsToRaster {
                     FieldData::Text(key) => {
                         attribute_data[record_num] = match freq_data.get(&key) {
                             Some(val) => *val,
-                            None => 0f64
+                            None => 0f64,
                         }
                     }
                     _ => {

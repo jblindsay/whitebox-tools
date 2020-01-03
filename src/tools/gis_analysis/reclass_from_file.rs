@@ -21,20 +21,20 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster image in which the value of each grid cell is determined by the values in an 
-/// input raster image (`--input`) and a reclass file (`--reclass_file`). The reclass file is a text file 
-/// containing two or three columns, delimited (i.e. separated) by either a space, tab, or comma. The columns 
-/// describe respectively the *New* value, the *From* value, and the *To Just Less Than* value. Classes must be 
+/// This tool creates a new raster image in which the value of each grid cell is determined by the values in an
+/// input raster image (`--input`) and a reclass file (`--reclass_file`). The reclass file is a text file
+/// containing two or three columns, delimited (i.e. separated) by either a space, tab, or comma. The columns
+/// describe respectively the *New* value, the *From* value, and the *To Just Less Than* value. Classes must be
 /// mutually exclusive, i.e. non-overlapping.
-/// 
-/// If only two columns are present in the reclass file, i.e. the *From* column is left blank, the tool will 
-/// operate in assign mode. That is, any cell in the input image that is equal to the *From* value (contained 
+///
+/// If only two columns are present in the reclass file, i.e. the *From* column is left blank, the tool will
+/// operate in assign mode. That is, any cell in the input image that is equal to the *From* value (contained
 /// in the second column) will be assigned the *New* value (contained in the first column) in the output image.
-/// 
-/// Any values in the input raster that do not fall within one of the classes will be assigned its original 
-/// value in the output raster. TNoData values in the input raster will be assigned NoData values in the output 
+///
+/// Any values in the input raster that do not fall within one of the classes will be assigned its original
+/// value in the output raster. TNoData values in the input raster will be assigned NoData values in the output
 /// raster.
-/// 
+///
 /// # See Also
 /// `Reclass`, `ReclassEqualInterval`
 pub struct ReclassFromFile {

@@ -13,14 +13,14 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to either extract or classify the elevation values (z) of LiDAR points within 
+/// This tool can be used to either extract or classify the elevation values (z) of LiDAR points within
 /// a specified elevation range (slice). In addition to the names of the input and output LiDAR files
-/// (`--input` and `--output`), the user must specify the lower (`--minz`) and upper (`--maxz`) bounds of 
+/// (`--input` and `--output`), the user must specify the lower (`--minz`) and upper (`--maxz`) bounds of
 /// the elevation range. By default, the tool will only output points within the elevation slice, filtering
 /// out all points lying outside of this range. If the `--class` parameter is used, the tool will operate
 /// by assigning a class value (`--inclassval`) to the classification bit of points within the slice and
 /// another class value (`--outclassval`) to those points falling outside the range.
-/// 
+///
 /// # See Also
 /// `LidarRemoveOutliers`, `LidarClassifySubset`
 pub struct LidarElevationSlice {

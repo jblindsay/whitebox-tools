@@ -11,7 +11,6 @@ use crate::structures::Array2D;
 use crate::tools::*;
 use num_cpus;
 use std::env;
-use std::{f32, f64};
 use std::io::{Error, ErrorKind};
 use std::ops::AddAssign;
 use std::ops::SubAssign;
@@ -19,6 +18,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use std::{f32, f64};
 
 /// This tool implements a highly modified form of the DEM de-noising algorithm described
 /// by Sun et al. (2007). It is very effective at removing surface roughness from digital
@@ -42,10 +42,10 @@ use std::thread;
 /// method.
 ///
 /// # Reference
-/// Lindsay JB, Francioni* A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of 
+/// Lindsay JB, Francioni* A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of
 /// drainage features. *Remote Sensing*, 11(16), 1926; DOI: 10.3390/rs11161926.
-/// 
-/// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving 
+///
+/// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving
 /// mesh denoising. *IEEE Transactions on Visualization & Computer Graphics*, (5), 925-938.
 pub struct FeaturePreservingSmoothing {
     name: String,
@@ -323,10 +323,10 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         // let eight_grid_res = ((res_x + res_y) / 2f32) * 8f32;
         let eight_res_x = res_x * 8f32;
         let eight_res_y = res_y * 8f32;
-        
+
         /*
             Note: the normal should have a,b,c components to it since it is 3D. However, every pixel will
-            have a c-value of 1.0 and as such, there is no point in including it in the 
+            have a c-value of 1.0 and as such, there is no point in including it in the
             storage of the normals and in the average analysis. It's effectively constant. This is one way
             to both significantly reduce the memory footprint of the tool and reduce the number of calculations
             required for the averaging.
@@ -347,13 +347,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
                 let mut zn: f32;
                 let (mut a, mut b): (f32, f32);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![
-                        Normal {
-                            a: 0f32,
-                            b: 0f32,
-                        };
-                        columns as usize
-                    ];
+                    let mut data = vec![Normal { a: 0f32, b: 0f32 }; columns as usize];
                     let mut values = [0f32; 9];
                     for col in 0..columns {
                         z = input.get_value(row, col);
@@ -369,13 +363,18 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
                             // from Horn 1981:
                             // Pw = t(z++ + 2z+o + z+.) - (z-+ + 2z_o + z--)]/8Ax
                             // Qw = t(z+++2zo++z-+)- (z+-+2zo-+z--)]/8A>
-                            a = -(values[2] - values[4] + 2f32 * (values[1] - values[5]) + values[0] - values[6]) / eight_res_x;
-                            b = -(values[6] - values[4] + 2f32 * (values[7] - values[3]) + values[0] - values[2]) / eight_res_y;
+                            a = -(values[2] - values[4]
+                                + 2f32 * (values[1] - values[5])
+                                + values[0]
+                                - values[6])
+                                / eight_res_x;
+                            b = -(values[6] - values[4]
+                                + 2f32 * (values[7] - values[3])
+                                + values[0]
+                                - values[2])
+                                / eight_res_y;
                             // Notice that these aren't unit vectors. By normalizing by c instead, we remove the need to store the c-value.
-                            data[col as usize] = Normal {
-                                a: a,
-                                b: b,
-                            };
+                            data[col as usize] = Normal { a: a, b: b };
                         }
                     }
                     tx.send((row, data)).unwrap();
@@ -383,10 +382,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
             });
         }
 
-        let zero_vector = Normal {
-            a: 0f32,
-            b: 0f32,
-        };
+        let zero_vector = Normal { a: 0f32, b: 0f32 };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
             let data = rx.recv().unwrap();
@@ -444,13 +440,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
                 let mut sum_w: f32;
                 let threshold32 = threshold as f32;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![
-                        Normal {
-                            a: 0f32,
-                            b: 0f32,
-                        };
-                        columns as usize
-                    ];
+                    let mut data = vec![Normal { a: 0f32, b: 0f32 }; columns as usize];
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
@@ -461,7 +451,8 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
                                 xn = col + dx[n];
                                 yn = row + dy[n];
                                 if input.get_value(yn, xn) != nodata {
-                                    diff = nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
+                                    diff =
+                                        nv.get_value(row, col).angle_between(nv.get_value(yn, xn));
                                     if diff > threshold32 {
                                         w = (diff - threshold32) * (diff - threshold32);
                                         sum_w += w;
@@ -505,7 +496,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
                 )
             );
         }
-        
+
         drop(nv);
 
         ///////////////////////////////////////////////////////////////////////////
@@ -531,7 +522,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         }
         // output.configs.data_type = DataType::F32; // if the input file is integer elevations, the output must be floating-point
         // let mut output = Arc::try_unwrap(input).unwrap_err().clone();
-        
+
         if verbose {
             println!("Updating elevations...");
         }

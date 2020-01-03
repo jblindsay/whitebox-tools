@@ -253,5 +253,4 @@ mod test {
         // point on rectangle
         assert_eq!(poly_is_convex(&poly), false);
     }
-
 }

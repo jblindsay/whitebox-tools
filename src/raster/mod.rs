@@ -197,7 +197,7 @@ impl Raster {
         };
         output.file_mode = "w".to_string();
         output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
-        
+
         output.configs.rows = configs.rows;
         output.configs.columns = configs.columns;
         output.configs.north = configs.north;
@@ -223,13 +223,15 @@ impl Raster {
         output.configs.geo_key_directory = configs.geo_key_directory.clone();
         output.configs.geo_double_params = configs.geo_double_params.clone();
         output.configs.geo_ascii_params = configs.geo_ascii_params.clone();
-        
+
         if output.raster_type == RasterType::SurferAscii
             || output.raster_type == RasterType::Surfer7Binary
         {
             output.configs.nodata = 1.71041e38;
         }
-        output.data.reserve(output.configs.rows * output.configs.columns);
+        output
+            .data
+            .reserve(output.configs.rows * output.configs.columns);
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
 
         output
@@ -276,18 +278,24 @@ impl Raster {
         output.configs.geo_key_directory = input.configs.geo_key_directory.clone();
         output.configs.geo_double_params = input.configs.geo_double_params.clone();
         output.configs.geo_ascii_params = input.configs.geo_ascii_params.clone();
-        
+
         if output.raster_type == RasterType::SurferAscii
             || output.raster_type == RasterType::Surfer7Binary
         {
             output.configs.nodata = 1.71041e38;
         }
-        output.data.reserve(output.configs.rows * output.configs.columns);
+        output
+            .data
+            .reserve(output.configs.rows * output.configs.columns);
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
         output
     }
 
-    pub fn initialize_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(file_name: &'a str, configs: &'a RasterConfigs, array: &'a Array2D<T>) -> Raster {
+    pub fn initialize_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(
+        file_name: &'a str,
+        configs: &'a RasterConfigs,
+        array: &'a Array2D<T>,
+    ) -> Raster {
         let new_file_name = if file_name.contains(".") {
             file_name.to_string()
         } else {
@@ -328,13 +336,15 @@ impl Raster {
         output.configs.geo_key_directory = configs.geo_key_directory.clone();
         output.configs.geo_double_params = configs.geo_double_params.clone();
         output.configs.geo_ascii_params = configs.geo_ascii_params.clone();
-        
+
         if output.raster_type == RasterType::SurferAscii
             || output.raster_type == RasterType::Surfer7Binary
         {
             output.configs.nodata = 1.71041e38;
         }
-        output.data.reserve_exact(output.configs.rows * output.configs.columns);
+        output
+            .data
+            .reserve_exact(output.configs.rows * output.configs.columns);
         for row in 0..array.rows {
             for col in 0..array.columns {
                 output.data.push(array.get_value(row, col).into());
@@ -521,7 +531,8 @@ impl Raster {
             self.configs.columns as isize,
             self.configs.nodata,
             self.configs.nodata,
-        ).unwrap();
+        )
+        .unwrap();
         for row in 0..self.configs.rows as isize {
             data.set_row_data(row, self.get_row_data(row));
         }
@@ -535,7 +546,8 @@ impl Raster {
             self.configs.columns as isize,
             out_nodata,
             out_nodata,
-        ).unwrap();
+        )
+        .unwrap();
         let mut z: f64;
         for row in 0..self.configs.rows as isize {
             for col in 0..self.configs.columns as isize {
@@ -548,7 +560,10 @@ impl Raster {
         data
     }
 
-    pub fn set_data_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(&mut self, array: &'a Array2D<T>) -> Result<(), Error> {
+    pub fn set_data_from_array2d<'a, T: Into<f64> + Copy + AddAssign + SubAssign>(
+        &mut self,
+        array: &'a Array2D<T>,
+    ) -> Result<(), Error> {
         // quality control
         if array.rows * array.columns != self.data.len() as isize {
             return Err(Error::new(
@@ -566,7 +581,7 @@ impl Raster {
         self.configs.nodata = array.nodata().into();
         Ok(())
     }
-    
+
     pub fn reinitialize_values(&mut self, value: f64) {
         self.data = vec![value; self.configs.rows * self.configs.columns];
     }
@@ -1108,14 +1123,20 @@ impl Raster {
     }
 
     pub fn get_bounding_box(&self) -> BoundingBox {
-        BoundingBox::new(self.configs.west, self.configs.east, self.configs.south, self.configs.north)
+        BoundingBox::new(
+            self.configs.west,
+            self.configs.east,
+            self.configs.south,
+            self.configs.north,
+        )
     }
 
     pub fn is_in_geographic_coordinates(&self) -> bool {
         if self.configs.west < -180f64
             || self.configs.east > 180f64
             || self.configs.north > 90f64
-            || self.configs.south < -90f64 {
+            || self.configs.south < -90f64
+        {
             return false;
         }
         if self.configs.epsg_code == 4322
@@ -1242,11 +1263,18 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
         None => "".to_string(),
     };
     if extension.is_empty() {
-        panic!("The file type could not be determined for the file:\n{}\n due to missing extension.", file_name);
+        panic!(
+            "The file type could not be determined for the file:\n{}\n due to missing extension.",
+            file_name
+        );
     }
     if extension == "tas" || extension == "dep" {
         return RasterType::Whitebox;
-    } else if extension == "tif" || extension == "tiff" || extension == "gtif" || extension == "gtiff" {
+    } else if extension == "tif"
+        || extension == "tiff"
+        || extension == "gtif"
+        || extension == "gtiff"
+    {
         return RasterType::GeoTiff;
     } else if extension == "flt" {
         return RasterType::ArcBinary;

@@ -18,30 +18,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool is used to generate a flow accumulation grid (i.e. catchment area) using the 
-/// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction 
-/// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour, 
-/// i.e. flow divergence is not permitted. The user must specify the name of the input digital 
-/// elevation model (DEM). The DEM must have been hydrologically corrected to remove all spurious 
-/// depressions and flat areas. DEM pre-processing is usually achieved using the `BreachDepressions` or 
+/// This tool is used to generate a flow accumulation grid (i.e. catchment area) using the
+/// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction
+/// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour,
+/// i.e. flow divergence is not permitted. The user must specify the name of the input digital
+/// elevation model (DEM). The DEM must have been hydrologically corrected to remove all spurious
+/// depressions and flat areas. DEM pre-processing is usually achieved using the `BreachDepressions` or
 /// `FillDepressions` tools.
-/// 
-/// In addition to the input DEM, the user must specify the output type. The output flow-accumulation 
+///
+/// In addition to the input DEM, the user must specify the output type. The output flow-accumulation
 /// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
 /// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
-/// is `cells`. The user must also specify whether the output flow-accumulation grid should be 
-/// log-tranformed (`--log`), i.e. the output, if this option is selected, will be the natural-logarithm of the 
-/// accumulated flow value. This is a transformation that is often performed to better visualize the 
-/// contributing area distribution. Because contributing areas tend to be very high along valley bottoms 
-/// and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of 
-/// values on hillslopes tends to be 'washed out' because the palette is stretched out to represent the 
-/// highest values. Log-transformation provides a means of compensating for this phenomenon. Importantly, 
-/// however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain 
-/// indices, such as the wetness index, or relative stream power index. 
-/// 
-/// Grid cells possessing the **NoData** value in the input flow-pointer grid are assigned the **NoData** 
+/// is `cells`. The user must also specify whether the output flow-accumulation grid should be
+/// log-tranformed (`--log`), i.e. the output, if this option is selected, will be the natural-logarithm of the
+/// accumulated flow value. This is a transformation that is often performed to better visualize the
+/// contributing area distribution. Because contributing areas tend to be very high along valley bottoms
+/// and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of
+/// values on hillslopes tends to be 'washed out' because the palette is stretched out to represent the
+/// highest values. Log-transformation provides a means of compensating for this phenomenon. Importantly,
+/// however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain
+/// indices, such as the wetness index, or relative stream power index.
+///
+/// Grid cells possessing the **NoData** value in the input flow-pointer grid are assigned the **NoData**
 /// value in the output flow-accumulation image.
-/// 
+///
 /// # See Also:
 /// `DInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`
 pub struct D8FlowAccumulation {

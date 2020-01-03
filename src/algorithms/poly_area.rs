@@ -50,5 +50,4 @@ mod test {
         ];
         assert_eq!(polygon_area(&poly), 25f64);
     }
-
 }

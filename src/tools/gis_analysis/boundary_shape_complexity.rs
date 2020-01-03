@@ -19,17 +19,17 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tools calculates a type of shape complexity index for raster objects, focused on the complexity of the
-/// boundary of polygons. The index uses the `LineThinning` tool to estimate a skeletonized network for each 
-/// input raster polygon. The Boundary Shape Complexity (BSC) index is then calculated as the percentage of the 
+/// boundary of polygons. The index uses the `LineThinning` tool to estimate a skeletonized network for each
+/// input raster polygon. The Boundary Shape Complexity (BSC) index is then calculated as the percentage of the
 /// skeletonized network belonging to exterior links. Polygons with more complex boundaries will possess
-/// more branching skeletonized networks, with each spur in the boundary possessing a short exterior branch. The 
-/// two longest exterior links in the network are considered to be part of the main network.  Therefore, 
-/// polygons of complex shaped boundaries will have a higher percentage of their skeleton networks consisting 
+/// more branching skeletonized networks, with each spur in the boundary possessing a short exterior branch. The
+/// two longest exterior links in the network are considered to be part of the main network.  Therefore,
+/// polygons of complex shaped boundaries will have a higher percentage of their skeleton networks consisting
 /// of exterior links. It is expected that simple convex hulls should have relatively low BSC index values.
-/// 
-/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values should be 
+///
+/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values should be
 /// positive, non-zero whole numbers.
-/// 
+///
 /// # See Also
 /// `ShapeComplexityIndexRaster`, `LineThinning`
 pub struct BoundaryShapeComplexity {
@@ -46,8 +46,7 @@ impl BoundaryShapeComplexity {
         let name = "BoundaryShapeComplexity".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
         let description =
-            "Calculates the complexity of the boundaries of raster polygons."
-                .to_string();
+            "Calculates the complexity of the boundaries of raster polygons.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -131,7 +130,7 @@ impl WhiteboxTool for BoundaryShapeComplexity {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -242,12 +241,11 @@ impl WhiteboxTool for BoundaryShapeComplexity {
             }
         }
 
-
         let mut did_something = true;
         let mut loop_num = 0;
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        
+
         let elements1 = [
             [6, 7, 0, 4, 3, 2],
             [0, 1, 2, 4, 5, 6],
@@ -384,7 +382,6 @@ impl WhiteboxTool for BoundaryShapeComplexity {
         //     }
         // }
 
-
         let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
         let dx = [-1, -1, 0, 1, 1, 1, 0, -1];
         let dy = [0, -1, -1, -1, 0, 1, 1, 1];
@@ -440,7 +437,7 @@ impl WhiteboxTool for BoundaryShapeComplexity {
                             } else {
                                 did_something = false;
                             }
-                        } 
+                        }
 
                         num_end_nodes[bin] += link_length as f64;
                         if longest_exterior_link[bin] < link_length {
@@ -489,14 +486,18 @@ impl WhiteboxTool for BoundaryShapeComplexity {
 
         for bin in 1..num_bins {
             // if num_end_nodes[bin] >= 2f64 {
-            //     num_end_nodes[bin] -= 2f64; // you get 2 end nodes for free; i.e. they don't count against the complexity. 
+            //     num_end_nodes[bin] -= 2f64; // you get 2 end nodes for free; i.e. they don't count against the complexity.
             //     // Elongated convex hulls and single-cell wide lines will have two end nodes.
             // } else {
             //     num_end_nodes[bin] = 0f64;
             // }
             // let perimeter = (num_cells[bin] as f64 / f64::consts::PI).sqrt() * 2f64 * f64::consts::PI;
             // num_end_nodes[bin] = 100f64 * num_end_nodes[bin] / perimeter; // num_edge_cells[bin] as f64;
-            num_end_nodes[bin] = 100f64 * (num_end_nodes[bin] - longest_exterior_link[bin] as f64 - second_longest_exterior_link[bin] as f64) / num_cells[bin] as f64;
+            num_end_nodes[bin] = 100f64
+                * (num_end_nodes[bin]
+                    - longest_exterior_link[bin] as f64
+                    - second_longest_exterior_link[bin] as f64)
+                / num_cells[bin] as f64;
             // if num_end_nodes[bin] == 100f64 {
             //     // This is the case of a simple shape with no actual exterior links in the skeleton. That is
             //     // the measured 'exterior' is the full skeleton length.

@@ -19,11 +19,11 @@ use std::path;
 
 const EPSILON: f64 = std::f64::EPSILON;
 
-/// Vector lines can sometimes contain two features that are connected by a shared end vertex. This tool 
+/// Vector lines can sometimes contain two features that are connected by a shared end vertex. This tool
 /// identifies connected line features in an input vector file (`--input`) and merges them in the output
-/// file (`--output`). Two line features are merged if their ends are coincident, and are not coincident 
-/// with any other feature (i.e. a bifurcation junction). End vertices are considered to be coincident if 
-/// they are within the specified snap distance (`--snap`). 
+/// file (`--output`). Two line features are merged if their ends are coincident, and are not coincident
+/// with any other feature (i.e. a bifurcation junction). End vertices are considered to be coincident if
+/// they are within the specified snap distance (`--snap`).
 ///
 /// # See Also
 /// `SplitWithLines`
@@ -221,11 +221,14 @@ impl WhiteboxTool for MergeLineSegments {
         }
 
         // create output file
-        let mut output = Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, false)?;
+        let mut output =
+            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, false)?;
         output.projection = projection;
 
         // add the attributes
-        output.attributes.add_field(&AttributeField::new("FID", FieldDataType::Int, 7u8, 0u8));
+        output
+            .attributes
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 7u8, 0u8));
 
         let mut input_field_mapping = vec![0; input.attributes.get_num_fields()];
         for i in 0..input.attributes.get_num_fields() {
@@ -289,10 +292,14 @@ impl WhiteboxTool for MergeLineSegments {
         for i in 0..polylines.len() {
             if !already_added[i] {
                 p1 = polylines[i].first_vertex();
-                let ret1 = tree.within(&[p1.x, p1.y], precision, &squared_euclidean).unwrap();
+                let ret1 = tree
+                    .within(&[p1.x, p1.y], precision, &squared_euclidean)
+                    .unwrap();
 
                 p2 = polylines[i].last_vertex();
-                let ret2 = tree.within(&[p2.x, p2.y], precision, &squared_euclidean).unwrap();
+                let ret2 = tree
+                    .within(&[p2.x, p2.y], precision, &squared_euclidean)
+                    .unwrap();
 
                 if ret1.len() != 2 && ret2.len() != 2 {
                     // this feature doesn't have an endnode to join; just output it as is
@@ -341,7 +348,9 @@ impl WhiteboxTool for MergeLineSegments {
                         } else {
                             polylines[current_feature].last_vertex()
                         };
-                        let ret = tree.within(&[p1.x, p1.y], precision, &squared_euclidean).unwrap();
+                        let ret = tree
+                            .within(&[p1.x, p1.y], precision, &squared_euclidean)
+                            .unwrap();
                         if ret.len() == 2 {
                             for a in 0..ret.len() {
                                 index = *ret[a].1;
@@ -349,7 +358,7 @@ impl WhiteboxTool for MergeLineSegments {
                                     current_endnode = index;
                                     if already_added[current_endnode / 2] {
                                         flag = false;
-                                    } 
+                                    }
                                 }
                             }
                         } else {
@@ -436,7 +445,9 @@ impl WhiteboxTool for MergeLineSegments {
                     } else {
                         polylines[current_feature].last_vertex()
                     };
-                    let ret = tree.within(&[p1.x, p1.y], precision, &squared_euclidean).unwrap();
+                    let ret = tree
+                        .within(&[p1.x, p1.y], precision, &squared_euclidean)
+                        .unwrap();
                     if ret.len() == 2 {
                         for a in 0..ret.len() {
                             index = *ret[a].1;
@@ -444,7 +455,7 @@ impl WhiteboxTool for MergeLineSegments {
                                 current_endnode = index;
                                 if already_added[current_endnode / 2] {
                                     flag = false;
-                                } 
+                                }
                             }
                         }
                     } else {
@@ -473,8 +484,7 @@ impl WhiteboxTool for MergeLineSegments {
                     old_progress = progress;
                 }
             }
-        }   
-
+        }
 
         if verbose {
             println!("Saving data...")

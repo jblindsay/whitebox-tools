@@ -14,19 +14,19 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to measure the average slope gradient, in degrees, of each link in a raster stream 
-/// network. To estimate the slope of individual grid cells in a raster stream network, use the 
-/// `StreamSlopeContinuous` tool instead. The user must specify the names of a stream link identifier raster image (`--linkid`), a D8 
-/// pointer image (`--d8_pntr`), and a digital elevation model (`--dem`). The pointer image is used to traverse the 
-/// stream network and must only be created using the D8 algorithm (`D8Pointer`). 
-/// Stream cells are designated in the streams image as all values greater than zero. Thus, all non-stream or background 
-/// grid cells are commonly assigned either zeros or NoData values. Background cells will be assigned the NoData value 
-/// in the output image, unless the `--zero_background` parameter is used, in which case non-stream cells will be assinged 
+/// This tool can be used to measure the average slope gradient, in degrees, of each link in a raster stream
+/// network. To estimate the slope of individual grid cells in a raster stream network, use the
+/// `StreamSlopeContinuous` tool instead. The user must specify the names of a stream link identifier raster image (`--linkid`), a D8
+/// pointer image (`--d8_pntr`), and a digital elevation model (`--dem`). The pointer image is used to traverse the
+/// stream network and must only be created using the D8 algorithm (`D8Pointer`).
+/// Stream cells are designated in the streams image as all values greater than zero. Thus, all non-stream or background
+/// grid cells are commonly assigned either zeros or NoData values. Background cells will be assigned the NoData value
+/// in the output image, unless the `--zero_background` parameter is used, in which case non-stream cells will be assinged
 /// zero values in the output.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// # See Also
 /// `StreamSlopeContinuous`, `D8Pointer`
 pub struct StreamLinkSlope {

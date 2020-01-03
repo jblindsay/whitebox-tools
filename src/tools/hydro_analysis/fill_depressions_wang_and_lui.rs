@@ -5,9 +5,9 @@ Created: 28/06/2017
 Last Modified: 05/12/2019
 License: MIT
 
-NOTE: This tool was originally named FillDepressions. However, I have updated the algorithm used by the 
+NOTE: This tool was originally named FillDepressions. However, I have updated the algorithm used by the
 FillDepressions tool to something that is often more efficient than the Wang and Lui method. As such,
-I have created this tool to house the original Wang and Lui based depression filling method for 
+I have created this tool to house the original Wang and Lui based depression filling method for
 legacy reasons.
 */
 
@@ -22,29 +22,29 @@ use std::i32;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the 
-/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous 
-/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressionsWangAndLui` algorithm is based on 
-/// the computationally efficient approach of examining each cell based on its spill elevation, starting from the 
-/// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm 
-/// first proposed by Wang and Liu (2006). However, itt is currently not the most efficient depression-removal algorithm 
+/// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the
+/// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous
+/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressionsWangAndLui` algorithm is based on
+/// the computationally efficient approach of examining each cell based on its spill elevation, starting from the
+/// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm
+/// first proposed by Wang and Liu (2006). However, itt is currently not the most efficient depression-removal algorithm
 /// available in WhiteboxTools; `FillDepressions` and `BreachDepressionsLeastCost` are both more efficient and often
 /// produce better, lower-impact results.
-/// 
-/// If the input DEM has gaps, or missing-data holes, that contain NoData values, it is better to use the 
-/// `FillMissingData` tool to repair these gaps. This tool will interpolate values across the gaps and produce 
-/// a more natural-looking surface than the flat areas that are produced by depression filling. Importantly, the 
-/// `FillDepressions` tool algorithm implementation assumes that there are no 'donut hole' NoData gaps within the area 
-/// of valid data. Any NoData areas along the edge of the grid will simply be ignored and will remain NoData areas in 
+///
+/// If the input DEM has gaps, or missing-data holes, that contain NoData values, it is better to use the
+/// `FillMissingData` tool to repair these gaps. This tool will interpolate values across the gaps and produce
+/// a more natural-looking surface than the flat areas that are produced by depression filling. Importantly, the
+/// `FillDepressions` tool algorithm implementation assumes that there are no 'donut hole' NoData gaps within the area
+/// of valid data. Any NoData areas along the edge of the grid will simply be ignored and will remain NoData areas in
 /// the output image.
-/// 
+///
 /// The user may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
 /// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
-/// 
+///
 /// # Reference
-/// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation 
+/// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation
 /// models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 20(2): 193-213.
-/// 
+///
 /// # See Also
 /// `FillDepressions`, `BreachDepressionsLeastCost`, `BreachDepressions`, `FillMissingData`
 pub struct FillDepressionsWangAndLui {
@@ -183,7 +183,7 @@ impl WhiteboxTool for FillDepressionsWangAndLui {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem"{
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {

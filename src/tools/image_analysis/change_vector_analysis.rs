@@ -38,10 +38,10 @@ use std::path;
 /// determine 'actual' change (i.e. change above some assumed level of error). The type
 /// of change (qualitatively) is then defined according to the corresponding sector code.
 /// Jensen (2015) provides a useful description of this approach to change detection.
-/// 
+///
 /// # Reference
 /// Jensen, J. R. (2015). Introductory Digital Image Processing: A Remote Sensing Perspective.
-/// 
+///
 /// # See Also
 /// `WriteFunctionMemoryInsertion`
 pub struct ChangeVectorAnalysis {

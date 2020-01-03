@@ -16,14 +16,14 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to mark the flowpath initiated from user-specified locations downslope and 
-/// terminating at either the grid's edge or a grid cell with undefined flow direction. The user must 
-/// input the name of a D8 flow pointer grid (`--d8_pntr`) and an input vector file indicating the location 
+/// This tool can be used to mark the flowpath initiated from user-specified locations downslope and
+/// terminating at either the grid's edge or a grid cell with undefined flow direction. The user must
+/// input the name of a D8 flow pointer grid (`--d8_pntr`) and an input vector file indicating the location
 /// of one or more initiation points, i.e. 'seed points' (`--seed_pts`). The seed point file must be a
 /// vector of the POINT ShapeType. Note that the flow pointer should be generated from a DEM that has
 /// been processed to remove all topographic depression (see `BreachDepressions` and `FillDepressions`) and
 /// created using the D8 flow algorithm (`D8Pointer`).
-/// 
+///
 /// # See Also
 /// `D8Pointer`, `BreachDepressions`, `FillDepressions`, `DownslopeFlowpathLength`, `DownslopeDistanceToStream`
 pub struct TraceDownslopeFlowpaths {

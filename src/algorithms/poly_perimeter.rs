@@ -49,5 +49,4 @@ mod test {
         ];
         assert_eq!(polygon_perimeter(&poly), 20f64);
     }
-
 }

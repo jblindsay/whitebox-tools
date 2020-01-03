@@ -10,7 +10,7 @@ use crate::algorithms::{point_in_poly, polygon_area, triangulate, Triangulation}
 use crate::raster::*;
 use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
-use crate::vector::{FieldData, ShapeTypeDimension, ShapeType, Shapefile};
+use crate::vector::{FieldData, ShapeType, ShapeTypeDimension, Shapefile};
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use num_cpus;
@@ -28,31 +28,31 @@ use std::thread;
 /// the natural neighbour method performs a weighted averaging of nearby point values to estimate the attribute
 /// (`--field`) value at grid cell intersections in the output raster (`--output`). However, the two methods differ
 /// quite significantly in the way that neighbours are identified and in the weighting scheme. First, natural neigbhour
-/// identifies neighbours to be used in the interpolation of a point by finding the points connected to the 
-/// estimated value location in a [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation), that 
-/// is, the so-called *natural neighbours*. This approach has the main advantage of not having to specify an arbitrary 
-/// search distance or minimum number of nearest neighbours like many other interpolators do. Weights in the natural 
-/// neighbour scheme are determined using an area-stealing approach, whereby the weight assigned to a neighbour's value 
-/// is determined by the proportion of its [Voronoi polygon](https://en.wikipedia.org/wiki/Voronoi_diagram) that would 
+/// identifies neighbours to be used in the interpolation of a point by finding the points connected to the
+/// estimated value location in a [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation), that
+/// is, the so-called *natural neighbours*. This approach has the main advantage of not having to specify an arbitrary
+/// search distance or minimum number of nearest neighbours like many other interpolators do. Weights in the natural
+/// neighbour scheme are determined using an area-stealing approach, whereby the weight assigned to a neighbour's value
+/// is determined by the proportion of its [Voronoi polygon](https://en.wikipedia.org/wiki/Voronoi_diagram) that would
 /// be lost by inserting the interpolation point into the Voronoi diagram. That is, inserting the interpolation point into
 /// the Voronoi diagram results in the creation of a new polygon and shrinking the sizes of the Voronoi polygons associated
 /// with each of the natural neighbours. The larger the area by which a neighbours polygon is reduced through the
 /// insertion, relative to the polygon of the interpolation point, the greater the weight given to the neighbour point's
-/// value in the interpolation. Interpolation weights sum to one because the sum of the reduced polygon areas must 
+/// value in the interpolation. Interpolation weights sum to one because the sum of the reduced polygon areas must
 /// account for the entire area of the interpolation points polygon.
-/// 
+///
 /// The user must specify the attribute field containing point values (`--field`). Alternatively, if the input Shapefile
-/// contains z-values, the interpolation may be based on these values (`--use_z`). Either an output grid resolution 
+/// contains z-values, the interpolation may be based on these values (`--use_z`). Either an output grid resolution
 /// (`--cell_size`) must be specified or alternatively an existing base file (`--base`) can be used to determine the
-/// output raster's (`--output`) resolution and spatial extent. Natural neighbour interpolation generally produces a 
-/// satisfactorily smooth surface within the region of data points but can produce spurious breaks in the surface 
+/// output raster's (`--output`) resolution and spatial extent. Natural neighbour interpolation generally produces a
+/// satisfactorily smooth surface within the region of data points but can produce spurious breaks in the surface
 /// outside of this region. Thus, it is recommended that the output surface be clipped to the convex hull of the input
 /// points (`--clip`).
-/// 
+///
 /// # Reference
-/// Sibson, R. (1981). "A brief description of natural neighbor interpolation (Chapter 2)". In V. Barnett (ed.). 
+/// Sibson, R. (1981). "A brief description of natural neighbor interpolation (Chapter 2)". In V. Barnett (ed.).
 /// Interpolating Multivariate Data. Chichester: John Wiley. pp. 21–36.
-/// 
+///
 /// # See Also
 /// `IdwInterpolation`, `NearestNeighbourGridding`
 pub struct NaturalNeighbourInterpolation {
@@ -68,7 +68,8 @@ impl NaturalNeighbourInterpolation {
         // public constructor
         let name = "NaturalNeighbourInterpolation".to_string();
         let toolbox = "GIS Analysis".to_string();
-        let description = "Creates a raster grid based on Sibson's natural neighbour method.".to_string();
+        let description =
+            "Creates a raster grid based on Sibson's natural neighbour method.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -443,8 +444,8 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
         let dont_clip_to_hull = !clip_to_hull;
         let mut hull_vertices: Vec<Point2D> = vec![points[delaunay.hull[0]].clone()];
         for a in (0..delaunay.hull.len()).rev() {
-            hull_vertices.push(points[delaunay.hull[a]].clone()); 
-        }                
+            hull_vertices.push(points[delaunay.hull[a]].clone());
+        }
 
         if verbose {
             println!("Creating point-halfedge mapping...");
@@ -489,7 +490,6 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
             let point_edge_map = point_edge_map.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                
                 let (mut px, mut py): (f64, f64);
                 let mut previous_nn = EMPTY;
                 let mut delaunay2: Triangulation;
@@ -515,27 +515,28 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                     for col in 0..columns {
                         px = west + (col as f64 + 0.5) * res_x;
                         py = north - (row as f64 + 0.5) * res_y;
-                        if dont_clip_to_hull || point_in_poly(&Point2D::new(px, py), &hull_vertices) {
-                            // find the nearest point 
+                        if dont_clip_to_hull || point_in_poly(&Point2D::new(px, py), &hull_vertices)
+                        {
+                            // find the nearest point
                             match tree.nearest(&[px, py], 1, &squared_euclidean) {
                                 Ok(ret) => {
                                     point_num = *ret[0].1;
 
-                                    if ret[0].0 > 0f64{ // point does not coincide with a sample
+                                    if ret[0].0 > 0f64 {
+                                        // point does not coincide with a sample
 
                                         if point_num != previous_nn {
-
                                             // get the edge that is incoming to 'point_num'
                                             edge = match point_edge_map.get(&point_num) {
                                                 Some(e) => *e,
                                                 None => EMPTY,
                                             };
                                             if edge != EMPTY {
-
                                                 // find all the neighbours of point_num and their neighbours too
-                                                natural_neighbours = delaunay.natural_neighbours_2nd_order(edge);
+                                                natural_neighbours =
+                                                    delaunay.natural_neighbours_2nd_order(edge);
                                                 num_neighbours = natural_neighbours.len();
-                                                    
+
                                                 nn_points = natural_neighbours
                                                     .clone()
                                                     .into_iter()
@@ -545,7 +546,7 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                                 /////////////////////////////////////////////
                                                 // Create the Voronoi diagram of the points
                                                 /////////////////////////////////////////////
-                                                
+
                                                 // Add a frame of hidden points surrounding the data, to serve as an artificial hull.
                                                 ghost_box = BoundingBox::from_points(&nn_points);
 
@@ -557,7 +558,9 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                                 ghost_box.expand_by(2.0 * expansion);
 
                                                 gap = expansion / 2f64; // One-half the average point spacing
-                                                num_edge_points = ((ghost_box.max_x - ghost_box.min_x) / gap) as usize;
+                                                num_edge_points =
+                                                    ((ghost_box.max_x - ghost_box.min_x) / gap)
+                                                        as usize;
                                                 for x in 0..num_edge_points {
                                                     nn_points.push(Point2D::new(
                                                         ghost_box.min_x + x as f64 * gap,
@@ -569,7 +572,9 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                                     ));
                                                 }
 
-                                                num_edge_points = ((ghost_box.max_y - ghost_box.min_y) / gap) as usize;
+                                                num_edge_points =
+                                                    ((ghost_box.max_y - ghost_box.min_y) / gap)
+                                                        as usize;
                                                 for y in 0..num_edge_points {
                                                     nn_points.push(Point2D::new(
                                                         ghost_box.min_x,
@@ -581,15 +586,18 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                                     ));
                                                 }
 
-                                                delaunay2 = triangulate(&nn_points).expect("No triangulation exists.");
-
+                                                delaunay2 = triangulate(&nn_points)
+                                                    .expect("No triangulation exists.");
 
                                                 // measure their areas
                                                 areas1 = vec![0f64; num_neighbours];
                                                 let mut point_edge_map2 = HashMap::new(); // point id to half-edge id
                                                 for edge in 0..delaunay2.triangles.len() {
-                                                    endpoint = delaunay2.triangles[delaunay2.next_halfedge(edge)];
-                                                    if !point_edge_map2.contains_key(&endpoint) || delaunay2.halfedges[edge] == EMPTY {
+                                                    endpoint = delaunay2.triangles
+                                                        [delaunay2.next_halfedge(edge)];
+                                                    if !point_edge_map2.contains_key(&endpoint)
+                                                        || delaunay2.halfedges[edge] == EMPTY
+                                                    {
                                                         point_edge_map2.insert(endpoint, edge);
                                                     }
                                                 }
@@ -607,7 +615,10 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
 
                                                         vertices = triangles
                                                             .into_iter()
-                                                            .map(|t| delaunay2.triangle_center(&nn_points, t))
+                                                            .map(|t| {
+                                                                delaunay2
+                                                                    .triangle_center(&nn_points, t)
+                                                            })
                                                             .collect();
 
                                                         areas1[a] = polygon_area(&vertices);
@@ -622,11 +633,15 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                             // now add the grid cell centre point in and re-triangulate.
                                             nn_points.pop();
                                             nn_points.push(Point2D::new(px, py));
-                                            let delaunay3 = triangulate(&nn_points).expect("No triangulation exists.");
+                                            let delaunay3 = triangulate(&nn_points)
+                                                .expect("No triangulation exists.");
                                             let mut point_edge_map2 = HashMap::new(); // point id to half-edge id
                                             for edge in 0..delaunay3.triangles.len() {
-                                                endpoint = delaunay3.triangles[delaunay3.next_halfedge(edge)];
-                                                if !point_edge_map2.contains_key(&endpoint) || delaunay3.halfedges[edge] == EMPTY {
+                                                endpoint = delaunay3.triangles
+                                                    [delaunay3.next_halfedge(edge)];
+                                                if !point_edge_map2.contains_key(&endpoint)
+                                                    || delaunay3.halfedges[edge] == EMPTY
+                                                {
                                                     point_edge_map2.insert(endpoint, edge);
                                                 }
                                             }
@@ -643,9 +658,11 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                                         .map(|e| delaunay3.triangle_of_edge(e))
                                                         .collect();
 
-                                                    vertices= triangles
+                                                    vertices = triangles
                                                         .into_iter()
-                                                        .map(|t| delaunay3.triangle_center(&nn_points, t))
+                                                        .map(|t| {
+                                                            delaunay3.triangle_center(&nn_points, t)
+                                                        })
                                                         .collect();
 
                                                     areas2[a] = polygon_area(&vertices);
@@ -659,17 +676,17 @@ impl WhiteboxTool for NaturalNeighbourInterpolation {
                                             if sum_diff > 0f64 {
                                                 z = 0f64;
                                                 for a in 0..num_neighbours {
-                                                    z += (areas1[a] - areas2[a]) / sum_diff * z_values[natural_neighbours[a]];
+                                                    z += (areas1[a] - areas2[a]) / sum_diff
+                                                        * z_values[natural_neighbours[a]];
                                                 }
                                                 data[col as usize] = z;
                                             }
                                         }
-
-                                    } else { // point coincides with a sample
+                                    } else {
+                                        // point coincides with a sample
                                         data[col as usize] = z_values[point_num];
                                     }
-
-                                },
+                                }
                                 Err(_) => {
                                     // no point found; output nodata
                                 }

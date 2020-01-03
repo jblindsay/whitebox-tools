@@ -14,10 +14,10 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool can be used to modify the value of pixels containing the NoData value for an input raster image.
-/// This operation differs from the `SetNoDataValue` tool, which sets the NoData value for an image in the 
+/// This operation differs from the `SetNoDataValue` tool, which sets the NoData value for an image in the
 /// image header without actually modifying pixel values. Also, `SetNodataValue` does not
 /// overwrite the input file, while the `ModifyNoDataValue` tool does.
-/// 
+///
 /// # See Also
 /// `SetNoDataValue`, `ConvertNodataToZero`
 pub struct ModifyNoDataValue {
@@ -117,7 +117,7 @@ impl WhiteboxTool for ModifyNoDataValue {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut new_nodata_value = -32768f64;
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,

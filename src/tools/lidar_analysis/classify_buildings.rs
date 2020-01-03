@@ -11,11 +11,11 @@ use crate::lidar::*;
 use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::{ShapeType, Shapefile};
+use num_cpus;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
-use num_cpus;
-use std::sync::{Arc, mpsc};
+use std::sync::{mpsc, Arc};
 use std::thread;
 
 /// This tool can be used to assign the building class (classification value 6) to all points within an
@@ -23,12 +23,12 @@ use std::thread;
 /// footprint vector (`--buildings`). The tool performs a simple point-in-polygon operation to determine
 /// membership. The two inputs (i.e. the LAS file and vector) must share the same map projection. Furthermore,
 /// any error in the definition of the building footprints will result in misclassified points in the output
-/// LAS file (`--output`). In particular, if the footprints extend slightly beyond the actual building, 
+/// LAS file (`--output`). In particular, if the footprints extend slightly beyond the actual building,
 /// ground points situated adjacent to the building will be incorrectly classified. Thus, care must be
-/// taken in digitizing building footprint polygons. Furthermore, where there are tall trees that overlap 
-/// significantly with the building footprint, these vegetation points will also be incorrectly assigned the 
+/// taken in digitizing building footprint polygons. Furthermore, where there are tall trees that overlap
+/// significantly with the building footprint, these vegetation points will also be incorrectly assigned the
 /// building class value.
-/// 
+///
 /// # See Also
 /// `FilterLidarClasses`, `LidarGroundPointFilter`, `ClipLidarToPolygon`
 pub struct ClassifyBuildingsInLidar {
@@ -44,7 +44,8 @@ impl ClassifyBuildingsInLidar {
     pub fn new() -> ClassifyBuildingsInLidar {
         let name = "ClassifyBuildingsInLidar".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Reclassifies a LiDAR points that lie within vector building footprints.".to_string();
+        let description =
+            "Reclassifies a LiDAR points that lie within vector building footprints.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -229,12 +230,7 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
         let mut record_nums = Vec::with_capacity(num_records);
         for record_num in 0..polygons.num_records {
             let record = polygons.get_record(record_num);
-            feature_bb = BoundingBox::new(
-                record.x_min,
-                record.x_max,
-                record.y_min,
-                record.y_max,
-            );
+            feature_bb = BoundingBox::new(record.x_min, record.x_max, record.y_min, record.y_max);
             if feature_bb.overlaps(lidar_bb) {
                 bb.push(feature_bb);
                 record_nums.push(record_num);
@@ -247,9 +243,9 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
 
         let n_points = input.header.number_of_points as usize;
         let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
-        
+
         let num_procs = num_cpus::get();
-        let input = Arc::new(input); 
+        let input = Arc::new(input);
         let polygons = Arc::new(polygons);
         let record_nums = Arc::new(record_nums);
         let bb = Arc::new(bb);
@@ -316,8 +312,11 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
                         }
                     }
                     match tx.send((point_in_poly, point_num)) {
-                        Ok(_) => {}, // do nothing
-                        Err(_) => panic!("Error performing clipping operation on point num. {}", point_num),
+                        Ok(_) => {} // do nothing
+                        Err(_) => panic!(
+                            "Error performing clipping operation on point num. {}",
+                            point_num
+                        ),
                     };
                 }
             });
@@ -471,7 +470,10 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
             }
         }
 
-        println!("Number of building points classified: {}", num_building_points);
+        println!(
+            "Number of building points classified: {}",
+            num_building_points
+        );
 
         let elapsed_time = get_formatted_elapsed_time(start);
 
@@ -480,7 +482,11 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
         }
         if output.header.number_of_points > 0 {
             let _ = match output.write() {
-                Ok(_) => if verbose { println!("Complete!") },
+                Ok(_) => {
+                    if verbose {
+                        println!("Complete!")
+                    }
+                }
                 Err(e) => println!("error while writing: {:?}", e),
             };
         } else {

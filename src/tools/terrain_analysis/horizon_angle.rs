@@ -19,27 +19,27 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the horizon angle (*Sx*), i.e. the maximum slope along a specified azimuth (0-360 degrees) for 
-/// each grid cell in an input digital elevation model (DEM). Horizon angle is sometime referred to as the maximum upwind 
-/// slope in wind exposure/sheltering studies. Positive values can be considered sheltered with respect to the azimuth and 
-/// negative values are exposed. Thus, *Sx* is a measure of exposure to a wind from a specific direction. The algorithm works 
-/// by tracing a ray from each grid cell in the direction of interest and evaluating the slope for each location in which the 
-/// DEM grid is intersected by the ray. Linear interpolation is used to estimate the elevation of the surface where a ray does 
+/// This tool calculates the horizon angle (*Sx*), i.e. the maximum slope along a specified azimuth (0-360 degrees) for
+/// each grid cell in an input digital elevation model (DEM). Horizon angle is sometime referred to as the maximum upwind
+/// slope in wind exposure/sheltering studies. Positive values can be considered sheltered with respect to the azimuth and
+/// negative values are exposed. Thus, *Sx* is a measure of exposure to a wind from a specific direction. The algorithm works
+/// by tracing a ray from each grid cell in the direction of interest and evaluating the slope for each location in which the
+/// DEM grid is intersected by the ray. Linear interpolation is used to estimate the elevation of the surface where a ray does
 /// not intersect the DEM grid precisely at one of its nodes.
-/// 
-/// The user is able to constrain the maximum search distance (`--max_dist`) for the ray tracing by entering a valid maximum 
-/// search distance value (in the same units as the X-Y coordinates of the input raster DEM). If the maximum search distance 
+///
+/// The user is able to constrain the maximum search distance (`--max_dist`) for the ray tracing by entering a valid maximum
+/// search distance value (in the same units as the X-Y coordinates of the input raster DEM). If the maximum search distance
 /// is left blank, each ray will be traced to the edge of the DEM, which will add to the computational time.
-/// 
-/// Maximum upwind slope should not be calculated for very extensive areas over which the Earth's curvature must be taken into 
-/// account. Also, this index does not take into account the deflection of wind by topography. However, averaging the horizon 
-/// angle over a window of directions can yield a more robust measure of exposure, compensating for the deflection of wind from 
-/// its regional average by the topography. For example, if you are interested in measuring the exposure of a landscape to a 
+///
+/// Maximum upwind slope should not be calculated for very extensive areas over which the Earth's curvature must be taken into
+/// account. Also, this index does not take into account the deflection of wind by topography. However, averaging the horizon
+/// angle over a window of directions can yield a more robust measure of exposure, compensating for the deflection of wind from
+/// its regional average by the topography. For example, if you are interested in measuring the exposure of a landscape to a
 /// northerly wind, you could perform the following calculation:
-/// 
+///
 /// > Sx(N) = [Sx(345)+Sx(350)+Sx(355)+Sx(0)+Sx(5)+Sx(10)+Sx(15)] / 7.0
-/// 
-/// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to operate for 
+///
+/// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to operate for
 /// larger sized DEMs. Maximum upwind slope is best displayed using a Grey scale palette that is inverted.
 pub struct HorizonAngle {
     name: String,

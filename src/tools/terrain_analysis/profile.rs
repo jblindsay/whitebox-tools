@@ -21,14 +21,14 @@ use std::path;
 use std::process::Command;
 
 /// This tool can be used to plot the data profile, along a set of one or more vector lines (`--lines`), in
-/// an input (`--surface`) digital elevation model (DEM), or other surface model. The data profile plots 
-/// surface height (y-axis) against distance along profile (x-axis). The tool outputs an interactive SVG line 
+/// an input (`--surface`) digital elevation model (DEM), or other surface model. The data profile plots
+/// surface height (y-axis) against distance along profile (x-axis). The tool outputs an interactive SVG line
 /// graph embedded in an HTML document (`--output`). If the vector lines file contains multiple line features,
 /// the output plot will contain each of the input profiles.
-/// 
-/// If you want to extract the [longitudinal profile](http://www.fao.org/docrep/003/X6841E/X6841E02.HTM) of a river, 
+///
+/// If you want to extract the [longitudinal profile](http://www.fao.org/docrep/003/X6841E/X6841E02.HTM) of a river,
 /// use the `LongProfile` tool instead.
-/// 
+///
 /// # See Also
 /// `LongProfile`, `HypsometricAnalysis`
 pub struct Profile {

@@ -219,7 +219,9 @@ impl WhiteboxTool for VoronoiDiagram {
         // set the projection information
         output.projection = input.projection.clone();
 
-        output.attributes.add_fields(&input.attributes.get_fields().clone());
+        output
+            .attributes
+            .add_fields(&input.attributes.get_fields().clone());
 
         // Read the points in
         let mut points: Vec<Point2D> = vec![];

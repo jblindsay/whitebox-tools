@@ -31,7 +31,7 @@ use std::path;
 ///
 /// Each split geometry's attribute record will contain `FID` and `PARENT_FID` values
 /// and all of the attributes (excluding `FID`'s) of the input layer.
-/// 
+///
 /// # See Also
 /// 'MergeLineSegments'
 pub struct SplitWithLines {
@@ -465,7 +465,7 @@ impl WhiteboxTool for SplitWithLines {
             //         }
             //     }
             // }
-            
+
             // // Remove any single-point lines result from above.
             // let mut features_polylines2: Vec<Polyline> = vec![];
             // for i in (0..features_polylines.len()).rev() {
@@ -504,11 +504,6 @@ impl WhiteboxTool for SplitWithLines {
             //         }
             //     }
             // }
-
-
-
-            
-
 
             // hunt for intersections in the overlapping bounding boxes
             let mut fid = 1i32;
@@ -619,7 +614,8 @@ impl WhiteboxTool for SplitWithLines {
             // }
 
             // create output file
-            let mut output = Shapefile::initialize_using_file(&output_file, &input1, ShapeType::Polygon, false)?;
+            let mut output =
+                Shapefile::initialize_using_file(&output_file, &input1, ShapeType::Polygon, false)?;
             output.projection = projection;
 
             // add the attributes

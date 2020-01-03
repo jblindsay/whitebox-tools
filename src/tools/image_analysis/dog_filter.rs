@@ -18,30 +18,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to perform a difference-of-Gaussians (DoG) filter on a raster image. In digital 
-/// image processing, DoG is a feature enhancement algorithm that involves the subtraction of one blurred 
-/// version of an image from another, less blurred version of the original. The blurred images are obtained 
-/// by applying filters with Gaussian-weighted kernels of differing standard deviations to the input image 
-/// (`--input`). Blurring an image using a Gaussian-weighted kernel suppresses high-frequency spatial 
-/// information and emphasizes lower-frequency variation. Subtracting one blurred image from the other 
-/// preserves spatial information that lies between the range of frequencies that are preserved in the 
-/// two blurred images. Thus, the difference-of-Gaussians is a band-pass filter that discards all but a 
+/// This tool can be used to perform a difference-of-Gaussians (DoG) filter on a raster image. In digital
+/// image processing, DoG is a feature enhancement algorithm that involves the subtraction of one blurred
+/// version of an image from another, less blurred version of the original. The blurred images are obtained
+/// by applying filters with Gaussian-weighted kernels of differing standard deviations to the input image
+/// (`--input`). Blurring an image using a Gaussian-weighted kernel suppresses high-frequency spatial
+/// information and emphasizes lower-frequency variation. Subtracting one blurred image from the other
+/// preserves spatial information that lies between the range of frequencies that are preserved in the
+/// two blurred images. Thus, the difference-of-Gaussians is a band-pass filter that discards all but a
 /// specified range of spatial frequencies that are present in the original image.
-/// 
-/// The algorithm operates by differencing the results of convolving two kernels of weights with each grid 
-/// cell and its neighbours in an image. The weights of the convolution kernels are determined by the 2-dimensional 
-/// Gaussian (i.e. normal) curve, which gives stronger weighting to cells nearer the kernel centre. The size of 
-/// the two convolution kernels are determined by setting the two standard deviation parameters (`--sigma1` and 
-/// `--sigma2`); the larger the standard deviation the larger the resulting filter kernel. The second standard 
+///
+/// The algorithm operates by differencing the results of convolving two kernels of weights with each grid
+/// cell and its neighbours in an image. The weights of the convolution kernels are determined by the 2-dimensional
+/// Gaussian (i.e. normal) curve, which gives stronger weighting to cells nearer the kernel centre. The size of
+/// the two convolution kernels are determined by setting the two standard deviation parameters (`--sigma1` and
+/// `--sigma2`); the larger the standard deviation the larger the resulting filter kernel. The second standard
 /// deviation should be a larger value than the first, however if this is not the case, the tool will automatically
 /// swap the two parameters. Both standard deviations can range from 0.5-20.
-/// 
-/// The difference-of-Gaussians filter can be used to emphasize edges present in an image. Other edge-sharpening 
-/// filters also operate by enhancing high-frequency detail, but because random noise also has a high spatial 
-/// frequency, many of these sharpening filters tend to enhance noise, which can be an undesirable artifact. 
-/// The difference-of-Gaussians filter can remove high-frequency noise while emphasizing edges. This filter can, 
+///
+/// The difference-of-Gaussians filter can be used to emphasize edges present in an image. Other edge-sharpening
+/// filters also operate by enhancing high-frequency detail, but because random noise also has a high spatial
+/// frequency, many of these sharpening filters tend to enhance noise, which can be an undesirable artifact.
+/// The difference-of-Gaussians filter can remove high-frequency noise while emphasizing edges. This filter can,
 /// however, reduce overall image contrast.
-/// 
+///
 /// # See Also
 /// `GaussianFilter`, `FastAlmostGaussianFilter`, `LaplacianFilter`, LaplacianOfGaussianFilter`
 pub struct DiffOfGaussianFilter {

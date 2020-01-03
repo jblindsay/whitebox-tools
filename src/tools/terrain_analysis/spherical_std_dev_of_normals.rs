@@ -18,41 +18,41 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to calculate the spherical standard deviation of the distribution of surface normals 
+/// This tool can be used to calculate the spherical standard deviation of the distribution of surface normals
 /// for an input digital elevation model (DEM; `--dem`). This is a measure of the angular dispersion of the surface
-/// normal vectors within a local neighbourhood of a specified size (`--filter`). `SphericalStdDevOfNormals` 
+/// normal vectors within a local neighbourhood of a specified size (`--filter`). `SphericalStdDevOfNormals`
 /// is therefore a measure of surface shape complexity, texture, and roughness. The <a href="https://en.wikipedia.org/wiki/Directional_statistics#Measures_of_location_and_spread">
 /// spherical standard deviation</a> (<em>s</em>) is defined as:
-/// 
+///
 /// > <em>s</em> = &radic;[-2ln(<em>R</em> / <em>N</em>)] &times; 180 / &pi;
-/// 
-/// where <em>R</em> is the resultant vector length and <em>N</em> is the number of unit normal vectors 
+///
+/// where <em>R</em> is the resultant vector length and <em>N</em> is the number of unit normal vectors
 /// within the local neighbourhood. <em>s</em> is measured in degrees and is zero for simple planes and increases
-/// infinitely with increasing surface complexity or roughness. Note that this formulation of the spherical 
+/// infinitely with increasing surface complexity or roughness. Note that this formulation of the spherical
 /// standard deviation assumes an underlying wrapped normal distribution.
-/// 
+///
 /// The local neighbourhood size (`--filter`) must be any odd integer equal to or greater than three. Grohmann et al. (2010) found that
 /// vector dispersion, a related measure of angular dispersion, increases monotonically with scale. This is the result
-/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the 
-/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity 
-/// associated with specific scale ranges. That is, at large spatial scales, <em>s</em> should reflect 
-/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including 
-/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than 
-/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior 
-/// to calculating <em>R</em>. In this way, the resulting distribution is able to isolate and highlight 
+/// of the angular dispersion measure integrating (accumulating) all of the surface variance of smaller scales up to the
+/// test scale. A more interesting scale relation can therefore be estimated by isolating the amount of surface complexity
+/// associated with specific scale ranges. That is, at large spatial scales, <em>s</em> should reflect
+/// the texture of large-scale landforms rather than the accumulated complexity at all smaller scales, including
+/// microtopographic roughness. As such, ***this tool normalizes the surface complexity of scales that are smaller than
+/// the filter size by applying Gaussian blur*** (with a standard deviation of one-third the filter size) to the DEM prior
+/// to calculating <em>R</em>. In this way, the resulting distribution is able to isolate and highlight
 /// the surface shape complexity associated with landscape features of a similar scale to that of the filter size.
-/// 
-/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a> 
-/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require 
+///
+/// This tool makes extensive use of <a href="https://en.wikipedia.org/wiki/Summed-area_table">integral images</a>
+/// (i.e. summed-area tables) and parallel processing to ensure computational efficiency. It may, however, require
 /// substantial memory resources when applied to larger DEMs.
-/// 
+///
 /// # References
-/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the 
+/// Grohmann, C. H., Smith, M. J., & Riccomini, C. (2010). Multiscale analysis of topographic surface roughness in the
 /// Midland Valley, Scotland. *IEEE Transactions on Geoscience and Remote Sensing*, 49(4), 1200-1213.
-/// 
-/// Hodgson, M. E., and Gaile, G. L. (1999). A cartographic modeling approach for surface orientation-related applications. 
+///
+/// Hodgson, M. E., and Gaile, G. L. (1999). A cartographic modeling approach for surface orientation-related applications.
 /// *Photogrammetric Engineering and Remote Sensing*, 65(1), 85-95.
-/// 
+///
 /// # See Also
 /// `CircularVarianceOfAspect`, `MultiscaleRoughness`, `EdgeDensity`, `SurfaceAreaRatio`, `RuggednessIndex`
 pub struct SphericalStdDevOfNormals {
@@ -266,8 +266,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
             let mut filter_size_smooth = 0;
             let mut weight: f64;
             for i in 0..250 {
-                weight =
-                    recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
+                weight = recip_root_2_pi_times_sigma_d
+                    * (-1.0 * ((i * i) as f64) / two_sigma_sqr_d).exp();
                 if weight <= 0.001 {
                     filter_size_smooth = i * 2 + 1;
                     break;
@@ -308,7 +308,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
             let d_x = Arc::new(d_x);
             let d_y = Arc::new(d_y);
             let weights = Arc::new(weights);
-            
+
             let num_procs = num_cpus::get() as isize;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -360,15 +360,17 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                 wl -= 1;
             } // must be an odd integer
             let wu = wl + 2;
-            let m =
-                ((12f64 * sigma * sigma - (n * wl * wl) as f64 - (4 * n * wl) as f64 - (3 * n) as f64)
-                    / (-4 * wl - 4) as f64)
-                    .round() as isize;
-            
+            let m = ((12f64 * sigma * sigma
+                - (n * wl * wl) as f64
+                - (4 * n * wl) as f64
+                - (3 * n) as f64)
+                / (-4 * wl - 4) as f64)
+                .round() as isize;
+
             let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
             let mut integral_n: Array2D<i32> = Array2D::new(rows, columns, 0, -1)?;
             let mut val: f64;
-            
+
             let mut sum: f64;
             let mut sum_n: i32;
             let mut i_prev: f64;
@@ -485,7 +487,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                 z_factor = 1.0 / (113200.0 * mid_lat.cos());
             }
         }
-        
+
         let resx = configs.resolution_x;
         let resy = configs.resolution_y;
         let num_procs = num_cpus::get() as isize;
@@ -570,27 +572,29 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     sumx += xc.get_value(row, col);
                     sumy += yc.get_value(row, col);
                     sumz += zc.get_value(row, col);
-                    if smoothed_dem.get_value(row, col) == nodata { // || 
+                    if smoothed_dem.get_value(row, col) == nodata {
+                        // ||
                         // (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
-                    xc.set_value(row, col, sumx + xc.get_value(row-1, col));
-                    yc.set_value(row, col, sumy + yc.get_value(row-1, col));
-                    zc.set_value(row, col, sumz + zc.get_value(row-1, col));
-                    i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
+                    xc.set_value(row, col, sumx + xc.get_value(row - 1, col));
+                    yc.set_value(row, col, sumy + yc.get_value(row - 1, col));
+                    zc.set_value(row, col, sumz + zc.get_value(row - 1, col));
+                    i_n.set_value(row, col, sumn + i_n.get_value(row - 1, col));
                 }
             } else {
                 if smoothed_dem.get_value(0, 0) == nodata {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
-                    xc.increment(row, col, xc.get_value(row, col-1));
-                    yc.increment(row, col, yc.get_value(row, col-1));
-                    zc.increment(row, col, zc.get_value(row, col-1));
-                    i_n.increment(row, col, i_n.get_value(row, col-1));
-                    if smoothed_dem.get_value(row, col) == nodata { //|| 
+                    xc.increment(row, col, xc.get_value(row, col - 1));
+                    yc.increment(row, col, yc.get_value(row, col - 1));
+                    zc.increment(row, col, zc.get_value(row, col - 1));
+                    i_n.increment(row, col, i_n.get_value(row, col - 1));
+                    if smoothed_dem.get_value(row, col) == nodata {
+                        //||
                         // (xc.get_value(row, col) == 0f64 && yc.get_value(row, col) == 0f64) {
                         // it's either nodata or a flag cell in the DEM.
                         i_n.decrement(row, col, 1);
@@ -673,8 +677,8 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                                     - zc.get_value(y1, x2)
                                     - zc.get_value(y2, x1);
                                 mean = (sumx * sumx + sumy * sumy + sumz * sumz).sqrt() / n;
-                                if mean > 1f64 { 
-                                    mean = 1f64; 
+                                if mean > 1f64 {
+                                    mean = 1f64;
                                 }
                                 // data[col as usize] = (2f64 * (1f64 - mean)).sqrt().to_degrees();
                                 data[col as usize] = (-2f64 * mean.ln()).sqrt().to_degrees();
@@ -683,8 +687,13 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     }
 
                     match tx2.send((row, data)) {
-                        Ok(_) => {},
-                        Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+                        Ok(_) => {}
+                        Err(_) => {
+                            println!(
+                                "Error sending data from thread {} processing row {}.",
+                                tid, row
+                            );
+                        }
                     }
                 }
             });
@@ -698,7 +707,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
             match rx2.recv() {
                 Ok(data) => {
                     output.set_row_data(data.0, data.1);
-                },
+                }
                 Err(_) => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -706,7 +715,7 @@ impl WhiteboxTool for SphericalStdDevOfNormals {
                     ));
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {

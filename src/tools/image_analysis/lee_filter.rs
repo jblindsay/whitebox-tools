@@ -18,14 +18,14 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// The Lee Sigma filter is a low-pass filter used to smooth the input image (`--input`). The user must 
-/// specify the dimensions of the filter (`--filterx` and `--filtery`) as well as the *sigma* (`--sigma`) and 
+/// The Lee Sigma filter is a low-pass filter used to smooth the input image (`--input`). The user must
+/// specify the dimensions of the filter (`--filterx` and `--filtery`) as well as the *sigma* (`--sigma`) and
 /// *M* (`-m`) parameter.
-/// 
+///
 /// # Reference
-/// Lee, J. S. (1983). Digital image smoothing and the sigma filter. Computer vision, graphics, and image 
+/// Lee, J. S. (1983). Digital image smoothing and the sigma filter. Computer vision, graphics, and image
 /// processing, 24(2), 255-269.
-/// 
+///
 /// # See Also
 /// `MeanFilter`, `GaussianFilter`
 pub struct LeeSigmaFilter {

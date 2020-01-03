@@ -17,7 +17,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to flip, or reflect, an image (`--input`) either vertically, horizontally, or both. The 
+/// This tool can be used to flip, or reflect, an image (`--input`) either vertically, horizontally, or both. The
 /// axis of reflection is specified using the `--direction` parameter. The input image is not reflected in place;
 /// rather, the reflected image is stored in a separate output (`--output`) file.
 pub struct FlipImage {

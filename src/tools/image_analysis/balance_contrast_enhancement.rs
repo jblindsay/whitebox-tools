@@ -17,21 +17,21 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to reduce colour bias in a colour composite image based on the 
-/// technique described by Liu (1991). Colour bias is a common phenomena with colour images 
-/// derived from multispectral imagery, whereby a higher average brightness value in one 
-/// band results in over-representation of that band in the colour composite. The tool 
-/// essentially applies a parabolic stretch to each of the three bands in a user specified 
-/// RGB colour composite, forcing the histograms of each band to have the same minimum, 
-/// maximum, and average values while maintaining their overall histogram shape. For greater 
-/// detail on the operation of the tool, please see Liu (1991). Aside from the names of the 
-/// input and output colour composite images, the user must also set the value of E, the 
+/// This tool can be used to reduce colour bias in a colour composite image based on the
+/// technique described by Liu (1991). Colour bias is a common phenomena with colour images
+/// derived from multispectral imagery, whereby a higher average brightness value in one
+/// band results in over-representation of that band in the colour composite. The tool
+/// essentially applies a parabolic stretch to each of the three bands in a user specified
+/// RGB colour composite, forcing the histograms of each band to have the same minimum,
+/// maximum, and average values while maintaining their overall histogram shape. For greater
+/// detail on the operation of the tool, please see Liu (1991). Aside from the names of the
+/// input and output colour composite images, the user must also set the value of E, the
 /// desired output band mean, where 20 < E < 235.
-/// 
+///
 /// # Reference
-/// Liu, J.G. (1991) Balance contrast enhancement technique and its application in image 
+/// Liu, J.G. (1991) Balance contrast enhancement technique and its application in image
 /// colour composition. *International Journal of Remote Sensing*, 12:10.
-/// 
+///
 /// # See Also
 /// `DirectDecorrelationStretch`, `HistogramMatching`, `HistogramMatchingTwoImages`, `HistogramEqualization`, `GaussianContrastStretch`
 pub struct BalanceContrastEnhancement {

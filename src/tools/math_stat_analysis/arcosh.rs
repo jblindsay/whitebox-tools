@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
-/// [inverse hyperbolic cosine](https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions) (arcosh) of the 
-/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in 
-/// radian, in the range [0, &pi;] or **NoData** if the number is outside the range [-1, 1]. If desired, you can convert 
-/// radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input raster 
-/// will be assigned **NoData** values in the output raster. 
-/// 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the
+/// [inverse hyperbolic cosine](https://en.wikipedia.org/wiki/Inverse_hyperbolic_functions) (arcosh) of the
+/// corresponding grid cell in an input raster (`--input`). The output raster will contain angular data measured in
+/// radian, in the range [0, &pi;] or **NoData** if the number is outside the range [-1, 1]. If desired, you can convert
+/// radians to degrees using the `ToDegrees` tool. Grid cells with **NoData** values in the input raster
+/// will be assigned **NoData** values in the output raster.
+///
 /// # See Also
 /// `Arsinh`, `Artanh`, `ToDegrees`
 pub struct Arcosh {
@@ -40,7 +40,8 @@ impl Arcosh {
         let name = "Arcosh".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Returns the inverse hyperbolic cosine (arcosh) of each values in a raster.".to_string();
+            "Returns the inverse hyperbolic cosine (arcosh) of each values in a raster."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

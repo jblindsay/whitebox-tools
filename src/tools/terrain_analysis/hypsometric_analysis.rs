@@ -20,9 +20,9 @@ use std::path;
 use std::process::Command;
 
 /// This tool can be used to derive the hypsometric curve, or area-altitude curve, of one or more
-/// input digital elevation models (DEMs) (`--inputs`). A hypsometric curve is a histogram or cumulative 
-/// distribution function of elevations in a geographical area. 
-/// 
+/// input digital elevation models (DEMs) (`--inputs`). A hypsometric curve is a histogram or cumulative
+/// distribution function of elevations in a geographical area.
+///
 /// # See Also
 /// `SlopeVsElevationPlot`
 pub struct HypsometricAnalysis {

@@ -22,17 +22,17 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a Gaussian stretch on a raster image. The observed histogram of the input image is fitted 
-/// to a Gaussian histogram, i.e. normal distribution. A histogram matching technique is used to map the values from 
-/// the input image onto the output Gaussian distribution. The user must the number of tones (`--num_tones`) used in the 
-/// output image. 
-/// 
-/// This tool is related to the more general `HistogramMatching` tool, which can be used to fit any frequency distribution 
-/// to an input image, and other contrast enhancement tools such as `HistogramEqualization`, `MinMaxContrastStretch`, 
+/// This tool performs a Gaussian stretch on a raster image. The observed histogram of the input image is fitted
+/// to a Gaussian histogram, i.e. normal distribution. A histogram matching technique is used to map the values from
+/// the input image onto the output Gaussian distribution. The user must the number of tones (`--num_tones`) used in the
+/// output image.
+///
+/// This tool is related to the more general `HistogramMatching` tool, which can be used to fit any frequency distribution
+/// to an input image, and other contrast enhancement tools such as `HistogramEqualization`, `MinMaxContrastStretch`,
 /// `PercentageContrastStretch`, `SigmoidalContrastStretch`, and `StandardDeviationContrastStretch`.
-/// 
+///
 /// # See Also
-/// `HistogramEqualization`, `MinMaxContrastStretch`, `PercentageContrastStretch`, `SigmoidalContrastStretch`, 
+/// `HistogramEqualization`, `MinMaxContrastStretch`, `PercentageContrastStretch`, `SigmoidalContrastStretch`,
 /// `StandardDeviationContrastStretch`, `HistogramMatching`
 pub struct GaussianContrastStretch {
     name: String,

@@ -250,7 +250,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let mut frs: FixedRadiusSearch2D<f64> = FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
+        let mut frs: FixedRadiusSearch2D<f64> =
+            FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
         let mut p: PointData;
         for i in 0..n_points {
             p = input.get_point_info(i);
@@ -279,7 +280,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
                     let mut avg_z: f64;
                     let mut n: f64;
                     let mut p: PointData;
-                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
+                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid)
+                    {
                         p = input.get_point_info(point_num);
                         let ret = frs.search(p.x, p.y);
                         avg_z = 0f64;
@@ -307,7 +309,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
                     let mut n: usize;
                     let mut median: f64;
                     let mut p: PointData;
-                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
+                    for point_num in (0..n_points).filter(|point_num| point_num % num_procs == tid)
+                    {
                         p = input.get_point_info(point_num);
                         let ret = frs.search(p.x, p.y);
                         n = 0;
@@ -331,7 +334,8 @@ impl WhiteboxTool for LidarRemoveOutliers {
                         } else if n == 2 {
                             median = (z_values[0] + z_values[1]) / 2f64;
                             tx.send((point_num, p.z - median)).unwrap();
-                        } else { // n == 0 or n == 1 {
+                        } else {
+                            // n == 0 or n == 1 {
                             tx.send((point_num, p.z)).unwrap();
                         }
                     }
@@ -380,7 +384,7 @@ impl WhiteboxTool for LidarRemoveOutliers {
                 let class_val = match residuals[point_num] {
                     d if d < -elev_diff => 7,
                     d if d > elev_diff => 18,
-                    _ => p.classification() ,
+                    _ => p.classification(),
                 };
                 let pr = input.get_record(point_num);
                 let pr2: LidarPointRecord;

@@ -23,16 +23,16 @@ use std::thread;
 /// This tool calculates the density of edges, or breaks-in-slope within an input digital elevation model (DEM).
 /// A break-in-slope occurs between two neighbouring grid cells if the angular difference between their normal
 /// vectors is greater than a user-specified threshold value (`--norm_diff`). `EdgeDensity` calculates the proportion
-/// of edge cells within the neighbouring window, of square filter dimension `--filter`, surrounding each grid cell. 
+/// of edge cells within the neighbouring window, of square filter dimension `--filter`, surrounding each grid cell.
 /// Therefore, `EdgeDensity `is a measure of how complex the topographic surface is within a local neighbourhood.
-/// It is therefore a measure of topographic texture. It will take a value near 0.0 for smooth sites and 1.0 in areas 
-/// of high surface roughness or complex topography. 
-/// 
+/// It is therefore a measure of topographic texture. It will take a value near 0.0 for smooth sites and 1.0 in areas
+/// of high surface roughness or complex topography.
+///
 /// The distribution of `EdgeDensity` is highly dependent upon the value of the `norm_diff` used in the calculation. This
 /// threshold may require experimentation to find an appropriate value and is likely dependent upon the topography and
 /// source data. Nonetheless, experience has shown that `EdgeDensity` provides one of the best measures of surface
 /// texture of any of the available roughness tools.
-/// 
+///
 /// # See Also
 /// `CircularVarianceOfAspect`, `MultiscaleRoughness`, `SurfaceAreaRatio`, `RuggednessIndex`
 pub struct EdgeDensity {
@@ -48,7 +48,8 @@ impl EdgeDensity {
         // public constructor
         let name = "EdgeDensity".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates the density of edges, or breaks-in-slope within DEMs.".to_string();
+        let description =
+            "Calculates the density of edges, or breaks-in-slope within DEMs.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -170,7 +171,7 @@ impl WhiteboxTool for EdgeDensity {
         let mut filter_size = 11usize;
         let mut max_norm_diff = 5f64;
         let mut z_factor = 1f64;
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -236,7 +237,7 @@ impl WhiteboxTool for EdgeDensity {
         }
 
         let midpoint = (filter_size as f64 / 2f64).floor() as isize;
-        
+
         if max_norm_diff > 90f64 {
             max_norm_diff = 90f64;
         }
@@ -420,20 +421,20 @@ impl WhiteboxTool for EdgeDensity {
                 sumn = 0u32;
                 for col in 0..columns {
                     sum += edges.get_value(row, col);
-                    edges.set_value(row, col, sum + edges.get_value(row-1, col));
+                    edges.set_value(row, col, sum + edges.get_value(row - 1, col));
                     if input.get_value(row, col) == nodata {
                         i_n.decrement(row, col, 1);
                     }
                     sumn += i_n.get_value(row, col);
-                    i_n.set_value(row, col, sumn + i_n.get_value(row-1, col));
+                    i_n.set_value(row, col, sumn + i_n.get_value(row - 1, col));
                 }
             } else {
                 if input.get_value(0, 0) == nodata {
                     i_n.set_value(0, 0, 0);
                 }
                 for col in 1..columns {
-                    edges.increment(row, col, edges.get_value(row, col-1));
-                    i_n.increment(row, col, i_n.get_value(row, col-1));
+                    edges.increment(row, col, edges.get_value(row, col - 1));
+                    i_n.increment(row, col, i_n.get_value(row, col - 1));
                     if input.get_value(row, col) == nodata {
                         i_n.decrement(row, col, 1);
                     }
@@ -448,7 +449,6 @@ impl WhiteboxTool for EdgeDensity {
             }
         }
 
-        
         let edges = Arc::new(edges);
         let i_n = Arc::new(i_n);
         let (tx2, rx2) = mpsc::channel();
@@ -468,7 +468,7 @@ impl WhiteboxTool for EdgeDensity {
                     if y1 < 0 {
                         y1 = 0;
                     }
-                    
+
                     y2 = row + midpoint;
                     if y2 >= rows {
                         y2 = rows - 1;
@@ -481,7 +481,7 @@ impl WhiteboxTool for EdgeDensity {
                             if x1 < 0 {
                                 x1 = 0;
                             }
-                            
+
                             x2 = col + midpoint;
                             if x2 >= columns {
                                 x2 = columns - 1;
@@ -500,8 +500,13 @@ impl WhiteboxTool for EdgeDensity {
                     }
 
                     match tx2.send((row, data)) {
-                        Ok(_) => {},
-                        Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+                        Ok(_) => {}
+                        Err(_) => {
+                            println!(
+                                "Error sending data from thread {} processing row {}.",
+                                tid, row
+                            );
+                        }
                     }
                 }
             });
@@ -515,7 +520,7 @@ impl WhiteboxTool for EdgeDensity {
             match rx2.recv() {
                 Ok(data) => {
                     output.set_row_data(data.0, data.1);
-                },
+                }
                 Err(_) => {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
@@ -523,7 +528,7 @@ impl WhiteboxTool for EdgeDensity {
                     ));
                 }
             }
-            
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {

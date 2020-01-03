@@ -14,9 +14,9 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufWriter, Error, ErrorKind};
-use std::fs::File;
 use std::path;
 use std::path::Path;
 use std::process::Command;
@@ -24,38 +24,38 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to map the spatial pattern of maximum spherical standard deviation 
-/// (σ<sub>*s max*</sub>; `--out_mag`), as well as the scale at which maximum spherical standard deviation occurs 
+/// This tool can be used to map the spatial pattern of maximum spherical standard deviation
+/// (σ<sub>*s max*</sub>; `--out_mag`), as well as the scale at which maximum spherical standard deviation occurs
 /// (*r<sub>max</sub>*; `--out_scale`), for each grid cell in an input DEM (`--dem`). This serves as a multi-scale measure
-/// of surface roughness, or topographic complexity. The spherical standard deviation (σ<sub>s</sub>) is 
+/// of surface roughness, or topographic complexity. The spherical standard deviation (σ<sub>s</sub>) is
 /// a measure of the angular spread among *n* unit vectors and is defined as:
-/// 
+///
 /// > σ<sub>s</sub> = &radic;[-2ln(<em>R</em> / <em>N</em>)] &times; 180 / &pi;
-/// 
-/// Where *R* is the resultant vector length and is derived from the sum of the *x*, *y*, and *z* components 
-/// of each of the *n* normals contained within a filter kernel, which designates a tested spatial scale. Each 
-/// unit vector is a 3-dimensional measure of the surface orientation and slope at each grid cell center. The 
+///
+/// Where *R* is the resultant vector length and is derived from the sum of the *x*, *y*, and *z* components
+/// of each of the *n* normals contained within a filter kernel, which designates a tested spatial scale. Each
+/// unit vector is a 3-dimensional measure of the surface orientation and slope at each grid cell center. The
 /// maximum spherical standard deviation is:
-/// 
-/// > σ<sub>*s max*</sub>=*max*{σs(*r*):*r*=*r<sub>L</sub>*...*r<sub>U</sub>*}, 
-/// 
-/// Experience with roughness scale signatures has shown that σ<sub>*s max*</sub> is highly variable at 
-/// shorter scales and changes more gradually at broader scales. Therefore, a nonlinear scale sampling 
-/// interval is used by this tool to ensure that the scale sampling density is higher for short scale 
+///
+/// > σ<sub>*s max*</sub>=*max*{σs(*r*):*r*=*r<sub>L</sub>*...*r<sub>U</sub>*},
+///
+/// Experience with roughness scale signatures has shown that σ<sub>*s max*</sub> is highly variable at
+/// shorter scales and changes more gradually at broader scales. Therefore, a nonlinear scale sampling
+/// interval is used by this tool to ensure that the scale sampling density is higher for short scale
 /// ranges and coarser at longer tested scales, such that:
-/// 
+///
 /// > *r<sub>i</sub>* = *r<sub>L</sub>* + [step &times; (i - *r<sub>L</sub>*)]<sup>*p*</sup>
-/// 
+///
 /// Where *ri* is the filter radius for step *i* and *p* is the nonlinear scaling factor (`--step_nonlinearity`)
-/// and a step size (`--step`) of *step*. 
-/// 
-/// Use the `SphericalStdDevOfNormals` tool if you need to calculate σ<sub>s</sub> for a single scale. 
+/// and a step size (`--step`) of *step*.
+///
+/// Use the `SphericalStdDevOfNormals` tool if you need to calculate σ<sub>s</sub> for a single scale.
 ///  
 /// # Reference
-/// 
-/// JB Lindsay, DR Newman, and A  Francioni. 2019 Scale-Optimized Surface Roughness for Topographic Analysis. 
+///
+/// JB Lindsay, DR Newman, and A  Francioni. 2019 Scale-Optimized Surface Roughness for Topographic Analysis.
 /// *Geosciences*, 9(322) doi: 10.3390/geosciences9070322.
-/// 
+///
 /// # See Also
 /// `SphericalStdDevOfNormals`, `MultiscaleStdDevNormalsSignature`, `MultiscaleRoughness`
 pub struct MultiscaleStdDevNormals {
@@ -375,7 +375,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
                         0
                     };
-                    i_n.set_value(row, col, sum + i_n.get_value(row-1, col));
+                    i_n.set_value(row, col, sum + i_n.get_value(row - 1, col));
                 }
             } else {
                 if input.get_value(0, 0) != nodata {
@@ -393,14 +393,14 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                         //input.set_value(row, col, input.get_value(row, col) - min_val);
                         0
                     };
-                    i_n.set_value(row, col, val + i_n.get_value(row, col-1));
+                    i_n.set_value(row, col, val + i_n.get_value(row, col - 1));
                 }
             }
         }
 
         let i_n = Arc::new(i_n);
         let input = Arc::new(input);
-            
+
         ///////////////////////////////
         // Perform the main analysis //
         ///////////////////////////////
@@ -415,9 +415,10 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         let series_names = vec![String::from("DEM Average SStdDevN")];
 
         // for midpoint in (min_scale..=max_scale).step_by(step as usize) {
-        for s in min_scale..(min_scale+num_steps) {
-            let midpoint = min_scale + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
-            println!("Loop {} / {}", s-min_scale+1, num_steps);
+        for s in min_scale..(min_scale + num_steps) {
+            let midpoint = min_scale
+                + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
+            println!("Loop {} / {}", s - min_scale + 1, num_steps);
 
             let filter_size = midpoint * 2 + 1;
 
@@ -435,8 +436,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 let mut filter_size_smooth = 0;
                 let mut weight: f32;
                 for i in 0..250 {
-                    weight =
-                        recip_root_2_pi_times_sigma_d * (-1.0 * ((i * i) as f32) / two_sigma_sqr_d).exp();
+                    weight = recip_root_2_pi_times_sigma_d
+                        * (-1.0 * ((i * i) as f32) / two_sigma_sqr_d).exp();
                     if weight <= 0.001 {
                         filter_size_smooth = i * 2 + 1;
                         break;
@@ -458,7 +459,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 let mut weights = vec![0.0; num_pixels_in_filter];
 
                 // fill the filter d_x and d_y values and the distance-weights
-                let midpoint_smoothed: isize = (filter_size_smooth as f32 / 2f32).floor() as isize + 1;
+                let midpoint_smoothed: isize =
+                    (filter_size_smooth as f32 / 2f32).floor() as isize + 1;
                 let mut a = 0;
                 let (mut x, mut y): (isize, isize);
                 for row in 0..filter_size {
@@ -477,7 +479,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 let d_x = Arc::new(d_x);
                 let d_y = Arc::new(d_y);
                 let weights = Arc::new(weights);
-                
+
                 let (tx, rx) = mpsc::channel();
                 for tid in 0..num_procs {
                     let input = input.clone();
@@ -528,11 +530,13 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                     wl -= 1;
                 } // must be an odd integer
                 let wu = wl + 2;
-                let m =
-                    ((12f32 * sigma * sigma - (n * wl * wl) as f32 - (4 * n * wl) as f32 - (3 * n) as f32)
-                        / (-4 * wl - 4) as f32)
-                        .round() as isize;
-                
+                let m = ((12f32 * sigma * sigma
+                    - (n * wl * wl) as f32
+                    - (4 * n * wl) as f32
+                    - (3 * n) as f32)
+                    / (-4 * wl - 4) as f32)
+                    .round() as isize;
+
                 let mut integral: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata as f64)?; // Memory requirements: 6.5X
                 let mut val: f32;
                 let mut sum: f64;
@@ -558,7 +562,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                 val = input.get_value(row, col);
                                 if val == nodata {
                                     val = 0f32;
-                                // } else {
+                                    // } else {
                                     // sum_n += 1;
                                 }
                                 sum += val as f64;
@@ -620,7 +624,11 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                     sum = integral.get_value(y2, x2) + integral.get_value(y1, x1)
                                         - integral.get_value(y1, x2)
                                         - integral.get_value(y2, x1);
-                                    smoothed_dem.set_value(row, col, (sum / num_cells as f64) as f32);
+                                    smoothed_dem.set_value(
+                                        row,
+                                        col,
+                                        (sum / num_cells as f64) as f32,
+                                    );
                                 } else {
                                     // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
                                     smoothed_dem.set_value(row, col, 0f32);
@@ -700,8 +708,6 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
 
             drop(smoothed_dem); // Memory requirements: 9.5X
 
-
-
             ////////////////////////////////////////
             // Convert normals to integral images //
             ////////////////////////////////////////
@@ -715,19 +721,18 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                         sumx += xc.get_value(row, col);
                         sumy += yc.get_value(row, col);
                         sumz += zc.get_value(row, col);
-                        xc.set_value(row, col, sumx + xc.get_value(row-1, col));
-                        yc.set_value(row, col, sumy + yc.get_value(row-1, col));
-                        zc.set_value(row, col, sumz + zc.get_value(row-1, col));
+                        xc.set_value(row, col, sumx + xc.get_value(row - 1, col));
+                        yc.set_value(row, col, sumy + yc.get_value(row - 1, col));
+                        zc.set_value(row, col, sumz + zc.get_value(row - 1, col));
                     }
                 } else {
                     for col in 1..columns {
-                        xc.increment(row, col, xc.get_value(row, col-1));
-                        yc.increment(row, col, yc.get_value(row, col-1));
-                        zc.increment(row, col, zc.get_value(row, col-1));
+                        xc.increment(row, col, xc.get_value(row, col - 1));
+                        yc.increment(row, col, yc.get_value(row, col - 1));
+                        zc.increment(row, col, zc.get_value(row, col - 1));
                     }
                 }
             }
-
 
             ////////////////////////////////////////////////////////////////
             // Calculate the spherical standard deviations of the normals //
@@ -786,7 +791,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                 }
                                 n = (i_n.get_value(y2, x2) + i_n.get_value(y1, x1)
                                     - i_n.get_value(y1, x2)
-                                    - i_n.get_value(y2, x1)) as f32;
+                                    - i_n.get_value(y2, x1))
+                                    as f32;
                                 if n > 0f32 {
                                     sumx = xc.get_value(y2, x2) + xc.get_value(y1, x1)
                                         - xc.get_value(y1, x2)
@@ -797,9 +803,11 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                     sumz = zc.get_value(y2, x2) + zc.get_value(y1, x1)
                                         - zc.get_value(y1, x2)
                                         - zc.get_value(y2, x1);
-                                    mean = ((sumx * sumx + sumy * sumy + sumz * sumz) as f32).sqrt() / n;
-                                    if mean > 1f32 { 
-                                        mean = 1f32; 
+                                    mean = ((sumx * sumx + sumy * sumy + sumz * sumz) as f32)
+                                        .sqrt()
+                                        / n;
+                                    if mean > 1f32 {
+                                        mean = 1f32;
                                     }
                                     data[col as usize] = (-2f32 * mean.ln()).sqrt().to_degrees();
                                 }
@@ -807,8 +815,13 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                         }
 
                         match tx2.send((row, data)) {
-                            Ok(_) => {},
-                            Err(_) => { println!("Error sending data from thread {} processing row {}.", tid, row); },
+                            Ok(_) => {}
+                            Err(_) => {
+                                println!(
+                                    "Error sending data from thread {} processing row {}.",
+                                    tid, row
+                                );
+                            }
                         }
                     }
                 });
@@ -830,7 +843,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                                 output_scale.set_value(row, col, -32768);
                             }
                         }
-                    },
+                    }
                     Err(_) => {
                         return Err(Error::new(
                             ErrorKind::InvalidInput,
@@ -846,7 +859,6 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             // drop(xc); // Memory requirements: 7.5X (automatically freed at end of scope)
             // drop(yc); // Memory requirements: 5.5X
             // drop(zc); // Memory requirements: 3.5X
-            
 
             // Update progress
             if verbose {
@@ -863,7 +875,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         drop(input); // Memory requirements: 2.5X
         drop(i_n); // Memory requirements: 1.5X
 
-        let mut output_mag_raster = Raster::initialize_from_array2d(&output_mag_file, &configs, &output_mag); // Memory requirements: 3.5X
+        let mut output_mag_raster =
+            Raster::initialize_from_array2d(&output_mag_file, &configs, &output_mag); // Memory requirements: 3.5X
         output_mag_raster.configs.data_type = DataType::F32;
         drop(output_mag); // Memory requirements: 2.5X
 
@@ -874,12 +887,14 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             self.get_tool_name()
         ));
         output_mag_raster.add_metadata_entry(format!("Input file: {}", input_file));
-        output_mag_raster.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
+        output_mag_raster
+            .add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         // output_mag_raster.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_mag_raster.add_metadata_entry(format!("Step size: {}", step));
         output_mag_raster.add_metadata_entry(format!("Number of steps: {}", num_steps));
         output_mag_raster.add_metadata_entry(format!("Step nonlinearity: {}", step_nonlinearity));
-        output_mag_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        output_mag_raster
+            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving magnitude data...")
@@ -895,7 +910,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
 
         drop(output_mag_raster); // Memory requirements: 0.5X
 
-        let mut output_scale_raster = Raster::initialize_from_array2d(&output_scale_file, &configs, &output_scale); // Memory requirements: 2.5X
+        let mut output_scale_raster =
+            Raster::initialize_from_array2d(&output_scale_file, &configs, &output_scale); // Memory requirements: 2.5X
         output_scale_raster.configs.data_type = DataType::I16;
         drop(output_scale); // Memory requirements: 2.0X
 
@@ -905,12 +921,14 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             self.get_tool_name()
         ));
         output_scale_raster.add_metadata_entry(format!("Input file: {}", input_file));
-        output_scale_raster.add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
+        output_scale_raster
+            .add_metadata_entry(format!("Minimum neighbourhood radius: {}", min_scale));
         // output_scale_raster.add_metadata_entry(format!("Maximum neighbourhood radius: {}", max_scale));
         output_scale_raster.add_metadata_entry(format!("Step size: {}", step));
         output_scale_raster.add_metadata_entry(format!("Number of steps: {}", num_steps));
         output_scale_raster.add_metadata_entry(format!("Step nonlinearity: {}", step_nonlinearity));
-        output_scale_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        output_scale_raster
+            .add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving scale data...")
@@ -933,9 +951,12 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
 
         // Memory requirements: 0.0X (wehn output_scale_raster is freed automatically at end of scope)
 
-
         // Output the scale signature of average spherical standard deviation of normals
-        let signature_file = Path::new(&output_mag_file).with_extension("html").into_os_string().into_string().unwrap();
+        let signature_file = Path::new(&output_mag_file)
+            .with_extension("html")
+            .into_os_string()
+            .into_string()
+            .unwrap();
         let f = File::create(signature_file.clone())?;
         let mut writer = BufWriter::new(f);
 
@@ -955,11 +976,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         )?;
 
         writer.write_all(
-            (format!(
-                "<p><strong>Input DEM</strong>: {}<br></p>",
-                input_file
-            ))
-            .as_bytes(),
+            (format!("<p><strong>Input DEM</strong>: {}<br></p>", input_file)).as_bytes(),
         )?;
 
         let multiples = xdata.len() > 2 && xdata.len() < 12;
@@ -1011,7 +1028,10 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 let _ = output.stdout;
             }
 
-            println!("Complete! Please see {} for signature output.", signature_file);
+            println!(
+                "Complete! Please see {} for signature output.",
+                signature_file
+            );
         }
 
         Ok(())

@@ -24,27 +24,27 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a [longitudinal profile](http://www.fao.org/docrep/003/X6841E/X6841E02.HTM) plot. 
-/// A longitudinal stream profile is a plot of elevation against downstream distance. Most long profiles use distance 
-/// from channel head as the distance measure. This tool, however, uses the distance to the stream network outlet cell, 
-/// or mouth, as the distance measure. The reason for this difference is that while for any one location within a stream 
-/// network there is only ever one downstream outlet, there is usually many upstream channel heads. Thus plotted using 
-/// the traditional downstream-distance method, the same point within a network will plot in many different long profile 
-/// locations, whereas it will always plot on one unique location in the distance-to-mouth method. One consequence of 
-/// this difference is that the long profile will be oriented from right-to-left rather than left-to-right, as would 
+/// This tool can be used to create a [longitudinal profile](http://www.fao.org/docrep/003/X6841E/X6841E02.HTM) plot.
+/// A longitudinal stream profile is a plot of elevation against downstream distance. Most long profiles use distance
+/// from channel head as the distance measure. This tool, however, uses the distance to the stream network outlet cell,
+/// or mouth, as the distance measure. The reason for this difference is that while for any one location within a stream
+/// network there is only ever one downstream outlet, there is usually many upstream channel heads. Thus plotted using
+/// the traditional downstream-distance method, the same point within a network will plot in many different long profile
+/// locations, whereas it will always plot on one unique location in the distance-to-mouth method. One consequence of
+/// this difference is that the long profile will be oriented from right-to-left rather than left-to-right, as would
 /// traditionally be the case.
-/// 
-/// The tool outputs an interactive SVG line graph embedded in an HTML document (`--output`). The user must specify the 
-/// names of a D8 pointer (`--d8_pntr`) image (flow direction), a streams raster image 
-/// (`--streams`), and a digital elevation model (`--dem`). Stream cells are designated in the streams image as all 
-/// positive, nonzero values. Thus all non-stream or background grid cells are commonly assigned either zeros or NoData 
-/// values. The pointer image is used to traverse the stream network and should only be created using the D8 algorithm 
-/// (`D8Pointer`). The streams image should be derived using a flow accumulation based stream network extraction 
+///
+/// The tool outputs an interactive SVG line graph embedded in an HTML document (`--output`). The user must specify the
+/// names of a D8 pointer (`--d8_pntr`) image (flow direction), a streams raster image
+/// (`--streams`), and a digital elevation model (`--dem`). Stream cells are designated in the streams image as all
+/// positive, nonzero values. Thus all non-stream or background grid cells are commonly assigned either zeros or NoData
+/// values. The pointer image is used to traverse the stream network and should only be created using the D8 algorithm
+/// (`D8Pointer`). The streams image should be derived using a flow accumulation based stream network extraction
 /// algorithm, also based on the D8 flow algorithm.
-/// 
+///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// # See Also
 /// `LongProfileFromPoints`, `Profile`, `D8Pointer`
 pub struct LongProfile {

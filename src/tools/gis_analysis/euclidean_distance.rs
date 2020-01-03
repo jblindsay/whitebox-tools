@@ -192,12 +192,12 @@ impl WhiteboxTool for EuclideanDistance {
         let nodata = input.configs.nodata;
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-        
+
         let start = Instant::now();
 
         let mut rx: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut ry: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
-        
+
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
 

@@ -6,21 +6,21 @@ Last Modified: 07/08/2019
 License: MIT
 */
 
+use crate::spatial_ref_system::esri_wkt_from_epsg;
 use crate::tools::*;
-use crate::vector::{AttributeField, FieldData, FieldDataType, Shapefile, ShapeType};
+use crate::vector::{AttributeField, FieldData, FieldDataType, ShapeType, Shapefile};
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, Error, ErrorKind};
 use std::path;
 use std::{f64, i32};
-use crate::spatial_ref_system::esri_wkt_from_epsg;
 
-/// This tool can be used to import a series of points contained within a comma-separated values 
-/// (*.csv) file (`--input`) into a vector shapefile of a POINT ShapeType. The input file must be an ASCII text 
+/// This tool can be used to import a series of points contained within a comma-separated values
+/// (*.csv) file (`--input`) into a vector shapefile of a POINT ShapeType. The input file must be an ASCII text
 /// file with a .csv extensions. The tool will automatically detect the field data type; for numeric
-/// fields, it will also determine the appropriate length and precision. The user must specify the 
-/// x-coordinate (`--xfield`) and y-coordiante (`--yfield`) fields. All fields are imported as 
+/// fields, it will also determine the appropriate length and precision. The user must specify the
+/// x-coordinate (`--xfield`) and y-coordiante (`--yfield`) fields. All fields are imported as
 /// attributes in the output (`--output`) vector file. The tool assumes that the first line of the file is a header line from which field
 /// names are retreived.
 ///
@@ -81,13 +81,13 @@ impl CsvPointsToVector {
             optional: true,
         });
 
-        parameters.push(ToolParameter{
-            name: "EPSG Projection".to_owned(), 
-            flags: vec!["--epsg".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "EPSG Projection".to_owned(),
+            flags: vec!["--epsg".to_owned()],
             description: "EPSG projection (e.g. 2958).".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
-            optional: true
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -218,7 +218,7 @@ impl WhiteboxTool for CsvPointsToVector {
 
         let mut progress: usize;
         let mut old_progress: usize = 1;
-        
+
         // File strings need a full directory
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
@@ -232,7 +232,7 @@ impl WhiteboxTool for CsvPointsToVector {
         if verbose {
             println!("Reading data...")
         };
-        
+
         // read in the CSV file
         let mut data = vec![];
         let f = match File::open(input_file.clone()) {
@@ -296,15 +296,19 @@ impl WhiteboxTool for CsvPointsToVector {
                             field_lengths[a] = line_vec[a].len() as u8;
                         }
                         match field_types[a] {
-                            FieldDataType::Int => imported_data.push(FieldData::Int(line_vec[a].trim().parse::<i32>().unwrap())),
+                            FieldDataType::Int => imported_data
+                                .push(FieldData::Int(line_vec[a].trim().parse::<i32>().unwrap())),
                             FieldDataType::Real => {
                                 let prec = get_precision(line_vec[a]);
                                 if prec > field_precision[a] {
                                     field_precision[a] = prec;
                                 }
-                                imported_data.push(FieldData::Real(line_vec[a].trim().parse::<f64>().unwrap()))
+                                imported_data.push(FieldData::Real(
+                                    line_vec[a].trim().parse::<f64>().unwrap(),
+                                ))
                             }
-                            FieldDataType::Bool => imported_data.push(FieldData::Bool(line_vec[a].trim().parse::<bool>().unwrap())),
+                            FieldDataType::Bool => imported_data
+                                .push(FieldData::Bool(line_vec[a].trim().parse::<bool>().unwrap())),
                             FieldDataType::Text => {
                                 imported_data.push(FieldData::Text(line_vec[a].trim().to_string()))
                             }
@@ -320,7 +324,9 @@ impl WhiteboxTool for CsvPointsToVector {
         }
 
         // make sure that the x and y fields are numeric
-        if field_types[x_field] != FieldDataType::Real || field_types[y_field] != FieldDataType::Real {
+        if field_types[x_field] != FieldDataType::Real
+            || field_types[y_field] != FieldDataType::Real
+        {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "Either the x or y fields, or both, do not contain floating-point numerical data.",
@@ -352,22 +358,23 @@ impl WhiteboxTool for CsvPointsToVector {
             // geometries
             x = match data[record_num][x_field] {
                 FieldData::Real(v) => v,
-                _ => 0f64
+                _ => 0f64,
             };
             y = match data[record_num][y_field] {
                 FieldData::Real(v) => v,
-                _ => 0f64
+                _ => 0f64,
             };
 
             output.add_point_record(x, y);
 
             // attributes
             rec_num += 1;
-            output.attributes.add_record(data[record_num].clone(), false);
+            output
+                .attributes
+                .add_record(data[record_num].clone(), false);
 
             if verbose {
-                progress =
-                    (100.0_f64 * (rec_num + 1) as f64 / data.len() as f64) as usize;
+                progress = (100.0_f64 * (rec_num + 1) as f64 / data.len() as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;

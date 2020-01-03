@@ -105,5 +105,4 @@ mod test {
         points.reverse();
         assert_eq!(is_clockwise_order(&points), true);
     }
-
 }

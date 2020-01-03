@@ -18,19 +18,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to fill in small gaps in a raster or digital elevation model (DEM). The gaps, 
-/// or holes, must have recognized NoData values. If gaps do not currently have this characteristic, use 
-/// the `SetNodataValue` tool and ensure that the data are stored using a raster format that supports NoData 
+/// This tool can be used to fill in small gaps in a raster or digital elevation model (DEM). The gaps,
+/// or holes, must have recognized NoData values. If gaps do not currently have this characteristic, use
+/// the `SetNodataValue` tool and ensure that the data are stored using a raster format that supports NoData
 /// values. All valid, non-NoData values in the input raster will be assigned the same value in the output image.
-/// 
-/// The algorithm uses an inverse-distance weighted (IDW) scheme based on the valid values on the edge of 
-/// NoData gaps to estimate gap values. The user must specify the filter size (`--filter`), which determines 
+///
+/// The algorithm uses an inverse-distance weighted (IDW) scheme based on the valid values on the edge of
+/// NoData gaps to estimate gap values. The user must specify the filter size (`--filter`), which determines
 /// the size of gap that is filled, and the IDW weight (`--weight`).
-/// 
-/// The filter size, specified in grid cells, is used to determine how far the algorithm will search for valid, 
-/// non-NoData values. Therefore, setting a larger filter size allows for the filling of larger gaps in the input 
-/// raster. 
-/// 
+///
+/// The filter size, specified in grid cells, is used to determine how far the algorithm will search for valid,
+/// non-NoData values. Therefore, setting a larger filter size allows for the filling of larger gaps in the input
+/// raster.
+///
 /// # See Also
 /// `SetNodataValue`
 pub struct FillMissingData {

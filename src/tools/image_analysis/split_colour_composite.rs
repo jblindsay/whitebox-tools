@@ -16,10 +16,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to split a red-green-blue (RGB) colour-composite image into three separate bands of 
-/// multi-spectral imagery. The user must specify the input image (`--input`) and output red, green, blue images 
+/// This tool can be used to split a red-green-blue (RGB) colour-composite image into three separate bands of
+/// multi-spectral imagery. The user must specify the input image (`--input`) and output red, green, blue images
 /// (`--red`, `--green`, `--blue`).
-/// 
+///
 /// # See Also
 /// `CreateColourComposite`
 pub struct SplitColourComposite {
@@ -50,33 +50,27 @@ impl SplitColourComposite {
         });
 
         parameters.push(ToolParameter {
-            name: "Output Red Band File"
-                .to_owned(),
+            name: "Output Red Band File".to_owned(),
             flags: vec!["--red".to_owned()],
-            description:
-                "Output red band file.".to_owned(),
+            description: "Output red band file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Output Green Band File"
-                .to_owned(),
+            name: "Output Green Band File".to_owned(),
             flags: vec!["--green".to_owned()],
-            description:
-                "Output green band file.".to_owned(),
+            description: "Output green band file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Output Blue Band File"
-                .to_owned(),
+            name: "Output Blue Band File".to_owned(),
             flags: vec!["--blue".to_owned()],
-            description:
-                "Output blue band file.".to_owned(),
+            description: "Output blue band file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: true,
@@ -226,7 +220,7 @@ impl WhiteboxTool for SplitColourComposite {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        
+
         let start = Instant::now();
 
         let rows = input.configs.rows as isize;

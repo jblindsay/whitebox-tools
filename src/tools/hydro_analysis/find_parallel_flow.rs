@@ -18,11 +18,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to find cells in a stream network grid that possess parallel flow directions based 
-/// on an input D8 flow-pointer grid (`D8Pointer`). Because streams rarely flow in parallel for significant 
-/// distances, these areas are likely errors resulting from the biased assignment of flow direction based on 
+/// This tool can be used to find cells in a stream network grid that possess parallel flow directions based
+/// on an input D8 flow-pointer grid (`D8Pointer`). Because streams rarely flow in parallel for significant
+/// distances, these areas are likely errors resulting from the biased assignment of flow direction based on
 /// the D8 method.
-/// 
+///
 /// # See Also
 /// `D8Pointer`
 pub struct FindParallelFlow {

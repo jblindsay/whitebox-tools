@@ -18,12 +18,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a gamma colour correction transform on an input image (`--input`), such that each 
+/// This tool performs a gamma colour correction transform on an input image (`--input`), such that each
 /// input pixel value (z<sub>in</sub><sup>) is mapped to the corresponding output value (z<sub>out</sub>) as:
-/// 
+///
 /// > z<sub>out</sub> = z<sub>in</sub><sup>`gamma`</sup>
-/// 
-/// The user must specify the value of the `gamma` parameter. The input image may be of either a greyscale or RGB colour 
+///
+/// The user must specify the value of the `gamma` parameter. The input image may be of either a greyscale or RGB colour
 /// composite data type.
 pub struct GammaCorrection {
     name: String,

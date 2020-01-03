@@ -21,7 +21,7 @@ use std::thread;
 
 /// This tool can be used to calculate a measure of landscape visibility based on the
 /// topography of an input digital elevation model (DEM). The user must specify the name of
-/// the input DEM (`--dem`), the output file name (`--output`), the viewing height (`--height`), 
+/// the input DEM (`--dem`), the output file name (`--output`), the viewing height (`--height`),
 /// and a resolution factor (`--res_factor`).
 /// Viewsheds are calcuated for a subset of grid cells in the DEM based on the resolution
 /// factor. The visibility index value (0.0-1.0) indicates the proportion of tested stations
@@ -38,7 +38,7 @@ use std::thread;
 /// also requires substantial memory resources to operate. Each of these limitations should be
 /// considered before running this tool on a particular data set. This tool is best to apply
 /// on computer systems with high core-counts and plenty of memory.
-/// 
+///
 /// # See Also
 /// `Viewshed`
 pub struct VisibilityIndex {

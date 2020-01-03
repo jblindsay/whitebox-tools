@@ -17,11 +17,11 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a new raster (`--output`) in which each grid cell is equal to the 
-/// [square root](https://en.wikipedia.org/wiki/Square_root) of the value of the corresponding grid cell in the 
-/// input raster (`--input`). **NoData** values in the input image will be assigned **NoData** values in the 
+/// This tool creates a new raster (`--output`) in which each grid cell is equal to the
+/// [square root](https://en.wikipedia.org/wiki/Square_root) of the value of the corresponding grid cell in the
+/// input raster (`--input`). **NoData** values in the input image will be assigned **NoData** values in the
 /// output image.
-/// 
+///
 /// # See Also
 /// `Square`
 pub struct SquareRoot {

@@ -17,27 +17,27 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a multiscale topographic position (MTP) image ([see here for an 
-/// example](https://www.uoguelph.ca/~hydrogeo/pubs/UpdatedPosterMapSm.png)) from three DEV<sub>max</sub> rasters of differing 
+/// This tool creates a multiscale topographic position (MTP) image ([see here for an
+/// example](https://www.uoguelph.ca/~hydrogeo/pubs/UpdatedPosterMapSm.png)) from three DEV<sub>max</sub> rasters of differing
 /// spatial scale ranges. Specifically, `MultiscaleTopographicPositionImage` takes three DEV<sub>max</sub> *magnitude*
 /// rasters, created using the `MaxElevationDeviation` tool, as inputs. The three inputs should correspond to the elevation
-/// deviations in the local (`--local`), meso (`--meso`), and broad (`--broad`) scale ranges and will be forced into the 
-/// blue, green, and red colour components of the colour composite output (`--output`) raster. The image lightness value 
+/// deviations in the local (`--local`), meso (`--meso`), and broad (`--broad`) scale ranges and will be forced into the
+/// blue, green, and red colour components of the colour composite output (`--output`) raster. The image lightness value
 /// (`--lightness`) controls the overall brightness of the output image, as depending on the topography and scale ranges,
-/// these images can appear relatively dark. Higher values result in brighter, more colourful output images. 
-/// 
-/// The output images can take some training to interpret correctly and a detailed explanation can be found in Lindsay et al. 
+/// these images can appear relatively dark. Higher values result in brighter, more colourful output images.
+///
+/// The output images can take some training to interpret correctly and a detailed explanation can be found in Lindsay et al.
 /// (2015). Sites within the landscape that occupy prominent topographic positions, either
 /// low-lying or elevated, will be apparent by their bright colouring in the MTP image. Those that are coloured more strongly in
 /// the blue are promient at the local scale range; locations that are more strongly green coloured are promient at the meso scale;
 /// and bright reds in the MTP image are associated with broad-scale landscape prominence. Of course, combination colours are also possible when
 /// topography is elevated or low-lying across multiple scale ranges. For example, a yellow area would indicated a site of prominent
-/// topographic position across the meso and broadest scale ranges. 
-/// 
+/// topographic position across the meso and broadest scale ranges.
+///
 /// # Reference
-/// Lindsay J, Cockburn J, Russell H. 2015. An integral image approach to performing multi-scale 
+/// Lindsay J, Cockburn J, Russell H. 2015. An integral image approach to performing multi-scale
 /// topographic position analysis. Geomorphology, 245: 51-61.
-/// 
+///
 /// # See Also
 /// `MaxElevationDeviation`
 pub struct MultiscaleTopographicPositionImage {

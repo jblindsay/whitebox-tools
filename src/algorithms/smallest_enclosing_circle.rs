@@ -157,5 +157,4 @@ mod test {
         let r = centre.distance(&Point2D::new(side_length, side_length));
         assert_eq!(circle, Circle::new(centre, r));
     }
-
 }

@@ -14,15 +14,15 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to extract the values of one or more rasters (`--inputs`) at the sites of a set of vector points. 
+/// This tool can be used to extract the values of one or more rasters (`--inputs`) at the sites of a set of vector points.
 /// By default, the data is output to the attribute table of the input points (`--points`) vector; however,
-/// if the `--out_text` parameter is specified, the tool will additionally output point values as text data 
+/// if the `--out_text` parameter is specified, the tool will additionally output point values as text data
 /// to standard output (*stdout*). Attribute fields will be added to the table of the points file, with field
 /// names, *VALUE1*, *VALUE2*, *VALUE3*, etc. each corresponding to the order of input rasters.
-/// 
+///
 /// If you need to plot a chart of values from a raster stack at a set of points, the `ImageStackProfile` may be
 /// more suitable for this application.
-/// 
+///
 /// # See Also
 /// `ImageStackProfile`, `FindLowestOrHighestPoints`
 pub struct ExtractRasterValuesAtPoints {
@@ -264,7 +264,11 @@ impl WhiteboxTool for ExtractRasterValuesAtPoints {
         if output_text {
             println!("Point values:");
             for record_num in 0..num_records {
-                println!("Point {} values: {:?}", record_num+1, raster_values[record_num]);
+                println!(
+                    "Point {} values: {:?}",
+                    record_num + 1,
+                    raster_values[record_num]
+                );
             }
         }
 

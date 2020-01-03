@@ -14,28 +14,28 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to delineate all of the drainage basins contained within a local drainage direction, 
-/// or flow pointer raster (`--d8_pntr`), and draining to the edge of the data. The flow pointer raster must be derived using 
-/// the `D8Pointer` tool and should have been extracted from a digital elevation model (DEM) that has been 
+/// This tool can be used to delineate all of the drainage basins contained within a local drainage direction,
+/// or flow pointer raster (`--d8_pntr`), and draining to the edge of the data. The flow pointer raster must be derived using
+/// the `D8Pointer` tool and should have been extracted from a digital elevation model (DEM) that has been
 /// hydrologically pre-processed to remove topographic depressions and flat areas, e.g. using the `BreachDepressions`
-/// tool. By default, the flow pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools: 
-/// 
+/// tool. By default, the flow pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools:
+///
 /// | .  |  .  |  . |
 /// |:--:|:---:|:--:|
 /// | 64 | 128 | 1  |
 /// | 32 |  0  | 2  |
 /// | 16 |  8  | 4  |
-/// 
+///
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.
-/// 
+///
 /// The `Basins` and `Watershed` tools are similar in function but while the `Watershed` tool identifies the upslope areas
 /// that drain to one or more user-specified outlet points, the `Basins` tool automatically sets outlets to all grid cells
 /// situated along the edge of the data that do not have a defined flow direction (i.e. they do not have a lower neighbour).
-/// Notice that these edge outlets need not be situated along the edges of the flow-pointer raster, but rather along the 
+/// Notice that these edge outlets need not be situated along the edges of the flow-pointer raster, but rather along the
 /// edges of the region of valid data. That is, the DEM from which the flow-pointer has been extracted may incompletely
 /// fill the containing raster, if it is irregular shaped, and NoData regions may occupy the peripherals. Thus, the entire
 /// region of valid data in the flow pointer raster will be divided into a set of mutually exclusive basins using this tool.
-/// 
+///
 /// # See Also
 /// `Watershed`, `D8Pointer`, `BreachDepressions`
 pub struct Basins {

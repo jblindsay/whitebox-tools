@@ -28,10 +28,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool segments a LiDAR point cloud based on normal vectors. The segment values 
-/// are stored as unique, random red-green-blue (RGB) colour values stored in the output 
+/// This tool segments a LiDAR point cloud based on normal vectors. The segment values
+/// are stored as unique, random red-green-blue (RGB) colour values stored in the output
 /// (`--output`) LAS file.
-/// 
+///
 /// # See Also
 /// `LidarSegmentationBasedFilter`
 pub struct LidarSegmentation {
@@ -95,13 +95,13 @@ impl LidarSegmentation {
             optional: false
         });
 
-        parameters.push(ToolParameter{
-            name: "Don't Cross Class Boundaries".to_owned(), 
-            flags: vec!["--classes".to_owned()], 
+        parameters.push(ToolParameter {
+            name: "Don't Cross Class Boundaries".to_owned(),
+            flags: vec!["--classes".to_owned()],
             description: "Segments don't cross class boundaries.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
-            optional: false
+            optional: false,
         });
 
         parameters.push(ToolParameter {
@@ -393,7 +393,9 @@ impl WhiteboxTool for LidarSegmentation {
                         let pn: PointData = input.get_point_info(index_n);
                         // Calculate height difference.
                         height_diff = (pn.z - p.z).abs();
-                        if !dont_cross_class_boundaries || (p.classification() == pn.classification()) {
+                        if !dont_cross_class_boundaries
+                            || (p.classification() == pn.classification())
+                        {
                             if height_diff < max_z_diff {
                                 // Check the difference in normal vectors.
                                 norm_diff =
@@ -418,20 +420,22 @@ impl WhiteboxTool for LidarSegmentation {
         let mut rng = rand::thread_rng();
         let (mut r, mut g, mut b): (u16, u16, u16); // = (0u16, 0u16, 0u16);
         let range: Vec<u32> = (0..16777215).collect();
-        let raw_clrs: Vec<u32> = range.choose_multiple(&mut rng, current_segment+1).cloned().collect();
+        let raw_clrs: Vec<u32> = range
+            .choose_multiple(&mut rng, current_segment + 1)
+            .cloned()
+            .collect();
         for i in 0..current_segment + 1 as usize {
             r = (raw_clrs[i] as u32 & 0xFF) as u16;
             g = ((raw_clrs[i] as u32 >> 8) & 0xFF) as u16;
             b = ((raw_clrs[i] as u32 >> 16) & 0xFF) as u16;
-                
+
             clrs.push((r, g, b));
         }
 
-        let mut segment_size = vec![0usize; current_segment+1];
+        let mut segment_size = vec![0usize; current_segment + 1];
         for point_num in 0..n_points {
             segment_size[segment_id[point_num]] += 1;
         }
-
 
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.point_format = 2;
