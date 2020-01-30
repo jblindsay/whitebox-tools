@@ -253,7 +253,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
         // let mut interp_parameter_is_rgb = false;
         let mut return_type = "all".to_string();
         let mut grid_res: f64 = 1.0;
-        let mut search_radius = 2.5;
+        let search_radius = 1.0;
         let mut include_class_vals = vec![true; 256];
         let mut palette = "default".to_string();
         let mut exclude_cls_str = String::new();
@@ -307,22 +307,34 @@ impl WhiteboxTool for LidarRbfInterpolation {
                 };
             } else if flag_val == "-resolution" {
                 grid_res = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-weight" {
                 weight = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
-            } else if flag_val == "-radius" {
-                search_radius = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
-                } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
-                };
+            // } else if flag_val == "-radius" {
+            //     search_radius = if keyval {
+            //         vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
+            //     } else {
+            //         args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
+            //     };
             } else if flag_val == "-palette" {
                 palette = if keyval {
                     vec[1].to_string()
@@ -343,21 +355,51 @@ impl WhiteboxTool for LidarRbfInterpolation {
                 }
                 for value in vec {
                     if !value.trim().is_empty() {
-                        let c = value.trim().parse::<usize>().unwrap();
-                        include_class_vals[c] = false;
+                        if value.contains("-") {
+                            cmd = value.split("-");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else if value.contains("...") {
+                            cmd = value.split("...");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else {
+                            let c = value.trim().parse::<usize>().unwrap();
+                            include_class_vals[c] = false;
+                        }
                     }
                 }
             } else if flag_val == "-minz" {
                 min_z = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-maxz" {
                 max_z = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-func_type" {
                 func_type = if keyval {
@@ -380,15 +422,27 @@ impl WhiteboxTool for LidarRbfInterpolation {
                 };
             } else if flag_val == "-weight" {
                 weight = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-num_points" {
                 num_points = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             }
         }

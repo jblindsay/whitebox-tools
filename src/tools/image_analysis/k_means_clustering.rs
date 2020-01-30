@@ -238,21 +238,39 @@ impl WhiteboxTool for KMeansClustering {
                 };
             } else if flag_val == "-classes" {
                 num_classes = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-max_iterations" {
                 max_iterations = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-class_change" {
                 percent_changed_threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-initialize" {
                 if keyval {
@@ -266,9 +284,15 @@ impl WhiteboxTool for KMeansClustering {
                 }
             } else if flag_val == "-min_class_size" {
                 min_class_size = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             }
         }

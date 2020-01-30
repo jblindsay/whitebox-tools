@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 13/07/2017
-Last Modified: 22/10/2019
+Last Modified: 30/01/2020
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -188,37 +188,54 @@ impl WhiteboxTool for MinMaxContrastStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-min_val" || vec[0].to_lowercase() == "--min_val" {
+            } else if flag_val == "-min_val" {
                 if keyval {
-                    min_val = vec[1].to_string().parse::<f64>().unwrap();
+                    min_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    min_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    min_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-max_val" || vec[0].to_lowercase() == "--max_val" {
+            } else if flag_val == "-max_val" {
                 if keyval {
-                    max_val = vec[1].to_string().parse::<f64>().unwrap();
+                    max_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    max_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    max_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-num_tones"
-                || vec[0].to_lowercase() == "--num_tones"
-            {
+            } else if flag_val == "-num_tones" {
                 if keyval {
-                    num_tones = vec[1].to_string().parse::<f64>().unwrap();
+                    num_tones = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    num_tones = args[i + 1].to_string().parse::<f64>().unwrap();
+                    num_tones = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

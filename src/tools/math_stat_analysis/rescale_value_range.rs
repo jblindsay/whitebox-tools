@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: September 10, 2017
-Last Modified: 13/10/2018
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -175,47 +175,66 @@ impl WhiteboxTool for RescaleValueRange {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-clip_min" || vec[0].to_lowercase() == "--clip_min"
-            {
+            } else if flag_val == "-clip_min" {
                 if keyval {
-                    min_val = vec[1].to_string().parse::<f64>().unwrap();
+                    min_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    min_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    min_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-clip_max" || vec[0].to_lowercase() == "--clip_max"
-            {
+            } else if flag_val == "-clip_max" {
                 if keyval {
-                    max_val = vec[1].to_string().parse::<f64>().unwrap();
+                    max_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    max_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    max_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-out_min_val"
-                || vec[0].to_lowercase() == "--out_min_val"
-            {
+            } else if flag_val == "-out_min_val" {
                 if keyval {
-                    out_min_val = vec[1].to_string().parse::<f64>().unwrap();
+                    out_min_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    out_min_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    out_min_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-out_max_val"
-                || vec[0].to_lowercase() == "--out_max_val"
-            {
+            } else if flag_val == "-out_max_val" {
                 if keyval {
-                    out_max_val = vec[1].to_string().parse::<f64>().unwrap();
+                    out_max_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    out_max_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    out_max_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

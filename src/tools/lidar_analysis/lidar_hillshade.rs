@@ -183,21 +183,39 @@ impl WhiteboxTool for LidarHillshade {
                 }
             } else if flag_val == "-azimuth" {
                 if keyval {
-                    azimuth = vec[1].to_string().parse::<f64>().unwrap();
+                    azimuth = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    azimuth = args[i + 1].to_string().parse::<f64>().unwrap();
+                    azimuth = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-altitude" {
                 if keyval {
-                    altitude = vec[1].to_string().parse::<f64>().unwrap();
+                    altitude = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    altitude = args[i + 1].to_string().parse::<f64>().unwrap();
+                    altitude = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                    search_radius = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }
@@ -352,7 +370,11 @@ impl WhiteboxTool for LidarHillshade {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

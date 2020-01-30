@@ -196,6 +196,10 @@ impl WhiteboxTool for LasToAscii {
 
                 let n_points = input.header.number_of_points as usize;
 
+                // let x_prec = get_precision(&(input.header.x_scale_factor.to_string()));
+                // let y_prec = get_precision(&(input.header.y_scale_factor.to_string()));
+                // let z_prec = get_precision(&(input.header.z_scale_factor.to_string()));
+
                 if !has_rgb {
                     writer.write_all(
                         "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE\n".as_bytes(),
@@ -280,3 +284,11 @@ pub fn get_file_extension(file_name: &str) -> String {
     let e = extension.to_str().unwrap();
     e.to_string()
 }
+
+// fn get_precision(s: &str) -> u8 {
+//     let dec_pos = match s.chars().position(|c| c == '.') {
+//         Some(p) => p,
+//         None => return 0u8,
+//     };
+//     (s.len() - dec_pos - 1) as u8
+// }

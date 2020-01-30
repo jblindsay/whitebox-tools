@@ -207,10 +207,13 @@ impl WhiteboxTool for VoronoiDiagram {
         if input.header.shape_type.base_shape_type() != ShapeType::Point
             && input.header.shape_type.base_shape_type() != ShapeType::MultiPoint
         {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "The input vector data must be of POINT base shape type.",
-            ));
+            if verbose {
+                println!("Warning: The input file is not of a POINT base shape type. Unexpected results may occur.");
+            }
+            // return Err(Error::new(
+            //     ErrorKind::InvalidInput,
+            //     "The input vector data must be of POINT base shape type.",
+            // ));
         }
 
         // create output file

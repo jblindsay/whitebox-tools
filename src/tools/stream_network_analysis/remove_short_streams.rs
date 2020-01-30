@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 18/10/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -173,36 +173,38 @@ impl WhiteboxTool for RemoveShortStreams {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-d8_pntr" || vec[0].to_lowercase() == "--d8_pntr" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-d8_pntr" {
                 if keyval {
                     d8_file = vec[1].to_string();
                 } else {
                     d8_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
+            } else if flag_val == "-streams" {
                 if keyval {
                     streams_file = vec[1].to_string();
                 } else {
                     streams_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-min_length"
-                || vec[0].to_lowercase() == "--min_length"
-            {
+            } else if flag_val == "-min_length" {
                 if keyval {
-                    min_length = vec[1].to_string().parse::<f64>().unwrap();
+                    min_length = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    min_length = args[i + 1].to_string().parse::<f64>().unwrap();
+                    min_length = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-esri_pntr"
-                || vec[0].to_lowercase() == "--esri_pntr"
-                || vec[0].to_lowercase() == "--esri_style"
-            {
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                 }

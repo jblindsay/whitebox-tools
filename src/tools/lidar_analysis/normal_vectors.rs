@@ -163,9 +163,15 @@ impl WhiteboxTool for NormalVectors {
                 }
             } else if flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                    search_radius = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }
@@ -293,7 +299,11 @@ impl WhiteboxTool for NormalVectors {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

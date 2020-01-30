@@ -215,9 +215,15 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 };
             } else if flag_val == "-num_comp" {
                 num_comp = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
                 num_comp_set = true;
             } else if flag_val == "-standardized" {

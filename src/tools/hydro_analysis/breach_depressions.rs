@@ -226,23 +226,41 @@ impl WhiteboxTool for BreachDepressions {
                 };
             } else if flag_val == "-max_depth" {
                 max_depth = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
                 constrained_mode = true;
             } else if flag_val == "-max_length" {
                 max_length = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
                 constrained_mode = true;
             } else if flag_val == "-flat_increment" {
                 flat_increment = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-fill_pits" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {

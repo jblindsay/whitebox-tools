@@ -209,21 +209,39 @@ impl WhiteboxTool for CorrectVignetting {
                 };
             } else if flag_val == "-focal_length" {
                 focal_length = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-image_width" {
                 image_width = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-n" {
                 n_param = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

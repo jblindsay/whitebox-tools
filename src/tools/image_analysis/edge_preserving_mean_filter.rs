@@ -186,15 +186,27 @@ impl WhiteboxTool for EdgePreservingMeanFilter {
                 };
             } else if flag_val == "-filter" {
                 filter_size = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-threshold" {
                 threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/02/2019
-Last Modified: 01/08/2019
+Last Modified: 18/01/2020
 License: MIT
 */
 
@@ -43,7 +43,7 @@ use byteorder::{LittleEndian, WriteBytesExt};
 /// | g     | green             |
 /// 
 /// The `x`, `y`, and `z` patterns must always be specified. If the `rn` pattern is used, the `nr` pattern must
-/// also be specified. Examples of valid pattern string inclue:
+/// also be specified. Examples of valid pattern string include:
 /// 
 /// ```
 /// 'x,y,z,i'
@@ -350,9 +350,9 @@ impl WhiteboxTool for AsciiToLas {
                                     1usize => point_data.y = line_data[a].parse::<f64>()?,
                                     2usize => point_data.z = line_data[a].parse::<f64>()?,
                                     3usize => point_data.intensity = line_data[a].parse::<u16>()?,
-                                    4usize => point_data.set_classification(line_data[a].parse::<u8>()?,
-                                    5usize => point_data.set_return_number(line_data[a].parse::<u8>()?,
-                                    6usize => point_data.set_number_of_returns(line_data[a].parse::<u8>()?,
+                                    4usize => point_data.set_classification(line_data[a].parse::<u8>()?),
+                                    5usize => point_data.set_return_number(line_data[a].parse::<u8>()?),
+                                    6usize => point_data.set_number_of_returns(line_data[a].parse::<u8>()?),
                                     7usize => gps_time = line_data[a].parse::<f64>().unwrap(),
                                     8usize => point_data.scan_angle = line_data[a].parse::<i16>()?,
                                     9usize => clr_data.red = line_data[a].parse::<u16>()?,
@@ -435,7 +435,7 @@ impl WhiteboxTool for AsciiToLas {
                     println!("Writing output LAS file {}...", output.get_short_filename());
                 }
                 let _ = match output.write() {
-                    Ok(_) => println!("Complete!"),
+                    Ok(_) => if verbose { println!("Complete!") },
                     Err(e) => println!("error while writing: {:?}", e),
                 };
             }

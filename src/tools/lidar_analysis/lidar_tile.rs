@@ -190,33 +190,65 @@ impl WhiteboxTool for LidarTile {
                 }
             } else if flag_val == "-width_x" || flag_val == "-width" {
                 if keyval {
-                    width_x = vec[1].to_string().parse::<f64>().unwrap();
+                    width_x = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    width_x = args[i + 1].to_string().parse::<f64>().unwrap();
+                    width_x = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-width_y" || flag_val == "-height" {
                 if keyval {
-                    width_y = vec[1].to_string().parse::<f64>().unwrap();
+                    width_y = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    width_y = args[i + 1].to_string().parse::<f64>().unwrap();
+                    width_y = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-origin_x" {
                 if keyval {
-                    origin_x = vec[1].to_string().parse::<f64>().unwrap();
+                    origin_x = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    origin_x = args[i + 1].to_string().parse::<f64>().unwrap();
+                    origin_x = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-origin_y" {
                 if keyval {
-                    origin_y = vec[1].to_string().parse::<f64>().unwrap();
+                    origin_y = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    origin_y = args[i + 1].to_string().parse::<f64>().unwrap();
+                    origin_y = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-min_points" {
                 if keyval {
-                    min_points = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    min_points = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    min_points = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    min_points = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/07/2017
-Last Modified: 12/10/2018
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -174,30 +174,36 @@ impl WhiteboxTool for StreamPowerIndex {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-sca" || vec[0].to_lowercase() == "--sca" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-sca" {
                 if keyval {
                     sca_file = vec[1].to_string();
                 } else {
                     sca_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-slope" || vec[0].to_lowercase() == "--slope" {
+            } else if flag_val == "-slope" {
                 if keyval {
                     slope_file = vec[1].to_string();
                 } else {
                     slope_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-exponent" || vec[0].to_lowercase() == "--exponent"
-            {
+            } else if flag_val == "-exponent" {
                 if keyval {
-                    sca_exponent = vec[1].to_string().parse::<f64>().unwrap();
+                    sca_exponent = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    sca_exponent = args[i + 1].to_string().parse::<f64>().unwrap();
+                    sca_exponent = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

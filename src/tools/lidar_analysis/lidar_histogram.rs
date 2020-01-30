@@ -196,9 +196,15 @@ impl WhiteboxTool for LidarHistogram {
                 }
             } else if flag_val == "-clip" {
                 if keyval {
-                    clip_percent = vec[1].to_string().parse::<f64>().unwrap();
+                    clip_percent = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    clip_percent = args[i + 1].to_string().parse::<f64>().unwrap();
+                    clip_percent = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

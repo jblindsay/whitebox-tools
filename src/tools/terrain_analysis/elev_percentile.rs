@@ -222,28 +222,46 @@ impl WhiteboxTool for ElevPercentile {
                 };
             } else if flag_val == "-filter" {
                 filter_size_x = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
                 filter_size_y = filter_size_x;
             } else if flag_val == "-filterx" {
                 filter_size_x = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-filtery" {
                 filter_size_y = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-sig_digits" {
                 num_sig_digits = if keyval {
-                    vec[1].to_string().parse::<i32>().unwrap()
+                    vec[1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<i32>().unwrap()
+                    args[i + 1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

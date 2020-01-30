@@ -469,7 +469,8 @@ impl WhiteboxTool for LidarTileFootprint {
 
         if output.projection.is_empty() {
             let input_file = inputs[0].replace("\"", "").clone();
-            let mut input = LasFile::new(&input_file, "r")?;
+            let mut input = LasFile::new(&input_file, "rh")?;
+            // let mut input =  LasHeader::read_las_header(&input_file)?;
             output.projection = input.get_wkt().clone();
         }
 

@@ -241,28 +241,56 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 }
             } else if flag_val == "-start_clusters" {
                 if keyval {
-                    num_classes = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    num_classes = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    num_classes = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    num_classes = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             } else if flag_val == "-merge_dist" || flag_val == "-merger_dist" {
                 if keyval {
-                    merger_dist = vec[1].to_string().parse::<f64>().unwrap();
+                    merger_dist = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    merger_dist = args[i + 1].to_string().parse::<f64>().unwrap();
+                    merger_dist = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
                 merger_dist *= merger_dist;
             } else if flag_val == "-max_iterations" {
                 if keyval {
-                    max_iterations = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    max_iterations = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    max_iterations = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    max_iterations = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             } else if flag_val == "-class_change" {
                 if keyval {
-                    percent_changed_threshold = vec[1].to_string().parse::<f64>().unwrap();
+                    percent_changed_threshold = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    percent_changed_threshold = args[i + 1].to_string().parse::<f64>().unwrap();
+                    percent_changed_threshold = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
                 // } else if flag_val == "-initialize" {
                 //     if keyval {
@@ -276,9 +304,9 @@ impl WhiteboxTool for ModifiedKMeansClustering {
                 //     }
                 // } else if flag_val == "-min_class_size" {
                 //     if keyval {
-                //         min_class_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                //         min_class_size = vec[1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize;
                 //     } else {
-                //         min_class_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                //         min_class_size = args[i + 1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize;
                 //     }
             }
         }

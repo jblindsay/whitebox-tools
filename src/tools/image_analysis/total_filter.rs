@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/06/2017
-Last Modified: 13/10/2018
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -165,36 +165,61 @@ impl WhiteboxTool for TotalFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if flag_val == "-filter" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
                 filter_size_y = filter_size_x;
-            } else if vec[0].to_lowercase() == "-filterx" || vec[0].to_lowercase() == "--filterx" {
+            } else if flag_val == "-filterx" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
-            } else if vec[0].to_lowercase() == "-filtery" || vec[0].to_lowercase() == "--filtery" {
+            } else if flag_val == "-filtery" {
                 if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_y = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_y = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             }
         }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 11/07/2017
-Last Modified: 30/01/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -167,36 +167,54 @@ impl WhiteboxTool for CreatePlane {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-base" || vec[0].to_lowercase() == "--base" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-base" {
                 if keyval {
                     base_file = vec[1].to_string();
                 } else {
                     base_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-slope" || vec[0].to_lowercase() == "--slope" {
+            } else if flag_val == "-slope" {
                 if keyval {
-                    slope = vec[1].to_string().parse::<f64>().unwrap();
+                    slope = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    slope = args[i + 1].to_string().parse::<f64>().unwrap();
+                    slope = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-aspect" || vec[0].to_lowercase() == "--aspect" {
+            } else if flag_val == "-aspect" {
                 if keyval {
-                    aspect = vec[1].to_string().parse::<f64>().unwrap();
+                    aspect = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    aspect = args[i + 1].to_string().parse::<f64>().unwrap();
+                    aspect = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-constant" || vec[0].to_lowercase() == "--constant"
-            {
+            } else if flag_val == "-constant" {
                 if keyval {
-                    constant_val = vec[1].to_string().parse::<f64>().unwrap();
+                    constant_val = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    constant_val = args[i + 1].to_string().parse::<f64>().unwrap();
+                    constant_val = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

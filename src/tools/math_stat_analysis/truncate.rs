@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 06/07/2017
-Last Modified: 26/10/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -149,25 +149,32 @@ impl WhiteboxTool for Truncate {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-num_decimals"
-                || vec[0].to_lowercase() == "--num_decimals"
-            {
+            } else if flag_val == "-num_decimals" {
                 if keyval {
-                    num_decimals = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    num_decimals = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    num_decimals = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    num_decimals = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             }
         }

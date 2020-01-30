@@ -195,28 +195,52 @@ impl WhiteboxTool for HighPassMedianFilter {
                 }
             } else if flag_val == "-filter" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
                 filter_size_y = filter_size_x;
             } else if flag_val == "-filterx" {
                 if keyval {
-                    filter_size_x = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_x = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_x = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             } else if flag_val == "-filtery" {
                 if keyval {
-                    filter_size_y = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_y = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size_y = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size_y = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             } else if flag_val == "-sig_digits" {
                 if keyval {
-                    num_sig_digits = vec[1].to_string().parse::<i32>().unwrap();
+                    num_sig_digits = vec[1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    num_sig_digits = args[i + 1].to_string().parse::<i32>().unwrap();
+                    num_sig_digits = args[i + 1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

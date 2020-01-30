@@ -260,15 +260,27 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 }
             } else if flag_val == "-resolution" {
                 if keyval {
-                    grid_res = vec[1].to_string().parse::<f64>().unwrap();
+                    grid_res = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    grid_res = args[i + 1].to_string().parse::<f64>().unwrap();
+                    grid_res = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-radius" {
                 if keyval {
-                    search_radius = vec[1].to_string().parse::<f64>().unwrap();
+                    search_radius = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    search_radius = args[i + 1].to_string().parse::<f64>().unwrap();
+                    search_radius = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-palette" {
                 if keyval {
@@ -296,15 +308,27 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                 }
             } else if flag_val == "-minz" {
                 if keyval {
-                    min_z = vec[1].to_string().parse::<f64>().unwrap();
+                    min_z = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    min_z = args[i + 1].to_string().parse::<f64>().unwrap();
+                    min_z = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-maxz" {
                 if keyval {
-                    max_z = vec[1].to_string().parse::<f64>().unwrap();
+                    max_z = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    max_z = args[i + 1].to_string().parse::<f64>().unwrap();
+                    max_z = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

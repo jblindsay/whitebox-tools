@@ -255,9 +255,15 @@ impl WhiteboxTool for LidarTINGridding {
                 };
             } else if flag_val == "-resolution" {
                 grid_res = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-exclude_cls" {
                 exclude_cls_str = if keyval {
@@ -273,27 +279,63 @@ impl WhiteboxTool for LidarTINGridding {
                 }
                 for value in vec {
                     if !value.trim().is_empty() {
-                        let c = value.trim().parse::<usize>().unwrap();
-                        include_class_vals[c] = false;
+                        if value.contains("-") {
+                            cmd = value.split("-");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else if value.contains("...") {
+                            cmd = value.split("...");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else {
+                            let c = value.trim().parse::<usize>().unwrap();
+                            include_class_vals[c] = false;
+                        }
                     }
                 }
             } else if flag_val == "-minz" {
                 min_z = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-maxz" {
                 max_z = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-max_triangle_edge_length" {
                 max_triangle_edge_length = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
 
                 max_triangle_edge_length *= max_triangle_edge_length; // actually squared distance

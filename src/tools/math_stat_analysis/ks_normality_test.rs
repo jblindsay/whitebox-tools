@@ -174,9 +174,15 @@ impl WhiteboxTool for KsTestForNormality {
                 };
             } else if flag_val == "-num_samples" {
                 num_samples = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             }
         }

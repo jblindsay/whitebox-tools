@@ -489,11 +489,13 @@ impl LasFile {
             false => {
                 let mut f = File::open(&self.file_name)?;
                 let metadata = fs::metadata(&self.file_name)?;
-                let file_size: usize = if self.file_mode != "rh" {
-                    metadata.len() as usize
-                } else {
-                    375 // the size of the header
-                };
+                // let file_size: usize = if self.file_mode != "rh" {
+                //     metadata.len() as usize
+                // } else {
+                //     375 // the size of the header
+                // };
+
+                let file_size: usize = metadata.len() as usize;
 
                 let mut buffer = vec![0; file_size]; // Vec::with_capacity(file_size);
                 if file_size < 1024 * 1024 * 500 {
@@ -652,46 +654,49 @@ impl LasFile {
             self.header.number_of_points = 0;
         }
 
-        if self.file_mode != "rh" {
-            // file_mode = "rh" does not read points or the VLR data, only the header.
+        // if self.file_mode != "rh" {
+        // file_mode = "rh" does not read points or the VLR data, only the header.
 
-            ///////////////////////
-            // Read the VLR data //
-            ///////////////////////
-            bor.seek(self.header.header_size as usize);
-            for _ in 0..self.header.number_of_vlrs {
-                let mut vlr: Vlr = Default::default();
-                vlr.reserved = bor.read_u16()?;
-                vlr.user_id = bor.read_utf8(16);
-                vlr.record_id = bor.read_u16()?;
-                vlr.record_length_after_header = bor.read_u16()?;
-                vlr.description = bor.read_utf8(32);
-                // get the byte data
-                for _ in 0..vlr.record_length_after_header {
-                    vlr.binary_data.push(bor.read_u8()?);
-                }
-
-                if vlr.record_id == 34_735 {
-                    self.geokeys
-                        .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
-                } else if vlr.record_id == 34_736 {
-                    self.geokeys
-                        .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
-                } else if vlr.record_id == 34_737 {
-                    self.geokeys.add_ascii_params(&vlr.binary_data);
-                } else if vlr.record_id == 2112 {
-                    let skip = if vlr.binary_data[vlr.binary_data.len() - 1] == 0u8 {
-                        1
-                    } else {
-                        0
-                    };
-                    self.wkt =
-                        String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len() - skip])
-                            .trim()
-                            .to_string();
-                }
-                self.vlr_data.push(vlr);
+        ///////////////////////
+        // Read the VLR data //
+        ///////////////////////
+        bor.seek(self.header.header_size as usize);
+        for _ in 0..self.header.number_of_vlrs {
+            let mut vlr: Vlr = Default::default();
+            vlr.reserved = bor.read_u16()?;
+            vlr.user_id = bor.read_utf8(16);
+            vlr.record_id = bor.read_u16()?;
+            vlr.record_length_after_header = bor.read_u16()?;
+            vlr.description = bor.read_utf8(32);
+            // get the byte data
+            for _ in 0..vlr.record_length_after_header {
+                vlr.binary_data.push(bor.read_u8()?);
             }
+
+            if vlr.record_id == 34_735 {
+                self.geokeys
+                    .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
+            } else if vlr.record_id == 34_736 {
+                self.geokeys
+                    .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
+            } else if vlr.record_id == 34_737 {
+                self.geokeys.add_ascii_params(&vlr.binary_data);
+            } else if vlr.record_id == 2112 {
+                let skip = if vlr.binary_data[vlr.binary_data.len() - 1] == 0u8 {
+                    1
+                } else {
+                    0
+                };
+                self.wkt =
+                    String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len() - skip])
+                        .trim()
+                        .to_string();
+            }
+            self.vlr_data.push(vlr);
+        }
+
+        if self.file_mode != "rh" {
+            // file_mode = "rh" does not read points, only the header and VLR data.
 
             /////////////////////////
             // Read the point data //

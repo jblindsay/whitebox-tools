@@ -204,7 +204,11 @@ impl WhiteboxTool for FindFlightlineEdgePoints {
                 println!("Writing output LAS file...");
             }
             let _ = match output.write() {
-                Ok(_) => println!("Complete!"),
+                Ok(_) => {
+                    if verbose {
+                        println!("Complete!")
+                    }
+                }
                 Err(e) => println!("error while writing: {:?}", e),
             };
         } else {

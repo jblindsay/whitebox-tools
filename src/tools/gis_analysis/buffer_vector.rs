@@ -200,17 +200,17 @@
 //                 };
 //             } else if flag_val.contains("-dist") {
 //                 distance = if keyval {
-//                     vec[1].to_string().parse::<f64>().unwrap()
+//                     vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
 //                 } else {
-//                     args[i + 1].to_string().parse::<f64>().unwrap()
+//                     args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
 //                 };
 //             } else if flag_val == "-dissolve" {
 //                 dissolve = true;
 //             } else if flag_val == "-snap" {
 //                 precision = if keyval {
-//                     vec[1].to_string().parse::<f64>().unwrap()
+//                     vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
 //                 } else {
-//                     args[i + 1].to_string().parse::<f64>().unwrap()
+//                     args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
 //                 };
 //                 if precision < EPSILON {
 //                     precision = EPSILON;

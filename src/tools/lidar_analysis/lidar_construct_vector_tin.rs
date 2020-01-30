@@ -235,15 +235,27 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                 }
             } else if flag_val == "-minz" {
                 if keyval {
-                    min_z = vec[1].to_string().parse::<f64>().unwrap();
+                    min_z = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    min_z = args[i + 1].to_string().parse::<f64>().unwrap();
+                    min_z = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-maxz" {
                 if keyval {
-                    max_z = vec[1].to_string().parse::<f64>().unwrap();
+                    max_z = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    max_z = args[i + 1].to_string().parse::<f64>().unwrap();
+                    max_z = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

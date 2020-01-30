@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/07/2017
-Last Modified: 13/10/2018
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -174,35 +174,42 @@ impl WhiteboxTool for DirectDecorrelationStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "-input"
-                || vec[0].to_lowercase() == "--input"
-            {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-k" || vec[0].to_lowercase() == "--k" {
+            } else if flag_val == "-k" {
                 if keyval {
-                    achromatic_factor = vec[1].to_string().parse::<f64>().unwrap();
+                    achromatic_factor = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    achromatic_factor = args[i + 1].to_string().parse::<f64>().unwrap();
+                    achromatic_factor = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-clip_percent"
-                || vec[0].to_lowercase() == "--clip_percent"
-                || vec[0].to_lowercase() == "--clip"
-            {
+            } else if flag_val == "-clip_percent" || flag_val == "-clip" {
                 if keyval {
-                    clip_percent = vec[1].to_string().parse::<f64>().unwrap();
+                    clip_percent = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    clip_percent = args[i + 1].to_string().parse::<f64>().unwrap();
+                    clip_percent = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
                 if clip_percent < 0f64 {
                     clip_percent = 0f64;

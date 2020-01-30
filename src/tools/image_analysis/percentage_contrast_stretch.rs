@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 13/07/2017
-Last Modified: 22/10/2019
+Last Modified: 30/01/2020
 License: MIT
 
 NOTES: 1. The tool should be updated to take multiple file inputs.
@@ -190,28 +190,32 @@ impl WhiteboxTool for PercentageContrastStretch {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
+            } else if flag_val == "-clip" {
                 if keyval {
-                    clip = vec[1].to_string().parse::<f64>().unwrap();
+                    clip = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    clip = args[i + 1].to_string().parse::<f64>().unwrap();
+                    clip = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
-            } else if vec[0].to_lowercase() == "-tail"
-                || vec[0].to_lowercase() == "--tail"
-                || vec[0].to_lowercase() == "--tails"
-            {
+            } else if flag_val == "-tail" || flag_val == "-tails" {
                 if keyval {
                     tail = vec[1].to_string();
                 } else {
@@ -224,13 +228,17 @@ impl WhiteboxTool for PercentageContrastStretch {
                 } else {
                     tail = String::from("both");
                 }
-            } else if vec[0].to_lowercase() == "-num_tones"
-                || vec[0].to_lowercase() == "--num_tones"
-            {
+            } else if flag_val == "-num_tones" {
                 if keyval {
-                    num_tones = vec[1].to_string().parse::<f64>().unwrap();
+                    num_tones = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    num_tones = args[i + 1].to_string().parse::<f64>().unwrap();
+                    num_tones = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

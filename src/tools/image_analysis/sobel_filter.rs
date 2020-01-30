@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/06/2017
-Last Modified: 22/10/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -185,19 +185,20 @@ impl WhiteboxTool for SobelFilter {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-variant" || vec[0].to_lowercase() == "--variant" {
+            } else if flag_val == "-variant" {
                 if keyval {
                     variant = vec[1].to_string();
                 } else {
@@ -208,11 +209,17 @@ impl WhiteboxTool for SobelFilter {
                 } else {
                     variant = "3x3".to_string();
                 }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
+            } else if flag_val == "-clip" {
                 if keyval {
-                    clip_amount = vec[1].to_string().parse::<f64>().unwrap();
+                    clip_amount = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    clip_amount = args[i + 1].to_string().parse::<f64>().unwrap();
+                    clip_amount = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
                 if clip_amount < 0.0 {
                     clip_amount = 0.0;

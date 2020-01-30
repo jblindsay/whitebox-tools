@@ -211,15 +211,27 @@ impl WhiteboxTool for LidarElevationSlice {
                 };
             } else if flag_val == "-maxz" {
                 maxz = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-minz" {
                 minz = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-class" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
@@ -459,7 +471,11 @@ impl WhiteboxTool for LidarElevationSlice {
                 println!("Writing output LAS file...");
             }
             let _ = match output.write() {
-                Ok(_) => println!("Complete!"),
+                Ok(_) => {
+                    if verbose {
+                        println!("Complete!")
+                    }
+                }
                 Err(e) => println!("error while writing: {:?}", e),
             };
         } else {

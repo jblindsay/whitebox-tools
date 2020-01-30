@@ -63,6 +63,9 @@ Version 1.0.1 (XX-XX-20XX)
 - Added the RasterPerimeter tool to measure the perimeter of raster polygons.
 - Modified the LidarRbfInterpolation tool to improve efficiency.
 - Fixed an issue with how floating point attributes were written in Shapefile attribute tables.
+- Updated the LidarSegmentation tool, which now used RANSAC to fit planar models to points.
+- Added the HeightAboveGround tool, to normalize a LiDAR point cloud. Each point's z-value is
+  converted to the height above the nearest ground-classified point.
 
 Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 

@@ -47,8 +47,12 @@ use std::thread;
 /// Planes that have slopes greater than this threshold are rejected by the algorithm. This has the side-effect
 /// of removing building walls however.
 ///
+/// # References
+/// Fischler MA and Bolles RC. 1981. Random sample consensus: a paradigm for model fitting with applications
+/// to image analysis and automated cartography. Commun. ACM, 24(6):381–395.
+///
 /// # See Also
-/// `LidarGroundPointFilter`
+/// `LidarSegmentation`, `LidarGroundPointFilter`
 pub struct LidarRansacPlanes {
     name: String,
     description: String,
@@ -252,39 +256,57 @@ impl WhiteboxTool for LidarRansacPlanes {
                 };
             } else if flag_val == "-radius" {
                 search_radius = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-num_iter" {
                 num_iter = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-num_samples" {
                 num_samples = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-threshold" {
                 threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-model_size" {
                 acceptable_model_size = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-max_slope" {
                 max_slope = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-classify" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
@@ -672,7 +694,11 @@ impl WhiteboxTool for LidarRansacPlanes {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

@@ -382,6 +382,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1074,7 +1075,7 @@ class WhiteboxTools(object):
         use_z -- Use z-coordinate instead of field?. 
         output -- Output raster file. 
         weight -- IDW weight value. 
-        radius -- Search Radius. 
+        radius -- Search Radius in map units. 
         min_points -- Minimum number of points. 
         cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
         base -- Optionally specified input base raster file. Not used when a cell size is specified. 
@@ -1286,6 +1287,38 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('polygon_short_axis', args, callback) # returns 1 if error
 
+    def radial_basis_function_interpolation(self, i, field, output, use_z=False, radius=None, min_points=None, func_type="ThinPlateSpline", poly_order="none", weight=0.1, cell_size=None, base=None, callback=None):
+        """Interpolates vector points into a raster surface using a radial basis function scheme.
+
+        Keyword arguments:
+
+        i -- Input vector points file. 
+        field -- Input field name in attribute table. 
+        use_z -- Use z-coordinate instead of field?. 
+        output -- Output raster file. 
+        radius -- Search Radius (in map units). 
+        min_points -- Minimum number of points. 
+        func_type -- Radial basis function type; options are 'ThinPlateSpline' (default), 'PolyHarmonic', 'Gaussian', 'MultiQuadric', 'InverseMultiQuadric'. 
+        poly_order -- Polynomial order; options are 'none' (default), 'constant', 'affine'. 
+        weight -- Weight parameter used in basis function. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field='{}'".format(field))
+        if use_z: args.append("--use_z")
+        args.append("--output='{}'".format(output))
+        if radius is not None: args.append("--radius='{}'".format(radius))
+        if min_points is not None: args.append("--min_points='{}'".format(min_points))
+        args.append("--func_type={}".format(func_type))
+        args.append("--poly_order={}".format(poly_order))
+        args.append("--weight={}".format(weight))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('radial_basis_function_interpolation', args, callback) # returns 1 if error
+
     def raster_area(self, i, output=None, out_text=False, units="grid cells", zero_back=False, callback=None):
         """Calculates the area of polygons or classes within a raster image.
 
@@ -1321,6 +1354,26 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         args.append("--assign={}".format(assign))
         return self.run_tool('raster_cell_assignment', args, callback) # returns 1 if error
+
+    def raster_perimeter(self, i, output=None, out_text=False, units="grid cells", zero_back=False, callback=None):
+        """Calculates the perimeters of polygons or classes within a raster image.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        out_text -- Would you like to output polygon areas to text?. 
+        units -- Area units; options include 'grid cells' and 'map units'. 
+        zero_back -- Flag indicating whether zero values should be treated as a background. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        if out_text: args.append("--out_text")
+        args.append("--units={}".format(units))
+        if zero_back: args.append("--zero_back")
+        return self.run_tool('raster_perimeter', args, callback) # returns 1 if error
 
     def reclass(self, i, output, reclass_vals, assign_mode=False, callback=None):
         """Reclassifies the values in a raster image.
@@ -2661,6 +2714,32 @@ class WhiteboxTools(object):
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         return self.run_tool('min_downslope_elev_change', args, callback) # returns 1 if error
+
+    def multiscale_elevation_percentile(self, dem, out_mag, out_scale, sig_digits=3, min_scale=4, step=1, num_steps=10, step_nonlinearity=1.0, callback=None):
+        """Calculates surface roughness over a range of spatial scales.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        out_mag -- Output raster roughness magnitude file. 
+        out_scale -- Output raster roughness scale file. 
+        sig_digits -- Number of significant digits. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        num_steps -- Number of steps. 
+        step_nonlinearity -- Step nonlinearity factor (1.0-2.0 is typical). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--out_mag='{}'".format(out_mag))
+        args.append("--out_scale='{}'".format(out_scale))
+        args.append("--sig_digits={}".format(sig_digits))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--step={}".format(step))
+        args.append("--num_steps={}".format(num_steps))
+        args.append("--step_nonlinearity={}".format(step_nonlinearity))
+        return self.run_tool('multiscale_elevation_percentile', args, callback) # returns 1 if error
 
     def multiscale_roughness(self, dem, out_mag, out_scale, max_scale, min_scale=1, step=1, callback=None):
         """Calculates surface roughness over a range of spatial scales.
@@ -5380,6 +5459,20 @@ class WhiteboxTools(object):
         args.append("--resolution={}".format(resolution))
         return self.run_tool('flightline_overlap', args, callback) # returns 1 if error
 
+    def height_above_ground(self, i=None, output=None, callback=None):
+        """Normalizes a LiDAR point cloud, providing the height above the nearest ground-classified point.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        return self.run_tool('height_above_ground', args, callback) # returns 1 if error
+
     def las_to_ascii(self, inputs, callback=None):
         """Converts one or more LAS files into ASCII text files.
 
@@ -5776,8 +5869,8 @@ class WhiteboxTools(object):
         if predom_class: args.append("--predom_class")
         return self.run_tool('lidar_point_stats', args, callback) # returns 1 if error
 
-    def lidar_ransac_planes(self, i, output, radius=2.0, num_iter=50, num_samples=5, threshold=0.35, model_size=8, classify=False, callback=None):
-        """Removes outliers (high and low points) in a LiDAR point cloud.
+    def lidar_ransac_planes(self, i, output, radius=2.0, num_iter=50, num_samples=5, threshold=0.35, model_size=8, max_slope=80.0, classify=False, callback=None):
+        """Performs a RANSAC analysis to identify points within a LiDAR point cloud that belong to linear planes.
 
         Keyword arguments:
 
@@ -5786,8 +5879,9 @@ class WhiteboxTools(object):
         radius -- Search Radius. 
         num_iter -- Number of iterations. 
         num_samples -- Number of sample points on which to build the model. 
-        threshold -- Threshold used to determine inliner points. 
+        threshold -- Threshold used to determine inlier points. 
         model_size -- Acceptable model size. 
+        max_slope -- Maximum planar slope. 
         classify -- Classify points as ground (2) or off-ground (1). 
         callback -- Custom function for handling tool text outputs.
         """
@@ -5799,8 +5893,43 @@ class WhiteboxTools(object):
         args.append("--num_samples={}".format(num_samples))
         args.append("--threshold={}".format(threshold))
         args.append("--model_size={}".format(model_size))
+        args.append("--max_slope={}".format(max_slope))
         if classify: args.append("--classify")
         return self.run_tool('lidar_ransac_planes', args, callback) # returns 1 if error
+
+    def lidar_rbf_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, num_points=20, exclude_cls=None, minz=None, maxz=None, func_type="ThinPlateSpline", poly_order="none", weight=5, callback=None):
+        """Interpolates LAS files using a radial basis function (RBF) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
+        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
+        resolution -- Output raster's grid resolution. 
+        num_points -- Number of points. 
+        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        func_type -- Radial basis function type; options are 'ThinPlateSpline' (default), 'PolyHarmonic', 'Gaussian', 'MultiQuadric', 'InverseMultiQuadric'. 
+        poly_order -- Polynomial order; options are 'none' (default), 'constant', 'affine'. 
+        weight -- Weight parameter used in basis function. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--parameter={}".format(parameter))
+        args.append("--returns={}".format(returns))
+        args.append("--resolution={}".format(resolution))
+        args.append("--num_points={}".format(num_points))
+        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        args.append("--func_type={}".format(func_type))
+        args.append("--poly_order={}".format(poly_order))
+        args.append("--weight={}".format(weight))
+        return self.run_tool('lidar_rbf_interpolation', args, callback) # returns 1 if error
 
     def lidar_remove_duplicates(self, i, output, include_z=False, callback=None):
         """Removes duplicate points from a LiDAR data set.
@@ -5840,62 +5969,38 @@ class WhiteboxTools(object):
         if classify: args.append("--classify")
         return self.run_tool('lidar_remove_outliers', args, callback) # returns 1 if error
 
-    def lidar_rfb_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, func_type="ThinPlateSpline", poly_order="none", weight=0.1, callback=None):
-        """Interpolates LAS files using a radial basis function (RFB) scheme. When the input/output parameters are not specified, the tool interpolates all LAS files contained within the working directory.
-
-        Keyword arguments:
-
-        i -- Input LiDAR file (including extension). 
-        output -- Output raster file (including extension). 
-        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
-        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
-        resolution -- Output raster's grid resolution. 
-        radius -- Search Radius. 
-        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
-        minz -- Optional minimum elevation for inclusion in interpolation. 
-        maxz -- Optional maximum elevation for inclusion in interpolation. 
-        func_type -- Radial basis function type; options are 'ThinPlateSpline' (default), 'PolyHarmonic', 'Gaussian', 'MultiQuadric', 'InverseMultiQuadric'. 
-        poly_order -- Polynomial order; options are 'none' (default), 'constant', 'affine'. 
-        weight -- Weight parameter used in basis function. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        if i is not None: args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
-        args.append("--parameter={}".format(parameter))
-        args.append("--returns={}".format(returns))
-        args.append("--resolution={}".format(resolution))
-        args.append("--radius={}".format(radius))
-        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
-        if minz is not None: args.append("--minz='{}'".format(minz))
-        if maxz is not None: args.append("--maxz='{}'".format(maxz))
-        args.append("--func_type={}".format(func_type))
-        args.append("--poly_order={}".format(poly_order))
-        args.append("--weight={}".format(weight))
-        return self.run_tool('lidar_rfb_interpolation', args, callback) # returns 1 if error
-
-    def lidar_segmentation(self, i, output, radius=5.0, norm_diff=10.0, maxzdiff=1.0, classes=False, min_size=1, callback=None):
-        """Segments a LiDAR point cloud based on normal vectors.
+    def lidar_segmentation(self, i, output, radius=2.0, num_iter=50, num_samples=10, threshold=0.15, model_size=15, max_slope=80.0, norm_diff=10.0, maxzdiff=1.0, classes=False, ground=False, callback=None):
+        """Segments a LiDAR point cloud based on differences in the orientation of fitted planar surfaces and point proximity.
 
         Keyword arguments:
 
         i -- Input LiDAR file. 
-        output -- Output file. 
+        output -- Output LiDAR file. 
         radius -- Search Radius. 
+        num_iter -- Number of iterations. 
+        num_samples -- Number of sample points on which to build the model. 
+        threshold -- Threshold used to determine inlier points. 
+        model_size -- Acceptable model size. 
+        max_slope -- Maximum planar slope. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
         maxzdiff -- Maximum difference in elevation (z units) between neighbouring points of the same segment. 
         classes -- Segments don't cross class boundaries. 
-        min_size -- Minimum segment size (number of points). 
+        ground -- Classify the largest segment as ground points?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
+        args.append("--num_iter={}".format(num_iter))
+        args.append("--num_samples={}".format(num_samples))
+        args.append("--threshold={}".format(threshold))
+        args.append("--model_size={}".format(model_size))
+        args.append("--max_slope={}".format(max_slope))
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--maxzdiff={}".format(maxzdiff))
         if classes: args.append("--classes")
-        args.append("--min_size={}".format(min_size))
+        if ground: args.append("--ground")
         return self.run_tool('lidar_segmentation', args, callback) # returns 1 if error
 
     def lidar_segmentation_based_filter(self, i, output, radius=5.0, norm_diff=2.0, maxzdiff=1.0, classify=False, callback=None):
@@ -6277,7 +6382,7 @@ class WhiteboxTools(object):
 
         Keyword arguments:
 
-        i -- Input raster file. 
+        i -- Input vector file. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
         callback -- Custom function for handling tool text outputs.
         """
@@ -6285,6 +6390,28 @@ class WhiteboxTools(object):
         args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         return self.run_tool('attribute_correlation', args, callback) # returns 1 if error
+
+    def attribute_correlation_neighbourhood_analysis(self, i, field1, field2, radius=None, min_points=None, stat="pearson", callback=None):
+        """Performs a correlation on two input vector attributes within a neighbourhood search windows.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        field1 -- First input field name (dependent variable) in attribute table. 
+        field2 -- Second input field name (independent variable) in attribute table. 
+        radius -- Search Radius (in map units). 
+        min_points -- Minimum number of points. 
+        stat -- Correlation type; one of 'pearson' (default) and 'spearman'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--field1='{}'".format(field1))
+        args.append("--field2='{}'".format(field2))
+        if radius is not None: args.append("--radius='{}'".format(radius))
+        if min_points is not None: args.append("--min_points='{}'".format(min_points))
+        args.append("--stat={}".format(stat))
+        return self.run_tool('attribute_correlation_neighbourhood_analysis', args, callback) # returns 1 if error
 
     def attribute_histogram(self, i, field, output, callback=None):
         """Creates a histogram for the field values of a vector's attribute table.

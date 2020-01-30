@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 07/08/2019
-Last Modified: 07/08/2019
+Last Modified: 28/01/2020
 License: MIT
 */
 
@@ -188,21 +188,39 @@ impl WhiteboxTool for CsvPointsToVector {
                 };
             } else if flag_val == "-xfield" {
                 x_field = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-yfield" {
                 y_field = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-epsg" {
                 epsg = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as u16
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as u16
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as u16
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as u16
                 };
                 projection_set = true;
             }
@@ -283,9 +301,13 @@ impl WhiteboxTool for CsvPointsToVector {
                     }
                     if record_num == 1 {
                         // the first data record
-                        for i in 0..csv_num_fields {
-                            field_types.push(get_type(line_vec[i]));
-                            field_indices_to_append.push(i);
+                        for a in 0..csv_num_fields {
+                            if a == x_field || a == y_field {
+                                field_types.push(FieldDataType::Real); // It has to be floating point data.
+                            } else {
+                                field_types.push(get_type(line_vec[a]));
+                            }
+                            field_indices_to_append.push(a);
                         }
                         field_lengths = vec![0u8; csv_num_fields];
                         field_precision = vec![0u8; csv_num_fields];
@@ -295,25 +317,34 @@ impl WhiteboxTool for CsvPointsToVector {
                         if line_vec[a].len() as u8 > field_lengths[a] {
                             field_lengths[a] = line_vec[a].len() as u8;
                         }
-                        match field_types[a] {
-                            FieldDataType::Int => imported_data
-                                .push(FieldData::Int(line_vec[a].trim().parse::<i32>().unwrap())),
-                            FieldDataType::Real => {
-                                let prec = get_precision(line_vec[a]);
-                                if prec > field_precision[a] {
-                                    field_precision[a] = prec;
+                        if a == x_field || a == y_field {
+                            let prec = get_precision(line_vec[a]);
+                            if prec > field_precision[a] {
+                                field_precision[a] = prec;
+                            }
+                            imported_data
+                                .push(FieldData::Real(line_vec[a].trim().parse::<f64>().unwrap()))
+                        } else {
+                            match field_types[a] {
+                                FieldDataType::Int => imported_data.push(FieldData::Int(
+                                    line_vec[a].trim().parse::<i32>().unwrap(),
+                                )),
+                                FieldDataType::Real => {
+                                    let prec = get_precision(line_vec[a]);
+                                    if prec > field_precision[a] {
+                                        field_precision[a] = prec;
+                                    }
+                                    imported_data.push(FieldData::Real(
+                                        line_vec[a].trim().parse::<f64>().unwrap(),
+                                    ))
                                 }
-                                imported_data.push(FieldData::Real(
-                                    line_vec[a].trim().parse::<f64>().unwrap(),
-                                ))
-                            }
-                            FieldDataType::Bool => imported_data
-                                .push(FieldData::Bool(line_vec[a].trim().parse::<bool>().unwrap())),
-                            FieldDataType::Text => {
-                                imported_data.push(FieldData::Text(line_vec[a].trim().to_string()))
-                            }
-                            FieldDataType::Date => {
-                                imported_data.push(FieldData::Text(line_vec[a].trim().to_string()))
+                                FieldDataType::Bool => imported_data.push(FieldData::Bool(
+                                    line_vec[a].trim().parse::<bool>().unwrap(),
+                                )),
+                                FieldDataType::Text => imported_data
+                                    .push(FieldData::Text(line_vec[a].trim().to_string())),
+                                FieldDataType::Date => imported_data
+                                    .push(FieldData::Text(line_vec[a].trim().to_string())),
                             }
                         }
                     }

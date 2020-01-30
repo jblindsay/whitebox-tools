@@ -180,15 +180,27 @@ impl WhiteboxTool for LidarThinHighDensity {
                 };
             } else if flag_val == "-resolution" {
                 grid_res = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-density" {
                 density = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-save_filtered" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
@@ -383,7 +395,11 @@ impl WhiteboxTool for LidarThinHighDensity {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

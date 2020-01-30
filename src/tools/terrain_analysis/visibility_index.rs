@@ -193,15 +193,27 @@ impl WhiteboxTool for VisibilityIndex {
                 };
             } else if flag_val == "-height" {
                 height = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-res_factor" {
                 res_factor = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as isize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as isize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as isize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as isize
                 };
             }
         }

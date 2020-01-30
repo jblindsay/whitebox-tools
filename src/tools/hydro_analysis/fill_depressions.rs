@@ -220,15 +220,27 @@ impl WhiteboxTool for FillDepressions {
                 }
             } else if flag_val == "-flat_increment" {
                 flat_increment = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-max_depth" {
                 max_depth = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }
@@ -348,6 +360,7 @@ impl WhiteboxTool for FillDepressions {
 
         // Now we need to perform an in-place depression filling
         let mut minheap = BinaryHeap::new();
+        let mut minheap2 = BinaryHeap::new();
         let mut visited: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
         let mut flats: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
         let mut possible_outlets = vec![];
@@ -356,11 +369,16 @@ impl WhiteboxTool for FillDepressions {
         let mut pit_id = 1;
         let mut flag: bool;
         let mut z_pit: f64;
+
+        let mut outlet_found: bool;
+        let mut outlet_z: f64;
+        let mut queue = VecDeque::new();
+
         while let Some(cell) = undefined_flow_cells.pop() {
             row = cell.0;
             col = cell.1;
+            // if it's already in a solved site, don't do it a second time.
             if flats.get_value(row, col) != 1 {
-                // if it's already in a solved site, don't do it a second time.
                 // First there is a priority region-growing operation to find the outlets.
                 z_pit = output.get_value(row, col);
                 minheap.clear();
@@ -370,16 +388,18 @@ impl WhiteboxTool for FillDepressions {
                     priority: z_pit,
                 });
                 visited.set_value(row, col, 1);
-                let mut outlet_found = false;
-                let mut outlet_z = f64::INFINITY;
-                let mut queue = VecDeque::new();
+                outlet_found = false;
+                outlet_z = f64::INFINITY;
+                if !queue.is_empty() {
+                    queue.clear();
+                }
                 while let Some(cell2) = minheap.pop() {
                     z = cell2.priority;
                     if outlet_found && z > outlet_z {
                         break;
                     }
                     if z - z_pit > max_depth {
-                        // no outlet could be found that was low enough.
+                        // No outlet could be found that was low enough.
                         break;
                     }
                     if !outlet_found {
@@ -406,7 +426,7 @@ impl WhiteboxTool for FillDepressions {
                                         possible_outlets.push((cell2.row, cell2.column));
                                     }
                                 } else if zn == outlet_z {
-                                    // We've found the outlet but are still looking for additional outlets.
+                                    // We've found the outlet but are still looking for additional depression cells.
                                     minheap.push(GridCell {
                                         row: rn,
                                         column: cn,
@@ -417,6 +437,7 @@ impl WhiteboxTool for FillDepressions {
                             }
                         }
                     } else {
+                        // We've found the outlet but are still looking for additional depression cells and potential outlets.
                         if z == outlet_z {
                             flag = false;
                             for n in 0..8 {
@@ -447,8 +468,9 @@ impl WhiteboxTool for FillDepressions {
                     }
                 }
 
-                // Now that we have the outlets, raise the interior of the depression
                 if outlet_found {
+                    // Now that we have the outlets, raise the interior of the depression.
+                    // Start from the outlets.
                     while let Some(cell2) = queue.pop_front() {
                         for n in 0..8 {
                             rn = cell2.0 + dy[n];
@@ -525,12 +547,15 @@ impl WhiteboxTool for FillDepressions {
             }
 
             let num_outlets = minheap.len();
-
+            let mut outlets = vec![];
             while let Some(cell) = minheap.pop() {
                 if flats.get_value(cell.row, cell.column) != 3 {
                     z = output.get_value(cell.row, cell.column);
                     flats.set_value(cell.row, cell.column, 3);
-                    let mut outlets = vec![];
+                    // let mut outlets = vec![];
+                    if !outlets.is_empty() {
+                        outlets.clear();
+                    }
                     outlets.push(cell);
                     // Are there any other outlet cells at the same elevation (likely for the same feature)
                     flag = true;
@@ -549,8 +574,9 @@ impl WhiteboxTool for FillDepressions {
                             }
                         }
                     }
-                    // let mut queue = VecDeque::new();
-                    let mut minheap2 = BinaryHeap::new();
+                    if !minheap2.is_empty() {
+                        minheap2.clear();
+                    }
                     for cell2 in &outlets {
                         z = output.get_value(cell2.row, cell2.column);
                         for n in 0..8 {

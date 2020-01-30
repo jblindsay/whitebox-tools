@@ -246,47 +246,47 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                 };
             } else if flag_val == "-filter" {
                 filter_size = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-norm_diff" {
                 max_norm_diff = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-num_iter" {
                 num_iter = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1].to_string().parse::<f32>().expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-reduction" {
                 reduction = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 };
                 reduction = reduction.abs();
             } else if flag_val == "-dfm" {
                 dfm_threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 };
                 dfm_threshold = dfm_threshold.abs();
             } else if flag_val == "-zfactor" {
                 z_factor = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-max_diff" {
                 max_z_diff = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

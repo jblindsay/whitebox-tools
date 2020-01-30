@@ -173,9 +173,15 @@ impl WhiteboxTool for TrendSurface {
                 };
             } else if flag_val == "-order" {
                 order = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             }
         }

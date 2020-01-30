@@ -253,27 +253,45 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 };
             } else if flag_val == "-radius" {
                 search_radius = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-min_neighbours" || flag_val == "-min_neighbors" {
                 min_neighbours = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().unwrap()
+                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-height_threshold" {
                 height_threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-slope_threshold" {
                 slope_threshold = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-classify" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {

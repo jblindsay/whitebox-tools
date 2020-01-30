@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/07/2019
-Last Modified: 24/07/2019
+Last Modified: 16/01/2020
 License: MIT
 */
 
@@ -41,7 +41,8 @@ use std::path;
 /// | 18                    | High noise
 ///
 /// Thus, to filter out low and high noise points from a point cloud, specify
-/// `--exclude_cls='7,18'`. Notice that usage of this tool assumes that the
+/// `--exclude_cls='7,18'`. Class ranges may also be specified, e.g. `--exclude_cls='3-5,7,18'`.
+/// Notice that usage of this tool assumes that the
 /// LAS file has underwent a comprehensive point classification, which not all
 /// point clouds have had. Use the `LidarInfo` tool determine the distribution
 /// of various class values in your file.
@@ -203,8 +204,26 @@ impl WhiteboxTool for FilterLidarClasses {
                 }
                 for value in vec {
                     if !value.trim().is_empty() {
-                        let c = value.trim().parse::<usize>().unwrap();
-                        include_class_vals[c] = false;
+                        if value.contains("-") {
+                            cmd = value.split("-");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else if value.contains("...") {
+                            cmd = value.split("...");
+                            vec = cmd.collect::<Vec<&str>>();
+                            let c = vec[0].trim().parse::<usize>().unwrap();
+                            let d = vec[1].trim().parse::<usize>().unwrap();
+                            for e in c..=d {
+                                include_class_vals[e] = false;
+                            }
+                        } else {
+                            let c = value.trim().parse::<usize>().unwrap();
+                            include_class_vals[c] = false;
+                        }
                     }
                 }
             }
@@ -267,7 +286,11 @@ impl WhiteboxTool for FilterLidarClasses {
             println!("Writing output LAS file...");
         }
         let _ = match output.write() {
-            Ok(_) => println!("Complete!"),
+            Ok(_) => {
+                if verbose {
+                    println!("Complete!")
+                }
+            }
             Err(e) => println!("error while writing: {:?}", e),
         };
         if verbose {

@@ -186,15 +186,29 @@ impl WhiteboxTool for FillMissingData {
                 }
             } else if flag_val == "-filter" {
                 if keyval {
-                    filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
             } else if flag_val == "-weight" {
                 weight = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

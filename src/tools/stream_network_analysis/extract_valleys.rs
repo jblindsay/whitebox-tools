@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/07/2017
-Last Modified: 18/10/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -219,19 +219,20 @@ impl WhiteboxTool for ExtractValleys {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-dem" || vec[0].to_lowercase() == "--dem" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-variant" || vec[0].to_lowercase() == "--variant" {
+            } else if flag_val == "-variant" {
                 if keyval {
                     variant = vec[1].to_string();
                 } else {
@@ -245,17 +246,23 @@ impl WhiteboxTool for ExtractValleys {
                     //if variant.to_lowercase().contains("p") {
                     variant = String::from("PandD");
                 }
-            } else if vec[0].to_lowercase() == "-line_thin"
-                || vec[0].to_lowercase() == "--line_thin"
-            {
+            } else if flag_val == "-line_thin" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     line_thin = true;
                 }
-            } else if vec[0].to_lowercase() == "-filter" || vec[0].to_lowercase() == "--filter" {
+            } else if flag_val == "-filter" {
                 if keyval {
-                    filter_size = vec[1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size = vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 } else {
-                    filter_size = args[i + 1].to_string().parse::<f32>().unwrap() as usize;
+                    filter_size = args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                        as usize;
                 }
 
                 //the filter dimensions must be odd numbers such that there is a middle pixel

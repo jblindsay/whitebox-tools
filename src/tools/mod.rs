@@ -273,6 +273,7 @@ impl ToolManager {
         tool_names.push("FilterLidarScanAngles".to_string());
         tool_names.push("FindFlightlineEdgePoints".to_string());
         tool_names.push("FlightlineOverlap".to_string());
+        tool_names.push("HeightAboveGround".to_string());
         tool_names.push("LasToAscii".to_string());
         tool_names.push("LasToMultipointShapefile".to_string());
         tool_names.push("LasToShapefile".to_string());
@@ -827,6 +828,7 @@ impl ToolManager {
                 Some(Box::new(lidar_analysis::FindFlightlineEdgePoints::new()))
             }
             "flightlineoverlap" => Some(Box::new(lidar_analysis::FlightlineOverlap::new())),
+            "heightaboveground" => Some(Box::new(lidar_analysis::HeightAboveGround::new())),
             "lastoascii" => Some(Box::new(lidar_analysis::LasToAscii::new())),
             "lastomultipointshapefile" => {
                 Some(Box::new(lidar_analysis::LasToMultipointShapefile::new()))

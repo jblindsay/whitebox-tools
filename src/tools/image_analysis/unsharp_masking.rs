@@ -195,21 +195,39 @@ impl WhiteboxTool for UnsharpMasking {
                 }
             } else if flag_val == "-sigma" {
                 if keyval {
-                    sigma_d = vec[1].to_string().parse::<f64>().unwrap();
+                    sigma_d = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    sigma_d = args[i + 1].to_string().parse::<f64>().unwrap();
+                    sigma_d = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-amount" {
                 if keyval {
-                    amount = vec[1].to_string().parse::<f64>().unwrap();
+                    amount = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    amount = args[i + 1].to_string().parse::<f64>().unwrap();
+                    amount = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-threshold" {
                 if keyval {
-                    threshold = vec[1].to_string().parse::<f64>().unwrap();
+                    threshold = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    threshold = args[i + 1].to_string().parse::<f64>().unwrap();
+                    threshold = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

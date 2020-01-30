@@ -218,9 +218,15 @@ impl WhiteboxTool for SymmetricalDifference {
                 };
             } else if flag_val == "-snap" {
                 precision = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
                 if precision == 0f64 {
                     precision = std::f64::EPSILON;

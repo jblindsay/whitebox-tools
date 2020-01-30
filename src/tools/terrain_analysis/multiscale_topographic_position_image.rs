@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/07/2017
-Last Modified: 29/01/2019
+Last Modified: 30/01/2020
 License: MIT
 */
 
@@ -185,37 +185,42 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-broad" || vec[0].to_lowercase() == "--broad" {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-broad" {
                 if keyval {
                     input1_file = vec[1].to_string();
                 } else {
                     input1_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-meso" || vec[0].to_lowercase() == "--meso" {
+            } else if flag_val == "-meso" {
                 if keyval {
                     input2_file = vec[1].to_string();
                 } else {
                     input2_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-local" || vec[0].to_lowercase() == "--local" {
+            } else if flag_val == "-local" {
                 if keyval {
                     input3_file = vec[1].to_string();
                 } else {
                     input3_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-lightness"
-                || vec[0].to_lowercase() == "--lightness"
-            {
+            } else if flag_val == "-lightness" {
                 if keyval {
-                    cutoff = vec[1].to_string().parse::<f64>().unwrap();
+                    cutoff = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    cutoff = args[i + 1].to_string().parse::<f64>().unwrap();
+                    cutoff = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

@@ -236,9 +236,15 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
                 };
             } else if flag_val == "-step_nonlinearity" {
                 step_nonlinearity = if keyval {
-                    vec[1].to_string().parse::<f32>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f32>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

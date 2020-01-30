@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Simon Gudim and Dr. John Lindsay
 Created: 19/12/2019
-Last Modified: 22/12/2019
+Last Modified: 10/01/2020
 License: MIT
 */
 
@@ -228,15 +228,28 @@ impl WhiteboxTool for AttributeCorrelationNeighbourhoodAnalysis {
                 };
             } else if flag_val == "-radius" {
                 radius = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap()
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
+                radius *= radius; // the K-D tree structure actually needs the squared-radius because squared distances are used.
             } else if flag_val == "-min_points" {
                 min_points = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap() as usize
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 } else {
-                    args[i + 1].to_string().parse::<f64>().unwrap() as usize
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val)) as usize
                 };
             } else if flag_val == "-stat" {
                 let val = if keyval {

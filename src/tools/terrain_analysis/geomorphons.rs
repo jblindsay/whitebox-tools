@@ -179,19 +179,19 @@ impl WhiteboxTool for Geomorphons {
                 };
             } else if flag_val == "-s" || flag_val == "-search" {
                 search_radius = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
                     args[i+1].to_string().parse::<usize>().unwrap()
                 };
             } else if flag_val == "-t" || flag_val == "-threshold" {
                 flat_thresh = if keyval {
-                    vec[1].to_string().parse::<f64>().unwrap()
+                    vec[1].to_string().parse::<f64>().expect(&format!("Error parsing {}", flag_val))
                 } else {
                     args[i+1].to_string().parse::<f64>().unwrap()
                 };
             } else if flag_val == "-d" || flag_val == "-tdist" {
                 flat_dist = if keyval {
-                    vec[1].to_string().parse::<usize>().unwrap()
+                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
                 } else {
                     args[i+1].to_string().parse::<usize>().unwrap()
                 };
