@@ -342,7 +342,7 @@ impl WhiteboxTool for RasterStreamsToVector {
         let mut flag: bool;
         let mut already_added_point: bool;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 

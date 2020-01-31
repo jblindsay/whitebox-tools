@@ -353,7 +353,7 @@ impl WhiteboxTool for Hillshade {
         let mut histo: [f64; 32768] = [0.0; 32768];
         let mut num_cells = 0.0;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             let mut bin: usize;
             for col in 0..data.1.len() {
                 if data.1[col] != out_nodata {

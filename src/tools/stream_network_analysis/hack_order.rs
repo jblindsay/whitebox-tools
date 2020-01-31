@@ -376,7 +376,7 @@ impl WhiteboxTool for HackStreamOrder {
         let mut val: f64;
         let mut c: usize;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 
@@ -421,7 +421,7 @@ impl WhiteboxTool for HackStreamOrder {
         let mut trib_val_n: f64;
         let mut ho: f64;
         while !upstream_stack.is_empty() {
-            let cell = upstream_stack.pop().unwrap();
+            let cell = upstream_stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 

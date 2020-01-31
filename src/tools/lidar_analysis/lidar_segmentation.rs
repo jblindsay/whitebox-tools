@@ -567,7 +567,7 @@ impl WhiteboxTool for LidarSegmentation {
         let mut model_rmse = vec![f64::MAX; n_points];
         let mut planes = vec![Plane::zero(); n_points];
         for i in 0..n_points {
-            let (model, rmse, model_points) = rx.recv().unwrap();
+            let (model, rmse, model_points) = rx.recv().expect("Error receiving data from thread.");
             if rmse < f64::MAX {
                 for index in model_points {
                     if rmse < model_rmse[index] {
@@ -633,7 +633,7 @@ impl WhiteboxTool for LidarSegmentation {
                         old_progress = progress;
                     }
                 }
-                point_id = stack.pop().unwrap();
+                point_id = stack.pop().expect("Error during pop operation.");
                 is_planar = if model_rmse[point_id] < f64::MAX {
                     true
                 } else {

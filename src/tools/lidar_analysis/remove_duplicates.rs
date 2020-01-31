@@ -261,7 +261,7 @@ impl WhiteboxTool for LidarRemoveDuplicates {
 
         let mut is_duplicate = vec![false; n_points];
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             is_duplicate[data.0] = data.1;
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

@@ -356,7 +356,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
 
         let mut aspect: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             aspect.set_row_data(data.0, data.1);
 
             if verbose {
@@ -478,7 +478,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let directions = [45f64, 90f64, 135f64, 180f64, 225f64, 270f64, 315f64, 360f64];
 
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             zout = output[(row, col)];
@@ -639,7 +639,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             num_inflowing.set_row_data(row, data);
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
@@ -661,7 +661,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         // let mut dir: i8;
         let mut fa: f64;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             fa = output[(row, col)];

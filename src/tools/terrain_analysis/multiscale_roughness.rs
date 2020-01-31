@@ -338,7 +338,7 @@ impl WhiteboxTool for MultiscaleRoughness {
         };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv.set_row_data(data.0, data.1);
 
             if verbose {
@@ -459,7 +459,7 @@ impl WhiteboxTool for MultiscaleRoughness {
 
             let mut smoothed: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
             for _ in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 smoothed.set_row_data(row, data);
             }
 
@@ -571,7 +571,7 @@ impl WhiteboxTool for MultiscaleRoughness {
             }
 
             for _ in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] > output_mag.get_value(row, col) {
                         output_mag.set_value(row, col, data[col as usize]);

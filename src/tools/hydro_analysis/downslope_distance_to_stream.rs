@@ -291,7 +291,7 @@ impl WhiteboxTool for DownslopeDistanceToStream {
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data);
             if pit {
                 interior_pit_found = true;
@@ -344,7 +344,7 @@ impl WhiteboxTool for DownslopeDistanceToStream {
             cell_size_y,
         ];
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             stream_dist = cell.2;

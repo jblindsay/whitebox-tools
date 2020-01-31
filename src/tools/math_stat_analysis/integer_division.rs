@@ -267,7 +267,7 @@ impl WhiteboxTool for IntegerDivision {
 
             let mut output = Raster::initialize_using_file(&output_file, &in2);
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {
@@ -343,7 +343,7 @@ impl WhiteboxTool for IntegerDivision {
 
             let mut output = Raster::initialize_using_file(&output_file, &in1);
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {
@@ -430,7 +430,7 @@ impl WhiteboxTool for IntegerDivision {
 
             let mut output = Raster::initialize_using_file(&output_file, &in1);
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {

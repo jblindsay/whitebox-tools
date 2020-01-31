@@ -239,7 +239,7 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut sq_sum = 0.0;
             let mut abs_residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
-                let (a, b, c, d) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().expect("Error receiving data from thread.");
                 num_cells += a;
                 sum += b;
                 sq_sum += c;
@@ -388,7 +388,7 @@ impl WhiteboxTool for RootMeanSquareError {
             let mut sq_sum = 0.0;
             let mut abs_residuals: Vec<f32> = Vec::with_capacity((rows * columns) as usize);
             for row in 0..rows {
-                let (a, b, c, d) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().expect("Error receiving data from thread.");
                 num_cells += a;
                 sum += b;
                 sq_sum += c;

@@ -262,7 +262,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         }
 
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             z = filled.get_value(row, col);
@@ -346,7 +346,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         // let mut stack = Vec::with_capacity((rows * columns) as usize);
         // num_solved = 0;
         // for r in 0..rows {
-        //     let (row, data) = rx.recv().unwrap();
+        //     let (row, data) = rx.recv().expect("Error receiving data from thread.");
         //     num_inflowing.set_row_data(row, data);
         //     for col in 0..columns {
         //         if num_inflowing.get_value(row, col) == 0i8 {
@@ -370,7 +370,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         // let mut fa2: i32;
         // let mut dir: i8;
         // while !stack.is_empty() {
-        //     let cell = stack.pop().unwrap();
+        //     let cell = stack.pop().expect("Error during pop operation.");
         //     row = cell.0;
         //     col = cell.1;
         //     fa = output.get_value(row, col);
@@ -451,7 +451,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         num_solved = 0;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             num_inflowing.set_row_data(row, data);
             for col in 0..columns {
                 if num_inflowing.get_value(row, col) == 0i8 {
@@ -481,7 +481,7 @@ impl WhiteboxTool for UpslopeDepressionStorage {
         let mut weights: [f32; 8] = [0.0; 8];
         let mut downslope: [bool; 8] = [false; 8];
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             z = filled.get_value(row, col);

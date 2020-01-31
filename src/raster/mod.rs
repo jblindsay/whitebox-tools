@@ -876,7 +876,7 @@ impl Raster {
         }
 
         for _ in 0..num_procs {
-            let (min_val, max_val) = rx.recv().unwrap();
+            let (min_val, max_val) = rx.recv().expect("Error receiving data from thread.");
             if min_val != nodata {
                 if min_val < self.configs.minimum {
                     self.configs.minimum = min_val;
@@ -931,7 +931,7 @@ impl Raster {
 
         let mut count = 0usize;
         for _ in 0..num_procs {
-            count += rx.recv().unwrap();
+            count += rx.recv().expect("Error receiving data from thread.");
         }
 
         count
@@ -965,7 +965,7 @@ impl Raster {
         let mut sum = 0.0f64;
         let mut count = 0.0f64;
         for _ in 0..num_procs {
-            let (s, c) = rx.recv().unwrap();
+            let (s, c) = rx.recv().expect("Error receiving data from thread.");
             sum += s;
             count += c;
         }
@@ -1003,7 +1003,7 @@ impl Raster {
         let mut sq_diff_sum = 0.0f64;
         let mut count = 0.0f64;
         for _ in 0..num_cells {
-            let (s, c) = rx.recv().unwrap();
+            let (s, c) = rx.recv().expect("Error receiving data from thread.");
             sq_diff_sum += s;
             count += c;
         }

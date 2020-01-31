@@ -343,7 +343,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
             }
 
             for _ in 0..rows {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 smoothed_dem.set_row_data(data.0, data.1);
             }
         } else if filter_size > 3 {
@@ -532,7 +532,7 @@ impl WhiteboxTool for CircularVarianceOfAspect {
         let mut xc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
         let mut yc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             xc.set_row_data(data.0, data.1);
             yc.set_row_data(data.0, data.2);
             if verbose {

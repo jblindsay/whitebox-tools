@@ -420,7 +420,7 @@ impl WhiteboxTool for MaxElevationDeviation {
 
             let (mut z1, mut z2): (f64, f64);
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     z2 = data[col as usize];
                     if z2 != nodata {

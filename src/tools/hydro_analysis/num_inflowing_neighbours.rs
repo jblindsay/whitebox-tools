@@ -257,7 +257,7 @@ impl WhiteboxTool for NumInflowingNeighbours {
 
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data); //(data.0, data.1);
             if pit {
                 interior_pit_found = true;
@@ -307,7 +307,7 @@ impl WhiteboxTool for NumInflowingNeighbours {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
 
             if verbose {

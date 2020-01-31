@@ -620,7 +620,7 @@ impl WhiteboxTool for BurnStreamsAtRoads {
                     if raster_lines.get_value(row + dy[e], col + dx[e]) == 1i8 {
                         stack.push((row + dy[e], col + dx[e], 1usize)); // the third element is the distance
                         while !stack.is_empty() {
-                            let cell2 = stack.pop().unwrap();
+                            let cell2 = stack.pop().expect("Error during pop operation.");
                             let r = cell2.0;
                             let c = cell2.1;
                             if minz > output.get_value(r, c) {
@@ -644,7 +644,7 @@ impl WhiteboxTool for BurnStreamsAtRoads {
                     if raster_lines.get_value(row + dy[e], col + dx[e]) == 3i8 {
                         stack.push((row + dy[e], col + dx[e], 1usize)); // the third element is the distance
                         while !stack.is_empty() {
-                            let cell2 = stack.pop().unwrap();
+                            let cell2 = stack.pop().expect("Error during pop operation.");
                             let r = cell2.0;
                             let c = cell2.1;
                             if output.get_value(r, c) > minz {

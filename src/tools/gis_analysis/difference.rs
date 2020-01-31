@@ -1018,7 +1018,7 @@ impl WhiteboxTool for Difference {
 
                                     let mut target_found = false;
                                     while !queue.is_empty() && !target_found {
-                                        let link = queue.pop().unwrap();
+                                        let link = queue.pop().expect("Error during pop operation.");
                                         if link.id == target_node {
                                             // This happens for a single-line polygon.
                                             target_found = true;

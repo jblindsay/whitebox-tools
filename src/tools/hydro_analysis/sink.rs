@@ -249,7 +249,7 @@ impl WhiteboxTool for Sink {
 
         let mut undefined_flow_cells = vec![];
         for p in 0..num_procs {
-            let mut pits = rx.recv().unwrap();
+            let mut pits = rx.recv().expect("Error receiving data from thread.");
             undefined_flow_cells.append(&mut pits);
 
             if verbose {

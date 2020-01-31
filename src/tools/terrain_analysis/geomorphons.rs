@@ -307,7 +307,7 @@ impl WhiteboxTool for Geomorphons {
 
         let mut gtc = [0u16; 6562];
         for _ in 0..max_codes {
-            let out = rx.recv().unwrap();
+            let out = rx.recv().expect("Error receiving data from thread.");
             gtc[out.0 as usize] = out.1 as u16;
         }
 
@@ -479,7 +479,7 @@ impl WhiteboxTool for Geomorphons {
         }
 
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

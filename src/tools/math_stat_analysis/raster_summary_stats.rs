@@ -228,7 +228,7 @@ impl WhiteboxTool for RasterSummaryStats {
         let mut minz = f64::INFINITY;
         let mut maxz = f64::NEG_INFINITY;
         for row in 0..rows {
-            let (a, b, c, d, e) = rx.recv().unwrap();
+            let (a, b, c, d, e) = rx.recv().expect("Error receiving data from thread.");
             num_cells += a;
             sum += b;
             sq_sum += c;

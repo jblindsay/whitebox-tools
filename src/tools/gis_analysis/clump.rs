@@ -254,7 +254,7 @@ impl WhiteboxTool for Clump {
                     stack.push((row, col));
                     count = 0;
                     while !stack.is_empty() {
-                        let cell = stack.pop().unwrap();
+                        let cell = stack.pop().expect("Error during pop operation.");
                         r = cell.0;
                         c = cell.1;
                         count += 1;

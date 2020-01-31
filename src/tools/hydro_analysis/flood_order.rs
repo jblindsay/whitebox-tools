@@ -286,7 +286,7 @@ impl WhiteboxTool for FloodOrder {
         // Perform the priority flood operation.
         let mut order_val = 1f64;
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             zout = filled_dem[(row, col)];

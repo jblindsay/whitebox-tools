@@ -335,7 +335,7 @@ impl WhiteboxTool for Closing {
 
         let mut dilation: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             dilation.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -416,7 +416,7 @@ impl WhiteboxTool for Closing {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

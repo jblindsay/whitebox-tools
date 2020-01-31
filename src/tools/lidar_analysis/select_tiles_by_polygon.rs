@@ -381,7 +381,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
         let mut old_progress: i32 = -1;
         let mut num_files_copied = 0;
         for tile in 0..num_tiles {
-            let in_poly = rx.recv().unwrap();
+            let in_poly = rx.recv().expect("Error receiving data from thread.");
             if in_poly {
                 num_files_copied += 1;
                 if num_files_copied == 50 {

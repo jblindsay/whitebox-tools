@@ -506,7 +506,7 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             zout = filled_dem.get_value(row, col);
@@ -576,7 +576,7 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.reinitialize_values(0.0);
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             z = input.get_value(row, col);

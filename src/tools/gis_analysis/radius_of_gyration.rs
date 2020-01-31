@@ -237,7 +237,7 @@ impl WhiteboxTool for RadiusOfGyration {
         let mut total_n = vec![0usize; range + 1];
 
         for row in 0..rows {
-            let (tc, tr, n) = rx.recv().unwrap();
+            let (tc, tr, n) = rx.recv().expect("Error receiving data from thread.");
 
             for a in 0..range + 1 {
                 total_columns[a] += tc[a];
@@ -293,7 +293,7 @@ impl WhiteboxTool for RadiusOfGyration {
 
         let mut gyradius = vec![0f64; range + 1];
         for row in 0..rows {
-            let g = rx.recv().unwrap();
+            let g = rx.recv().expect("Error receiving data from thread.");
             for a in 0..range + 1 {
                 gyradius[a] += g[a];
             }

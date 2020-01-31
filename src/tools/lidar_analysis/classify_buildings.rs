@@ -326,7 +326,7 @@ impl WhiteboxTool for ClassifyBuildingsInLidar {
         output.header.system_id = "EXTRACTION".to_string();
         let mut num_building_points = 0;
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             if !data.0 {
                 output.add_point_record(input.get_record(data.1));
             } else {

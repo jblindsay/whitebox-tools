@@ -259,7 +259,7 @@ impl WhiteboxTool for CrispnessIndex {
         let mut sum = 0.0;
         let mut warning = false;
         for row in 0..rows {
-            let (a, b, c) = rx.recv().unwrap();
+            let (a, b, c) = rx.recv().expect("Error receiving data from thread.");
             num_cells += a;
             sum += b;
             if c {
@@ -298,7 +298,7 @@ impl WhiteboxTool for CrispnessIndex {
 
         let mut total_dev = 0f64;
         for row in 0..rows {
-            total_dev += rx.recv().unwrap();
+            total_dev += rx.recv().expect("Error receiving data from thread.");
 
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

@@ -257,7 +257,7 @@ impl WhiteboxTool for ShapeComplexityIndexRaster {
         let mut min_col = vec![isize::max_value(); num_bins];
         let mut max_col = vec![isize::min_value(); num_bins];
         for tid in 0..num_procs {
-            let (data1, data2, data3, data4, data5) = rx.recv().unwrap();
+            let (data1, data2, data3, data4, data5) = rx.recv().expect("Error receiving data from thread.");
             for bin in 0..num_bins {
                 freq_data[bin] += data1[bin];
                 if data2[bin] < min_row[bin] {

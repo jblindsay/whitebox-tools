@@ -307,7 +307,7 @@ impl WhiteboxTool for PairedSampleTTest {
             let mut sum = 0.0;
             let mut sq_sum = 0.0;
             for row in 0..rows {
-                let (a, b, c, d) = rx.recv().unwrap();
+                let (a, b, c, d) = rx.recv().expect("Error receiving data from thread.");
                 n += a;
                 sum += b;
                 sq_sum += c;

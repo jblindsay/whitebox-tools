@@ -413,7 +413,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
 
             for i in 0..n_points {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 neighbourhood_min[data.0] = data.1;
                 if verbose {
                     progress = (100.0_f64 * i as f64 / num_points) as i32;
@@ -460,7 +460,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
             }
 
             for i in 0..n_points {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 if data.1 != f64::MIN {
                     let z = input.get_point_info(data.0).z;
                     residuals[data.0] = z - data.1;
@@ -525,7 +525,7 @@ impl WhiteboxTool for LidarGroundPointFilter {
         }
 
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             is_off_terrain[data.0] = data.1;
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

@@ -358,7 +358,7 @@ impl WhiteboxTool for LidarBlockMaximum {
             let mut progress: i32;
             let mut old_progress: i32 = 1;
             for i in 0..n_points {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 row = data.0;
                 col = data.1;
                 z = data.2;

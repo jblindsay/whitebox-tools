@@ -331,7 +331,7 @@ impl WhiteboxTool for DownslopeIndex {
 
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data);
             if pit {
                 interior_pit_found = true;
@@ -419,7 +419,7 @@ impl WhiteboxTool for DownslopeIndex {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::F32;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;

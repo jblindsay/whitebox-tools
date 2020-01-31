@@ -295,7 +295,7 @@ impl WhiteboxTool for Slope {
         }
 
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
 
             if verbose {

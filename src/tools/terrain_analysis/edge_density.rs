@@ -358,7 +358,7 @@ impl WhiteboxTool for EdgeDensity {
         };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv.set_row_data(data.0, data.1);
 
             if verbose {
@@ -417,7 +417,7 @@ impl WhiteboxTool for EdgeDensity {
 
         let mut edges: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             edges.set_row_data(data.0, data.1);
 
             if verbose {

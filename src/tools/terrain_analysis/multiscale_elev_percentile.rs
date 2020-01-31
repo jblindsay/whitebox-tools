@@ -392,7 +392,7 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
         }
 
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             binned_data.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -536,7 +536,7 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             let mut z1: f64;
             let mut z2: f64;
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] != nodata {
                         z1 = output_mag.get_value(row, col);

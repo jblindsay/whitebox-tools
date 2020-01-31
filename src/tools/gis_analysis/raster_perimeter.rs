@@ -576,7 +576,7 @@ impl WhiteboxTool for RasterPerimeter {
 
         let mut data = vec![0f64; num_bins];
         for tid in 0..num_procs {
-            let data_rx = rx.recv().unwrap();
+            let data_rx = rx.recv().expect("Error receiving data from thread.");
             for a in 0..num_bins {
                 data[a] += data_rx[a] * avg_res;
             }

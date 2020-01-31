@@ -238,7 +238,7 @@ impl WhiteboxTool for LidarColourize {
 
         let mut colour_values: Vec<u32> = vec![0u32; n_points];
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             colour_values[data.0] = data.1;
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

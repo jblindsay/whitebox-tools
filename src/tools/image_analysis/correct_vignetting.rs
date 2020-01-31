@@ -370,7 +370,7 @@ impl WhiteboxTool for CorrectVignetting {
         let mut min_out = f64::INFINITY;
         let mut max_out = f64::NEG_INFINITY;
         for r in 0..rows {
-            let (row, data, a, b, c, d) = rx.recv().unwrap();
+            let (row, data, a, b, c, d) = rx.recv().expect("Error receiving data from thread.");
             if a < min_in {
                 min_in = a;
             }
@@ -438,7 +438,7 @@ impl WhiteboxTool for CorrectVignetting {
             output.configs.data_type = DataType::RGBA32;
         }
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;

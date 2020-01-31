@@ -346,7 +346,7 @@ impl WhiteboxTool for Anova {
         let mut min_id = i32::max_value();
         let mut max_id = i32::min_value();
         for row in 0..rows {
-            let (a, b, c, d, e) = rx.recv().unwrap();
+            let (a, b, c, d, e) = rx.recv().expect("Error receiving data from thread.");
             overall_n += a;
             overall_sum += b;
             overall_sum_sqr += c;

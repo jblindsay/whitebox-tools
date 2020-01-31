@@ -229,7 +229,7 @@ impl WhiteboxTool for BoundaryShapeComplexity {
         output.configs.data_type = DataType::F32;
         output.configs.palette = String::from("spectrum_black_background.pal");
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
 
             if verbose {

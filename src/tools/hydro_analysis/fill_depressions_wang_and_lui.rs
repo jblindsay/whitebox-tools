@@ -351,7 +351,7 @@ impl WhiteboxTool for FillDepressionsWangAndLui {
 
         // Perform the priority flood operation.
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             zout = output[(row, col)];
@@ -399,7 +399,7 @@ impl WhiteboxTool for FillDepressionsWangAndLui {
         */
         // // Perform the priority flood operation.
         // while !minheap.is_empty() {
-        //     let cell = minheap.pop().unwrap();
+        //     let cell = minheap.pop().expect("Error during pop operation.");
         //     row = cell.row;
         //     col = cell.column;
         //     zout = output[(row, col)];
@@ -562,7 +562,7 @@ impl WhiteboxTool for FillDepressionsWangAndLui {
         // // let initial_heap_size = minheap.len();
         // // num_solved_cells = 0;
         // while !minheap.is_empty() {
-        //     let cell = minheap.pop().unwrap();
+        //     let cell = minheap.pop().expect("Error during pop operation.");
         //     queue.push_back((cell.row, cell.column));
         //     while !queue.is_empty() {
         //         let cell = queue.pop_front().unwrap();

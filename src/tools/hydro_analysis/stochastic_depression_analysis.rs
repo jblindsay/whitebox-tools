@@ -427,7 +427,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
             let mut error_model: Array2D<i32> =
                 Array2D::new(rows, columns, nodata_i32, nodata_i32).unwrap();
             for _ in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 error_model.set_row_data(row, data);
             }
 
@@ -537,7 +537,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 }
 
                 for _ in 0..rows {
-                    let (row, data, val1, val2) = rx.recv().unwrap();
+                    let (row, data, val1, val2) = rx.recv().expect("Error receiving data from thread.");
                     error_model.set_row_data(row, data);
                     if val1 < min_value {
                         min_value = val1;
@@ -693,7 +693,7 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
 
             // Perform the priority flood operation.
             while !minheap.is_empty() {
-                let cell = minheap.pop().unwrap();
+                let cell = minheap.pop().expect("Error during pop operation.");
                 row = cell.id / columns;
                 col = cell.id % columns;
                 zout = dep_filled.get_value(row, col);

@@ -444,7 +444,7 @@ impl WhiteboxTool for BreachDepressions {
 
         if !constrained_mode {
             while !minheap.is_empty() {
-                let cell = minheap.pop().unwrap();
+                let cell = minheap.pop().expect("Error during pop operation.");
                 row = cell.row;
                 col = cell.column;
                 zout = output.get_value(row, col);
@@ -529,7 +529,7 @@ impl WhiteboxTool for BreachDepressions {
             let mut unresolved_pits = false;
             // let mut flood_order_tail = 0usize;
             while !minheap.is_empty() {
-                let cell = minheap.pop().unwrap();
+                let cell = minheap.pop().expect("Error during pop operation.");
                 row = cell.row;
                 col = cell.column;
                 floodorder.push(row * columns + col);
@@ -655,7 +655,7 @@ impl WhiteboxTool for BreachDepressions {
                                     // if !costheap.is_empty() {
                                     //     // println!("I'm here");
                                     //     while !costheap.is_empty() {
-                                    //         let cell = costheap.pop().unwrap();
+                                    //         let cell = costheap.pop().expect("Error during pop operation.");
                                     //         if solved.get_value(cell.row, cell.column) == 0 {
                                     //             solved.set_value(cell.row, cell.column, 1);
                                     //             accum_val = accumulatedcost.get_value(cell.row, cell.column);

@@ -318,7 +318,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
 
                 let mut slope: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
                 for row in 0..rows {
-                    let data = rx.recv().unwrap();
+                    let data = rx.recv().expect("Error receiving data from thread.");
                     slope.set_row_data(data.0, data.1);
 
                     if verbose {
@@ -462,7 +462,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
 
                 let mut slope: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
                 for row in 0..rows {
-                    let data = rx.recv().unwrap();
+                    let data = rx.recv().expect("Error receiving data from thread.");
                     slope.set_row_data(data.0, data.1);
 
                     if verbose {

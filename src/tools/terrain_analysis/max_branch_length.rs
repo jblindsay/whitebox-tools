@@ -297,7 +297,7 @@ impl WhiteboxTool for MaxBranchLength {
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, flow_nodata, flow_nodata)?;
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data);
             if pit {
                 interior_pit_found = true;

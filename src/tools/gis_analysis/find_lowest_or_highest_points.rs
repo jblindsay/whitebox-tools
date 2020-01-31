@@ -287,7 +287,7 @@ impl WhiteboxTool for FindLowestOrHighestPoints {
         let mut high_row = 0isize;
         let mut high_col = 0isize;
         for _ in 0..num_procs {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             if data.0 < low_z {
                 low_z = data.0;
                 low_col = data.1;

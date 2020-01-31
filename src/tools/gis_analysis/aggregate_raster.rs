@@ -295,7 +295,7 @@ impl WhiteboxTool for AggregateRaster {
                 }
 
                 for r in 0..rows_out {
-                    let (row, data) = rx.recv().unwrap();
+                    let (row, data) = rx.recv().expect("Error receiving data from thread.");
                     output.set_row_data(row, data);
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows_out - 1) as f64) as usize;
@@ -342,7 +342,7 @@ impl WhiteboxTool for AggregateRaster {
                 }
 
                 for r in 0..rows_out {
-                    let (row, data) = rx.recv().unwrap();
+                    let (row, data) = rx.recv().expect("Error receiving data from thread.");
                     output.set_row_data(row, data);
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows_out - 1) as f64) as usize;
@@ -391,7 +391,7 @@ impl WhiteboxTool for AggregateRaster {
                 }
 
                 for r in 0..rows_out {
-                    let (row, data) = rx.recv().unwrap();
+                    let (row, data) = rx.recv().expect("Error receiving data from thread.");
                     output.set_row_data(row, data);
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows_out - 1) as f64) as usize;
@@ -440,7 +440,7 @@ impl WhiteboxTool for AggregateRaster {
                 }
 
                 for r in 0..rows_out {
-                    let (row, data) = rx.recv().unwrap();
+                    let (row, data) = rx.recv().expect("Error receiving data from thread.");
                     output.set_row_data(row, data);
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows_out - 1) as f64) as usize;
@@ -494,7 +494,7 @@ impl WhiteboxTool for AggregateRaster {
                 }
 
                 for r in 0..rows_out {
-                    let (row, data) = rx.recv().unwrap();
+                    let (row, data) = rx.recv().expect("Error receiving data from thread.");
                     output.set_row_data(row, data);
                     if verbose {
                         progress = (100.0_f64 * r as f64 / (rows_out - 1) as f64) as usize;

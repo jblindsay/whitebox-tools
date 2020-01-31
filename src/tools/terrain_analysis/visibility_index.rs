@@ -629,7 +629,7 @@ impl WhiteboxTool for VisibilityIndex {
         let mut output = Raster::initialize_using_file(&output_file, &dem);
         let mut z: f64;
         for _p in 0..num_procs {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             for row in 0..rows {
                 for col in 0..columns {
                     if dem.get_value(row, col) != nodata {

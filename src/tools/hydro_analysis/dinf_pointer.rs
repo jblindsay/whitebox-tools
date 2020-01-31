@@ -322,7 +322,7 @@ impl WhiteboxTool for DInfPointer {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
             if pit {
                 interior_pit_found = true;

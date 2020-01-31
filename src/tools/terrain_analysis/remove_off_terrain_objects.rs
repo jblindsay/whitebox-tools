@@ -425,7 +425,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         }
 
         while stack.len() > 0 {
-            let gc = stack.pop().unwrap();
+            let gc = stack.pop().expect("Error during pop operation.");
             row = gc.row;
             col = gc.column;
             z = tophat.get_value(row, col);
@@ -696,7 +696,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         // let mut frs: FixedRadiusSearch<f64> = FixedRadiusSearch::new(filter_size as f64);
         // let mut modified = vec![vec![false; columns]; rows];
         // while heap.len() > 0 {
-        //     let gc = heap.pop().unwrap();
+        //     let gc = heap.pop().expect("Error during pop operation.");
         //     row = gc.row;
         //     col = gc.column;
         //     z = -(gc.priority as f64 / multiplier);

@@ -444,7 +444,7 @@ impl WhiteboxTool for FillBurn {
 
         let mut output = Raster::initialize_using_file(&output_file, &dem);
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
 
             if verbose {
@@ -539,7 +539,7 @@ impl WhiteboxTool for FillBurn {
         let small_num = 1.0 / elev_multiplier as f64;
 
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             zout = output.get_value(row, col);

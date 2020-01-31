@@ -340,7 +340,7 @@ impl WhiteboxTool for LongProfile {
 
         let mut heads = vec![];
         for row in 0..rows {
-            let (r, data) = rx.recv().unwrap();
+            let (r, data) = rx.recv().expect("Error receiving data from thread.");
             for col in data {
                 heads.push((r, col));
             }

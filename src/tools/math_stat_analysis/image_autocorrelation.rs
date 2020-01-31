@@ -344,7 +344,7 @@ impl WhiteboxTool for ImageAutocorrelation {
                 });
             }
             for np in 0..num_procs {
-                let (total, image_n) = rx.recv().unwrap();
+                let (total, image_n) = rx.recv().expect("Error receiving data from thread.");
                 image_totals[a] += total;
                 n[a] += image_n;
 

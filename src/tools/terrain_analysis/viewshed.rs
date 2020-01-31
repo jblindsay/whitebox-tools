@@ -315,9 +315,9 @@ impl WhiteboxTool for Viewshed {
             stn_num += 1;
             println!("Station {} of {}", stn_num, num_stn);
 
-            stn_x = station_x.pop().unwrap();
+            stn_x = station_x.pop().expect("Error during pop operation.");
             stn_col = dem.get_column_from_x(stn_x);
-            stn_y = station_y.pop().unwrap();
+            stn_y = station_y.pop().expect("Error during pop operation.");
             stn_row = dem.get_row_from_y(stn_y);
             stn_z = dem.get_value(stn_row, stn_col) + height;
 
@@ -361,7 +361,7 @@ impl WhiteboxTool for Viewshed {
             }
 
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 view_angle.set_row_data(row, data);
 
                 if verbose {

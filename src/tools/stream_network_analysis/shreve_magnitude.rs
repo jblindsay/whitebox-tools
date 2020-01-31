@@ -352,7 +352,7 @@ impl WhiteboxTool for ShreveStreamMagnitude {
         let mut val: f64;
         let mut c: usize;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 

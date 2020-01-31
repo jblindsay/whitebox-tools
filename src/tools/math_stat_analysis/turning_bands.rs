@@ -472,7 +472,7 @@ impl WhiteboxTool for TurningBandsSimulation {
             }
 
             for _ in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.increment_row_data(row, data);
             }
 

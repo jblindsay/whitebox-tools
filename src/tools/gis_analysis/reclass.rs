@@ -300,7 +300,7 @@ impl WhiteboxTool for Reclass {
             }
 
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {
@@ -355,7 +355,7 @@ impl WhiteboxTool for Reclass {
             }
 
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {

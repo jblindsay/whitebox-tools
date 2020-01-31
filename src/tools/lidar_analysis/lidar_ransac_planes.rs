@@ -501,9 +501,9 @@ impl WhiteboxTool for LidarRansacPlanes {
 
         let mut is_a_planar_surface = vec![false; n_points];
         for i in 0..n_points {
-            // let data = rx.recv().unwrap();
+            // let data = rx.recv().expect("Error receiving data from thread.");
             // is_a_planar_surface[data.0] = data.1;
-            let model_points = rx.recv().unwrap();
+            let model_points = rx.recv().expect("Error receiving data from thread.");
             for index in model_points {
                 is_a_planar_surface[index] = true;
             }

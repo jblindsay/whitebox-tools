@@ -353,7 +353,7 @@ impl WhiteboxTool for MosaicWithFeathering {
         let mut dist1_raster: Array2D<u32> =
             Array2D::new(rows1, columns1, u32::max_value(), u32::max_value())?;
         for row in 0..rows1 {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             dist1_raster.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -380,7 +380,7 @@ impl WhiteboxTool for MosaicWithFeathering {
         let mut dist2_raster: Array2D<u32> =
             Array2D::new(rows2, columns2, u32::max_value(), u32::max_value())?;
         for row in 0..rows2 {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             dist2_raster.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -475,7 +475,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                 });
             }
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
@@ -723,7 +723,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                 });
             }
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
                 if verbose {
                     progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;

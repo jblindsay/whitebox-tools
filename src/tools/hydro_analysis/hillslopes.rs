@@ -327,7 +327,7 @@ impl WhiteboxTool for Hillslopes {
         let mut val: f64;
         let mut c: usize;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 
@@ -367,7 +367,7 @@ impl WhiteboxTool for Hillslopes {
 
         // Assign a new unique id to each channel head
         while !heads.is_empty() {
-            let cell = heads.pop().unwrap();
+            let cell = heads.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             current_id += 1f64;
@@ -503,7 +503,7 @@ impl WhiteboxTool for Hillslopes {
                     old_id = output[(row, col)];
                     stack.push((row, col));
                     while !stack.is_empty() {
-                        let cell = stack.pop().unwrap();
+                        let cell = stack.pop().expect("Error during pop operation.");
                         row2 = cell.0;
                         col2 = cell.1;
                         output[(row2, col2)] = current_id;

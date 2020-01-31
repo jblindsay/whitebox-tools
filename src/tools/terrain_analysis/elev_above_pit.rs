@@ -252,7 +252,7 @@ impl WhiteboxTool for ElevAbovePit {
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data);
             for col in 0..columns {
                 if flow_dir[(row, col)] == -1 {
@@ -277,7 +277,7 @@ impl WhiteboxTool for ElevAbovePit {
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let inflowing_vals = [4i8, 5i8, 6i8, 7i8, 0i8, 1i8, 2i8, 3i8];
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             basin_z = cell.2;

@@ -492,7 +492,7 @@ impl WhiteboxTool for PanchromaticSharpening {
             }
 
             for row in 0..rows_pan {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(data.0, data.1);
                 if verbose {
                     progress = (100.0_f64 * (row + 1) as f64 / rows_pan as f64) as usize;
@@ -540,7 +540,7 @@ impl WhiteboxTool for PanchromaticSharpening {
 
             let mut overall_max = f64::NEG_INFINITY;
             for tid in 0..num_procs {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 if data > overall_max {
                     overall_max = data;
                 }
@@ -666,7 +666,7 @@ impl WhiteboxTool for PanchromaticSharpening {
             }
 
             for row in 0..rows_pan {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(data.0, data.1);
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows_pan - 1) as f64) as usize;

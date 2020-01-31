@@ -573,7 +573,7 @@ impl WhiteboxTool for LidarConstructVectorTIN {
         let mut progress: i32;
         let mut old_progress: i32 = -1;
         for tile in 0..inputs.len() {
-            let tile_completed = rx.recv().unwrap();
+            let tile_completed = rx.recv().expect("Error receiving data from thread.");
             if verbose {
                 println!(
                     "Finished TINing {} ({} of {})",

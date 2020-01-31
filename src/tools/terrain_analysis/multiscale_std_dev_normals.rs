@@ -524,7 +524,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
                 }
 
                 for _ in 0..rows {
-                    let data = rx.recv().unwrap();
+                    let data = rx.recv().expect("Error receiving data from thread.");
                     smoothed_dem.set_row_data(data.0, data.1);
                 }
             } else if filter_size > 3 {
@@ -706,7 +706,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             let mut yc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?; // Memory requirements: 8.5X
             let mut zc: Array2D<f64> = Array2D::new(rows, columns, 0f64, -1f64)?; // Memory requirements: 10.5X
             for _ in 0..rows {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 xc.set_row_data(data.0, data.1);
                 yc.set_row_data(data.0, data.2);
                 zc.set_row_data(data.0, data.3);

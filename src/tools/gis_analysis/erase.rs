@@ -319,7 +319,7 @@ impl WhiteboxTool for Erase {
 
                 let mut output_feature: Vec<bool> = vec![false; input.num_records];
                 for r in 0..input.num_records {
-                    let (record_num, out) = rx.recv().unwrap();
+                    let (record_num, out) = rx.recv().expect("Error receiving data from thread.");
                     if !out {
                         output_feature[record_num] = true;
                     }
@@ -395,7 +395,7 @@ impl WhiteboxTool for Erase {
                     let mut output_feature: Vec<bool> = vec![false; num_points];
                     let mut num_out_pnts = 0;
                     for _ in 0..num_points {
-                        let (point_num, out) = rx.recv().unwrap();
+                        let (point_num, out) = rx.recv().expect("Error receiving data from thread.");
                         if !out {
                             output_feature[point_num] = true;
                             num_out_pnts += 1;
@@ -891,7 +891,7 @@ impl WhiteboxTool for Erase {
 
                                 let mut target_found = false;
                                 while !queue.is_empty() && !target_found {
-                                    let link = queue.pop().unwrap();
+                                    let link = queue.pop().expect("Error during pop operation.");
                                     if link.id == target_node {
                                         // This happens for a single-line polygon.
                                         target_found = true;

@@ -251,7 +251,7 @@ impl WhiteboxTool for DepthInSink {
 
         let mut undefined_flow_cells = vec![];
         for p in 0..num_procs {
-            let mut pits = rx.recv().unwrap();
+            let mut pits = rx.recv().expect("Error receiving data from thread.");
             undefined_flow_cells.append(&mut pits);
 
             if verbose {
@@ -784,7 +784,7 @@ impl Ord for GridCell {
 
 //         // Perform the priority flood operation.
 //         while !minheap.is_empty() {
-//             let cell = minheap.pop().unwrap();
+//             let cell = minheap.pop().expect("Error during pop operation.");
 //             row = cell.row;
 //             col = cell.column;
 //             zout = output[(row, col)];

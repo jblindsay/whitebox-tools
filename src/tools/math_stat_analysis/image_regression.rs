@@ -354,7 +354,7 @@ impl WhiteboxTool for ImageRegression {
         let mut sum_yy = 0f64;
         let mut n = 0f64;
         for _ in 0..num_procs {
-            let (a, b, c, d, e, f) = rx.recv().unwrap();
+            let (a, b, c, d, e, f) = rx.recv().expect("Error receiving data from thread.");
             sum_x += a;
             sum_y += b;
             sum_xy += c;
@@ -403,7 +403,7 @@ impl WhiteboxTool for ImageRegression {
         let mut ss_error = 0f64;
         let mut ss_total = 0f64;
         for _ in 0..num_procs {
-            let (a, b) = rx.recv().unwrap();
+            let (a, b) = rx.recv().expect("Error receiving data from thread.");
             ss_error += a;
             ss_total += b;
         }
@@ -468,7 +468,7 @@ impl WhiteboxTool for ImageRegression {
             let mut output = Raster::initialize_using_file(&residuals_file, &input1);
             output.configs.data_type = DataType::F32;
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);
 
                 if verbose {

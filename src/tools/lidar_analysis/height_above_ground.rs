@@ -268,7 +268,7 @@ impl WhiteboxTool for HeightAboveGround {
 
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         for n in 0..num_procs {
-            let residuals = rx.recv().unwrap();
+            let residuals = rx.recv().expect("Error receiving data from thread.");
             for (i, z) in residuals {
                 let pr = input.get_record(i);
                 let pr2: LidarPointRecord;

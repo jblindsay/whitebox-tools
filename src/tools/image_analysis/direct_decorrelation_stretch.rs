@@ -349,7 +349,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         let mut histo_blue = [0usize; 256];
         let mut num_cells = 0;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             red_band.set_row_data(data.0, data.1);
             for i in 0..256 {
                 histo_red[i] += data.2[i];
@@ -509,7 +509,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
         output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

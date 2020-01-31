@@ -326,7 +326,7 @@ impl WhiteboxTool for ZonalStatistics {
         let mut min_id = isize::max_value();
         let mut max_id = isize::min_value();
         for row in 0..rows {
-            let (min, max) = rx.recv().unwrap();
+            let (min, max) = rx.recv().expect("Error receiving data from thread.");
             if min < min_id {
                 min_id = min;
             }

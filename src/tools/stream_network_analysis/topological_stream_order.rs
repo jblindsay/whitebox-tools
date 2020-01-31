@@ -338,7 +338,7 @@ impl WhiteboxTool for TopologicalStreamOrder {
         let mut order_val: f64;
         let mut count: i8;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
 

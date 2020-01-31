@@ -345,7 +345,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         }
 
         for point_num in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             neighbourhood_min[data.0] = data.1;
             if verbose {
                 progress = (100.0_f64 * point_num as f64 / num_points) as i32;
@@ -384,7 +384,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         }
 
         for point_num in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             let z = input.get_point_info(data.0).z;
             residuals[data.0] = z - data.1;
             if verbose {
@@ -445,7 +445,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let mut is_ground_point = vec![false; n_points];
         let mut stack = Vec::with_capacity(n_points);
         for point_num in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             normal_vectors[data.0] = data.1;
             if residuals[data.0] == 0f64 {
                 is_ground_point[data.0] = true;
@@ -472,7 +472,7 @@ impl WhiteboxTool for LidarSegmentationBasedFilter {
         let mut index_n: usize;
         let mut z: f64;
         while !stack.is_empty() {
-            point_id = stack.pop().unwrap();
+            point_id = stack.pop().expect("Error during pop operation.");
             z = residuals[point_id];
             /* Check the neighbours to see if there are any
             points that have similar normal vectors and

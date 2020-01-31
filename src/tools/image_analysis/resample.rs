@@ -291,7 +291,7 @@ impl WhiteboxTool for Resample {
                 });
             }
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] != nodata {
                         destination.set_value(row, col, data[col as usize]);
@@ -376,7 +376,7 @@ impl WhiteboxTool for Resample {
                 });
             }
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns as usize {
                     if data[col] != nodata {
                         destination.set_value(row, col as isize, data[col]);
@@ -459,7 +459,7 @@ impl WhiteboxTool for Resample {
                 });
             }
             for r in 0..rows {
-                let (row, data) = rx.recv().unwrap();
+                let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns as usize {
                     if data[col] != nodata {
                         destination.set_value(row, col as isize, data[col]);

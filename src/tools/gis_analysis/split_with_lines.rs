@@ -772,7 +772,7 @@ impl WhiteboxTool for SplitWithLines {
 
                     let mut target_found = false;
                     while !queue.is_empty() && !target_found {
-                        let link = queue.pop().unwrap();
+                        let link = queue.pop().expect("Error during pop operation.");
                         let other_side = get_other_endnode(link.id);
                         prev[other_side] = link.id;
                         for a in &endnodes[other_side] {

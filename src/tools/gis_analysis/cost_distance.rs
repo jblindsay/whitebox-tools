@@ -315,7 +315,7 @@ impl WhiteboxTool for CostDistance {
         let backlink_dir = [16.0, 32.0, 64.0, 128.0, 1.0, 2.0, 4.0, 8.0];
         let mut solved: Array2D<i8> = Array2D::new(rows, columns, 0, -1)?;
         while !minheap.is_empty() {
-            let cell = minheap.pop().unwrap();
+            let cell = minheap.pop().expect("Error during pop operation.");
             row = cell.row;
             col = cell.column;
             if solved.get_value(row, col) == 0 {

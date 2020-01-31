@@ -250,7 +250,7 @@ impl WhiteboxTool for NormalVectors {
         }
 
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             normal_values[data.0] = data.1;
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;

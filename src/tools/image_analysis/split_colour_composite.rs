@@ -274,7 +274,7 @@ impl WhiteboxTool for SplitColourComposite {
         output_b.configs.nodata = output_nodata;
 
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             output_r.set_row_data(data.0, data.1);
             output_g.set_row_data(data.0, data.2);
             output_b.set_row_data(data.0, data.3);

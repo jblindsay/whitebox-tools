@@ -391,7 +391,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         }
 
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             binned_data.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -526,7 +526,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
 
         let mut dfm_data: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             dfm_data.set_row_data(data.0, data.1);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
@@ -601,7 +601,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
         };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv.set_row_data(data.0, data.1);
 
             if verbose {
@@ -715,7 +715,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
 
         let mut nv_smooth: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv_smooth.set_row_data(data.0, data.1);
 
             if verbose {

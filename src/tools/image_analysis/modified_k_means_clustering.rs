@@ -520,7 +520,7 @@ impl WhiteboxTool for ModifiedKMeansClustering {
             }
 
             for r in 0..rows {
-                let (row, data, ccd) = rx.recv().unwrap();
+                let (row, data, ccd) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] >= 0 {
                         if !n_counted {

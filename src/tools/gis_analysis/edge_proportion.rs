@@ -244,7 +244,7 @@ impl WhiteboxTool for EdgeProportion {
         let mut num_cells = vec![0usize; max_val + 1];
         let mut num_edge_cells = vec![0usize; max_val + 1];
         for tid in 0..num_procs {
-            let (vec1, vec2) = rx.recv().unwrap();
+            let (vec1, vec2) = rx.recv().expect("Error receiving data from thread.");
             for bin in 0..max_val + 1 {
                 num_cells[bin] += vec1[bin];
                 num_edge_cells[bin] += vec2[bin];
@@ -294,7 +294,7 @@ impl WhiteboxTool for EdgeProportion {
         output.configs.photometric_interp = PhotometricInterpretation::Continuous;
 
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;

@@ -283,7 +283,7 @@ impl WhiteboxTool for RasterArea {
 
             let mut freq_data = vec![0usize; num_bins];
             for tid in 0..num_procs {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 for a in 0..num_bins {
                     freq_data[a] += data[a];
                 }
@@ -398,7 +398,7 @@ impl WhiteboxTool for RasterArea {
             // cell size is not constant for the data.
             let mut area_data = vec![0f64; num_bins];
             for tid in 0..num_procs {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 for a in 0..num_bins {
                     area_data[a] += data[a];
                 }

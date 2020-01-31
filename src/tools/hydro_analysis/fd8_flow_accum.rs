@@ -358,7 +358,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let mut num_solved_cells = 0;
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             num_inflowing.set_row_data(row, data);
             if pit {
                 interior_pit_found = true;
@@ -400,7 +400,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let mut dir: i8;
         let mut total_weights: f64;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             z = input[(row, col)];

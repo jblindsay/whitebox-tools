@@ -322,7 +322,7 @@ impl WhiteboxTool for ClipLidarToPolygon {
         let mut output = LasFile::initialize_using_file(&output_file, &input);
         output.header.system_id = "EXTRACTION".to_string();
         for i in 0..n_points {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             if data.0 {
                 output.add_point_record(input.get_record(data.1));
             }

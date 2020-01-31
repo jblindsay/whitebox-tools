@@ -339,7 +339,7 @@ impl WhiteboxTool for FillDepressions {
 
         let mut undefined_flow_cells = vec![];
         for p in 0..num_procs {
-            let mut pits = rx.recv().unwrap();
+            let mut pits = rx.recv().expect("Error receiving data from thread.");
             undefined_flow_cells.append(&mut pits);
 
             if verbose {
@@ -564,7 +564,7 @@ impl WhiteboxTool for FillDepressions {
                             Some(cell2) => {
                                 if cell2.priority == z {
                                     flats.set_value(cell2.row, cell2.column, 3);
-                                    outlets.push(minheap.pop().unwrap());
+                                    outlets.push(minheap.pop().expect("Error during pop operation."));
                                 } else {
                                     flag = false;
                                 }

@@ -387,7 +387,7 @@ impl WhiteboxTool for IhsToRgb {
             output_b.configs.data_type = DataType::F32;
 
             for row in 0..rows {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 output_r.set_row_data(data.0, data.1);
                 output_g.set_row_data(data.0, data.2);
                 output_b.set_row_data(data.0, data.3);
@@ -512,7 +512,7 @@ impl WhiteboxTool for IhsToRgb {
             output.configs.nodata = 0f64;
             output.configs.data_type = DataType::RGBA32;
             for row in 0..rows {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(data.0, data.1);
                 if verbose {
                     progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;

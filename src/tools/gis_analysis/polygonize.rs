@@ -438,7 +438,7 @@ impl WhiteboxTool for Polygonize {
 
                 let mut target_found = false;
                 while !queue.is_empty() && !target_found {
-                    let link = queue.pop().unwrap();
+                    let link = queue.pop().expect("Error during pop operation.");
                     if link.id == target_node {
                         // This happens for a single-line polygon.
                         target_found = true;
@@ -920,7 +920,7 @@ impl WhiteboxTool for Polygonize {
         //         let mut num_links = 0;
         //         let mut target_found = false;
         //         while !queue.is_empty() && !target_found {
-        //             let link = queue.pop().unwrap();
+        //             let link = queue.pop().expect("Error during pop operation.");
         //             if link.id == target_node {
         //                 // this happens for a single-line polygon.
         //                 target_found = true;
@@ -1071,7 +1071,7 @@ impl WhiteboxTool for Polygonize {
 
         //         let mut target_found = false;
         //         while !queue.is_empty() && !target_found {
-        //             let link = queue.pop().unwrap();
+        //             let link = queue.pop().expect("Error during pop operation.");
         //             if link.id == target_node {
         //                 // this happens at a single-line polygon.
         //                 target_found = true;

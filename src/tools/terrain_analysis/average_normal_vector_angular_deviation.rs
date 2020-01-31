@@ -340,7 +340,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             }
 
             for _ in 0..rows {
-                let data = rx.recv().unwrap();
+                let data = rx.recv().expect("Error receiving data from thread.");
                 smoothed_dem.set_row_data(data.0, data.1);
             }
         } else {
@@ -543,7 +543,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         // let mut output = Raster::initialize_using_config(&output_file, &configs);
         // output.configs.data_type = DataType::F32;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             angular_diff.set_row_data(data.0, data.1);
             // output.set_row_data(data.0, data.1);
             if verbose {

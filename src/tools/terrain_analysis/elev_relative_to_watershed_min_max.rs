@@ -261,7 +261,7 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
         let mut watershed_min_vals = vec![f64::INFINITY; range_watersheds as usize + 1];
         let mut watershed_max_vals = vec![f64::NEG_INFINITY; range_watersheds as usize + 1];
         for tid in 0..num_procs {
-            let (mins, maxs) = rx.recv().unwrap();
+            let (mins, maxs) = rx.recv().expect("Error receiving data from thread.");
             for i in 0..mins.len() {
                 //(range_watersheds as usize+1) {
                 if mins[i] != f64::INFINITY && mins[i] < watershed_min_vals[i] {
@@ -309,7 +309,7 @@ impl WhiteboxTool for ElevRelativeToWatershedMinMax {
         }
 
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);
             if verbose {
                 progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;

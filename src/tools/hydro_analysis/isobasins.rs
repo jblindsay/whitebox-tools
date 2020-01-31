@@ -283,7 +283,7 @@ impl WhiteboxTool for Isobasins {
 
         let mut interior_pit_found = false;
         for r in 0..rows {
-            let (row, data, pit) = rx.recv().unwrap();
+            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             flow_dir.set_row_data(row, data); //(data.0, data.1);
             if pit {
                 interior_pit_found = true;
@@ -337,7 +337,7 @@ impl WhiteboxTool for Isobasins {
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0usize;
         for r in 0..rows {
-            let (row, data) = rx.recv().unwrap();
+            let (row, data) = rx.recv().expect("Error receiving data from thread.");
             num_inflowing.set_row_data(row, data);
             for col in 0..columns {
                 if num_inflowing[(row, col)] == 0i8 {
@@ -373,7 +373,7 @@ impl WhiteboxTool for Isobasins {
         let mut inla_index: usize;
         let mut inla_mag: usize;
         while !stack.is_empty() {
-            let cell = stack.pop().unwrap();
+            let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             fa = accum.get_value(row, col);

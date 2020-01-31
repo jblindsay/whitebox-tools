@@ -415,7 +415,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         let zero_vector = Normal { a: 0f32, b: 0f32 };
         let mut nv: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv.set_row_data(data.0, data.1);
 
             if verbose {
@@ -505,7 +505,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
 
         let mut nv_smooth: Array2D<Normal> = Array2D::new(rows, columns, zero_vector, zero_vector)?;
         for row in 0..rows {
-            let data = rx.recv().unwrap();
+            let data = rx.recv().expect("Error receiving data from thread.");
             nv_smooth.set_row_data(data.0, data.1);
 
             if verbose {
