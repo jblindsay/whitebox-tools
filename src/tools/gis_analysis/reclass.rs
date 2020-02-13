@@ -30,7 +30,11 @@ use std::thread;
 ///
 /// > --reclass_vals='0.0;1.0;1.0;2.0'
 ///
-/// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0.
+/// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0. Users 
+/// may add the text strings *min* and *max* in the class definitions to stand in for the raster's minimum and maximum values.
+/// For example:
+/// 
+/// > --reclass_vals='0.0;min;1.0;1.0;1.0;max'
 ///
 /// Any values in the input raster that do not fall within one of the classes will be assigned its original value in the
 /// output raster. NoData values in the input raster will be assigned NoData values in the output raster, unless NoData is

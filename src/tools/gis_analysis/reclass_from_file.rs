@@ -25,7 +25,7 @@ use std::thread;
 /// input raster image (`--input`) and a reclass file (`--reclass_file`). The reclass file is a text file
 /// containing two or three columns, delimited (i.e. separated) by either a space, tab, or comma. The columns
 /// describe respectively the *New* value, the *From* value, and the *To Just Less Than* value. Classes must be
-/// mutually exclusive, i.e. non-overlapping. You may add the text strings 'min' and 'max' in the class definitions
+/// mutually exclusive, i.e. non-overlapping. Users may add the text strings *min* and *max* in the class definitions
 /// to stand in for the raster's minimum and maximum values.
 ///
 /// If only two columns are present in the reclass file, i.e. the *From* column is left blank, the tool will
