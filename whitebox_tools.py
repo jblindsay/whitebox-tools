@@ -383,6 +383,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3313,14 +3314,14 @@ class WhiteboxTools(object):
         if fill_pits: args.append("--fill_pits")
         return self.run_tool('breach_depressions', args, callback) # returns 1 if error
 
-    def breach_depressions_least_cost(self, dem, output, radius, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
+    def breach_depressions_least_cost(self, dem, output, dist, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
         """Breaches the depressions in a DEM using a least-cost pathway method.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        radius -- . 
+        dist -- . 
         max_cost -- Optional maximum breach cost (default is Inf). 
         min_dist -- Optional flag indicating whether to minimize breach distances. 
         flat_increment -- Optional elevation increment applied to flat areas. 
@@ -3330,7 +3331,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--radius='{}'".format(radius))
+        args.append("--dist='{}'".format(dist))
         if max_cost is not None: args.append("--max_cost='{}'".format(max_cost))
         if min_dist: args.append("--min_dist")
         if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
@@ -3641,8 +3642,8 @@ class WhiteboxTools(object):
         if max_depth is not None: args.append("--max_depth='{}'".format(max_depth))
         return self.run_tool('fill_depressions', args, callback) # returns 1 if error
 
-    def fill_depressions_wang_and_lui(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
-        """Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.
+    def fill_depressions_planchon_and_darboux(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
+        """Fills all of the depressions in a DEM using the Planchon and Darboux (2002) method.
 
         Keyword arguments:
 
@@ -3657,7 +3658,25 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if fix_flats: args.append("--fix_flats")
         if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
-        return self.run_tool('fill_depressions_wang_and_lui', args, callback) # returns 1 if error
+        return self.run_tool('fill_depressions_planchon_and_darboux', args, callback) # returns 1 if error
+
+    def fill_depressions_wang_and_liu(self, dem, output, fix_flats=True, flat_increment=None, callback=None):
+        """Fills all of the depressions in a DEM using the Wang and Liu (2006) method. Depression breaching should be preferred in most cases.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        fix_flats -- Optional flag indicating whether flat areas should have a small gradient applied. 
+        flat_increment -- Optional elevation increment applied to flat areas. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if fix_flats: args.append("--fix_flats")
+        if flat_increment is not None: args.append("--flat_increment='{}'".format(flat_increment))
+        return self.run_tool('fill_depressions_wang_and_liu', args, callback) # returns 1 if error
 
     def fill_single_cell_pits(self, dem, output, callback=None):
         """Raises pit cells to the elevation of their lowest neighbour.

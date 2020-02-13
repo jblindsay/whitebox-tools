@@ -65,8 +65,8 @@ use std::process::Command;
 /// out one or more of the high-order PCA components, which account for noise variance.
 ///
 /// Note: the current implementation reads every raster into memory at one time. This is because of the calculation of the
-/// co-variances. As such, if the entire image stack cannot fit in memory, the tool will likely experience an out-ofs-memory error.
-/// This tool should be run using the `--wd` flag to spectify the working directory into which the component images will be
+/// co-variances. As such, if the entire image stack cannot fit in memory, the tool will likely experience an out-of-memory error.
+/// This tool should be run using the `--wd` flag to specify the working directory into which the component images will be
 /// written.
 pub struct PrincipalComponentAnalysis {
     name: String,

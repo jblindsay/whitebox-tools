@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/09/2017
-Last Modified: 13/10/2018
+Last Modified: 13/02/2020
 License: MIT
 */
 
@@ -265,25 +265,18 @@ impl WhiteboxTool for ReclassFromFile {
                 let tx = tx.clone();
                 thread::spawn(move || {
                     let mut z: f64;
+                    let mut prev_idx: usize = 0;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data: Vec<f64> = vec![nodata; columns as usize];
-                        let mut prev_idx: usize = num_ranges;
                         for col in 0..columns {
                             z = input[(row, col)];
                             if z != nodata {
-                                if prev_idx < num_ranges {
-                                    // This is a shortcut intended to take advantage of the inherent
-                                    // spatial autocorrelation in spatial distributions to speed up
-                                    // the search for the appropriate range bin.
-                                    if z >= reclass_vals[prev_idx * 3 + 1]
-                                        && z < reclass_vals[prev_idx * 3 + 2]
-                                    {
-                                        z = reclass_vals[prev_idx * 3];
-                                    } else {
-                                        prev_idx = num_ranges;
-                                    }
-                                }
-                                if num_ranges == num_ranges {
+                                // This is a shortcut intended to take advantage of the inherent
+                                // spatial autocorrelation in spatial distributions to speed up
+                                // the search for the appropriate range bin.
+                                if z >= reclass_vals[prev_idx * 3 + 1] && z < reclass_vals[prev_idx * 3 + 2] {
+                                    z = reclass_vals[prev_idx * 3];
+                                } else {
                                     for a in 0..num_ranges {
                                         if z >= reclass_vals[a * 3 + 1]
                                             && z < reclass_vals[a * 3 + 2]

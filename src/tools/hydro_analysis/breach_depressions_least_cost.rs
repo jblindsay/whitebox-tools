@@ -659,8 +659,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             while let Some(cell) = undefined_flow_cells.pop() {
                 row = cell.0;
                 col = cell.1;
+                // if it's already in a solved site, don't do it a second time.
                 if flats.get_value(row, col) != 1 {
-                    // if it's already in a solved site, don't do it a second time.
                     // First there is a priority region-growing operation to find the outlets.
                     z = output.get_value(row, col);
                     minheap.clear();

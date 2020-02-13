@@ -24,10 +24,10 @@ use std::path;
 
 /// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the
 /// flat areas. This is a common pre-processing step required by many flow-path analysis tools to ensure continuous
-/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressionsWangAndLui` algorithm is based on
+/// flow from each grid cell to an outlet located along the grid edge. The `FillDepressionsWangAndLiu` algorithm is based on
 /// the computationally efficient approach of examining each cell based on its spill elevation, starting from the
 /// edge cells, and visiting cells from lowest order using a priority queue. As such, it is based on the algorithm
-/// first proposed by Wang and Liu (2006). However, itt is currently not the most efficient depression-removal algorithm
+/// first proposed by Wang and Liu (2006). However, it is currently not the most efficient depression-removal algorithm
 /// available in WhiteboxTools; `FillDepressions` and `BreachDepressionsLeastCost` are both more efficient and often
 /// produce better, lower-impact results.
 ///
@@ -39,15 +39,15 @@ use std::path;
 /// the output image.
 ///
 /// The user may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
-/// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
+/// **it is best not to specify this optional value and to let the algorithm determine the most suitable value itself**.
 ///
 /// # Reference
-/// Wang, L. and Lui, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation
+/// Wang, L. and Liu, H. 2006. An efficient method for identifying and filling surface depressions in digital elevation
 /// models for hydrologic analysis and modelling. International Journal of Geographical Information Science, 20(2): 193-213.
 ///
 /// # See Also
 /// `FillDepressions`, `BreachDepressionsLeastCost`, `BreachDepressions`, `FillMissingData`
-pub struct FillDepressionsWangAndLui {
+pub struct FillDepressionsWangAndLiu {
     name: String,
     description: String,
     toolbox: String,
@@ -55,12 +55,12 @@ pub struct FillDepressionsWangAndLui {
     example_usage: String,
 }
 
-impl FillDepressionsWangAndLui {
-    pub fn new() -> FillDepressionsWangAndLui {
+impl FillDepressionsWangAndLiu {
+    pub fn new() -> FillDepressionsWangAndLiu {
         // public constructor
-        let name = "FillDepressionsWangAndLui".to_string();
+        let name = "FillDepressionsWangAndLiu".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Fills all of the depressions in a DEM. Depression breaching should be preferred in most cases.".to_string();
+        let description = "Fills all of the depressions in a DEM using the Wang and Liu (2006) method. Depression breaching should be preferred in most cases.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -118,7 +118,7 @@ impl FillDepressionsWangAndLui {
         )
         .replace("*", &sep);
 
-        FillDepressionsWangAndLui {
+        FillDepressionsWangAndLiu {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -128,7 +128,7 @@ impl FillDepressionsWangAndLui {
     }
 }
 
-impl WhiteboxTool for FillDepressionsWangAndLui {
+impl WhiteboxTool for FillDepressionsWangAndLiu {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -255,10 +255,12 @@ impl WhiteboxTool for FillDepressionsWangAndLui {
         let small_num = if fix_flats && !flat_increment.is_nan() {
             flat_increment
         } else if fix_flats {
-            let min_val = input.configs.minimum;
-            let elev_digits = ((input.configs.maximum - min_val) as i64).to_string().len();
-            let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
-            1.0_f64 / elev_multiplier as f64
+            let resx = input.configs.resolution_x;
+            let resy = input.configs.resolution_y;
+            let diagres = (resx * resx + resy * resy).sqrt();
+            let elev_digits = (input.configs.maximum as i64).to_string().len();
+            let elev_multiplier = 10.0_f64.powi((15 - elev_digits) as i32);
+            1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         } else {
             0f64
         };

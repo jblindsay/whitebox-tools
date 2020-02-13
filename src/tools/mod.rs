@@ -165,7 +165,8 @@ impl ToolManager {
         tool_names.push("FD8Pointer".to_string());
         tool_names.push("FillBurn".to_string());
         tool_names.push("FillDepressions".to_string());
-        tool_names.push("FillDepressionsWangAndLui".to_string());
+        tool_names.push("FillDepressionsPlanchonAndDarboux".to_string());
+        tool_names.push("FillDepressionsWangAndLiu".to_string());
         tool_names.push("FillSingleCellPits".to_string());
         tool_names.push("FindNoFlowCells".to_string());
         tool_names.push("FindParallelFlow".to_string());
@@ -668,8 +669,9 @@ impl ToolManager {
             "fd8pointer" => Some(Box::new(hydro_analysis::FD8Pointer::new())),
             "fillburn" => Some(Box::new(hydro_analysis::FillBurn::new())),
             "filldepressions" => Some(Box::new(hydro_analysis::FillDepressions::new())),
-            "filldepressionswangandlui" => {
-                Some(Box::new(hydro_analysis::FillDepressionsWangAndLui::new()))
+            "filldepressionsplanchonanddarboux" => Some(Box::new(hydro_analysis::FillDepressionsPlanchonAndDarboux::new())),
+            "filldepressionswangandliu" => {
+                Some(Box::new(hydro_analysis::FillDepressionsWangAndLiu::new()))
             }
             "fillsinglecellpits" => Some(Box::new(hydro_analysis::FillSingleCellPits::new())),
             "findnoflowcells" => Some(Box::new(hydro_analysis::FindNoFlowCells::new())),
@@ -1208,7 +1210,7 @@ impl ToolManager {
         let mut tool_details: Vec<(String, String)> = Vec::new();
 
         for val in &self.tool_names {
-            let tool = self.get_tool(&val).unwrap();
+            let tool = self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val));
             tool_details.push(get_name_and_description(tool));
         }
 
@@ -1222,7 +1224,7 @@ impl ToolManager {
     pub fn list_tools_with_keywords(&self, keywords: Vec<String>) {
         let mut tool_details: Vec<(String, String)> = Vec::new();
         for val in &self.tool_names {
-            let tool = self.get_tool(&val).unwrap();
+            let tool = self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val));
             let toolbox = tool.get_toolbox();
             let (nm, des) = get_name_and_description(tool);
             for kw in &keywords {
@@ -1230,7 +1232,7 @@ impl ToolManager {
                     || des.to_lowercase().contains(&(kw.to_lowercase()))
                     || toolbox.to_lowercase().contains(&(kw.to_lowercase()))
                 {
-                    tool_details.push(get_name_and_description(self.get_tool(&val).unwrap()));
+                    tool_details.push(get_name_and_description(self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val))));
                     break;
                 }
             }
