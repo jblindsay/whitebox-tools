@@ -25,14 +25,15 @@ use std::thread;
 /// input raster image (`--input`) and a reclass file (`--reclass_file`). The reclass file is a text file
 /// containing two or three columns, delimited (i.e. separated) by either a space, tab, or comma. The columns
 /// describe respectively the *New* value, the *From* value, and the *To Just Less Than* value. Classes must be
-/// mutually exclusive, i.e. non-overlapping.
+/// mutually exclusive, i.e. non-overlapping. You may add the text strings 'min' and 'max' in the class definitions
+/// to stand in for the raster's minimum and maximum values.
 ///
 /// If only two columns are present in the reclass file, i.e. the *From* column is left blank, the tool will
 /// operate in assign mode. That is, any cell in the input image that is equal to the *From* value (contained
 /// in the second column) will be assigned the *New* value (contained in the first column) in the output image.
 ///
 /// Any values in the input raster that do not fall within one of the classes will be assigned its original
-/// value in the output raster. TNoData values in the input raster will be assigned NoData values in the output
+/// value in the output raster. NoData values in the input raster will be assigned NoData values in the output
 /// raster.
 ///
 /// # See Also
@@ -190,6 +191,28 @@ impl WhiteboxTool for ReclassFromFile {
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
+
+        if !input_file.contains(&sep) && !input_file.contains("/") {
+            input_file = format!("{}{}", working_directory, input_file);
+        }
+        if !output_file.contains(&sep) && !output_file.contains("/") {
+            output_file = format!("{}{}", working_directory, output_file);
+        }
+
+        if verbose {
+            println!("Reading data...")
+        };
+        let input = Arc::new(Raster::new(&input_file, "r")?);
+
+        let start = Instant::now();
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+        let min_val = input.configs.minimum;
+        let max_val = input.configs.maximum;
+
         if !reclass_file.contains(&sep) {
             reclass_file = format!("{}{}", working_directory, reclass_file);
         }
@@ -216,7 +239,13 @@ impl WhiteboxTool for ReclassFromFile {
             }
 
             for s in v {
-                reclass_vals.push(s.parse().unwrap());
+                if s.to_lowercase().contains("min") {
+                    reclass_vals.push(min_val);
+                } else if s.to_lowercase().contains("max") {
+                    reclass_vals.push(max_val);
+                } else {
+                    reclass_vals.push(s.parse().unwrap());
+                }
             }
         }
 
@@ -233,25 +262,7 @@ impl WhiteboxTool for ReclassFromFile {
         };
         let reclass_vals = Arc::new(reclass_vals);
 
-        let mut progress: usize;
-        let mut old_progress: usize = 1;
-
-        if !input_file.contains(&sep) && !input_file.contains("/") {
-            input_file = format!("{}{}", working_directory, input_file);
-        }
-        if !output_file.contains(&sep) && !output_file.contains("/") {
-            output_file = format!("{}{}", working_directory, output_file);
-        }
-
-        if verbose {
-            println!("Reading data...")
-        };
-        let input = Arc::new(Raster::new(&input_file, "r")?);
-
-        let start = Instant::now();
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
+        
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();

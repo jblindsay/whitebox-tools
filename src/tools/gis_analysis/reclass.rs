@@ -203,31 +203,6 @@ impl WhiteboxTool for Reclass {
             println!("***************{}", "*".repeat(self.get_tool_name().len()));
         }
 
-        let mut v: Vec<&str> = reclass_str.split(";").collect();
-        if v.len() < 2 {
-            // delimiter can be a semicolon, comma, space, or tab.
-            v = reclass_str.split(",").collect();
-            if v.len() < 2 {
-                v = reclass_str.split(" ").collect();
-                if v.len() < 2 {
-                    v = reclass_str.split("\t").collect();
-                }
-            }
-        }
-        let reclass_vals: Vec<f64> = v.iter().map(|x| x.parse().unwrap()).collect();
-        if reclass_vals.len() % 3 != 0 && !assign_mode {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
-        } else if reclass_vals.len() % 2 != 0 && assign_mode {
-            return Err(Error::new(ErrorKind::InvalidInput,
-                "The reclass values string must include pair values (new value; old value), e.g. '1;10;2;20;3;30;4;40'"));
-        }
-        let num_ranges = match assign_mode {
-            false => reclass_vals.len() / 3,
-            true => reclass_vals.len() / 2,
-        };
-        let reclass_vals = Arc::new(reclass_vals);
-
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
         let mut progress: usize;
@@ -249,6 +224,42 @@ impl WhiteboxTool for Reclass {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
+        let min_val = input.configs.minimum;
+        let max_val = input.configs.maximum;
+
+        let mut v: Vec<&str> = reclass_str.split(";").collect();
+        if v.len() < 2 {
+            // delimiter can be a semicolon, comma, space, or tab.
+            v = reclass_str.split(",").collect();
+            if v.len() < 2 {
+                v = reclass_str.split(" ").collect();
+                if v.len() < 2 {
+                    v = reclass_str.split("\t").collect();
+                }
+            }
+        }
+        let reclass_vals: Vec<f64> = v.iter().map(|s| 
+            if s.to_lowercase().contains("min") {
+                min_val
+            } else if s.to_lowercase().contains("max") {
+                max_val
+            } else {
+                s.parse().unwrap()
+            }
+        ).collect();
+        if reclass_vals.len() % 3 != 0 && !assign_mode {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
+        } else if reclass_vals.len() % 2 != 0 && assign_mode {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "The reclass values string must include pair values (new value; old value), e.g. '1;10;2;20;3;30;4;40'"));
+        }
+        let num_ranges = match assign_mode {
+            false => reclass_vals.len() / 3,
+            true => reclass_vals.len() / 2,
+        };
+        let reclass_vals = Arc::new(reclass_vals);
+
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
