@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/12/2017
-Last Modified: 29/10/2019
+Last Modified: 13/02/2020
 License: MIT
 */
 
@@ -361,6 +361,7 @@ impl WhiteboxTool for Isobasins {
         /////////////////////////////////
         let mut accum: Array2D<usize> = Array2D::new(rows, columns, 1, 0)?;
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I32;
         let mut outlet_id = 1f64;
         // output.reinitialize_values(1.0);
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];

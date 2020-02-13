@@ -269,7 +269,7 @@ impl WhiteboxTool for Watershed {
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
         let mut output = Raster::initialize_using_file(&output_file, &pntr);
         output.configs.nodata = nodata;
-        output.configs.data_type = DataType::I16;
+        output.configs.data_type = DataType::I32;
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.configs.palette = "qual.pal".to_string(); //palette;
         let low_value = f64::MIN;

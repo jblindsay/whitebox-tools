@@ -66,7 +66,8 @@ Version 1.1.1 (XX-XX-20XX)
 - Updated the LidarSegmentation tool, which now used RANSAC to fit planar models to points.
 - Added the HeightAboveGround tool, to normalize a LiDAR point cloud. Each point's z-value is
   converted to the height above the nearest ground-classified point.
-- Fixed an issue with the Reclass and ReclassFromFile tool.
+- Fixed an issue with the Reclass and ReclassFromFile tool that caused striping.
+- The Relcass and ReclassFromFile tools now take 'min' and 'max' in the reclass string.
 
 Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 

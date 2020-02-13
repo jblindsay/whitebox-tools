@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/09/2017
-Last Modified: 18/10/2019
+Last Modified: 13/02/2020
 License: MIT
 */
 

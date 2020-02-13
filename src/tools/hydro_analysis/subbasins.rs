@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/07/2017
-Last Modified: 18/10/2019
+Last Modified: 13/02/2020
 License: MIT
 */
 
@@ -363,7 +363,7 @@ impl WhiteboxTool for Subbasins {
 
         // Now perform the watershedding operation
         let mut output = Raster::initialize_using_file(&output_file, &streams);
-        output.configs.data_type = DataType::F32;
+        output.configs.data_type = DataType::I32;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         let low_value = f64::MIN;
