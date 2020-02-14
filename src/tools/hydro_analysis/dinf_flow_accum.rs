@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/06/2017
-Last Modified: 30/01/2020
+Last Modified: 13/02/2020
 License: MIT
 */
 
@@ -22,12 +22,11 @@ use std::thread;
 /// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the D-infinity algorithm
 /// (Tarboton, 1997). This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering
 /// each grid cell is routed to one or two downslope neighbour, i.e. flow divergence is permitted. The user must
-/// specify the name of the input pointer-grid, which has been created either from the Dinf flow-pointer tool. The
-/// flow-pointer grid should be created from a digital elevation model (DEM) that has been hydrologically corrected
+/// specify the name of the input digital elevation model (`--dem`). The DEM should have been hydrologically corrected
 /// to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using the
 /// `BreachDepressions` or `FillDepressions` tool.
 ///
-/// In addition to the input flow-pointer grid name, the user must specify the output type (`--out_type`). The output
+/// In addition to the input DEM grid name, the user must specify the output type (`--out_type`). The output
 /// flow-accumulation
 /// can be 1) specific catchment area (SCA), which is the upslope contributing area divided by the contour length (taken
 /// as the grid resolution), 2) total catchment area in square-metres, or 3) the number of upslope grid cells. The user
@@ -40,7 +39,7 @@ use std::thread;
 /// flow-accumulation grids must not be used to estimate other secondary terrain indices, such as the wetness index, or
 /// relative stream power index.
 ///
-/// Grid cells possessing the NoData value in the input flow-pointer grid are assigned the NoData value in the output
+/// Grid cells possessing the NoData value in the input DEM raster are assigned the NoData value in the output
 /// flow-accumulation image. The output raster is of the float data type and continuous data scale.
 ///
 /// # Reference
@@ -48,7 +47,7 @@ use std::thread;
 /// elevation models. Water resources research, 33(2), 309-319.
 ///
 /// # See Also
-/// `DInfPointer`, `BreachDepressions`, `FillDepressions`
+/// `DInfPointer`, `MDInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`,`
 pub struct DInfFlowAccumulation {
     name: String,
     description: String,
@@ -319,6 +318,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
 
                 let mut neighbouring_nodata: bool;
                 let mut interior_pit_found = false;
+                const HALF_PI: f64 = PI / 2f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -335,23 +335,21 @@ impl WhiteboxTool for DInfFlowAccumulation {
                                 if e1 != nodata && e2 != nodata {
                                     if e0 > e1 && e0 > e2 {
                                         s1 = (e0 - e1) / grid_res;
-                                        if s1 == 0.0 {
-                                            s1 = 0.00001;
-                                        }
                                         s2 = (e1 - e2) / grid_res;
-                                        r = (s2 / s1).atan();
+                                        r = if s1 != 0f64 { 
+                                            (s2 / s1).atan()
+                                        } else {
+                                            PI / 2.0
+                                        };
                                         s = (s1 * s1 + s2 * s2).sqrt();
                                         if s1 < 0.0 && s2 < 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if s1 < 0.0 && s2 == 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if s1 == 0.0 && s2 < 0.0 {
-                                            s = -1.0 * s;
-                                        }
-                                        if s1 == 0.001 && s2 < 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if r < 0.0 || r > atanof1 {
                                             if r < 0.0 {
@@ -364,7 +362,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                                         }
                                         if s >= max_slope && s != 0.00001 {
                                             max_slope = s;
-                                            dir = af * r + ac * (PI / 2.0);
+                                            dir = af * r + ac * HALF_PI;
                                         }
                                     } else if e0 > e1 || e0 > e2 {
                                         if e0 > e1 {
@@ -376,7 +374,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                                         }
                                         if s >= max_slope && s != 0.00001 {
                                             max_slope = s;
-                                            dir = af * r + ac * (PI / 2.0);
+                                            dir = af * r + ac * HALF_PI;
                                         }
                                     }
                                 } else {

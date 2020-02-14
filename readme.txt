@@ -61,6 +61,8 @@ Version 1.1.1 (XX-XX-20XX)
 - Added the AttributeCorrelationNeighbourhoodAnalysis tool.
 - Added the RadialBasisFunctionInterpolation tool, which includes a thin-plate spline mode.
 - Added the RasterPerimeter tool to measure the perimeter of raster polygons.
+- Added the MDInfFlowAccumulation tool to perform the MD-infinity flow accumulation of Seibert 
+  and McGlynn (2007).
 - Modified the LidarRbfInterpolation tool to improve efficiency.
 - Fixed an issue with how floating point attributes were written in Shapefile attribute tables.
 - Updated the LidarSegmentation tool, which now used RANSAC to fit planar models to points.
@@ -68,6 +70,9 @@ Version 1.1.1 (XX-XX-20XX)
   converted to the height above the nearest ground-classified point.
 - Fixed an issue with the Reclass and ReclassFromFile tool that caused striping.
 - The Relcass and ReclassFromFile tools now take 'min' and 'max' in the reclass string.
+- The watershed tool now accepts either a set of vector points or a raster for the pour points 
+  file. If a raster is specified, all non-zero, non-NoData valued cells will be considered 
+  outlet cells and the watershed labels will be assigned based on these values.
 
 Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 

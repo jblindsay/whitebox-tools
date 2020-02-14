@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/06/2017
-Last Modified: 12/10/2018
+Last Modified: 13/02/2020
 License: MIT
 */
 
@@ -232,6 +232,7 @@ impl WhiteboxTool for DInfPointer {
 
                 let mut neighbouring_nodata: bool;
                 let mut interior_pit_found = false;
+                const HALF_PI: f64 = PI / 2f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
@@ -248,23 +249,21 @@ impl WhiteboxTool for DInfPointer {
                                 if e1 != nodata && e2 != nodata {
                                     if e0 > e1 && e0 > e2 {
                                         s1 = (e0 - e1) / grid_res;
-                                        if s1 == 0.0 {
-                                            s1 = 0.00001;
-                                        }
                                         s2 = (e1 - e2) / grid_res;
-                                        r = (s2 / s1).atan();
+                                        r = if s1 != 0f64 { 
+                                            (s2 / s1).atan()
+                                        } else {
+                                            PI / 2.0
+                                        };
                                         s = (s1 * s1 + s2 * s2).sqrt();
                                         if s1 < 0.0 && s2 < 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if s1 < 0.0 && s2 == 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if s1 == 0.0 && s2 < 0.0 {
-                                            s = -1.0 * s;
-                                        }
-                                        if s1 == 0.001 && s2 < 0.0 {
-                                            s = -1.0 * s;
+                                            s *= -1.0;
                                         }
                                         if r < 0.0 || r > atanof1 {
                                             if r < 0.0 {
@@ -277,7 +276,7 @@ impl WhiteboxTool for DInfPointer {
                                         }
                                         if s >= max_slope && s != 0.00001 {
                                             max_slope = s;
-                                            dir = af * r + ac * (PI / 2.0);
+                                            dir = af * r + ac * HALF_PI;
                                         }
                                     } else if e0 > e1 || e0 > e2 {
                                         if e0 > e1 {
@@ -289,7 +288,7 @@ impl WhiteboxTool for DInfPointer {
                                         }
                                         if s >= max_slope && s != 0.00001 {
                                             max_slope = s;
-                                            dir = af * r + ac * (PI / 2.0);
+                                            dir = af * r + ac * HALF_PI;
                                         }
                                     }
                                 } else {

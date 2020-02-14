@@ -180,6 +180,7 @@ impl ToolManager {
         tool_names.push("JensonSnapPourPoints".to_string());
         tool_names.push("LongestFlowpath".to_string());
         tool_names.push("MaxUpslopeFlowpathLength".to_string());
+        tool_names.push("MDInfFlowAccumulation".to_string());
         tool_names.push("NumInflowingNeighbours".to_string());
         tool_names.push("RaiseWalls".to_string());
         tool_names.push("Rho8Pointer".to_string());
@@ -690,6 +691,7 @@ impl ToolManager {
             "maxupslopeflowpathlength" => {
                 Some(Box::new(hydro_analysis::MaxUpslopeFlowpathLength::new()))
             }
+            "mdinfflowaccumulation" => Some(Box::new(hydro_analysis::MDInfFlowAccumulation::new())),
             "numinflowingneighbours" => {
                 Some(Box::new(hydro_analysis::NumInflowingNeighbours::new()))
             }
