@@ -1,6 +1,6 @@
 (Updated 13-12-2019)
 
-The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **427 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent (see bottom table), and **40 tools** remain to be ported. For those tools that still need to be ported, a priorty has been provided.
+The following table summarizes the progress that has been made in porting *Whitebox GAT* (Java, Groovy) tools to the new *WhiteboxTools* (Rust) library. Currently, **435 tools** have been added to the *WhiteboxTools* library, including some with no GAT equivalent, and **38 tools** remain to be ported. For those tools that still need to be ported, a priority has been provided.
 
 | *Whitebox GAT* Tool Name                          | *WhiteboxTools* Name                | Priority | Notes                                                                                                                                                                               |
 |---------------------------------------------------|-------------------------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -239,7 +239,7 @@ The following table summarizes the progress that has been made in porting *White
 | Maximum Filter                                    | MaximumFilter                       |          |                                                                                                                                                                                     |
 | Maximum Interpolation (LiDAR)                     | Use BlockMaximum instead            |          |                                                                                                                                                                                     |
 | Maximum Upslope Flowpath Length                   | MaxUpslopefFlowpathLength           |          |                                                                                                                                                                                     |
-| MDInf Flow Accumulation                           |                                     | 1        |                                                                                                                                                                                     |
+| MDInf Flow Accumulation                           | MDInfFlowAccumulation               |          |                                                                                                                                                                                     |
 | Mean Filter                                       | MeanFilter                          |          |                                                                                                                                                                                     |
 | Median Filter                                     | MedianFilter                        |          |                                                                                                                                                                                     |
 | Medoid                                            | Medoid                              |          |                                                                                                                                                                                     |
@@ -309,7 +309,7 @@ The following table summarizes the progress that has been made in porting *White
 | Raster Streams to Vector                          | RasterStreamsToVector               |          |                                                                                                                                                                                     |
 | Raster to Vector Lines                            | RasterToVectorLines                 |          |                                                                                                                                                                                     |
 | Raster to Vector Points                           | RasterToVectorPoints                |          |                                                                                                                                                                                     |
-| Raster to Vector Polygons                         |                                     | 1        |                                                                                                                                                                                     |
+| Raster to Vector Polygons                         | RasterToVectorPolygons              |          |                                                                                                                                                                                     |
 | Rasterize Streams                                 | RasterizeStreams                    |          |                                                                                                                                                                                     |
 | Rasterize TIN                                     | TINGridding                         |          |                                                                                                                                                                                     |
 | Reciprocal                                        | Reciprocal                          |          |                                                                                                                                                                                     |
@@ -400,94 +400,3 @@ The following table summarizes the progress that has been made in porting *White
 | Write Function Memory Insert                      | WriteFunctionMemoryInsertion        |          |                                                                                                                                                                                     |
 | XOR                                               | Xor                                 |          |                                                                                                                                                                                     |
 | Z-Scores                                          | Zscores                             |          |                                                                                                                                                                                     |
-
-
-Tools that are new in *WhiteboxTools*
-
-| Tool Name                                         | Notes                                                                                                                                                          |
-|---------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Anova                                             |                                                                                                                                                                |
-| Arcosh | |
-| Arsinh | | 
-| Artanh | |
-| Basins                                            |                                                                                                                                                                |
-| BlockMaximumGridding                              |                                                                                                                                                                |
-| BoundaryShapeComplexity | |
-| CircularVarianceOfAspect | |
-| ClassifyBuildingsInLidar | |
-| ClassifyOverlapPoints                             |                                                                                                                                                                |
-| CleanVector | |
-| ClipLidarToPolygon                                |                                                                                                                                                                |
-| CornerDetection                                   |                                                                                                                                                                |
-| CountIf                                           |                                                                                                                                                                |
-| ConvertRasterFormat                               | An amalgamation of all previous import/export tools within Whitebox GAT.                                                                                       |
-| CsvPointsToVector | |
-| EdgeDensity | |
-| EdgePreservingMeanFilter                          |                                                                                                                                                                |
-| ElevationAboveStreamEuclidean                     |                                                                                                                                                                |
-| ErasePolygonFromLidar                             |                                                                                                                                                                |
-| Exp2                                              |                                                                                                                                                                |
-| FastAlmostGaussianFilter                          |                                                                                                                                                                |
-| FeaturePreservingSmoothing                        |                                                                                                                                                                |
-| FlattenLakes                                      |                                                                                                                                                                |
-| FlightLineOverlap                                 |                                                                                                                                                                |
-| FlowAccumulationFullWorkflow                      |                                                                                                                                                                |
-| FlowLengthDiff                                    |                                                                                                                                                                |
-| GammaCorrection                                   |                                                                                                                                                                |
-| HighPassMedianFilter                              |                                                                                                                                                                |
-| HortonStreamOrder                                 |                                                                                                                                                                |
-| HypsometricAnalysis                               |                                                                                                                                                                |
-| ImageCorrelationNeighbourhoodAnalysis | |
-| InPlaceAdd                                        |                                                                                                                                                                |
-| InPlaceDivide                                     |                                                                                                                                                                |
-| InPlaceMultiply                                   |                                                                                                                                                                |
-| InPlaceSubtract                                   |                                                                                                                                                                |
-| LidarClassifySubset                               |                                                                                                                                                                |
-| LidarColourize                                    |                                                                                                                                                                |
-| LidarConstructVectorTIN                           |                                                                                                                                                                |
-| LidarHillshade                                    |                                                                                                                                                                |
-| LidarKappaIndex                                   |                                                                                                                                                                |
-| LidarPointStats                                   |                                                                                                                                                                |
-| LidarRbfInterpolation                             |  Performs a radial basis function interpolation, including thin-plate splines                                                                                  |
-| LidarRemoveDuplicates                             |                                                                                                                                                                |
-| LidarRemoveOutliers                               |                                                                                                                                                                |
-| LidarSegmentationBasedFilter                      |                                                                                                                                                                |
-| LidarThin                                         |                                                                                                                                                                |
-| LidarThinHighDensity                              |                                                                                                                                                                |
-| LidarTinGridding                                  |                                                                                                                                                                |
-| LidarTophatTransform                              |                                                                                                                                                                |
-| LineIntersections                                 |                                                                                                                                                                |
-| LongestFlowpath                                   |                                                                                                                                                                |
-| MaxAnisotropyDev                                  |                                                                                                                                                                |
-| MaxAnisotropyDevSignature                         |                                                                                                                                                                |
-| MaxDifferenceFromMean                             |                                                                                                                                                                |
-| MergeLineSegments | |
-| MinAbsoluteOverlay                                |                                                                                                                                                                |
-| MinimumBoundingCircle                             |                                                                                                                                                                |
-| MinimumBoundingEnvelope                           |                                                                                                                                                                |
-| ModifyNoDataValue | |
-| MultiscaleRoughness                               |                                                                                                                                                                |
-| MultiscaleRoughnessSignature                      |                                                                                                                                                                |
-| NarrownessIndex | |
-| NormalVectors                                     |                                                                                                                                                                |
-| PairedSampleTTest | |
-| RadialBasisFunctionInterpolation                  |                                                                                                                                                                |
-| RelativeTopographicPosition                       |                                                                                                                                                                |
-| RobertsCrossFilter                                |                                                                                                                                                                |
-| ScharrFilter                                      |                                                                                                                                                                |
-| SelectTilesByPolygon                              |                                                                                                                                                                |
-| ShapeComplexityIndexRaster | |
-| SlopeVsElevationPlot                              |                                                                                                                                                                |
-| SurfaceAreaRatio | |
-| SphericalStdDevOfNormals | |
-| SplitWithLines                                    |                                                                                                                                                                |
-| StandardDeviationContrastStretch                  |                                                                                                                                                                |
-| StandardDeviationOfSlope                          |                                                                                                                                                                |
-| SumOverlay                                        |                                                                                                                                                                |
-| ToDegrees                                         |                                                                                                                                                                |
-| ToRadians                                         |                                                                                                                                                                |
-| TwoSampleKsTest | |
-| TributaryIdentifier                               |                                                                                                                                                                |
-| UnsharpMasking                                    |                                                                                                                                                                |
-| UpslopeDepressionStorage                          |                                                                                                                                                                |
-| WilcoxonSignedRankTest | |

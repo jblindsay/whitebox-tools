@@ -33,7 +33,7 @@ use std::path::Path;
 /// Online resource: [Whitebox Blog](https://whiteboxgeospatial.wordpress.com/2015/04/29/modelling-the-spatial-pattern-of-potential-impoundment-size-from-dems/)
 ///
 /// # See Also
-/// `StochasticDepressionAnalysis`
+/// `InsertDams`, `StochasticDepressionAnalysis`
 pub struct ImpoundmentSizeIndex {
     name: String,
     description: String,

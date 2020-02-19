@@ -18,12 +18,12 @@ use std::io::{Error, ErrorKind};
 use std::path;
 const EPSILON: f64 = std::f64::EPSILON;
 
-/// Converts a raster dataset to a vector of the POLYGON geometry type. The user must specify
+/// Converts a raster data set to a vector of the POLYGON geometry type. The user must specify
 /// the name of a raster file (`--input`) and the name of the output (`--output`) vector. All grid cells containing
-/// non-zero, non-NoData values will be considered a point. The vector's attribute table
-/// will contain a field called 'VALUE' that will contain the cell value for each point
-/// feature.
-/// 
+/// non-zero, non-NoData values will be considered part of a polygon feature. The vector's attribute table
+/// will contain a field called 'VALUE' that will contain the cell value for each polygon
+/// feature, in addition to the standard feature ID (FID) attribute.
+///
 /// # See Also
 /// `RasterToVectorPoints`, `RasterToVectorLines`
 pub struct RasterToVectorPolygons {
@@ -131,42 +131,6 @@ impl WhiteboxTool for RasterToVectorPolygons {
         working_directory: &'a str,
         verbose: bool,
     ) -> Result<(), Error> {
-        /*  Diagram 1:
-         *  Cell Numbering
-         *  _____________
-         *  |     |     |
-         *  |  0  |  1  |
-         *  |_____|_____|
-         *  |     |     |
-         *  |  2  |  3  |
-         *  |_____|_____|
-         *
-         */
-
-        /*  Diagram 2:
-         *  Edge Numbering (shared edges between cells)
-         *  _____________
-         *  |     |     |
-         *  |     3     |
-         *  |__2__|__0__|
-         *  |     |     |
-         *  |     1     |
-         *  |_____|_____|
-         *
-         */
-
-        /* Diagram 3:
-         * Cell Edge Numbering
-         *
-         *  ___0___
-         * |       |
-         * |       |
-         * 3       1
-         * |       |
-         * |___2___|
-         *
-         */
-
         let mut input_file = String::new();
         let mut output_file = String::new();
 
@@ -236,7 +200,7 @@ impl WhiteboxTool for RasterToVectorPolygons {
         let west = input.configs.west;
         let north = input.configs.north;
 
-        let get_x_from_column = |col| -> f64 { west + half_res_x + col as f64 * res_x};
+        let get_x_from_column = |col| -> f64 { west + half_res_x + col as f64 * res_x };
         let get_y_from_row = |row| -> f64 { north - half_res_y - row as f64 * res_y };
 
         let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
@@ -303,6 +267,30 @@ impl WhiteboxTool for RasterToVectorPolygons {
         drop(input);
         drop(visited);
 
+        /*  Diagram 1:
+         *  Edge Numbering (shared edges between cells)
+         *  _____________
+         *  |     |     |
+         *  |     3     |
+         *  |__2__|__0__|
+         *  |     |     |
+         *  |     1     |
+         *  |_____|_____|
+         *
+         */
+
+        /* Diagram 2:
+         * Cell Edge Numbering
+         *
+         *  ___0___
+         * |       |
+         * |       |
+         * 3       1
+         * |       |
+         * |___2___|
+         *
+         */
+
         let mut edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
         let mut num_edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
         let mut cell_edges: u8;
@@ -317,7 +305,8 @@ impl WhiteboxTool for RasterToVectorPolygons {
                         zn = clumps.get_value(row + dy[n], col + dx[n]);
                         if z != zn {
                             cell_edges |= 1u8 << n;
-                            if n < 4 { // Edges are only counted on the non-diagonal cells
+                            if n < 4 {
+                                // Edges are only counted on the non-diagonal cells
                                 num_edges.increment(row, col, 1u8);
                             }
                         }
@@ -335,7 +324,8 @@ impl WhiteboxTool for RasterToVectorPolygons {
             }
         }
 
-        let mut geometries = vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize-1];
+        let mut geometries =
+            vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize - 1];
 
         let mut cell: (isize, isize);
         let (mut x, mut y): (f64, f64);
@@ -350,7 +340,7 @@ impl WhiteboxTool for RasterToVectorPolygons {
         let edge_offsets_pt2_x = [half_res_x, half_res_x, -half_res_x, -half_res_x];
         let edge_offsets_pt2_y = [half_res_y, -half_res_y, -half_res_y, half_res_y];
         let (mut p1, mut p2, mut p3): (Point2D, Point2D, Point2D);
-        let prec = (5f64*EPSILON).tan();
+        let prec = (5f64 * EPSILON).tan();
         for row in 0..rows {
             for col in 0..columns {
                 z = clumps.get_value(row, col);
@@ -384,7 +374,10 @@ impl WhiteboxTool for RasterToVectorPolygons {
                                     // is there an edge with the diagonal?
                                     if (edges_val >> (edge + 4)) & 1u8 == 0u8 {
                                         // There's no edge with the diagonal. Move to the diagonal cell.
-                                        cell = (cell.0 + dy[edge as usize + 4], cell.1 + dx[edge as usize + 4]);
+                                        cell = (
+                                            cell.0 + dy[edge as usize + 4],
+                                            cell.1 + dx[edge as usize + 4],
+                                        );
                                         edge = edge_update[edge as usize];
                                     } else {
                                         // there is an edge with the diagonal
@@ -414,11 +407,18 @@ impl WhiteboxTool for RasterToVectorPolygons {
 
                             if points.len() > 1 {
                                 // Remove unnecessary points
-                                for a in (1..points.len()-1).rev() {
-                                    p1 = points[a-1];
+                                for a in (1..points.len() - 1).rev() {
+                                    p1 = points[a - 1];
                                     p2 = points[a];
-                                    p3 = points[a+1];
-                                    if ((p2.y-p1.y)*(p3.x-p2.x)-(p3.y-p2.y)*(p2.x-p1.x)).abs() <= (((p2.x-p1.x)*(p3.x-p2.x)+(p2.y-p1.y)*(p3.y-p2.y))).abs() * prec {
+                                    p3 = points[a + 1];
+                                    if ((p2.y - p1.y) * (p3.x - p2.x)
+                                        - (p3.y - p2.y) * (p2.x - p1.x))
+                                        .abs()
+                                        <= ((p2.x - p1.x) * (p3.x - p2.x)
+                                            + (p2.y - p1.y) * (p3.y - p2.y))
+                                            .abs()
+                                            * prec
+                                    {
                                         points.remove(a);
                                     }
                                 }
@@ -449,7 +449,10 @@ impl WhiteboxTool for RasterToVectorPolygons {
         for fid in 0..geometries.len() {
             output.add_record(geometries[fid].clone());
             output.attributes.add_record(
-                vec![FieldData::Int(fid as i32 + 1), FieldData::Real(clump_to_value[fid + 1])],
+                vec![
+                    FieldData::Int(fid as i32 + 1),
+                    FieldData::Real(clump_to_value[fid + 1]),
+                ],
                 false,
             );
 

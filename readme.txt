@@ -64,6 +64,9 @@ Version 1.1.1 (XX-XX-20XX)
 - Added the RasterPerimeter tool to measure the perimeter of raster polygons.
 - Added the MDInfFlowAccumulation tool to perform the MD-infinity flow accumulation of Seibert 
   and McGlynn (2007).
+- Added the InsertDams tool, which can be used to insert impoundment features at a set of points
+  of interest into a DEM. This tool can be used in combination with the ImpoundmentSizeIndex tool 
+  to create artificial reservoirs/depressions.
 - Modified the LidarRbfInterpolation tool to improve efficiency.
 - Fixed an issue with how floating point attributes were written in Shapefile attribute tables.
 - Updated the LidarSegmentation tool, which now used RANSAC to fit planar models to points.
