@@ -537,7 +537,8 @@ impl WhiteboxTool for StochasticDepressionAnalysis {
                 }
 
                 for _ in 0..rows {
-                    let (row, data, val1, val2) = rx.recv().expect("Error receiving data from thread.");
+                    let (row, data, val1, val2) =
+                        rx.recv().expect("Error receiving data from thread.");
                     error_model.set_row_data(row, data);
                     if val1 < min_value {
                         min_value = val1;

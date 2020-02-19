@@ -336,7 +336,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
                                     if e0 > e1 && e0 > e2 {
                                         s1 = (e0 - e1) / grid_res;
                                         s2 = (e1 - e2) / grid_res;
-                                        r = if s1 != 0f64 { 
+                                        r = if s1 != 0f64 {
                                             (s2 / s1).atan()
                                         } else {
                                             PI / 2.0

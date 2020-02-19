@@ -514,7 +514,8 @@ impl WhiteboxTool for KMeansClustering {
             }
 
             for r in 0..rows {
-                let (row, data, ccd, cmin, cmax) = rx.recv().expect("Error receiving data from thread.");
+                let (row, data, ccd, cmin, cmax) =
+                    rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] >= 0 {
                         if !n_counted {

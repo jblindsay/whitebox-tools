@@ -259,9 +259,15 @@ impl WhiteboxTool for ElevPercentile {
                 };
             } else if flag_val == "-sig_digits" {
                 num_sig_digits = if keyval {
-                    vec[1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<i32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<i32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

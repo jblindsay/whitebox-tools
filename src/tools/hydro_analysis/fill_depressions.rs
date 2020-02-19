@@ -564,7 +564,8 @@ impl WhiteboxTool for FillDepressions {
                             Some(cell2) => {
                                 if cell2.priority == z {
                                     flats.set_value(cell2.row, cell2.column, 3);
-                                    outlets.push(minheap.pop().expect("Error during pop operation."));
+                                    outlets
+                                        .push(minheap.pop().expect("Error during pop operation."));
                                 } else {
                                     flag = false;
                                 }

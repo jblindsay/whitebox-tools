@@ -780,7 +780,8 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
             let mut max_ties = -1isize;
             let mut num_ties = 0;
             for r in 0..rows {
-                let (row, data1, data2, ties, max_row_ties) = rx.recv().expect("Error receiving data from thread.");
+                let (row, data1, data2, ties, max_row_ties) =
+                    rx.recv().expect("Error receiving data from thread.");
                 output_val.set_row_data(row, data1);
                 output_sig.set_row_data(row, data2);
                 num_ties += ties;

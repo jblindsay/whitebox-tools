@@ -169,9 +169,15 @@ impl WhiteboxTool for SmoothVectors {
                 };
             } else if flag_val == "-filter" {
                 filter = if keyval {
-                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             }
         }

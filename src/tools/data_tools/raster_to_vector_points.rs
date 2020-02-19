@@ -15,10 +15,13 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// Converts a raster dataset to a vector of the POINT shapetype. The user must specify
-/// the name of a raster file and the name of the output vector. Points will correspond
+/// the name of a raster file (`--input`) and the name of the output vector (`--output`). Points will correspond
 /// with grid cell centre points. All grid cells containing non-zero, non-NoData values
 /// will be considered a point. The vector's attribute table will contain a field called
 /// 'VALUE' that will contain the cell value for each point feature.
+/// 
+/// # See Also
+/// `RasterToVectorPolygons`, `RasterToVectorLines`
 pub struct RasterToVectorPoints {
     name: String,
     description: String,

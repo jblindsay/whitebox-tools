@@ -357,7 +357,8 @@ impl WhiteboxTool for ImageCorrelation {
                     let mut image2_total_deviation = 0f64;
                     let mut total_product_deviations = 0f64;
                     for _ in 0..num_procs {
-                        let (val1, val2, val3) = rx.recv().expect("Error receiving data from thread.");
+                        let (val1, val2, val3) =
+                            rx.recv().expect("Error receiving data from thread.");
                         image1_total_deviation += val1;
                         image2_total_deviation += val2;
                         total_product_deviations += val3;

@@ -44,6 +44,7 @@ impl ToolManager {
         tool_names.push("PrintGeoTiffTags".to_string());
         tool_names.push("RasterToVectorLines".to_string());
         tool_names.push("RasterToVectorPoints".to_string());
+        tool_names.push("RasterToVectorPolygons".to_string());
         tool_names.push("ReinitializeAttributeTable".to_string());
         tool_names.push("RemovePolygonHoles".to_string());
         tool_names.push("SetNodataValue".to_string());
@@ -511,6 +512,7 @@ impl ToolManager {
             "printgeotifftags" => Some(Box::new(data_tools::PrintGeoTiffTags::new())),
             "rastertovectorlines" => Some(Box::new(data_tools::RasterToVectorLines::new())),
             "rastertovectorpoints" => Some(Box::new(data_tools::RasterToVectorPoints::new())),
+            "rastertovectorpolygons" => Some(Box::new(data_tools::RasterToVectorPolygons::new())),
             "reinitializeattributetable" => {
                 Some(Box::new(data_tools::ReinitializeAttributeTable::new()))
             }
@@ -670,7 +672,9 @@ impl ToolManager {
             "fd8pointer" => Some(Box::new(hydro_analysis::FD8Pointer::new())),
             "fillburn" => Some(Box::new(hydro_analysis::FillBurn::new())),
             "filldepressions" => Some(Box::new(hydro_analysis::FillDepressions::new())),
-            "filldepressionsplanchonanddarboux" => Some(Box::new(hydro_analysis::FillDepressionsPlanchonAndDarboux::new())),
+            "filldepressionsplanchonanddarboux" => Some(Box::new(
+                hydro_analysis::FillDepressionsPlanchonAndDarboux::new(),
+            )),
             "filldepressionswangandliu" => {
                 Some(Box::new(hydro_analysis::FillDepressionsWangAndLiu::new()))
             }
@@ -1212,7 +1216,9 @@ impl ToolManager {
         let mut tool_details: Vec<(String, String)> = Vec::new();
 
         for val in &self.tool_names {
-            let tool = self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val));
+            let tool = self
+                .get_tool(&val)
+                .expect(&format!("Unrecognized tool name {}.", val));
             tool_details.push(get_name_and_description(tool));
         }
 
@@ -1226,7 +1232,9 @@ impl ToolManager {
     pub fn list_tools_with_keywords(&self, keywords: Vec<String>) {
         let mut tool_details: Vec<(String, String)> = Vec::new();
         for val in &self.tool_names {
-            let tool = self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val));
+            let tool = self
+                .get_tool(&val)
+                .expect(&format!("Unrecognized tool name {}.", val));
             let toolbox = tool.get_toolbox();
             let (nm, des) = get_name_and_description(tool);
             for kw in &keywords {
@@ -1234,7 +1242,10 @@ impl ToolManager {
                     || des.to_lowercase().contains(&(kw.to_lowercase()))
                     || toolbox.to_lowercase().contains(&(kw.to_lowercase()))
                 {
-                    tool_details.push(get_name_and_description(self.get_tool(&val).expect(&format!("Unrecognized tool name {}.", val))));
+                    tool_details.push(get_name_and_description(
+                        self.get_tool(&val)
+                            .expect(&format!("Unrecognized tool name {}.", val)),
+                    ));
                     break;
                 }
             }

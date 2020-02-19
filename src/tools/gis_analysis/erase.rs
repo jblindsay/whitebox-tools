@@ -395,7 +395,8 @@ impl WhiteboxTool for Erase {
                     let mut output_feature: Vec<bool> = vec![false; num_points];
                     let mut num_out_pnts = 0;
                     for _ in 0..num_points {
-                        let (point_num, out) = rx.recv().expect("Error receiving data from thread.");
+                        let (point_num, out) =
+                            rx.recv().expect("Error receiving data from thread.");
                         if !out {
                             output_feature[point_num] = true;
                             num_out_pnts += 1;

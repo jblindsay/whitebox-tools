@@ -18,9 +18,9 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool can be used to fill all of the depressions in a digital elevation model (DEM) and to remove the
-/// flat areas using the Planchon and Darboux (2002) method. This is a common pre-processing step required by 
-/// many flow-path analysis tools to ensure continuous flow from each grid cell to an outlet located along 
-/// the grid edge. **This tool is currently not the most efficient depression-removal algorithm available in 
+/// flat areas using the Planchon and Darboux (2002) method. This is a common pre-processing step required by
+/// many flow-path analysis tools to ensure continuous flow from each grid cell to an outlet located along
+/// the grid edge. **This tool is currently not the most efficient depression-removal algorithm available in
 /// WhiteboxTools**; `FillDepressions` and `BreachDepressionsLeastCost` are both more efficient and often
 /// produce better, lower-impact results.
 ///
@@ -28,7 +28,7 @@ use std::path;
 /// **it is best not to specify this optional value and to let the algorithm determine the most suitable value itself**.
 ///
 /// # Reference
-/// Planchon, O. and Darboux, F., 2002. A fast, simple and versatile algorithm to fill the depressions of digital 
+/// Planchon, O. and Darboux, F., 2002. A fast, simple and versatile algorithm to fill the depressions of digital
 /// elevation models. Catena, 46(2-3), pp.159-176.
 ///
 /// # See Also
@@ -46,7 +46,9 @@ impl FillDepressionsPlanchonAndDarboux {
         // public constructor
         let name = "FillDepressionsPlanchonAndDarboux".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Fills all of the depressions in a DEM using the Planchon and Darboux (2002) method.".to_string();
+        let description =
+            "Fills all of the depressions in a DEM using the Planchon and Darboux (2002) method."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -293,13 +295,13 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                 }
             }
 
-            z = input.get_value(row, columns-1);
-            w = output.get_value(row, columns-1);
+            z = input.get_value(row, columns - 1);
+            w = output.get_value(row, columns - 1);
             if z != nodata {
-                output.set_value(row, columns-1, z);
+                output.set_value(row, columns - 1, z);
             } else if w == large_value {
-                output.set_value(row, columns-1, nodata_output);
-                stack.push((row, columns-1));
+                output.set_value(row, columns - 1, nodata_output);
+                stack.push((row, columns - 1));
                 while let Some(cell) = stack.pop() {
                     for n in 0..8 {
                         rn = cell.0 + dy[n];
@@ -345,13 +347,13 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                 }
             }
 
-            z = input.get_value(rows-1, col);
-            w = output.get_value(rows-1, col);
+            z = input.get_value(rows - 1, col);
+            w = output.get_value(rows - 1, col);
             if z != nodata {
-                output.set_value(rows-1, col, z);
-            } else if w == large_value  {
-                output.set_value(rows-1, col, nodata_output);
-                stack.push((rows-1, col));
+                output.set_value(rows - 1, col, z);
+            } else if w == large_value {
+                output.set_value(rows - 1, col, nodata_output);
+                stack.push((rows - 1, col));
                 while let Some(cell) = stack.pop() {
                     for n in 0..8 {
                         rn = cell.0 + dy[n];
@@ -379,8 +381,8 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
             something_done = false;
             let mut num_modified = 0u64;
             if i == 0 {
-                for row in 1..rows-1 {
-                    for col in 1..columns-1 {
+                for row in 1..rows - 1 {
+                    for col in 1..columns - 1 {
                         z = input.get_value(row, col);
                         w = output.get_value(row, col);
                         if w != nodata_output {
@@ -391,12 +393,14 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                                     wn = output.get_value(rn, cn);
                                     if wn != nodata_output {
                                         wn += small_num;
-                                        if z >= wn { // operation 1
+                                        if z >= wn {
+                                            // operation 1
                                             output.set_value(row, col, z);
                                             something_done = true;
                                             num_modified += 1;
                                             break;
-                                        } else if w > wn && wn > z { // operation 2
+                                        } else if w > wn && wn > z {
+                                            // operation 2
                                             output.set_value(row, col, wn);
                                             w = wn;
                                             something_done = true;
@@ -416,8 +420,8 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                     }
                 }
             } else if i == 1 {
-                for row in (1..rows-1).rev() {
-                    for col in (1..columns-1).rev() {
+                for row in (1..rows - 1).rev() {
+                    for col in (1..columns - 1).rev() {
                         z = input.get_value(row, col);
                         w = output.get_value(row, col);
                         if w != nodata_output {
@@ -428,12 +432,14 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                                     wn = output.get_value(rn, cn);
                                     if wn != nodata_output {
                                         wn += small_num;
-                                        if z >= wn { // operation 1
+                                        if z >= wn {
+                                            // operation 1
                                             output.set_value(row, col, z);
                                             something_done = true;
                                             num_modified += 1;
                                             break;
-                                        } else if w > wn && wn > z { // operation 2
+                                        } else if w > wn && wn > z {
+                                            // operation 2
                                             output.set_value(row, col, wn);
                                             w = wn;
                                             something_done = true;
@@ -453,8 +459,8 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                     }
                 }
             } else if i == 2 {
-                for row in 1..rows-1 {
-                    for col in (1..columns-1).rev() {
+                for row in 1..rows - 1 {
+                    for col in (1..columns - 1).rev() {
                         z = input.get_value(row, col);
                         w = output.get_value(row, col);
                         if w != nodata_output {
@@ -465,12 +471,14 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                                     wn = output.get_value(rn, cn);
                                     if wn != nodata_output {
                                         wn += small_num;
-                                        if z >= wn { // operation 1
+                                        if z >= wn {
+                                            // operation 1
                                             output.set_value(row, col, z);
                                             something_done = true;
                                             num_modified += 1;
                                             break;
-                                        } else if w > wn && wn > z { // operation 2
+                                        } else if w > wn && wn > z {
+                                            // operation 2
                                             output.set_value(row, col, wn);
                                             w = wn;
                                             something_done = true;
@@ -489,9 +497,10 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                         }
                     }
                 }
-            } else { // i == 3
-                for row in (1..rows-1).rev() {
-                    for col in 1..columns-1 {
+            } else {
+                // i == 3
+                for row in (1..rows - 1).rev() {
+                    for col in 1..columns - 1 {
                         z = input.get_value(row, col);
                         w = output.get_value(row, col);
                         if w != nodata_output {
@@ -502,12 +511,14 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
                                     wn = output.get_value(rn, cn);
                                     if wn != nodata_output {
                                         wn += small_num;
-                                        if z >= wn { // operation 1
+                                        if z >= wn {
+                                            // operation 1
                                             output.set_value(row, col, z);
                                             something_done = true;
                                             num_modified += 1;
                                             break;
-                                        } else if w > wn && wn > z { // operation 2
+                                        } else if w > wn && wn > z {
+                                            // operation 2
                                             output.set_value(row, col, wn);
                                             w = wn;
                                             something_done = true;

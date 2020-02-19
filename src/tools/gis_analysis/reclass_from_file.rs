@@ -262,8 +262,6 @@ impl WhiteboxTool for ReclassFromFile {
         };
         let reclass_vals = Arc::new(reclass_vals);
 
-        
-
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
 
@@ -285,7 +283,9 @@ impl WhiteboxTool for ReclassFromFile {
                                 // This is a shortcut intended to take advantage of the inherent
                                 // spatial autocorrelation in spatial distributions to speed up
                                 // the search for the appropriate range bin.
-                                if z >= reclass_vals[prev_idx * 3 + 1] && z < reclass_vals[prev_idx * 3 + 2] {
+                                if z >= reclass_vals[prev_idx * 3 + 1]
+                                    && z < reclass_vals[prev_idx * 3 + 2]
+                                {
                                     z = reclass_vals[prev_idx * 3];
                                 } else {
                                     for a in 0..num_ranges {

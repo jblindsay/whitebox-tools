@@ -30,7 +30,7 @@ use std::path;
 /// between stream segments at confluence sites, whereas `RasterToVectorLines` will not.
 ///
 /// # See Also
-/// `RasterToVectorPoints`, `RasterStreamsToVector`
+/// `RasterToVectorPolygons`, `RasterToVectorPoints`, `RasterStreamsToVector`
 pub struct RasterToVectorLines {
     name: String,
     description: String,
@@ -198,7 +198,6 @@ impl WhiteboxTool for RasterToVectorLines {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        // let num_cells = input.num_cells();
 
         // create output file
         let mut output = Shapefile::new(&output_file, ShapeType::PolyLine)?;

@@ -30,10 +30,10 @@ use std::thread;
 ///
 /// > --reclass_vals='0.0;1.0;1.0;2.0'
 ///
-/// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0. Users 
+/// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0. Users
 /// may add the text strings *min* and *max* in the class definitions to stand in for the raster's minimum and maximum values.
 /// For example:
-/// 
+///
 /// > --reclass_vals='0.0;min;1.0;1.0;1.0;max'
 ///
 /// Any values in the input raster that do not fall within one of the classes will be assigned its original value in the
@@ -242,15 +242,18 @@ impl WhiteboxTool for Reclass {
                 }
             }
         }
-        let reclass_vals: Vec<f64> = v.iter().map(|s| 
-            if s.to_lowercase().contains("min") {
-                min_val
-            } else if s.to_lowercase().contains("max") {
-                max_val
-            } else {
-                s.parse().unwrap()
-            }
-        ).collect();
+        let reclass_vals: Vec<f64> = v
+            .iter()
+            .map(|s| {
+                if s.to_lowercase().contains("min") {
+                    min_val
+                } else if s.to_lowercase().contains("max") {
+                    max_val
+                } else {
+                    s.parse().unwrap()
+                }
+            })
+            .collect();
         if reclass_vals.len() % 3 != 0 && !assign_mode {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
@@ -263,7 +266,6 @@ impl WhiteboxTool for Reclass {
             true => reclass_vals.len() / 2,
         };
         let reclass_vals = Arc::new(reclass_vals);
-
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -286,7 +288,9 @@ impl WhiteboxTool for Reclass {
                                 // This is a shortcut intended to take advantage of the inherent
                                 // spatial autocorrelation in spatial distributions to speed up
                                 // the search for the appropriate range bin.
-                                if z >= reclass_vals[prev_idx * 3 + 1] && z < reclass_vals[prev_idx * 3 + 2] {
+                                if z >= reclass_vals[prev_idx * 3 + 1]
+                                    && z < reclass_vals[prev_idx * 3 + 2]
+                                {
                                     z = reclass_vals[prev_idx * 3];
                                 } else {
                                     for a in 0..num_ranges {

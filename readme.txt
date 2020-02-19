@@ -57,6 +57,7 @@ for more details.
 ******************
 
 Version 1.1.1 (XX-XX-20XX)
+- Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.
 - Added the MultiscaleElevationPercentile tool.
 - Added the AttributeCorrelationNeighbourhoodAnalysis tool.
 - Added the RadialBasisFunctionInterpolation tool, which includes a thin-plate spline mode.

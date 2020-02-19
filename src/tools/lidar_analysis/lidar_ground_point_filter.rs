@@ -265,9 +265,15 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 };
             } else if flag_val == "-min_neighbours" || flag_val == "-min_neighbors" {
                 min_neighbours = if keyval {
-                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-height_threshold" {
                 height_threshold = if keyval {

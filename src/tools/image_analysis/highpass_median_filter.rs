@@ -238,9 +238,15 @@ impl WhiteboxTool for HighPassMedianFilter {
                 }
             } else if flag_val == "-sig_digits" {
                 if keyval {
-                    num_sig_digits = vec[1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val));
+                    num_sig_digits = vec[1]
+                        .to_string()
+                        .parse::<i32>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 } else {
-                    num_sig_digits = args[i + 1].to_string().parse::<i32>().expect(&format!("Error parsing {}", flag_val));
+                    num_sig_digits = args[i + 1]
+                        .to_string()
+                        .parse::<i32>()
+                        .expect(&format!("Error parsing {}", flag_val));
                 }
             }
         }

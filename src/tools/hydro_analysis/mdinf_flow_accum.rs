@@ -5,8 +5,8 @@ Created: 12/02/2020
 Last Modified: 12/02/2020
 License: MIT
 
-This tool has been created as a port of the Java MD-infinity implementation written by Jan Seibert (jan.seibert@geo.uzh.ch) and 
-Marc Vis (marc.vis@geo.uzh.ch) for Whitebox GAT: 
+This tool has been created as a port of the Java MD-infinity implementation written by Jan Seibert (jan.seibert@geo.uzh.ch) and
+Marc Vis (marc.vis@geo.uzh.ch) for Whitebox GAT:
 
 https://github.com/jblindsay/whitebox-geospatial-analysis-tools/blob/master/GeasyTools/plugins/FlowAccumMDInf.java
 */
@@ -17,12 +17,12 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
-use std::f64::consts::PI;
 
 /// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the MD-infinity algorithm
 /// (Seibert and McGlynn, 2007). This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering
@@ -48,7 +48,7 @@ use std::f64::consts::PI;
 /// flow-accumulation image. The output raster is of the float data type and continuous data scale.
 ///
 /// # Reference
-/// Seibert, J. and McGlynn, B.L., 2007. A new triangular multiple flow direction algorithm for computing upslope areas from 
+/// Seibert, J. and McGlynn, B.L., 2007. A new triangular multiple flow direction algorithm for computing upslope areas from
 /// gridded digital elevation models. Water resources research, 43(4).
 ///
 /// # See Also
@@ -379,8 +379,17 @@ impl WhiteboxTool for MDInfFlowAccumulation {
 
         let xd = [0, -1, -1, -1, 0, 1, 1, 1];
         let yd = [-1, -1, 0, 1, 1, 1, 0, -1];
-        let dd = [1f64, 2f64.sqrt(), 1f64, 2f64.sqrt(), 1f64, 2f64.sqrt(), 1f64, 2f64.sqrt()];
-    
+        let dd = [
+            1f64,
+            2f64.sqrt(),
+            1f64,
+            2f64.sqrt(),
+            1f64,
+            2f64.sqrt(),
+            1f64,
+            2f64.sqrt(),
+        ];
+
         let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
         let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
@@ -422,11 +431,13 @@ impl WhiteboxTool for MDInfFlowAccumulation {
                 let mut valley_sum: f64 = 0f64;
                 let mut valley_max: f64 = 0f64;
                 i_max = 0;
-                let mut s_facet = [nodata, nodata, nodata, nodata, nodata, nodata, nodata, nodata];
+                let mut s_facet = [
+                    nodata, nodata, nodata, nodata, nodata, nodata, nodata, nodata,
+                ];
                 for c in 0..8 {
                     i = c;
                     ii = (i + 1) % 8;
-    
+
                     p1 = input.get_value(row + yd[i], col + xd[i]);
                     p2 = input.get_value(row + yd[ii], col + xd[ii]);
                     if p1 < z && p1 != nodata {
@@ -440,7 +451,7 @@ impl WhiteboxTool for MDInfFlowAccumulation {
                         // Calculate the coordinates of the normal to the triangular facet
                         nx = (yd[i] as f64 * z2 - yd[ii] as f64 * z1) * grid_res;
                         ny = (xd[ii] as f64 * z1 - xd[i] as f64 * z2) * grid_res;
-                        nz = (xd[i] * yd[ii] - xd[ii] * yd[i]) as f64 * grid_res*grid_res;
+                        nz = (xd[i] * yd[ii] - xd[ii] * yd[i]) as f64 * grid_res * grid_res;
 
                         // Calculate the downslope direction of the triangular facet
                         if nx == 0f64 {
@@ -458,7 +469,7 @@ impl WhiteboxTool for MDInfFlowAccumulation {
                         }
 
                         // Calculate the slope of the triangular facet
-                        hs = -((nz / (nx*nx + ny*ny + nz*nz).sqrt()).acos()).tan();
+                        hs = -((nz / (nx * nx + ny * ny + nz * nz).sqrt()).acos()).tan();
 
                         // If the downslope direction is outside the triangular facet, then use the direction of p1 or p2
                         if (hr < i as f64 * quarter_pi) || (hr > (i + 1) as f64 * quarter_pi) {
@@ -473,12 +484,11 @@ impl WhiteboxTool for MDInfFlowAccumulation {
 
                         r_facet[c] = hr;
                         s_facet[c] = hs;
-
                     } else {
                         if p1 != nodata && p1 < z {
                             hr = (i as f64) / 4.0 * PI;
                             hs = (z - p1) / (dd[ii] * grid_res);
-                            
+
                             r_facet[c] = hr;
                             s_facet[c] = hs;
                         }
@@ -490,16 +500,25 @@ impl WhiteboxTool for MDInfFlowAccumulation {
                     i = c;
                     ii = (i + 1) % 8;
 
-                    if s_facet[i] > 0f64 { // If the slope is downhill
-                        valley[i] = if r_facet[i] > (i as f64 * quarter_pi) && r_facet[i] < ((i + 1) as f64 * quarter_pi) { // If the downslope direction is inside the 45 degrees of the triangular facet
+                    if s_facet[i] > 0f64 {
+                        // If the slope is downhill
+                        valley[i] = if r_facet[i] > (i as f64 * quarter_pi)
+                            && r_facet[i] < ((i + 1) as f64 * quarter_pi)
+                        {
+                            // If the downslope direction is inside the 45 degrees of the triangular facet
                             s_facet[i]
-                        } else if r_facet[i] == r_facet[ii] { // If two adjacent triangular facets have the same downslope direction
+                        } else if r_facet[i] == r_facet[ii] {
+                            // If two adjacent triangular facets have the same downslope direction
                             s_facet[i]
-                        } else if (s_facet[ii] == nodata) && (r_facet[i] == ((i + 1) as f64 * quarter_pi)) { // If the downslope direction is on the border of the current triangular facet, and the corresponding neigbour's downslope is NoData
+                        } else if (s_facet[ii] == nodata)
+                            && (r_facet[i] == ((i + 1) as f64 * quarter_pi))
+                        {
+                            // If the downslope direction is on the border of the current triangular facet, and the corresponding neigbour's downslope is NoData
                             s_facet[i]
                         } else {
                             ii = (i + 7) % 8;
-                            if (s_facet[ii] == nodata) && (r_facet[i] == (i as f64 * quarter_pi)) { // If the downslope direction is on the other border of the current triangular facet, and the corresponding neigbour's downslope is NoData
+                            if (s_facet[ii] == nodata) && (r_facet[i] == (i as f64 * quarter_pi)) {
+                                // If the downslope direction is on the other border of the current triangular facet, and the corresponding neigbour's downslope is NoData
                                 s_facet[i]
                             } else {
                                 0f64
@@ -546,8 +565,10 @@ impl WhiteboxTool for MDInfFlowAccumulation {
                         ii = (i + 1) % 8;
 
                         if valley[i] > 0f64 {
-                            weights[i] += valley[i] * ((i + 1) as f64 * quarter_pi - r_facet[i]) / quarter_pi;
-                            weights[ii] += valley[i] * (r_facet[i] - i as f64 * quarter_pi) / quarter_pi;
+                            weights[i] +=
+                                valley[i] * ((i + 1) as f64 * quarter_pi - r_facet[i]) / quarter_pi;
+                            weights[ii] +=
+                                valley[i] * (r_facet[i] - i as f64 * quarter_pi) / quarter_pi;
                         }
                     }
                 }

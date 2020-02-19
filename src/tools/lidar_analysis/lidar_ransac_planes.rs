@@ -268,15 +268,27 @@ impl WhiteboxTool for LidarRansacPlanes {
                 };
             } else if flag_val == "-num_iter" {
                 num_iter = if keyval {
-                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-num_samples" {
                 num_samples = if keyval {
-                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-threshold" {
                 threshold = if keyval {
@@ -292,9 +304,15 @@ impl WhiteboxTool for LidarRansacPlanes {
                 };
             } else if flag_val == "-model_size" {
                 acceptable_model_size = if keyval {
-                    vec[1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    args[i + 1].to_string().parse::<usize>().expect(&format!("Error parsing {}", flag_val))
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-max_slope" {
                 max_slope = if keyval {

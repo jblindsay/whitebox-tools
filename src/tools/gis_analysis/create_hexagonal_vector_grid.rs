@@ -243,7 +243,7 @@ impl WhiteboxTool for CreateHexagonalVectorGrid {
         let (extent, proj_info) = if input_file.to_lowercase().ends_with(".shp") {
             // Note that this only works because at the moment, Shapefiles are the only supported vector.
             // If additional vector formats are added in the future, this will need updating.
-        
+
             let input = Shapefile::read(&input_file)?;
             (
                 BoundingBox::new(
