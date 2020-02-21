@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.1.1 (XX-XX-20XX)
+Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.
 - Added the MultiscaleElevationPercentile tool.
 - Added the AttributeCorrelationNeighbourhoodAnalysis tool.
@@ -67,11 +67,11 @@ Version 1.1.1 (XX-XX-20XX)
 - Added the InsertDams tool, which can be used to insert impoundment features at a set of points
   of interest into a DEM. This tool can be used in combination with the ImpoundmentSizeIndex tool 
   to create artificial reservoirs/depressions.
+- Added the HeightAboveGround tool, to normalize a LiDAR point cloud. Each point's z-value is
+  converted to the height above the nearest ground-classified point.
 - Modified the LidarRbfInterpolation tool to improve efficiency.
 - Fixed an issue with how floating point attributes were written in Shapefile attribute tables.
 - Updated the LidarSegmentation tool, which now used RANSAC to fit planar models to points.
-- Added the HeightAboveGround tool, to normalize a LiDAR point cloud. Each point's z-value is
-  converted to the height above the nearest ground-classified point.
 - Fixed an issue with the Reclass and ReclassFromFile tool that caused striping.
 - The Relcass and ReclassFromFile tools now take 'min' and 'max' in the reclass string.
 - The watershed tool now accepts either a set of vector points or a raster for the pour points 
