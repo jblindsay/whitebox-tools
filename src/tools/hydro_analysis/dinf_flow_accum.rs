@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 24/06/2017
-Last Modified: 13/02/2020
+Last Modified: 21/02/2020
 License: MIT
 */
 
@@ -22,11 +22,12 @@ use std::thread;
 /// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the D-infinity algorithm
 /// (Tarboton, 1997). This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering
 /// each grid cell is routed to one or two downslope neighbour, i.e. flow divergence is permitted. The user must
-/// specify the name of the input digital elevation model (`--dem`). The DEM should have been hydrologically corrected
+/// specify the name of the input digital elevation model or D-infinity pointer raster (`--input`). If an input DEM is 
+/// specified, the DEM should have been hydrologically corrected
 /// to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using the
-/// `BreachDepressions` or `FillDepressions` tool.
+/// `BreachDepressionsLeastCost` or `FillDepressions` tool. 
 ///
-/// In addition to the input DEM grid name, the user must specify the output type (`--out_type`). The output
+/// In addition to the input DEM/pointer raster name, the user must specify the output type (`--out_type`). The output
 /// flow-accumulation
 /// can be 1) specific catchment area (SCA), which is the upslope contributing area divided by the contour length (taken
 /// as the grid resolution), 2) total catchment area in square-metres, or 3) the number of upslope grid cells. The user
@@ -39,7 +40,7 @@ use std::thread;
 /// flow-accumulation grids must not be used to estimate other secondary terrain indices, such as the wetness index, or
 /// relative stream power index.
 ///
-/// Grid cells possessing the NoData value in the input DEM raster are assigned the NoData value in the output
+/// Grid cells possessing the NoData value in the input DEM/pointer raster are assigned the NoData value in the output
 /// flow-accumulation image. The output raster is of the float data type and continuous data scale.
 ///
 /// # Reference
@@ -47,7 +48,7 @@ use std::thread;
 /// elevation models. Water resources research, 33(2), 309-319.
 ///
 /// # See Also
-/// `DInfPointer`, `MDInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`,`
+/// `DInfPointer`, `MDInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`,`
 pub struct DInfFlowAccumulation {
     name: String,
     description: String,
@@ -66,9 +67,9 @@ impl DInfFlowAccumulation {
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input DEM File".to_owned(),
-            flags: vec!["-i".to_owned(), "--dem".to_owned()],
-            description: "Input raster DEM file.".to_owned(),
+            name: "Input DEM or D-inf Pointer File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
+            description: "Input raster DEM or D-infinity pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -125,6 +126,15 @@ impl DInfFlowAccumulation {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Is the input raster a D-inf flow pointer?".to_owned(),
+            flags: vec!["--pntr".to_owned()],
+            description: "Is the input raster a D-infinity flow pointer rather than a DEM?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -136,8 +146,8 @@ impl DInfFlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type=sca
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --out_type=sca
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --out_type=sca --threshold=10000 --log --clip", short_exe, name).replace("*", &sep);
 
         DInfFlowAccumulation {
             name: name,
@@ -189,6 +199,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
         let mut convergence_threshold = f64::INFINITY;
         let mut log_transform = false;
         let mut clip_max = false;
+        let mut pntr_input = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -251,6 +262,10 @@ impl WhiteboxTool for DInfFlowAccumulation {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     clip_max = true;
                 }
+            } else if flag_val == "-pntr" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    pntr_input = true;
+                }
             }
         }
 
@@ -289,134 +304,138 @@ impl WhiteboxTool for DInfFlowAccumulation {
 
         // calculate the flow directions
         let mut flow_dir: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
-
+        let mut interior_pit_found = false;
         let num_procs = num_cpus::get() as isize;
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let grid_res = (cell_size_x + cell_size_y) / 2.0;
-                let mut dir: f64;
-                let mut max_slope: f64;
-                let mut e0: f64;
-                let mut af: f64;
-                let mut ac: f64;
-                let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
+            
+        if !pntr_input {
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let nodata = input.configs.nodata;
+                    let grid_res = (cell_size_x + cell_size_y) / 2.0;
+                    let mut dir: f64;
+                    let mut max_slope: f64;
+                    let mut e0: f64;
+                    let mut af: f64;
+                    let mut ac: f64;
+                    let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
 
-                let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
-                let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
+                    let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
+                    let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
 
-                let e1_col = [1, 0, 0, -1, -1, 0, 0, 1];
-                let e1_row = [0, -1, -1, 0, 0, 1, 1, 0];
+                    let e1_col = [1, 0, 0, -1, -1, 0, 0, 1];
+                    let e1_row = [0, -1, -1, 0, 0, 1, 1, 0];
 
-                let e2_col = [1, 1, -1, -1, -1, -1, 1, 1];
-                let e2_row = [-1, -1, -1, -1, 1, 1, 1, 1];
+                    let e2_col = [1, 1, -1, -1, -1, -1, 1, 1];
+                    let e2_row = [-1, -1, -1, -1, 1, 1, 1, 1];
 
-                let atanof1 = 1.0f64.atan();
+                    let atanof1 = 1.0f64.atan();
 
-                let mut neighbouring_nodata: bool;
-                let mut interior_pit_found = false;
-                const HALF_PI: f64 = PI / 2f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data: Vec<f64> = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        e0 = input[(row, col)];
-                        if e0 != nodata {
-                            dir = 360.0;
-                            max_slope = f64::MIN;
-                            neighbouring_nodata = false;
-                            for i in 0..8 {
-                                ac = ac_vals[i];
-                                af = af_vals[i];
-                                e1 = input[(row + e1_row[i], col + e1_col[i])];
-                                e2 = input[(row + e2_row[i], col + e2_col[i])];
-                                if e1 != nodata && e2 != nodata {
-                                    if e0 > e1 && e0 > e2 {
-                                        s1 = (e0 - e1) / grid_res;
-                                        s2 = (e1 - e2) / grid_res;
-                                        r = if s1 != 0f64 {
-                                            (s2 / s1).atan()
-                                        } else {
-                                            PI / 2.0
-                                        };
-                                        s = (s1 * s1 + s2 * s2).sqrt();
-                                        if s1 < 0.0 && s2 < 0.0 {
-                                            s *= -1.0;
-                                        }
-                                        if s1 < 0.0 && s2 == 0.0 {
-                                            s *= -1.0;
-                                        }
-                                        if s1 == 0.0 && s2 < 0.0 {
-                                            s *= -1.0;
-                                        }
-                                        if r < 0.0 || r > atanof1 {
-                                            if r < 0.0 {
+                    let mut neighbouring_nodata: bool;
+                    let mut interior_pit_found = false;
+                    const HALF_PI: f64 = PI / 2f64;
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data: Vec<f64> = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            e0 = input[(row, col)];
+                            if e0 != nodata {
+                                dir = 360.0;
+                                max_slope = f64::MIN;
+                                neighbouring_nodata = false;
+                                for i in 0..8 {
+                                    ac = ac_vals[i];
+                                    af = af_vals[i];
+                                    e1 = input[(row + e1_row[i], col + e1_col[i])];
+                                    e2 = input[(row + e2_row[i], col + e2_col[i])];
+                                    if e1 != nodata && e2 != nodata {
+                                        if e0 > e1 && e0 > e2 {
+                                            s1 = (e0 - e1) / grid_res;
+                                            s2 = (e1 - e2) / grid_res;
+                                            r = if s1 != 0f64 {
+                                                (s2 / s1).atan()
+                                            } else {
+                                                PI / 2.0
+                                            };
+                                            s = (s1 * s1 + s2 * s2).sqrt();
+                                            if s1 < 0.0 && s2 < 0.0 {
+                                                s *= -1.0;
+                                            }
+                                            if s1 < 0.0 && s2 == 0.0 {
+                                                s *= -1.0;
+                                            }
+                                            if s1 == 0.0 && s2 < 0.0 {
+                                                s *= -1.0;
+                                            }
+                                            if r < 0.0 || r > atanof1 {
+                                                if r < 0.0 {
+                                                    r = 0.0;
+                                                    s = s1;
+                                                } else {
+                                                    r = atanof1;
+                                                    s = (e0 - e2) / diag_cell_size;
+                                                }
+                                            }
+                                            if s >= max_slope && s != 0.00001 {
+                                                max_slope = s;
+                                                dir = af * r + ac * HALF_PI;
+                                            }
+                                        } else if e0 > e1 || e0 > e2 {
+                                            if e0 > e1 {
                                                 r = 0.0;
-                                                s = s1;
+                                                s = (e0 - e1) / grid_res;
                                             } else {
                                                 r = atanof1;
                                                 s = (e0 - e2) / diag_cell_size;
                                             }
+                                            if s >= max_slope && s != 0.00001 {
+                                                max_slope = s;
+                                                dir = af * r + ac * HALF_PI;
+                                            }
                                         }
-                                        if s >= max_slope && s != 0.00001 {
-                                            max_slope = s;
-                                            dir = af * r + ac * HALF_PI;
-                                        }
-                                    } else if e0 > e1 || e0 > e2 {
-                                        if e0 > e1 {
-                                            r = 0.0;
-                                            s = (e0 - e1) / grid_res;
-                                        } else {
-                                            r = atanof1;
-                                            s = (e0 - e2) / diag_cell_size;
-                                        }
-                                        if s >= max_slope && s != 0.00001 {
-                                            max_slope = s;
-                                            dir = af * r + ac * HALF_PI;
-                                        }
+                                    } else {
+                                        neighbouring_nodata = true;
                                     }
-                                } else {
-                                    neighbouring_nodata = true;
                                 }
-                            }
 
-                            if max_slope > 0f64 {
-                                dir = 360.0 - dir.to_degrees() + 90.0;
-                                if dir > 360.0 {
-                                    dir = dir - 360.0;
+                                if max_slope > 0f64 {
+                                    dir = 360.0 - dir.to_degrees() + 90.0;
+                                    if dir > 360.0 {
+                                        dir = dir - 360.0;
+                                    }
+                                    data[col as usize] = dir;
+                                } else {
+                                    data[col as usize] = -1f64;
+                                    if !neighbouring_nodata {
+                                        interior_pit_found = true;
+                                    }
                                 }
-                                data[col as usize] = dir;
                             } else {
                                 data[col as usize] = -1f64;
-                                if !neighbouring_nodata {
-                                    interior_pit_found = true;
-                                }
                             }
-                        } else {
-                            data[col as usize] = -1f64;
                         }
+                        tx.send((row, data, interior_pit_found)).unwrap();
                     }
-                    tx.send((row, data, interior_pit_found)).unwrap();
-                }
-            });
-        }
+                });
+            }
 
-        let mut interior_pit_found = false;
-        for r in 0..rows {
-            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
-            flow_dir.set_row_data(row, data);
-            if pit {
-                interior_pit_found = true;
-            }
-            if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Flow directions: {}%", progress);
-                    old_progress = progress;
+            for r in 0..rows {
+                let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
+                flow_dir.set_row_data(row, data);
+                if pit {
+                    interior_pit_found = true;
+                }
+                if verbose {
+                    progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Flow directions: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
+        } else { // pointer file input
+            flow_dir = input.get_data_as_array2d();
         }
 
         // calculate the number of inflowing cells

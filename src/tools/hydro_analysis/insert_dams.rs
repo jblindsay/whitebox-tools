@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/02/2020
-Last Modified: 19/02/2020
+Last Modified: 20/02/2020
 License: MIT
 */
 
@@ -251,10 +251,11 @@ impl WhiteboxTool for InsertDams {
         let (mut target_row, mut target_col): (isize, isize);
         let mut profile_intersects_target: bool;
         let mut max_dam_height: f64;
+        let mut dam_z: f64;
         let mut target_cell: usize;
         let (mut dam_row, mut dam_col): (isize, isize);
         let mut dam_dir: usize;
-        let mut best_dam_profile_filled = vec![0f64; dam_profile_length];
+        let mut best_dam_profile_filled: Vec<f64>; // = vec![0f64; dam_profile_length];
         /* Calculate dam heights
         Each cell will be assigned the altitude (ASL) of the highest dam that
         passes through the cell. Potential dams are calculated for each
@@ -264,14 +265,18 @@ impl WhiteboxTool for InsertDams {
             let record = dam_pts.get_record(record_num);
             target_row = input.get_row_from_y(record.points[0].y);
             target_col = input.get_column_from_x(record.points[0].x);
+            dam_z = input.get_value(target_row, target_col);
             dam_row = 0;
             dam_col = 0;
             dam_dir = 0;
             max_dam_height = f64::MIN;
+            // dam_z = f64::MIN;
+            best_dam_profile_filled = vec![0f64; dam_profile_length];
             for row in (target_row-half_dam_length as isize)..=(target_row+half_dam_length as isize) {
                 for col in (target_col-half_dam_length as isize)..=(target_col+half_dam_length as isize) {
                     z = input.get_value(row, col);
                     if z != nodata {
+                        // dam_z = z;
                         for dir in 0..4 {
                             profile_intersects_target = false;
                             target_cell = 0;
@@ -350,7 +355,7 @@ impl WhiteboxTool for InsertDams {
                 }
             }
 
-            if max_dam_height > f64::MIN {
+            if max_dam_height > f64::MIN && max_dam_height > dam_z {
                 // perform the actual damming
                 perp_dir1 = perpendicular1[dam_dir];
                 perp_dir2 = perpendicular2[dam_dir];
@@ -419,7 +424,10 @@ impl WhiteboxTool for InsertDams {
                     }
                 }
             } else {
-                // Error: no dam was found that covered the point
+                // No dam was found that covered the point
+                if verbose {
+                    println!("Warning: No dam could be identified for Point {} due to its position in non-impoundable terrain.", record_num+1);
+                }
             }
 
             if verbose {

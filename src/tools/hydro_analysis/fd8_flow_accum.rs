@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/06/2017
-Last Modified: 21/11/2019
+Last Modified: 21/02/2020
 License: MIT
 */
 
@@ -317,9 +317,15 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
 
-        // calculate the number of inflowing cells
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.reinitialize_values(1.0);
+        let mut stack = Vec::with_capacity((rows * columns) as usize);
+        let mut num_solved_cells = 0;
+        let mut interior_pit_found = false;
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let num_procs = num_cpus::get() as isize;
+               
+        // calculate the number of inflowing cells
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
@@ -328,16 +334,18 @@ impl WhiteboxTool for FD8FlowAccumulation {
                 let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
                 let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut z: f64;
+                let mut zn: f64;
                 let mut count: i8;
                 let mut interior_pit_found = false;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             count = 0i8;
                             for i in 0..8 {
-                                if input[(row + d_y[i], col + d_x[i])] > z {
+                                zn = input.get_value(row + d_y[i], col + d_x[i]);
+                                if zn > z && zn != nodata {
                                     count += 1;
                                 }
                             }
@@ -352,11 +360,6 @@ impl WhiteboxTool for FD8FlowAccumulation {
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.reinitialize_values(1.0);
-        let mut stack = Vec::with_capacity((rows * columns) as usize);
-        let mut num_solved_cells = 0;
-        let mut interior_pit_found = false;
         for r in 0..rows {
             let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
             num_inflowing.set_row_data(row, data);

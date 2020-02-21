@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/016/2017
-Last Modified: 18/10/2019
+Last Modified: 21/02/2020
 License: MIT
 */
 
@@ -22,11 +22,14 @@ use std::thread;
 /// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction
 /// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour,
 /// i.e. flow divergence is not permitted. The user must specify the name of the input digital
-/// elevation model (DEM). The DEM must have been hydrologically corrected to remove all spurious
-/// depressions and flat areas. DEM pre-processing is usually achieved using the `BreachDepressions` or
-/// `FillDepressions` tools.
+/// elevation model (DEM) or D8 flow pointer (`DInfPointer`) raster (`--input`). If an input DEM is used, it must have 
+/// been hydrologically corrected to remove all spurious depressions and flat areas. DEM pre-processing 
+/// is usually achieved using the `BreachDepressionsLeastCost` or `FillDepressions` tools. If a D8 pointer
+/// raster is input, the user must also specify the optional `--pntr` flag. If the D8 pointer follows
+/// the Esri pointer scheme, rather than the default WhiteboxTools scheme, the user must also specify the
+/// optional `--esri_pntr` flag.
 ///
-/// In addition to the input DEM, the user must specify the output type. The output flow-accumulation
+/// In addition to the input DEM/pointer, the user must specify the output type. The output flow-accumulation
 /// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
 /// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
 /// is `cells`. The user must also specify whether the output flow-accumulation grid should be
@@ -39,11 +42,11 @@ use std::thread;
 /// however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain
 /// indices, such as the wetness index, or relative stream power index.
 ///
-/// Grid cells possessing the **NoData** value in the input flow-pointer grid are assigned the **NoData**
+/// Grid cells possessing the **NoData** value in the input DEM/pointer raster are assigned the **NoData**
 /// value in the output flow-accumulation image.
 ///
 /// # See Also:
-/// `DInfFlowAccumulation`, `BreachDepressions`, `FillDepressions`
+/// `DInfPointer`, `DInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`
 pub struct D8FlowAccumulation {
     name: String,
     description: String,
@@ -57,13 +60,13 @@ impl D8FlowAccumulation {
         // public constructor
         let name = "D8FlowAccumulation".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Calculates a D8 flow accumulation raster from an input DEM.".to_string();
+        let description = "Calculates a D8 flow accumulation raster from an input DEM or flow pointer.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input DEM File".to_owned(),
-            flags: vec!["-i".to_owned(), "--dem".to_owned()],
-            description: "Input raster DEM file.".to_owned(),
+            name: "Input DEM or D8 Pointer File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned()],
+            description: "Input raster DEM or D8 pointer file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -105,6 +108,24 @@ impl D8FlowAccumulation {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Is the input raster a D8 flow pointer?".to_owned(),
+            flags: vec!["--pntr".to_owned()],
+            description: "Is the input raster a D8 flow pointer rather than a DEM?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "If a pointer is input, does it use the ESRI pointer scheme?".to_owned(),
+            flags: vec!["--esri_pntr".to_owned()],
+            description: "Input  D8 pointer uses the ESRI style scheme.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -116,8 +137,8 @@ impl D8FlowAccumulation {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='cells'
->>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --out_type='specific catchment area' --log --clip", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --out_type='cells'
+>>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=output.tif --out_type='specific catchment area' --log --clip", short_exe, name).replace("*", &sep);
 
         D8FlowAccumulation {
             name: name,
@@ -168,6 +189,8 @@ impl WhiteboxTool for D8FlowAccumulation {
         let mut out_type = String::from("sca");
         let mut log_transform = false;
         let mut clip_max = false;
+        let mut pntr_input = false;
+        let mut esri_style = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -184,23 +207,20 @@ impl WhiteboxTool for D8FlowAccumulation {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i"
-                || vec[0].to_lowercase() == "--input"
-                || vec[0].to_lowercase() == "--dem"
-            {
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 if keyval {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
+            } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if vec[0].to_lowercase() == "-out_type" || vec[0].to_lowercase() == "--out_type"
-            {
+            } else if flag_val == "-out_type" {
                 if keyval {
                     out_type = vec[1].to_lowercase();
                 } else {
@@ -213,13 +233,22 @@ impl WhiteboxTool for D8FlowAccumulation {
                 } else {
                     out_type = String::from("ca");
                 }
-            } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
+            } else if flag_val == "-log" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     log_transform = true;
                 }
-            } else if vec[0].to_lowercase() == "-clip" || vec[0].to_lowercase() == "--clip" {
+            } else if flag_val == "-clip" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     clip_max = true;
+                }
+            } else if flag_val == "-pntr" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    pntr_input = true;
+                }
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    esri_style = true;
+                    pntr_input = true;
                 }
             }
         }
@@ -248,7 +277,6 @@ impl WhiteboxTool for D8FlowAccumulation {
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
 
-        // calculate the flow direction
         let start = Instant::now();
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
@@ -257,84 +285,173 @@ impl WhiteboxTool for D8FlowAccumulation {
         let cell_size_x = input.configs.resolution_x;
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-
-        let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let num_procs = num_cpus::get() as isize;
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let grid_lengths = [
-                    diag_cell_size,
-                    cell_size_x,
-                    diag_cell_size,
-                    cell_size_y,
-                    diag_cell_size,
-                    cell_size_x,
-                    diag_cell_size,
-                    cell_size_y,
-                ];
-                let (mut z, mut z_n): (f64, f64);
-                let (mut max_slope, mut slope): (f64, f64);
-                let mut dir: i8;
-                let mut neighbouring_nodata: bool;
-                let mut interior_pit_found = false;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data: Vec<i8> = vec![-1i8; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            dir = 0i8;
-                            max_slope = f64::MIN;
-                            neighbouring_nodata = false;
-                            for i in 0..8 {
-                                z_n = input[(row + dy[i], col + dx[i])];
-                                if z_n != nodata {
-                                    slope = (z - z_n) / grid_lengths[i];
-                                    if slope > max_slope && slope > 0f64 {
-                                        max_slope = slope;
-                                        dir = i as i8;
-                                    }
-                                } else {
-                                    neighbouring_nodata = true;
-                                }
-                            }
-                            if max_slope >= 0f64 {
-                                data[col as usize] = dir;
-                            } else {
-                                data[col as usize] = -1i8;
-                                if !neighbouring_nodata {
-                                    interior_pit_found = true;
-                                }
-                            }
-                        } else {
-                            data[col as usize] = -1i8;
-                        }
-                    }
-                    tx.send((row, data, interior_pit_found)).unwrap();
-                }
-            });
-        }
-
+        // -2 indicates NoData, -1 indicates no downslope neighbour, 0-7 indicate flow to one neighbour.
+        let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
         let mut interior_pit_found = false;
-        for r in 0..rows {
-            let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
-            flow_dir.set_row_data(row, data); //(data.0, data.1);
-            if pit {
-                interior_pit_found = true;
+        let num_procs = num_cpus::get() as isize;
+        
+        if !pntr_input {
+            // calculate the flow direction from the input DEM
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let nodata = input.configs.nodata;
+                    let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                    let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                    let grid_lengths = [
+                        diag_cell_size,
+                        cell_size_x,
+                        diag_cell_size,
+                        cell_size_y,
+                        diag_cell_size,
+                        cell_size_x,
+                        diag_cell_size,
+                        cell_size_y,
+                    ];
+                    let (mut z, mut z_n): (f64, f64);
+                    let (mut max_slope, mut slope): (f64, f64);
+                    let mut dir: i8;
+                    let mut neighbouring_nodata: bool;
+                    let mut interior_pit_found = false;
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data: Vec<i8> = vec![-2i8; columns as usize];
+                        for col in 0..columns {
+                            z = input.get_value(row, col);
+                            if z != nodata {
+                                dir = 0i8;
+                                max_slope = f64::MIN;
+                                neighbouring_nodata = false;
+                                for i in 0..8 {
+                                    z_n = input[(row + dy[i], col + dx[i])];
+                                    if z_n != nodata {
+                                        slope = (z - z_n) / grid_lengths[i];
+                                        if slope > max_slope && slope > 0f64 {
+                                            max_slope = slope;
+                                            dir = i as i8;
+                                        }
+                                    } else {
+                                        neighbouring_nodata = true;
+                                    }
+                                }
+                                if max_slope >= 0f64 {
+                                    data[col as usize] = dir;
+                                } else {
+                                    data[col as usize] = -1i8;
+                                    if !neighbouring_nodata {
+                                        interior_pit_found = true;
+                                    }
+                                }
+                            }
+                        }
+                        tx.send((row, data, interior_pit_found)).unwrap();
+                    }
+                });
             }
-            if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Flow directions: {}%", progress);
-                    old_progress = progress;
+
+            for r in 0..rows {
+                let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
+                flow_dir.set_row_data(row, data);
+                if pit {
+                    interior_pit_found = true;
+                }
+                if verbose {
+                    progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Flow directions: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else { // The input raster is a D8 flow pointer
+            // map the pointer values into 0-7 style pointer vlaues
+            let (tx, rx) = mpsc::channel();
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let nodata = input.configs.nodata;
+                    let mut z: f64;
+                    let mut interior_pit_found = false;
+                    let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+                    let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                    let mut neighbouring_nodata: bool;
+                    // Create a mapping from the pointer values to cells offsets.
+                    // This may seem wasteful, using only 8 of 129 values in the array,
+                    // but the mapping method is far faster than calculating z.ln() / ln(2.0).
+                    // It's also a good way of allowing for different point styles.
+                    let mut pntr_matches: [i8; 129] = [-2i8; 129];
+                    if !esri_style {
+                        // This maps Whitebox-style D8 pointer values
+                        // onto the cell offsets in d_x and d_y.
+                        pntr_matches[1] = 0i8;
+                        pntr_matches[2] = 1i8;
+                        pntr_matches[4] = 2i8;
+                        pntr_matches[8] = 3i8;
+                        pntr_matches[16] = 4i8;
+                        pntr_matches[32] = 5i8;
+                        pntr_matches[64] = 6i8;
+                        pntr_matches[128] = 7i8;
+                    } else {
+                        // This maps Esri-style D8 pointer values
+                        // onto the cell offsets in d_x and d_y.
+                        pntr_matches[1] = 1i8;
+                        pntr_matches[2] = 2i8;
+                        pntr_matches[4] = 3i8;
+                        pntr_matches[8] = 4i8;
+                        pntr_matches[16] = 5i8;
+                        pntr_matches[32] = 6i8;
+                        pntr_matches[64] = 7i8;
+                        pntr_matches[128] = 0i8;
+                    }
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data: Vec<i8> = vec![-1i8; columns as usize];
+                        for col in 0..columns {
+                            z = input.get_value(row, col);
+                            if z != nodata {
+                                if z > 0f64 {
+                                    data[col as usize] = pntr_matches[z as usize];
+                                } else {
+                                    data[col as usize] = -1i8;
+                                    // is this no-flow cell interior?
+                                    neighbouring_nodata = false;
+                                    for i in 0..8 {
+                                        if input.get_value(row + dy[i], col + dx[i]) == nodata {
+                                            neighbouring_nodata = true;
+                                        }
+                                    }
+                                    if !neighbouring_nodata {
+                                        interior_pit_found = true;
+                                    }
+                                }
+                            }
+                        }
+                        tx.send((row, data, interior_pit_found)).unwrap();
+                    }
+                });
+            }
+
+            for r in 0..rows {
+                let (row, data, pit) = rx.recv().expect("Error receiving data from thread.");
+                flow_dir.set_row_data(row, data);
+                if pit {
+                    interior_pit_found = true;
+                }
+                if verbose {
+                    progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Flow directions: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
         }
+
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
+        output.reinitialize_values(1.0);
+        drop(input);
 
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);
@@ -342,23 +459,24 @@ impl WhiteboxTool for D8FlowAccumulation {
 
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
-            let input = input.clone();
+            // let input = input.clone();
             let flow_dir = flow_dir.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
-                let mut z: f64;
+                // let mut z: f64;
                 let mut count: i8;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
+                        // z = input.get_value(row, col);
+                        // if z != nodata {
+                        if flow_dir.get_value(row, col) != -2i8 {
                             count = 0i8;
                             for i in 0..8 {
-                                if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
                                     count += 1;
                                 }
                             }
@@ -372,8 +490,6 @@ impl WhiteboxTool for D8FlowAccumulation {
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
         for r in 0..rows {
@@ -400,7 +516,6 @@ impl WhiteboxTool for D8FlowAccumulation {
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
-        // let mut cell: (isize, isize);
         let mut dir: i8;
         let mut fa: f64;
         while !stack.is_empty() {
@@ -467,7 +582,8 @@ impl WhiteboxTool for D8FlowAccumulation {
         if log_transform {
             for row in 0..rows {
                 for col in 0..columns {
-                    if input[(row, col)] == nodata {
+                    // if input[(row, col)] == nodata {
+                    if flow_dir.get_value(row, col) == -2 {
                         output[(row, col)] = nodata;
                     } else {
                         let dir = flow_dir[(row, col)];
@@ -492,15 +608,15 @@ impl WhiteboxTool for D8FlowAccumulation {
         } else {
             for row in 0..rows {
                 for col in 0..columns {
-                    if input[(row, col)] == nodata {
+                    // if input[(row, col)] == nodata {
+                    if flow_dir.get_value(row, col) == -2 {
                         output[(row, col)] = nodata;
                     } else {
-                        let dir = flow_dir[(row, col)];
+                        let dir = flow_dir.get_value(row, col);
                         if dir >= 0 {
-                            output[(row, col)] =
-                                output[(row, col)] * cell_area / flow_widths[dir as usize];
+                            output.set_value(row, col, output.get_value(row, col) * cell_area / flow_widths[dir as usize]);
                         } else {
-                            output[(row, col)] = output[(row, col)] * cell_area / flow_widths[3];
+                            output.set_value(row, col, output.get_value(row, col) * cell_area / flow_widths[3]);
                         }
                     }
                 }

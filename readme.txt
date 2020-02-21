@@ -77,6 +77,8 @@ Version 1.1.1 (XX-XX-20XX)
 - The watershed tool now accepts either a set of vector points or a raster for the pour points 
   file. If a raster is specified, all non-zero, non-NoData valued cells will be considered 
   outlet cells and the watershed labels will be assigned based on these values.
+- The D8 and D-infinity flow accumulation tools now take either an input DEM or a flow pointer raster 
+  as inputs.
 
 Version 1.1.0 (09-12-2019)
 - Added the BreachDepressionsLeastCost tool, which performs a modified form of the Lindsay 

@@ -384,6 +384,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -647,6 +648,20 @@ class WhiteboxTools(object):
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('raster_to_vector_points', args, callback) # returns 1 if error
+
+    def raster_to_vector_polygons(self, i, output, callback=None):
+        """Converts a raster dataset to a vector of the POLYGON shapetype.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output vector polygons file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('raster_to_vector_polygons', args, callback) # returns 1 if error
 
     def reinitialize_attribute_table(self, i, callback=None):
         """Reinitializes a vector's attribute table deleting all fields but the feature ID (FID).
@@ -3372,24 +3387,28 @@ class WhiteboxTools(object):
         if width is not None: args.append("--width='{}'".format(width))
         return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
 
-    def d8_flow_accumulation(self, dem, output, out_type="cells", log=False, clip=False, callback=None):
-        """Calculates a D8 flow accumulation raster from an input DEM.
+    def d8_flow_accumulation(self, i, output, out_type="cells", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
+        """Calculates a D8 flow accumulation raster from an input DEM or flow pointer.
 
         Keyword arguments:
 
-        dem -- Input raster DEM file. 
+        i -- Input raster DEM or D8 pointer file. 
         output -- Output raster file. 
         out_type -- Output type; one of 'cells' (default), 'catchment area', and 'specific contributing area'. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
+        pntr -- Is the input raster a D8 flow pointer rather than a DEM?. 
+        esri_pntr -- Input  D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
-        args.append("--dem='{}'".format(dem))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--out_type={}".format(out_type))
         if log: args.append("--log")
         if clip: args.append("--clip")
+        if pntr: args.append("--pntr")
+        if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('d8_flow_accumulation', args, callback) # returns 1 if error
 
     def d8_mass_flux(self, dem, loading, efficiency, absorption, output, callback=None):
@@ -3428,26 +3447,28 @@ class WhiteboxTools(object):
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('d8_pointer', args, callback) # returns 1 if error
 
-    def d_inf_flow_accumulation(self, dem, output, out_type="Specific Contributing Area", threshold=None, log=False, clip=False, callback=None):
+    def d_inf_flow_accumulation(self, i, output, out_type="Specific Contributing Area", threshold=None, log=False, clip=False, pntr=False, callback=None):
         """Calculates a D-infinity flow accumulation raster from an input DEM.
 
         Keyword arguments:
 
-        dem -- Input raster DEM file. 
+        i -- Input raster DEM or D-infinity pointer file. 
         output -- Output raster file. 
         out_type -- Output type; one of 'cells', 'sca' (default), and 'ca'. 
         threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
+        pntr -- Is the input raster a D8 flow pointer rather than a DEM?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
-        args.append("--dem='{}'".format(dem))
+        args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--out_type={}".format(out_type))
         if threshold is not None: args.append("--threshold='{}'".format(threshold))
         if log: args.append("--log")
         if clip: args.append("--clip")
+        if pntr: args.append("--pntr")
         return self.run_tool('d_inf_flow_accumulation', args, callback) # returns 1 if error
 
     def d_inf_mass_flux(self, dem, loading, efficiency, absorption, output, callback=None):
@@ -3830,6 +3851,24 @@ class WhiteboxTools(object):
         args.append("--damlength='{}'".format(damlength))
         return self.run_tool('impoundment_size_index', args, callback) # returns 1 if error
 
+    def insert_dams(self, dem, dam_pts, output, damlength, callback=None):
+        """Calculates the impoundment size resulting from damming a DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        dam_pts -- Input vector dam points file. 
+        output -- Output file. 
+        damlength -- Maximum length of the dam. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--dam_pts='{}'".format(dam_pts))
+        args.append("--output='{}'".format(output))
+        args.append("--damlength='{}'".format(damlength))
+        return self.run_tool('insert_dams', args, callback) # returns 1 if error
+
     def isobasins(self, dem, output, size, callback=None):
         """Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 
@@ -3893,6 +3932,30 @@ class WhiteboxTools(object):
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         return self.run_tool('max_upslope_flowpath_length', args, callback) # returns 1 if error
+
+    def md_inf_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=1.1, threshold=None, log=False, clip=False, callback=None):
+        """Calculates an FD8 flow accumulation raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
+        exponent -- Optional exponent parameter; default is 1.1. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        log -- Optional flag to request the output be log-transformed. 
+        clip -- Optional flag to request clipping the display max by 1%. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--out_type={}".format(out_type))
+        args.append("--exponent={}".format(exponent))
+        if threshold is not None: args.append("--threshold='{}'".format(threshold))
+        if log: args.append("--log")
+        if clip: args.append("--clip")
+        return self.run_tool('md_inf_flow_accumulation', args, callback) # returns 1 if error
 
     def num_inflowing_neighbours(self, dem, output, callback=None):
         """Computes the number of inflowing neighbours to each cell in an input DEM based on the D8 algorithm.
@@ -4092,7 +4155,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         d8_pntr -- Input D8 pointer raster file. 
-        pour_pts -- Input vector pour points (outlet) file. 
+        pour_pts -- Input pour points (outlet) file. 
         output -- Output raster file. 
         esri_pntr -- D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
