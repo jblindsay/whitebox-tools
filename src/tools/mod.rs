@@ -266,7 +266,7 @@ impl ToolManager {
         tool_names.push("WriteFunctionMemoryInsertion".to_string());
 
         // lidar_analysis
-        // tool_names.push("AsciiToLas".to_string());
+        tool_names.push("AsciiToLas".to_string());
         tool_names.push("LidarBlockMaximum".to_string());
         tool_names.push("LidarBlockMinimum".to_string());
         tool_names.push("ClassifyBuildingsInLidar".to_string());
@@ -425,6 +425,7 @@ impl ToolManager {
         tool_names.push("Aspect".to_string());
         tool_names.push("AverageNormalVectorAngularDeviation".to_string());
         tool_names.push("CircularVarianceOfAspect".to_string());
+        tool_names.push("ContoursFromRaster".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
@@ -823,7 +824,7 @@ impl ToolManager {
             }
 
             // lidar_analysis
-            // "asciitolas" => Some(Box::new(lidar_analysis::AsciiToLas::new())),
+            "asciitolas" => Some(Box::new(lidar_analysis::AsciiToLas::new())),
             "lidarblockmaximum" => Some(Box::new(lidar_analysis::LidarBlockMaximum::new())),
             "lidarblockminimum" => Some(Box::new(lidar_analysis::LidarBlockMinimum::new())),
             "classifybuildingsinlidar" => {
@@ -1044,6 +1045,7 @@ impl ToolManager {
             "circularvarianceofaspect" => {
                 Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new()))
             }
+            "contoursfromraster" => Some(Box::new(terrain_analysis::ContoursFromRaster::new())),
             "devfrommeanelev" => Some(Box::new(terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => Some(Box::new(terrain_analysis::DirectionalRelief::new())),

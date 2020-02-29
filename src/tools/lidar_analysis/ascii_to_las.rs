@@ -16,17 +16,17 @@ use std::io::BufReader;
 use std::io::{Error, ErrorKind};
 use std::path;
 extern crate byteorder;
-use byteorder::{LittleEndian, WriteBytesExt};
+// use byteorder::{LittleEndian, WriteBytesExt};
+use crate::spatial_ref_system::esri_wkt_from_epsg;
 
-
-/// This tool can be used to convert one or more ASCII files, containing LiDAR point data, into LAS files. The user must 
-/// specify the name(s) of the input ASCII file(s) (`--inputs`). Each input file will have a coorespondingly named
-/// output file with a `.las` file extension. The output point data, each on a seperate line, will take the format:
-/// 
+/// This tool can be used to convert one or more ASCII files, containing LiDAR point data, into LAS files. The user must
+/// specify the name(s) of the input ASCII file(s) (`--inputs`). Each input file will have a correspondingly named
+/// output file with a `.las` file extension. The output point data, each on a separate line, will take the format:
+///
 /// ```
 /// x,y,z,intensity,class,return,num_returns"
 /// ```
-/// 
+///
 /// | Value | Interpretation    |
 /// | :---- | :---------------- |
 /// | x     | x-coordinate      |
@@ -41,10 +41,10 @@ use byteorder::{LittleEndian, WriteBytesExt};
 /// | r     | red               |
 /// | b     | blue              |
 /// | g     | green             |
-/// 
+///
 /// The `x`, `y`, and `z` patterns must always be specified. If the `rn` pattern is used, the `nr` pattern must
 /// also be specified. Examples of valid pattern string include:
-/// 
+///
 /// ```
 /// 'x,y,z,i'
 /// 'x,y,z,i,rn,nr'
@@ -52,9 +52,9 @@ use byteorder::{LittleEndian, WriteBytesExt};
 /// 'z,x,y,rn,nr'
 /// 'x,y,z,i,rn,nr,r,g,b'
 /// ```
-/// 
+///
 /// Use the `LasToAscii` tool to convert a LAS file into a text file containing LiDAR point data.
-/// 
+///
 /// # See Also
 /// `LasToAscii`
 pub struct AsciiToLas {
@@ -70,7 +70,8 @@ impl AsciiToLas {
         // public constructor
         let name = "AsciiToLas".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Converts one or more ASCII files containing LiDAR points into LAS files.".to_string();
+        let description =
+            "Converts one or more ASCII files containing LiDAR points into LAS files.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -92,9 +93,9 @@ impl AsciiToLas {
         });
 
         parameters.push(ToolParameter {
-            name: "Well-known-text (WKT) string".to_owned(),
-            flags: vec!["--wkt".to_owned()],
-            description: "Well-known-text string.".to_owned(),
+            name: "Well-known-text (WKT) string or EPSG code".to_owned(),
+            flags: vec!["--proj".to_owned()],
+            description: "Well-known-text string or EPSG code describing projection.".to_owned(),
             parameter_type: ParameterType::String,
             default_value: None,
             optional: true,
@@ -111,7 +112,7 @@ impl AsciiToLas {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\"", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"file1.las, file2.las, file3.las\" -o=outfile.las\" --proj=2150", short_exe, name).replace("*", &sep);
 
         AsciiToLas {
             name: name,
@@ -166,7 +167,7 @@ impl WhiteboxTool for AsciiToLas {
     ) -> Result<(), Error> {
         let mut input_files: String = String::new();
         let mut pattern_string = String::new();
-        let mut wkt_string = String::new();
+        let mut proj_string = String::new();
 
         // read the arguments
         if args.len() == 0 {
@@ -197,12 +198,22 @@ impl WhiteboxTool for AsciiToLas {
                 } else {
                     args[i + 1].to_string().to_lowercase()
                 };
-            } else if flag_val == "-wkt" {
-                wkt_string = if keyval {
+            } else if flag_val == "-proj" {
+                proj_string = if keyval {
                     vec[1].to_string().to_lowercase()
                 } else {
                     args[i + 1].to_string().to_lowercase()
                 };
+
+                if proj_string.parse::<u16>().is_ok() {
+                    proj_string = esri_wkt_from_epsg(proj_string.trim().parse::<u16>().expect("Error parsing EPSG code."));
+                    if proj_string.to_lowercase() == "unknown epsg code" {
+                        return Err(Error::new(
+                            ErrorKind::InvalidInput,
+                            "Error: The specified EPSG is unrecognized or unsupported. Please report this error.",
+                        ));
+                    }
+                }
             }
         }
 
@@ -227,17 +238,19 @@ impl WhiteboxTool for AsciiToLas {
         }
 
         // Do some quality control on the pattern
-        if !pattern_string.contains("x") ||
-            !pattern_string.contains("y") ||
-            !pattern_string.contains("z") {
+        if !pattern_string.contains("x")
+            || !pattern_string.contains("y")
+            || !pattern_string.contains("z")
+        {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "Error: The interpretation pattern string (e.g. 'x,y,z,i,c,rn,nr,sa') must contain x, y, and z fields.",
             ));
         }
 
-        if (pattern_string.contains("rn") && !pattern_string.contains("nr")) ||
-            (pattern_string.contains("nr") && !pattern_string.contains("rn")) {
+        if (pattern_string.contains("rn") && !pattern_string.contains("nr"))
+            || (pattern_string.contains("nr") && !pattern_string.contains("rn"))
+        {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "Error: If the interpretation pattern string (e.g. 'x,y,z,i,rn,nr,time') contains a 'rn' field it must also contain a 'nr' field and vice versa.",
@@ -253,32 +266,36 @@ impl WhiteboxTool for AsciiToLas {
         let mut pattern_has_r = false;
         let mut pattern_has_g = false;
         let mut pattern_has_b = false;
+        let mut pattern_has_i = false;
         for a in 0..num_fields {
             match pattern_vec[a] {
                 "x" => pattern_numeric[a] = 0usize,
                 "y" => pattern_numeric[a] = 1usize,
                 "z" => pattern_numeric[a] = 2usize,
-                "i" => pattern_numeric[a] = 3usize,
+                "i" => {
+                    pattern_has_i = true;
+                    pattern_numeric[a] = 3usize
+                },
                 "c" => pattern_numeric[a] = 4usize,
                 "rn" => pattern_numeric[a] = 5usize,
                 "nr" => pattern_numeric[a] = 6usize,
                 "time" => {
                     pattern_has_time = true;
                     pattern_numeric[a] = 7usize
-                },
+                }
                 "sa" => pattern_numeric[a] = 8usize,
                 "r" => {
                     pattern_has_r = true;
                     pattern_numeric[a] = 9usize
-                },
+                }
                 "g" => {
                     pattern_has_g = true;
                     pattern_numeric[a] = 10usize
-                },
+                }
                 "b" => {
                     pattern_has_b = true;
                     pattern_numeric[a] = 11usize
-                },
+                }
                 _ => println!("Unrecognized pattern {}", pattern_vec[a]),
             }
         }
@@ -294,7 +311,7 @@ impl WhiteboxTool for AsciiToLas {
                 "If any of r, g, or b are provided, each of r, g, and b must be provided.",
             ));
         }
-        
+
         let mut cmd = input_files.split(";");
         let mut files_vec = cmd.collect::<Vec<&str>>();
         if files_vec.len() == 1 {
@@ -315,16 +332,31 @@ impl WhiteboxTool for AsciiToLas {
                 let output_file = input_file.replace(&format!(".{}", file_extension), ".las");
                 let mut output = LasFile::new(&output_file, "w")?;
                 let mut header: LasHeader = Default::default();
-                pattern_has_time = true;
-                if pattern_has_time {
-                    header.point_format = 1;
-                } else {
+                let point_format = if !pattern_has_time && !pattern_has_clr {
                     header.point_format = 0;
-                }
+                    0u8
+                } else if pattern_has_time && !pattern_has_clr {
+                    header.point_format = 1;
+                    1u8
+                } else if !pattern_has_time && pattern_has_clr {
+                    header.point_format = 2;
+                    2u8
+                } else { // if pattern_has_time && pattern_has_clr {
+                    header.point_format = 3;
+                    3u8
+                };
+                header.project_id_used = true;
                 output.add_header(header);
-                if !wkt_string.is_empty() {
-                    output.wkt = wkt_string.clone();
+                if !proj_string.is_empty() {
+                    output.wkt = proj_string.clone();
+                } else {
+                    return Err(Error::new(
+                        ErrorKind::InvalidInput,
+                        "Error: Projection string was unspecified. Please specify either a WKT string or EPSG code.",
+                    ));
                 }
+                output.use_point_intensity = pattern_has_i;
+                output.use_point_userdata = true;
 
                 if verbose {
                     println!("Parsing file {}...", output.get_short_filename());
@@ -346,50 +378,74 @@ impl WhiteboxTool for AsciiToLas {
                             // now convert each of the specified fields based on the input pattern
                             for a in 0..num_fields {
                                 match pattern_numeric[a] {
-                                    0usize => point_data.x = line_data[a].parse::<f64>()?,
-                                    1usize => point_data.y = line_data[a].parse::<f64>()?,
-                                    2usize => point_data.z = line_data[a].parse::<f64>()?,
-                                    3usize => point_data.intensity = line_data[a].parse::<u16>()?,
-                                    4usize => point_data.set_classification(line_data[a].parse::<u8>()?),
-                                    5usize => point_data.set_return_number(line_data[a].parse::<u8>()?),
-                                    6usize => point_data.set_number_of_returns(line_data[a].parse::<u8>()?),
-                                    7usize => gps_time = line_data[a].parse::<f64>().unwrap(),
-                                    8usize => point_data.scan_angle = line_data[a].parse::<i16>()?,
-                                    9usize => clr_data.red = line_data[a].parse::<u16>()?,
-                                    10usize => clr_data.green = line_data[a].parse::<u16>()?,
-                                    11usize => clr_data.blue = line_data[a].parse::<u16>()?,
+                                    0usize => point_data.x = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
+                                    1usize => point_data.y = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
+                                    2usize => point_data.z = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
+                                    3usize => point_data.intensity = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
+                                    4usize => {
+                                        point_data.set_classification(line_data[a].trim().parse::<u8>().expect("Error parsing data."))
+                                    }
+                                    5usize => {
+                                        point_data.set_return_number(line_data[a].trim().parse::<u8>().expect("Error parsing data."))
+                                    }
+                                    6usize => point_data
+                                        .set_number_of_returns(line_data[a].trim().parse::<u8>().expect("Error parsing data.")),
+                                    7usize => gps_time = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
+                                    8usize => {
+                                        point_data.scan_angle = line_data[a].trim().parse::<i16>().expect("Error parsing data.")
+                                    }
+                                    9usize => clr_data.red = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
+                                    10usize => clr_data.green = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
+                                    11usize => clr_data.blue = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
                                     _ => println!("unrecognized pattern"),
                                 }
                             }
 
+                            point_data.point_source_id = 1;
+
                             point_num += 1;
-                            if point_num == 1 || point_num == 2 || point_num == 349528 {
-                                println!("Point {}: {:?}", point_num, point_data);
-                            }
-                            if !pattern_has_time && !pattern_has_clr {
-                                output.add_point_record(LidarPointRecord::PointRecord0 {
-                                    point_data: point_data,
-                                });
-                            } else if pattern_has_time && !pattern_has_clr {
-                                output.add_point_record(LidarPointRecord::PointRecord1 {
-                                    point_data: point_data,
-                                    gps_data: gps_time,
-                                });
-                            } else if !pattern_has_time && pattern_has_clr {
-                                output.add_point_record(LidarPointRecord::PointRecord2 {
-                                    point_data: point_data,
-                                    colour_data: clr_data,
-                                });
-                            } else { // if pattern_has_time && pattern_has_clr {
-                                output.add_point_record(LidarPointRecord::PointRecord3 {
-                                    point_data: point_data,
-                                    gps_data: gps_time,
-                                    colour_data: clr_data,
-                                });
-                            }
+                            match point_format {
+                                0 => {  
+                                    output.add_point_record(LidarPointRecord::PointRecord0 {
+                                        point_data: point_data,
+                                    });
+                                },
+                                1 => {
+                                    output.add_point_record(LidarPointRecord::PointRecord1 {
+                                        point_data: point_data,
+                                        gps_data: gps_time,
+                                    });
+                                },
+                                2 => {
+                                    output.add_point_record(LidarPointRecord::PointRecord2 {
+                                        point_data: point_data,
+                                        colour_data: clr_data,
+                                    });
+                                },
+                                3 => {
+                                    // if pattern_has_time && pattern_has_clr {
+                                    output.add_point_record(LidarPointRecord::PointRecord3 {
+                                        point_data: point_data,
+                                        gps_data: gps_time,
+                                        colour_data: clr_data,
+                                    });
+                                }
+                                _ => {
+                                    panic!("Error: Unrecognized point format.");
+                                }
+                            };
                         }
                     } // else ignore the line.
                 }
+
+                let mut vlr1: Vlr = Default::default();
+                // vlr1.reserved = 0u16;
+                vlr1.user_id = String::from("LASF_Projection");
+                vlr1.record_id = 2112u16;
+                vlr1.description = String::from("OGC WKT Coordinate System");
+                vlr1.binary_data = (format!("{}\0", proj_string)).as_bytes().to_vec();
+                vlr1.record_length_after_header = vlr1.binary_data.len() as u16;
+                output.add_vlr(vlr1);
 
                 // let mut vlr1: Vlr = Default::default();
                 // vlr1.reserved = 0u16;
@@ -430,12 +486,16 @@ impl WhiteboxTool for AsciiToLas {
                 // vlr3.record_length_after_header = vlr3.binary_data.len() as u16; //89;
                 // println!("vlr3 (89): {} {}", vlr3.binary_data.len(), vlr3.record_length_after_header);
                 // output.add_vlr(vlr3);
-    
+
                 if verbose {
                     println!("Writing output LAS file {}...", output.get_short_filename());
                 }
                 let _ = match output.write() {
-                    Ok(_) => if verbose { println!("Complete!") },
+                    Ok(_) => {
+                        if verbose {
+                            println!("Complete!")
+                        }
+                    }
                     Err(e) => println!("error while writing: {:?}", e),
                 };
             }

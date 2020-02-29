@@ -7,16 +7,16 @@ License: MIT
 */
 
 use crate::raster::*;
-use crate::vector::*;
 use crate::tools::*;
+use crate::vector::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to insert dams at one or more user-specified points (`--dam_pts`), and of a maximum length 
-/// (`--damlength`), within an input digital elevation model (DEM) (`--dem`). This tool can be thought of as providing 
-/// the impoundment feature that is calculated internally during a run of the the impoundment size index (ISI) tool for 
+/// This tool can be used to insert dams at one or more user-specified points (`--dam_pts`), and of a maximum length
+/// (`--damlength`), within an input digital elevation model (DEM) (`--dem`). This tool can be thought of as providing
+/// the impoundment feature that is calculated internally during a run of the the impoundment size index (ISI) tool for
 /// a set of points of interest. from a  (DEM).
 ///
 /// # Reference
@@ -229,7 +229,9 @@ impl WhiteboxTool for InsertDams {
         let dam_pts = Shapefile::read(&dam_file).expect("Error reading input dam file.");
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.set_data_from_raster(&input).expect("Error copying data to output file.");
+        output
+            .set_data_from_raster(&input)
+            .expect("Error copying data to output file.");
         output.configs.palette = input.configs.palette.clone();
 
         let start = Instant::now();
@@ -256,11 +258,11 @@ impl WhiteboxTool for InsertDams {
         let (mut dam_row, mut dam_col): (isize, isize);
         let mut dam_dir: usize;
         let mut best_dam_profile_filled: Vec<f64>; // = vec![0f64; dam_profile_length];
-        /* Calculate dam heights
-        Each cell will be assigned the altitude (ASL) of the highest dam that
-        passes through the cell. Potential dams are calculated for each
-        grid cell in the N-S, NE-SW, E-W, SE-NW directions.
-        */
+                                                   /* Calculate dam heights
+                                                   Each cell will be assigned the altitude (ASL) of the highest dam that
+                                                   passes through the cell. Potential dams are calculated for each
+                                                   grid cell in the N-S, NE-SW, E-W, SE-NW directions.
+                                                   */
         for record_num in 0..dam_pts.num_records {
             let record = dam_pts.get_record(record_num);
             target_row = input.get_row_from_y(record.points[0].y);
@@ -272,8 +274,12 @@ impl WhiteboxTool for InsertDams {
             max_dam_height = f64::MIN;
             // dam_z = f64::MIN;
             best_dam_profile_filled = vec![0f64; dam_profile_length];
-            for row in (target_row-half_dam_length as isize)..=(target_row+half_dam_length as isize) {
-                for col in (target_col-half_dam_length as isize)..=(target_col+half_dam_length as isize) {
+            for row in
+                (target_row - half_dam_length as isize)..=(target_row + half_dam_length as isize)
+            {
+                for col in (target_col - half_dam_length as isize)
+                    ..=(target_col + half_dam_length as isize)
+                {
                     z = input.get_value(row, col);
                     if z != nodata {
                         // dam_z = z;
@@ -351,7 +357,6 @@ impl WhiteboxTool for InsertDams {
                             }
                         }
                     }
-
                 }
             }
 
@@ -367,8 +372,14 @@ impl WhiteboxTool for InsertDams {
                 if best_dam_profile_filled[half_dam_length as usize] > output.get_value(r_n, c_n) {
                     output.set_value(r_n, c_n, best_dam_profile_filled[half_dam_length as usize]);
                 }
-                if best_dam_profile_filled[half_dam_length as usize] > output.get_value(r_n-1, c_n) {
-                    output.set_value(r_n-1, c_n, best_dam_profile_filled[half_dam_length as usize]);
+                if best_dam_profile_filled[half_dam_length as usize]
+                    > output.get_value(r_n - 1, c_n)
+                {
+                    output.set_value(
+                        r_n - 1,
+                        c_n,
+                        best_dam_profile_filled[half_dam_length as usize],
+                    );
                 }
                 for i in 1..=half_dam_length {
                     r_n += dy[perp_dir1 as usize];
@@ -384,12 +395,13 @@ impl WhiteboxTool for InsertDams {
                                 best_dam_profile_filled[half_dam_length + i as usize],
                             );
                         }
-                        if dam_dir == 0 || dam_dir == 2 { // diagonal
+                        if dam_dir == 0 || dam_dir == 2 {
+                            // diagonal
                             if best_dam_profile_filled[half_dam_length + i as usize]
-                                > output.get_value(r_n-1, c_n)
+                                > output.get_value(r_n - 1, c_n)
                             {
                                 output.set_value(
-                                    r_n-1,
+                                    r_n - 1,
                                     c_n,
                                     best_dam_profile_filled[half_dam_length + i as usize],
                                 );
@@ -411,12 +423,13 @@ impl WhiteboxTool for InsertDams {
                             );
                         }
                     }
-                    if dam_dir == 0 || dam_dir == 2 { // diagonal
+                    if dam_dir == 0 || dam_dir == 2 {
+                        // diagonal
                         if best_dam_profile_filled[half_dam_length - i as usize]
-                            > output.get_value(r_n2-1, c_n2)
+                            > output.get_value(r_n2 - 1, c_n2)
                         {
                             output.set_value(
-                                r_n2-1,
+                                r_n2 - 1,
                                 c_n2,
                                 best_dam_profile_filled[half_dam_length - i as usize],
                             );
@@ -439,8 +452,7 @@ impl WhiteboxTool for InsertDams {
                 }
             }
         }
-        
-        
+
         let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",

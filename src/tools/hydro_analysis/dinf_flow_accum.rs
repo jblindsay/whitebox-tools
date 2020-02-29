@@ -22,10 +22,10 @@ use std::thread;
 /// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the D-infinity algorithm
 /// (Tarboton, 1997). This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering
 /// each grid cell is routed to one or two downslope neighbour, i.e. flow divergence is permitted. The user must
-/// specify the name of the input digital elevation model or D-infinity pointer raster (`--input`). If an input DEM is 
+/// specify the name of the input digital elevation model or D-infinity pointer raster (`--input`). If an input DEM is
 /// specified, the DEM should have been hydrologically corrected
 /// to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using the
-/// `BreachDepressionsLeastCost` or `FillDepressions` tool. 
+/// `BreachDepressionsLeastCost` or `FillDepressions` tool.
 ///
 /// In addition to the input DEM/pointer raster name, the user must specify the output type (`--out_type`). The output
 /// flow-accumulation
@@ -129,7 +129,8 @@ impl DInfFlowAccumulation {
         parameters.push(ToolParameter {
             name: "Is the input raster a D-inf flow pointer?".to_owned(),
             flags: vec!["--pntr".to_owned()],
-            description: "Is the input raster a D-infinity flow pointer rather than a DEM?".to_owned(),
+            description: "Is the input raster a D-infinity flow pointer rather than a DEM?"
+                .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: None,
             optional: true,
@@ -306,7 +307,7 @@ impl WhiteboxTool for DInfFlowAccumulation {
         let mut flow_dir: Array2D<f64> = Array2D::new(rows, columns, nodata, nodata)?;
         let mut interior_pit_found = false;
         let num_procs = num_cpus::get() as isize;
-            
+
         if !pntr_input {
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -320,7 +321,14 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     let mut e0: f64;
                     let mut af: f64;
                     let mut ac: f64;
-                    let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (f64, f64, f64, f64, f64, f64);
+                    let (mut e1, mut r, mut s1, mut s2, mut s, mut e2): (
+                        f64,
+                        f64,
+                        f64,
+                        f64,
+                        f64,
+                        f64,
+                    );
 
                     let ac_vals = [0f64, 1f64, 1f64, 2f64, 2f64, 3f64, 3f64, 4f64];
                     let af_vals = [1f64, -1f64, 1f64, -1f64, 1f64, -1f64, 1f64, -1f64];
@@ -434,7 +442,8 @@ impl WhiteboxTool for DInfFlowAccumulation {
                     }
                 }
             }
-        } else { // pointer file input
+        } else {
+            // pointer file input
             flow_dir = input.get_data_as_array2d();
         }
 

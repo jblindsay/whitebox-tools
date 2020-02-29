@@ -114,12 +114,7 @@ impl LasFile {
 
         // Copy the VLRs
         for i in 0..(input.header.number_of_vlrs as usize) {
-            // if !input.vlr_data[i].description.contains("by LAStools of rapidlasso") {
             output.add_vlr(input.vlr_data[i].clone());
-            // } else {
-            //     // don't output LAStools VLRs.
-            //     output.header.number_of_vlrs -= 1;
-            // }
         }
 
         output
@@ -460,6 +455,10 @@ impl LasFile {
         }
     }
 
+    pub fn has_gps_time(&self) -> bool {
+        self.gps_data.len() > 0
+    }
+
     pub fn get_short_filename(&self) -> String {
         let path = Path::new(&self.file_name);
         let file_name = path.file_stem().unwrap();
@@ -487,7 +486,7 @@ impl LasFile {
     pub fn read(&mut self) -> Result<(), Error> {
         let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
             false => {
-                let mut f = File::open(&self.file_name)?;
+                let mut f = File::open(&self.file_name).expect("Error opening LAS file.");
                 let metadata = fs::metadata(&self.file_name)?;
                 // let file_size: usize = if self.file_mode != "rh" {
                 //     metadata.len() as usize
@@ -631,11 +630,13 @@ impl LasFile {
 
         if self.header.version_major == 1 && self.header.version_minor >= 3 {
             self.header.waveform_data_start = bor.read_u64()?;
-            self.header.offset_to_ex_vlrs = bor.read_u64()?;
-            self.header.number_of_extended_vlrs = bor.read_u32()?;
-            self.header.number_of_points = bor.read_u64()?;
-            for i in 0..15 {
-                self.header.number_of_points_by_return[i] = bor.read_u64()?;
+            if self.header.version_major == 1 && self.header.version_minor > 3 {
+                self.header.offset_to_ex_vlrs = bor.read_u64()?;
+                self.header.number_of_extended_vlrs = bor.read_u32()?;
+                self.header.number_of_points = bor.read_u64()?;
+                for i in 0..15 {
+                    self.header.number_of_points_by_return[i] = bor.read_u64()?;
+                }
             }
         }
 
@@ -1301,8 +1302,8 @@ impl LasFile {
         for i in 0..(self.header.number_of_vlrs as usize) {
             total_vlr_size += self.vlr_data[i].record_length_after_header as u32;
         }
-        // let alignment_bytes = self.header.header_size as u32 + total_vlr_size % 4u32;
-        self.header.offset_to_points = self.header.header_size as u32 + total_vlr_size; // + alignment_bytes; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
+        let alignment_bytes = 4u32 - ((self.header.header_size as u32 + total_vlr_size) % 4u32);
+        self.header.offset_to_points = self.header.header_size as u32 + total_vlr_size + alignment_bytes; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
         u32_bytes = unsafe { mem::transmute(self.header.offset_to_points) };
         writer.write_all(&u32_bytes)?;
 
@@ -1459,17 +1460,15 @@ impl LasFile {
             writer.write_all(&vlr.binary_data)?;
         }
 
-        // ////////////////////
-        // // Alignment bytes /
-        // ////////////////////
-        // if alignment_bytes > 0 {
-        //     println!("alignment bytes: {}", alignment_bytes);
-        //     for a in 0..alignment_bytes {
-        //         writer.write_all(&[0u8]);
-        //     }
-        // }
-
-        // println!("header: {:?}", self.header);
+        ////////////////////
+        // Alignment bytes /
+        ////////////////////
+        if alignment_bytes > 0 {
+            // println!("alignment bytes: {}", alignment_bytes);
+            for _ in 0..alignment_bytes {
+                writer.write_all(&[0u8])?;
+            }
+        }
 
         ////////////////////////////////
         // Write the point to the file /
@@ -1482,18 +1481,6 @@ impl LasFile {
                         / self.header.x_scale_factor) as i32;
                     u32_bytes = unsafe { mem::transmute(val) };
                     writer.write_all(&u32_bytes)?;
-
-                    // if i == 0 {
-                    //     println!("first point: {:?}", self.point_data[i]);
-                    // }
-
-                    // if i == 1 {
-                    //     println!("second point: {:?}", self.point_data[i]);
-                    // }
-
-                    // if i == 349527 {
-                    //     println!("last point: {:?}", self.point_data[i]);
-                    // }
 
                     val = ((self.point_data[i].y - self.header.y_offset)
                         / self.header.y_scale_factor) as i32;

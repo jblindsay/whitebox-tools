@@ -341,6 +341,8 @@ impl WhiteboxTool for VectorPointsToRaster {
             configs.nodata = nodata;
             configs.data_type = DataType::F32;
             configs.photometric_interp = PhotometricInterpretation::Continuous;
+            // configs.epsg_code = vector_data.projection.clone();
+            configs.projection = vector_data.projection.clone();
 
             Raster::initialize_using_config(&output_file, &configs)
         };

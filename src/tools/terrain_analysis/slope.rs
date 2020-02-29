@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 30/01/2020
+Last Modified: 21/02/2020
 License: MIT
 */
 
@@ -17,7 +17,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates slope gradient (i.e. slope steepness in degrees) for each grid cell
+/// This tool calculates slope gradient (i.e. slope steepness in degrees, radians, or percent) for each grid cell
 /// in an input digital elevation model (DEM). The user must specify the name of the input
 /// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
 /// when the vertical and horizontal units are not the same in the DEM. When this is the case,
@@ -99,6 +99,20 @@ impl Slope {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Units".to_owned(),
+            flags: vec!["--units".to_owned()],
+            description: "Units of output raster; options include 'degrees', 'radians', 'percent'"
+                .to_owned(),
+            parameter_type: ParameterType::OptionList(vec![
+                "degrees".to_owned(),
+                "radians".to_owned(),
+                "percent".to_owned(),
+            ]),
+            default_value: Some("degrees".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -111,7 +125,7 @@ impl Slope {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --units=\"radians\"",
             short_exe, name
         )
         .replace("*", &sep);
@@ -170,6 +184,7 @@ impl WhiteboxTool for Slope {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut z_factor = 1f64;
+        let mut units_numeric = 1; // degrees
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -211,6 +226,19 @@ impl WhiteboxTool for Slope {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val));
                 }
+            } else if flag_val == "-units" {
+                let units = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+                units_numeric = if units.to_lowercase().contains("deg") {
+                    1
+                } else if units.contains("rad") {
+                    2
+                } else {
+                    3
+                };
             }
         }
 
@@ -286,7 +314,12 @@ impl WhiteboxTool for Slope {
                             // calculate slope
                             fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            data[col as usize] = (fx * fx + fy * fy).sqrt().atan().to_degrees();
+
+                            data[col as usize] = match units_numeric {
+                                1 => (fx * fx + fy * fy).sqrt().atan().to_degrees(), // degrees
+                                2 => (fx * fx + fy * fy).sqrt().atan(),              // radians
+                                _ => (fx * fx + fy * fy).sqrt() * 100f64,            // percent
+                            };
                         }
                     }
                     tx1.send((row, data)).unwrap();

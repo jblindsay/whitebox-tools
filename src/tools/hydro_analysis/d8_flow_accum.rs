@@ -22,8 +22,8 @@ use std::thread;
 /// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction
 /// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour,
 /// i.e. flow divergence is not permitted. The user must specify the name of the input digital
-/// elevation model (DEM) or D8 flow pointer (`DInfPointer`) raster (`--input`). If an input DEM is used, it must have 
-/// been hydrologically corrected to remove all spurious depressions and flat areas. DEM pre-processing 
+/// elevation model (DEM) or D8 flow pointer (`DInfPointer`) raster (`--input`). If an input DEM is used, it must have
+/// been hydrologically corrected to remove all spurious depressions and flat areas. DEM pre-processing
 /// is usually achieved using the `BreachDepressionsLeastCost` or `FillDepressions` tools. If a D8 pointer
 /// raster is input, the user must also specify the optional `--pntr` flag. If the D8 pointer follows
 /// the Esri pointer scheme, rather than the default WhiteboxTools scheme, the user must also specify the
@@ -60,7 +60,9 @@ impl D8FlowAccumulation {
         // public constructor
         let name = "D8FlowAccumulation".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Calculates a D8 flow accumulation raster from an input DEM or flow pointer.".to_string();
+        let description =
+            "Calculates a D8 flow accumulation raster from an input DEM or flow pointer."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -289,7 +291,7 @@ impl WhiteboxTool for D8FlowAccumulation {
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
         let mut interior_pit_found = false;
         let num_procs = num_cpus::get() as isize;
-        
+
         if !pntr_input {
             // calculate the flow direction from the input DEM
             let (tx, rx) = mpsc::channel();
@@ -364,7 +366,8 @@ impl WhiteboxTool for D8FlowAccumulation {
                     }
                 }
             }
-        } else { // The input raster is a D8 flow pointer
+        } else {
+            // The input raster is a D8 flow pointer
             // map the pointer values into 0-7 style pointer vlaues
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
@@ -476,7 +479,8 @@ impl WhiteboxTool for D8FlowAccumulation {
                         if flow_dir.get_value(row, col) != -2i8 {
                             count = 0i8;
                             for i in 0..8 {
-                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
+                                {
                                     count += 1;
                                 }
                             }
@@ -614,9 +618,17 @@ impl WhiteboxTool for D8FlowAccumulation {
                     } else {
                         let dir = flow_dir.get_value(row, col);
                         if dir >= 0 {
-                            output.set_value(row, col, output.get_value(row, col) * cell_area / flow_widths[dir as usize]);
+                            output.set_value(
+                                row,
+                                col,
+                                output.get_value(row, col) * cell_area / flow_widths[dir as usize],
+                            );
                         } else {
-                            output.set_value(row, col, output.get_value(row, col) * cell_area / flow_widths[3]);
+                            output.set_value(
+                                row,
+                                col,
+                                output.get_value(row, col) * cell_area / flow_widths[3],
+                            );
                         }
                     }
                 }

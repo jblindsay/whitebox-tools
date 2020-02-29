@@ -56,6 +56,10 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.X.X (XX-XX-2020)
+- Added the AsciiToLas tool.
+- Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
+
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.
 - Added the MultiscaleElevationPercentile tool.

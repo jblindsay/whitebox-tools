@@ -332,6 +332,7 @@ impl WhiteboxTool for VectorLinesToRaster {
             configs.nodata = nodata;
             configs.data_type = DataType::F32;
             configs.photometric_interp = PhotometricInterpretation::Continuous;
+            configs.projection = vector_data.projection.clone();
 
             Raster::initialize_using_config(&output_file, &configs)
         };

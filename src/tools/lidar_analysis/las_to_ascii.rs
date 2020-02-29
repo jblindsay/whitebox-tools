@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 16/07/2017
-Last Modified: 12/08/2019
+Last Modified: 29/02/2020
 License: MIT
 */
 
@@ -17,10 +17,10 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool can be used to convert one or more LAS file, containing LiDAR data, into ASCII files. The user must
-/// specify the name(s) of the input LAS file(s) (`--inputs`). Each input file will have a coorespondingly named
+/// specify the name(s) of the input LAS file(s) (`--inputs`). Each input file will have a correspondingly named
 /// output file with a `.csv` file extension. CSV files are comma separated value files and contain tabular data
-/// with each column cooresponding to a field in the table and each row a point value. Fields are separated by
-/// commas in the ASCII formated file. The output point data, each on a seperate line, will take the format:
+/// with each column corresponding to a field in the table and each row a point value. Fields are separated by
+/// commas in the ASCII formated file. The output point data, each on a separate line, will take the format:
 ///
 /// ```
 /// X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE
@@ -189,6 +189,7 @@ impl WhiteboxTool for LasToAscii {
 
                 let has_rgb = input.has_rgb();
                 let mut rgb: ColourData;
+                let has_time = input.has_gps_time();
                 let file_extension = get_file_extension(&input_file);
                 let output_file = input_file.replace(&format!(".{}", file_extension), ".csv");
                 let f = File::create(output_file)?;
@@ -200,19 +201,27 @@ impl WhiteboxTool for LasToAscii {
                 // let y_prec = get_precision(&(input.header.y_scale_factor.to_string()));
                 // let z_prec = get_precision(&(input.header.z_scale_factor.to_string()));
 
-                if !has_rgb {
+                if !has_rgb && !has_time {
                     writer.write_all(
                         "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE\n".as_bytes(),
                     )?;
+                } else if !has_rgb && has_time {
+                    writer.write_all(
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,TIME\n".as_bytes(),
+                    )?;
+                } else if has_rgb && !has_time {
+                    writer.write_all(
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n".as_bytes(),
+                    )?;
                 } else {
                     writer.write_all(
-                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n"
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,TIME,RED,GREEN,BLUE\n"
                             .as_bytes(),
                     )?;
                 }
                 for k in 0..n_points {
                     let pd = input[k];
-                    let s = if !has_rgb {
+                    let s = if !has_rgb && !has_time {
                         format!(
                             "{},{},{},{},{},{},{},{}\n",
                             pd.x,
@@ -224,7 +233,20 @@ impl WhiteboxTool for LasToAscii {
                             pd.number_of_returns(),
                             pd.scan_angle
                         )
-                    } else {
+                    } else if !has_rgb && has_time {
+                        format!(
+                            "{},{},{},{},{},{},{},{},{}\n",
+                            pd.x,
+                            pd.y,
+                            pd.z,
+                            pd.intensity,
+                            pd.classification(),
+                            pd.return_number(),
+                            pd.number_of_returns(),
+                            pd.scan_angle,
+                            input.get_gps_time(k).expect("Error retrieving GPS time.")
+                        )
+                    } else if has_rgb && !has_time {
                         rgb = match input.get_rgb(k) {
                             Ok(v) => v,
                             Err(_) => {
@@ -244,6 +266,31 @@ impl WhiteboxTool for LasToAscii {
                             pd.return_number(),
                             pd.number_of_returns(),
                             pd.scan_angle,
+                            rgb.red,
+                            rgb.green,
+                            rgb.blue
+                        )
+                    } else {
+                        rgb = match input.get_rgb(k) {
+                            Ok(v) => v,
+                            Err(_) => {
+                                return Err(Error::new(
+                                    ErrorKind::NotFound,
+                                    "RGB data not read correctly in LAS file.",
+                                ))
+                            }
+                        };
+                        format!(
+                            "{},{},{},{},{},{},{},{},{},{},{},{}\n",
+                            pd.x,
+                            pd.y,
+                            pd.z,
+                            pd.intensity,
+                            pd.classification(),
+                            pd.return_number(),
+                            pd.number_of_returns(),
+                            pd.scan_angle,
+                            input.get_gps_time(k).expect("Error retrieving GPS time."),
                             rgb.red,
                             rgb.green,
                             rgb.blue

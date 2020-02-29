@@ -324,7 +324,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let mut interior_pit_found = false;
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let num_procs = num_cpus::get() as isize;
-               
+
         // calculate the number of inflowing cells
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -355,7 +355,8 @@ impl WhiteboxTool for FD8FlowAccumulation {
                             }
                         }
                     }
-                    tx.send((row, data, interior_pit_found)).unwrap();
+                    tx.send((row, data, interior_pit_found))
+                        .expect("Error sending data to thread.");
                 }
             });
         }

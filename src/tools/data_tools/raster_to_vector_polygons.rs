@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 25/12/2019
-Last Modified: 25/12/2019
+Created: 18/02/2020
+Last Modified: 21/02/2020
 License: MIT
 */
 
@@ -57,7 +57,7 @@ impl RasterToVectorPolygons {
             flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output vector polygons file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
-                VectorGeometryType::Point,
+                VectorGeometryType::Polygon,
             )),
             default_value: None,
             optional: false,

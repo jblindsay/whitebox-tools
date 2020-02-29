@@ -330,6 +330,8 @@ impl WhiteboxTool for MosaicWithFeathering {
         configs.data_type = input1.configs.data_type;
         configs.photometric_interp = input1.configs.photometric_interp;
         configs.palette = input1.configs.palette.clone();
+        configs.projection = input1.configs.projection.clone();
+        configs.epsg_code = input1.configs.epsg_code.clone();
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
 

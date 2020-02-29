@@ -2,6 +2,7 @@
 mod aspect;
 mod average_normal_vector_angular_deviation;
 mod circular_variance_of_aspect;
+mod contour_from_raster;
 mod dev_from_mean_elev;
 mod diff_from_mean_elev;
 mod directional_relief;
@@ -62,6 +63,7 @@ mod wetness_index;
 pub use self::aspect::Aspect;
 pub use self::average_normal_vector_angular_deviation::AverageNormalVectorAngularDeviation;
 pub use self::circular_variance_of_aspect::CircularVarianceOfAspect;
+pub use self::contour_from_raster::ContoursFromRaster;
 pub use self::dev_from_mean_elev::DevFromMeanElev;
 pub use self::diff_from_mean_elev::DiffFromMeanElev;
 pub use self::directional_relief::DirectionalRelief;
