@@ -54,7 +54,7 @@ impl PolygonShortAxis {
             flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output vector polyline file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
-                VectorGeometryType::PolyLine,
+                VectorGeometryType::Line,
             )),
             default_value: None,
             optional: false,
