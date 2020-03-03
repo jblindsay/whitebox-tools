@@ -58,6 +58,7 @@ for more details.
 
 Version 1.X.X (XX-XX-2020)
 - Added the AsciiToLas tool.
+- Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
 
 Version 1.2.0 (21-02-2020)
