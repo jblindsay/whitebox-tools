@@ -2471,7 +2471,7 @@ therefore a vector of simple two-point polylines forming a vector field.
 **Flag**             **Description**
 -------------------  ---------------
 -i, -\-input         Input vector polygons file
--o, -\-output        Output vector polygon file
+-o, -\-output        Output vector polyline file
 
 
 *Python function*:
