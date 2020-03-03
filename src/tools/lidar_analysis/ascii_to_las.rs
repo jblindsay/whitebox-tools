@@ -16,7 +16,6 @@ use std::io::BufReader;
 use std::io::{Error, ErrorKind};
 use std::path;
 extern crate byteorder;
-// use byteorder::{LittleEndian, WriteBytesExt};
 use crate::spatial_ref_system::esri_wkt_from_epsg;
 
 /// This tool can be used to convert one or more ASCII files, containing LiDAR point data, into LAS files. The user must
@@ -206,7 +205,12 @@ impl WhiteboxTool for AsciiToLas {
                 };
 
                 if proj_string.parse::<u16>().is_ok() {
-                    proj_string = esri_wkt_from_epsg(proj_string.trim().parse::<u16>().expect("Error parsing EPSG code."));
+                    proj_string = esri_wkt_from_epsg(
+                        proj_string
+                            .trim()
+                            .parse::<u16>()
+                            .expect("Error parsing EPSG code."),
+                    );
                     if proj_string.to_lowercase() == "unknown epsg code" {
                         return Err(Error::new(
                             ErrorKind::InvalidInput,
@@ -275,7 +279,7 @@ impl WhiteboxTool for AsciiToLas {
                 "i" => {
                     pattern_has_i = true;
                     pattern_numeric[a] = 3usize
-                },
+                }
                 "c" => pattern_numeric[a] = 4usize,
                 "rn" => pattern_numeric[a] = 5usize,
                 "nr" => pattern_numeric[a] = 6usize,
@@ -341,7 +345,8 @@ impl WhiteboxTool for AsciiToLas {
                 } else if !pattern_has_time && pattern_has_clr {
                     header.point_format = 2;
                     2u8
-                } else { // if pattern_has_time && pattern_has_clr {
+                } else {
+                    // if pattern_has_time && pattern_has_clr {
                     header.point_format = 3;
                     3u8
                 };
@@ -364,7 +369,7 @@ impl WhiteboxTool for AsciiToLas {
                 let f = File::open(input_file.clone())?;
                 let f = BufReader::new(f);
 
-                let mut point_num = 0;
+                // let mut point_num = 0;
                 for line in f.lines() {
                     let line_unwrapped = line?;
                     let line_data = line_unwrapped.split(",").collect::<Vec<&str>>();
@@ -378,50 +383,103 @@ impl WhiteboxTool for AsciiToLas {
                             // now convert each of the specified fields based on the input pattern
                             for a in 0..num_fields {
                                 match pattern_numeric[a] {
-                                    0usize => point_data.x = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
-                                    1usize => point_data.y = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
-                                    2usize => point_data.z = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
-                                    3usize => point_data.intensity = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
-                                    4usize => {
-                                        point_data.set_classification(line_data[a].trim().parse::<u8>().expect("Error parsing data."))
+                                    0usize => {
+                                        point_data.x = line_data[a]
+                                            .trim()
+                                            .parse::<f64>()
+                                            .expect("Error parsing data.")
                                     }
-                                    5usize => {
-                                        point_data.set_return_number(line_data[a].trim().parse::<u8>().expect("Error parsing data."))
+                                    1usize => {
+                                        point_data.y = line_data[a]
+                                            .trim()
+                                            .parse::<f64>()
+                                            .expect("Error parsing data.")
                                     }
-                                    6usize => point_data
-                                        .set_number_of_returns(line_data[a].trim().parse::<u8>().expect("Error parsing data.")),
-                                    7usize => gps_time = line_data[a].trim().parse::<f64>().expect("Error parsing data."),
+                                    2usize => {
+                                        point_data.z = line_data[a]
+                                            .trim()
+                                            .parse::<f64>()
+                                            .expect("Error parsing data.")
+                                    }
+                                    3usize => {
+                                        point_data.intensity = line_data[a]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .expect("Error parsing data.")
+                                    }
+                                    4usize => point_data.set_classification(
+                                        line_data[a]
+                                            .trim()
+                                            .parse::<u8>()
+                                            .expect("Error parsing data."),
+                                    ),
+                                    5usize => point_data.set_return_number(
+                                        line_data[a]
+                                            .trim()
+                                            .parse::<u8>()
+                                            .expect("Error parsing data."),
+                                    ),
+                                    6usize => point_data.set_number_of_returns(
+                                        line_data[a]
+                                            .trim()
+                                            .parse::<u8>()
+                                            .expect("Error parsing data."),
+                                    ),
+                                    7usize => {
+                                        gps_time = line_data[a]
+                                            .trim()
+                                            .parse::<f64>()
+                                            .expect("Error parsing data.")
+                                    }
                                     8usize => {
-                                        point_data.scan_angle = line_data[a].trim().parse::<i16>().expect("Error parsing data.")
+                                        point_data.scan_angle = line_data[a]
+                                            .trim()
+                                            .parse::<i16>()
+                                            .expect("Error parsing data.")
                                     }
-                                    9usize => clr_data.red = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
-                                    10usize => clr_data.green = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
-                                    11usize => clr_data.blue = line_data[a].trim().parse::<u16>().expect("Error parsing data."),
+                                    9usize => {
+                                        clr_data.red = line_data[a]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .expect("Error parsing data.")
+                                    }
+                                    10usize => {
+                                        clr_data.green = line_data[a]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .expect("Error parsing data.")
+                                    }
+                                    11usize => {
+                                        clr_data.blue = line_data[a]
+                                            .trim()
+                                            .parse::<u16>()
+                                            .expect("Error parsing data.")
+                                    }
                                     _ => println!("unrecognized pattern"),
                                 }
                             }
 
                             point_data.point_source_id = 1;
 
-                            point_num += 1;
+                            // point_num += 1;
                             match point_format {
-                                0 => {  
+                                0 => {
                                     output.add_point_record(LidarPointRecord::PointRecord0 {
                                         point_data: point_data,
                                     });
-                                },
+                                }
                                 1 => {
                                     output.add_point_record(LidarPointRecord::PointRecord1 {
                                         point_data: point_data,
                                         gps_data: gps_time,
                                     });
-                                },
+                                }
                                 2 => {
                                     output.add_point_record(LidarPointRecord::PointRecord2 {
                                         point_data: point_data,
                                         colour_data: clr_data,
                                     });
-                                },
+                                }
                                 3 => {
                                     // if pattern_has_time && pattern_has_clr {
                                     output.add_point_record(LidarPointRecord::PointRecord3 {

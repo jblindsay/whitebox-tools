@@ -1303,7 +1303,8 @@ impl LasFile {
             total_vlr_size += self.vlr_data[i].record_length_after_header as u32;
         }
         let alignment_bytes = 4u32 - ((self.header.header_size as u32 + total_vlr_size) % 4u32);
-        self.header.offset_to_points = self.header.header_size as u32 + total_vlr_size + alignment_bytes; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
+        self.header.offset_to_points =
+            self.header.header_size as u32 + total_vlr_size + alignment_bytes; // THIS NEEDS TO BE FIXED WHEN LAS 1.4 SUPPORT IS ADDED FOR WRITING
         u32_bytes = unsafe { mem::transmute(self.header.offset_to_points) };
         writer.write_all(&u32_bytes)?;
 

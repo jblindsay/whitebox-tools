@@ -52,9 +52,9 @@ impl PolygonLongAxis {
         parameters.push(ToolParameter {
             name: "Output Polygon File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output vector polygon file.".to_owned(),
+            description: "Output vector polyline file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
-                VectorGeometryType::Polygon,
+                VectorGeometryType::PolyLine,
             )),
             default_value: None,
             optional: false,

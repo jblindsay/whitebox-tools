@@ -211,7 +211,8 @@ impl WhiteboxTool for LasToAscii {
                     )?;
                 } else if has_rgb && !has_time {
                     writer.write_all(
-                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n".as_bytes(),
+                        "X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE,RED,GREEN,BLUE\n"
+                            .as_bytes(),
                     )?;
                 } else {
                     writer.write_all(
