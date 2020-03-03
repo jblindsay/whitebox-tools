@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/09/2018
-Last Modified: 13/10/2018
+Last Modified: 03/03/2020
 License: MIT
 */
 
@@ -22,7 +22,7 @@ use std::path;
 /// size will cause a decrease in the perimeter-area ratio. The perimeter-area ratio is
 /// the inverse of the compactness ratio.
 ///
-/// The output data will be displayed as a new field (P-A_RATIO) in the input vector's
+/// The output data will be displayed as a new field (P_A_RATIO) in the input vector's
 /// database file.
 pub struct PerimeterAreaRatio {
     name: String,
@@ -183,7 +183,7 @@ impl WhiteboxTool for PerimeterAreaRatio {
 
         // add the attributes
         output.attributes.add_field(&AttributeField::new(
-            "P-A_RATIO",
+            "P_A_RATIO",
             FieldDataType::Real,
             12u8,
             6u8,
