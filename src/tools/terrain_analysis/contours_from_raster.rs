@@ -56,7 +56,7 @@ impl ContoursFromRaster {
             flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output vector contour file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
-                VectorGeometryType::Point,
+                VectorGeometryType::Line,
             )),
             default_value: None,
             optional: false,
@@ -77,6 +77,15 @@ impl ContoursFromRaster {
             description: "Base contour height.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Smoothing Filter Size".to_owned(),
+            flags: vec!["--smooth".to_owned()],
+            description: "Smoothing filter size (in num. points), e.g. 3, 5, 7, 9, 11...".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("11".to_owned()),
             optional: true,
         });
 
@@ -162,7 +171,8 @@ impl WhiteboxTool for ContoursFromRaster {
         let mut contour_interval = 10f64;
         let mut base_contour = 0f64;
         let mut deflection_tolerance = 10f64;
-
+        let mut filter_size = 11;
+        
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -233,11 +243,26 @@ impl WhiteboxTool for ContoursFromRaster {
                 if deflection_tolerance > 45f64 {
                     deflection_tolerance = 45f64;
                 }
+            } else if flag_val == "-smooth" {
+                filter_size = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+                if filter_size > 21 {
+                    filter_size = 21;
+                }
             }
         }
 
+        let filter_radius = filter_size as isize / 2isize;
         deflection_tolerance = deflection_tolerance.to_radians().cos();
-
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
@@ -545,8 +570,6 @@ impl WhiteboxTool for ContoursFromRaster {
 
         let edge_offsets_pt1_x = [-half_res_x, half_res_x, half_res_x, -half_res_x];
         let edge_offsets_pt1_y = [half_res_y, half_res_y, -half_res_y, -half_res_y];
-        // let edge_offsets_pt2_x = [0f64, half_res_x, 0f64, -half_res_x];
-        // let edge_offsets_pt2_y = [half_res_y, 0f64, -half_res_y, 0f64];
         let edge_offsets_pt3_x = [half_res_x, half_res_x, -half_res_x, -half_res_x];
         let edge_offsets_pt3_y = [half_res_y, -half_res_y, -half_res_y, half_res_y];
         let (mut edge_x, mut edge_y): (f64, f64);
@@ -558,7 +581,7 @@ impl WhiteboxTool for ContoursFromRaster {
         let mut z: f64;
         let mut zn: f64;
         let (mut z1, mut z2): (isize, isize);
-        let (mut p1, mut p2, mut p3, mut p4, mut p5): (Point2D, Point2D, Point2D, Point2D, Point2D);
+        let (mut p1, mut p2, mut p3): (Point2D, Point2D, Point2D);
         let mut endnode = 0usize;
         for row in 0..rows {
             for col in 0..columns {
@@ -767,42 +790,58 @@ impl WhiteboxTool for ContoursFromRaster {
 
                     if points.len() > 1 {
                         // Smooth the points
-                        for a in 2..points.len() - 2 {
-                            p1 = points[a - 2];
-                            p2 = points[a - 1];
-                            p3 = points[a];
-                            p4 = points[a + 1];
-                            p5 = points[a + 2];
-                            // x = 0.1 * p1.x + 0.2 * p2.x + 0.4 * p3.x + 0.2 * p4.x + 0.1 * p5.x;
-                            // y = 0.1 * p1.y + 0.2 * p2.y + 0.4 * p3.y + 0.2 * p4.y + 0.1 * p5.y;
-                            x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                            y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                            points[a].x = x;
-                            points[a].y = y;
+                        if points.len() > filter_size {
+                            for a in 0..points.len() {
+                                x = 0f64;
+                                y = 0f64;
+                                for p in -filter_radius..=filter_radius {
+                                    let mut point_id: isize = a as isize + p;
+                                    if point_id < 0 {
+                                        point_id = 0;
+                                    }
+                                    if point_id >= points.len() as isize {
+                                        point_id = points.len() as isize - 1;
+                                    }
+                                    x += points[point_id as usize].x;
+                                    y += points[point_id as usize].y;
+                                }
+                                x /= filter_size as f64;
+                                y /= filter_size as f64;
+                                points[a].x = x;
+                                points[a].y = y;
+                            }
+
+                            for a in (0..points.len()).rev() {
+                                x = 0f64;
+                                y = 0f64;
+                                for p in -filter_radius..=filter_radius {
+                                    let mut point_id: isize = a as isize + p;
+                                    if point_id < 0 {
+                                        point_id = 0;
+                                    }
+                                    if point_id >= points.len() as isize {
+                                        point_id = points.len() as isize - 1;
+                                    }
+                                    x += points[point_id as usize].x;
+                                    y += points[point_id as usize].y;
+                                }
+                                x /= filter_size as f64;
+                                y /= filter_size as f64;
+                                points[a].x = x;
+                                points[a].y = y;
+                            }
                         }
 
-                        for a in (2..points.len() - 2).rev() {
-                            p1 = points[a - 2];
-                            p2 = points[a - 1];
-                            p3 = points[a];
-                            p4 = points[a + 1];
-                            p5 = points[a + 2];
-                            // x = 0.1 * p1.x + 0.2 * p2.x + 0.4 * p3.x + 0.2 * p4.x + 0.1 * p5.x;
-                            // y = 0.1 * p1.y + 0.2 * p2.y + 0.4 * p3.y + 0.2 * p4.y + 0.1 * p5.y;
-                            x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                            y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                            points[a].x = x;
-                            points[a].y = y;
-                        }
-
-                        for a in (2..points.len() - 2).rev() {
-                            p1 = points[a - 1];
-                            p2 = points[a];
-                            p3 = points[a + 1];
-                            // heading = Point2D::change_in_heading(p1, p2, p3).abs();
-                            if path_deflection(p1, p2, p3) > deflection_tolerance {
-                                points.remove(a);
-                                // num_points_removed += 1;
+                        if deflection_tolerance > 0f64 {
+                            for a in (1..points.len() - 1).rev() {
+                                p1 = points[a - 1];
+                                p2 = points[a];
+                                p3 = points[a + 1];
+                                // heading = Point2D::change_in_heading(p1, p2, p3).abs();
+                                if path_deflection(p1, p2, p3) > deflection_tolerance {
+                                    points.remove(a);
+                                    // num_points_removed += 1;
+                                }
                             }
                         }
 
@@ -922,94 +961,100 @@ impl WhiteboxTool for ContoursFromRaster {
 
                 num_line_points = points.len();
                 if num_line_points > 1 {
-                    // Smooth the points
-                    p1 = points[num_line_points - 3];
-                    p2 = points[num_line_points - 2];
-                    p3 = points[0];
-                    p4 = points[1];
-                    p5 = points[2];
-                    x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                    y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                    points[0].x = x;
-                    points[0].y = y;
 
-                    p1 = points[num_line_points - 3];
-                    p2 = points[num_line_points - 2];
-                    p3 = points[num_line_points - 1];
-                    p4 = points[1];
-                    p5 = points[2];
-                    x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                    y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                    points[num_line_points - 1].x = x;
-                    points[num_line_points - 1].y = y;
+                    if points.len() > filter_size {
+                        for a in 0..num_line_points {
+                            x = 0f64;
+                            y = 0f64;
+                            for p in -filter_radius..=filter_radius {
+                                let mut point_id: isize = a as isize + p;
+                                if point_id < 0 {
+                                    point_id += num_line_points as isize - 1 ;
+                                }
+                                if point_id >= num_line_points as isize {
+                                    point_id -= num_line_points as isize - 1;
+                                }
+                                x += points[point_id as usize].x;
+                                y += points[point_id as usize].y;
+                            }
+                            x /= filter_size as f64;
+                            y /= filter_size as f64;
+                            points[a].x = x;
+                            points[a].y = y;
+                        }
 
-                    p1 = points[num_line_points - 2];
-                    p2 = points[0];
-                    p3 = points[1];
-                    p4 = points[2];
-                    p5 = points[3];
-                    x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                    y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                    points[1].x = x;
-                    points[1].y = y;
-                    
-                    p1 = points[num_line_points - 4];
-                    p2 = points[num_line_points - 3];
-                    p3 = points[num_line_points - 2];
-                    p4 = points[0];
-                    p5 = points[1];
-                    x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                    y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                    points[num_line_points - 2].x = x;
-                    points[num_line_points - 2].y = y;
+                        // set the final point position to the same as the first to close the loop
+                        points[num_line_points - 1].x = points[0].x;
+                        points[num_line_points - 1].y = points[0].y;
 
-                    for a in 2..num_line_points - 2 {
-                        p1 = points[a - 2];
-                        p2 = points[a - 1];
-                        p3 = points[a];
-                        p4 = points[a + 1];
-                        p5 = points[a + 2];
-                        // x = 0.1 * p1.x + 0.2 * p2.x + 0.4 * p3.x + 0.2 * p4.x + 0.1 * p5.x;
-                        // y = 0.1 * p1.y + 0.2 * p2.y + 0.4 * p3.y + 0.2 * p4.y + 0.1 * p5.y;
-                        x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                        y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                        points[a].x = x;
-                        points[a].y = y;
+                        for a in (0..num_line_points).rev() {
+                            x = 0f64;
+                            y = 0f64;
+                            for p in -filter_radius..=filter_radius {
+                                let mut point_id: isize = a as isize + p;
+                                if point_id < 0 {
+                                    point_id += num_line_points as isize - 1 ;
+                                }
+                                if point_id >= num_line_points as isize {
+                                    point_id -= num_line_points as isize - 1;
+                                }
+                                x += points[point_id as usize].x;
+                                y += points[point_id as usize].y;
+                            }
+                            x /= filter_size as f64;
+                            y /= filter_size as f64;
+                            points[a].x = x;
+                            points[a].y = y;
+                        }
+
+                        // set the final point position to the same as the first to close the loop
+                        points[num_line_points - 1].x = points[0].x;
+                        points[num_line_points - 1].y = points[0].y;
                     }
 
-                    for a in (2..num_line_points - 2).rev() {
-                        p1 = points[a - 2];
-                        p2 = points[a - 1];
-                        p3 = points[a];
-                        p4 = points[a + 1];
-                        p5 = points[a + 2];
-                        // x = 0.1 * p1.x + 0.2 * p2.x + 0.4 * p3.x + 0.2 * p4.x + 0.1 * p5.x;
-                        // y = 0.1 * p1.y + 0.2 * p2.y + 0.4 * p3.y + 0.2 * p4.y + 0.1 * p5.y;
-                        x = (p1.x + p2.x + p3.x + p4.x + p5.x) / 5f64;
-                        y = (p1.y + p2.y + p3.y + p4.y + p5.y) / 5f64;
-                        points[a].x = x;
-                        points[a].y = y;
-                    }
-
-                    for a in (2..points.len() - 2).rev() {
-                        p1 = points[a - 1];
-                        p2 = points[a];
-                        p3 = points[a + 1];
-                        // heading = Point2D::change_in_heading(p1, p2, p3).abs();
-                        if path_deflection(p1, p2, p3) > deflection_tolerance {
-                            points.remove(a);
-                            // num_points_removed += 1;
+                    if deflection_tolerance > 0f64 {
+                        for a in (1..points.len() - 1).rev() {
+                            p1 = points[a - 1];
+                            p2 = points[a];
+                            p3 = points[a + 1];
+                            // heading = Point2D::change_in_heading(p1, p2, p3).abs();
+                            if path_deflection(p1, p2, p3) > deflection_tolerance {
+                                points.remove(a);
+                                // num_points_removed += 1;
+                            }
                         }
                     }
 
-                    let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                    sfg.add_part(&points);
-                    output.add_record(sfg);
-                    output.attributes.add_record(
-                        vec![FieldData::Int(fid as i32 + 1), FieldData::Real(base_contour + z * contour_interval)],
-                        false,
-                    );
-                    fid += 1;
+                    // make sure the line is big enough to warrant writing to file.
+                    let mut min_x = f64::MAX;
+                    let mut max_x = f64::MIN;
+                    let mut min_y = f64::MAX;
+                    let mut max_y = f64::MIN;
+                    for a in 0..points.len() {
+                        if points[a].x < min_x {
+                            min_x = points[a].x;
+                        }
+                        if points[a].x > max_x {
+                            max_x = points[a].x;
+                        }
+                        if points[a].y < min_y {
+                            min_y = points[a].y;
+                        }
+                        if points[a].y > max_y {
+                            max_y = points[a].y;
+                        }
+                    }
+
+                    if (max_x - min_x) > res_x || (max_y - min_y) > res_y {
+                        let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                        sfg.add_part(&points);
+                        output.add_record(sfg);
+                        output.attributes.add_record(
+                            vec![FieldData::Int(fid as i32 + 1), FieldData::Real(base_contour + z * contour_interval)],
+                            false,
+                        );
+                        fid += 1;
+                    }
                 }
             }
             if verbose {
