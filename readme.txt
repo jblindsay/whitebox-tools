@@ -60,6 +60,8 @@ Version 1.X.X (XX-XX-2020)
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
+- The vector-to-raster conversion tools now preserve input projections.
+- Fixed a bug in the RasterToVectorPolygons tool.
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.

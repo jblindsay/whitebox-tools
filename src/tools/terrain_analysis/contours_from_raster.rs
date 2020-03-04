@@ -83,7 +83,8 @@ impl ContoursFromRaster {
         parameters.push(ToolParameter {
             name: "Smoothing Filter Size".to_owned(),
             flags: vec!["--smooth".to_owned()],
-            description: "Smoothing filter size (in num. points), e.g. 3, 5, 7, 9, 11...".to_owned(),
+            description: "Smoothing filter size (in num. points), e.g. 3, 5, 7, 9, 11..."
+                .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("11".to_owned()),
             optional: true,
@@ -92,7 +93,8 @@ impl ContoursFromRaster {
         parameters.push(ToolParameter {
             name: "Tolerance".to_owned(),
             flags: vec!["--tolerance".to_owned()],
-            description: "Tolerance factor, in degrees (0-45); determines generalization level.".to_owned(),
+            description: "Tolerance factor, in degrees (0-45); determines generalization level."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("10.0".to_owned()),
             optional: true,
@@ -172,7 +174,7 @@ impl WhiteboxTool for ContoursFromRaster {
         let mut base_contour = 0f64;
         let mut deflection_tolerance = 10f64;
         let mut filter_size = 11;
-        
+
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -324,188 +326,6 @@ impl WhiteboxTool for ContoursFromRaster {
         let dx = [0, 1, 0, -1, 1, 1, -1, -1];
         let dy = [-1, 0, 1, 0, -1, 1, 1, -1];
 
-        /*
-        let (mut x, mut y): (f64, f64);
-        let dimensions = 2;
-        let capacity_per_node = 64;
-        let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
-        let mut z: f64;
-        let mut zn: f64;
-        let (mut z1, mut z2, mut z3): (f64, f64, f64);
-        let (mut c1, mut c2, mut c3): (isize, isize, isize);
-        let (mut p1, mut p2, mut p3, mut p4, mut p5): (Point2D, Point2D, Point2D, Point2D, Point2D);
-        let mut line_segments: Vec<LineSegment> = vec![];
-        let n2_8 = [7, 0, 1, 2, 3, 4, 5, 6];
-        let n3_8 = [0, 1, 2, 3, 4, 5, 6, 7];
-        let n2_4 = [7, 1, 3, 5];
-        let n3_4 = [1, 3, 5, 7];
-        let (mut x1, mut y1): (f64, f64);
-        let (mut x2, mut y2): (f64, f64);
-        let (mut x3, mut y3): (f64, f64);
-        let mut endnode = 0usize;
-        let mut fid = 1;
-        for row in 0..rows {
-            let eight_connectively = if row % 2 == 0 {
-                0
-            } else {
-                1
-            };
-            for col in 0..columns {
-                z1 = input.get_value(row, col);
-                if z1 != nodata {
-                    x1 = get_x_from_column(col);
-                    y1 = get_y_from_row(row);
-                    c1 = ((z1 - base_contour) / contour_interval).floor() as isize;
-                    if col % 2 == eight_connectively {
-                        for n in 0..8 {
-                            z2 = input.get_value(row + dy[n2_8[n]], col + dx[n2_8[n]]);
-                            if z2 != nodata {
-                                z3 = input.get_value(row + dy[n3_8[n]], col + dx[n3_8[n]]);
-                                if z3 != nodata {
-                                    c2 = ((z2 - base_contour) / contour_interval).floor() as isize;
-                                    c3 = ((z3 - base_contour) / contour_interval).floor() as isize;
-
-                                    if (c2 > c1 && c3 > c1) || (c2 < c1 && c3 < c1) {
-                                        x2 = get_x_from_column(col + dx[n2_8[n]]);
-                                        y2 = get_y_from_row(row + dy[n2_8[n]]);
-
-                                        x3 = get_x_from_column(col + dx[n3_8[n]]);
-                                        y3 = get_y_from_row(row + dy[n3_8[n]]);
-
-                                        for c in c1.min(c2.min(c3))..c1.max(c2.max(c3)) {
-                                            z = base_contour + c as f64 * contour_interval;
-
-                                            // x = if z1 < z2 {
-                                            //     x1 + (z - z1) / (z2 - z1) * (x2 - x1)
-                                            // } else {
-                                            //     x2 + (z - z2) / (z1 - z2) * (x1 - x2)
-                                            // };
-                                            // y = if z1 < z2 {
-                                            //     y1 + (z - z1) / (z2 - z1) * (y2 - y1)
-                                            // } else {
-                                            //     y2 + (z - z2) / (z1 - z2) * (y1 - y2)
-                                            // };
-                                            x = (x1 + x2) / 2f64;
-                                            y = (y1 + y2) / 2f64;
-                                            p1 = Point2D::new(x, y);
-
-                                            // x = if z1 < z3 {
-                                            //     x1 + (z - z1) / (z3 - z1) * (x3 - x1)
-                                            // } else {
-                                            //     x3 + (z - z3) / (z1 - z3) * (x1 - x3)
-                                            // };
-                                            // y = if z1 < z3 {
-                                            //     y1 + (z - z1) / (z3 - z1) * (y3 - y1)
-                                            // } else {
-                                            //     y3 + (z - z3) / (z1 - z3) * (y1 - y3)
-                                            // };
-                                            x = (x1 + x3) / 2f64;
-                                            y = (y1 + y3) / 2f64;
-                                            p2 = Point2D::new(x, y);
-
-                                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                                            sfg.add_part(&[p1, p2]);
-                                            output.add_record(sfg);
-                                            output.attributes.add_record(
-                                                vec![FieldData::Int(fid as i32 + 1), FieldData::Real(z)],
-                                                false,
-                                            );
-                                            fid += 1;
-
-                                            tree.add([p1.x, p1.y], endnode).unwrap();
-                                            endnode += 1;
-
-                                            tree.add([p2.x, p2.y], endnode).unwrap();
-                                            endnode += 1;
-
-                                            line_segments.push(LineSegment::new(p1, p2, z));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        for n in 0..4 {
-                            z2 = input.get_value(row + dy[n2_4[n]], col + dx[n2_4[n]]);
-                            if z2 != nodata {
-                                z3 = input.get_value(row + dy[n3_4[n]], col + dx[n3_4[n]]);
-                                if z3 != nodata {
-                                    c2 = ((z2 - base_contour) / contour_interval).floor() as isize;
-                                    c3 = ((z3 - base_contour) / contour_interval).floor() as isize;
-
-                                    if (c2 > c1 && c3 > c1) || (c2 < c1 && c3 < c1) {
-                                        x2 = get_x_from_column(col + dx[n2_4[n]]);
-                                        y2 = get_y_from_row(row + dy[n2_4[n]]);
-
-                                        x3 = get_x_from_column(col + dx[n3_4[n]]);
-                                        y3 = get_y_from_row(row + dy[n3_4[n]]);
-
-                                        for c in c1.min(c2.min(c3))..c1.max(c2.max(c3)) {
-                                            z = base_contour + c as f64 * contour_interval;
-
-                                            // x = if z1 < z2 {
-                                            //     x1 + (z - z1) / (z2 - z1) * (x2 - x1)
-                                            // } else {
-                                            //     x2 + (z - z2) / (z1 - z2) * (x1 - x2)
-                                            // };
-                                            // y = if z1 < z2 {
-                                            //     y1 + (z - z1) / (z2 - z1) * (y2 - y1)
-                                            // } else {
-                                            //     y2 + (z - z2) / (z1 - z2) * (y1 - y2)
-                                            // };
-                                            x = (x1 + x2) / 2f64;
-                                            y = (y1 + y2) / 2f64;
-                                            p1 = Point2D::new(x, y);
-
-                                            // x = if z1 < z3 {
-                                            //     x1 + (z - z1) / (z3 - z1) * (x3 - x1)
-                                            // } else {
-                                            //     x3 + (z - z3) / (z1 - z3) * (x1 - x3)
-                                            // };
-                                            // y = if z1 < z3 {
-                                            //     y1 + (z - z1) / (z3 - z1) * (y3 - y1)
-                                            // } else {
-                                            //     y3 + (z - z3) / (z1 - z3) * (y1 - y3)
-                                            // };
-                                            x = (x1 + x3) / 2f64;
-                                            y = (y1 + y3) / 2f64;
-                                            p2 = Point2D::new(x, y);
-
-                                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                                            sfg.add_part(&[p1, p2]);
-                                            output.add_record(sfg);
-                                            output.attributes.add_record(
-                                                vec![FieldData::Int(fid as i32 + 1), FieldData::Real(z)],
-                                                false,
-                                            );
-                                            fid += 1;
-
-                                            tree.add([p1.x, p1.y], endnode).unwrap();
-                                            endnode += 1;
-
-                                            tree.add([p2.x, p2.y], endnode).unwrap();
-                                            endnode += 1;
-
-                                            line_segments.push(LineSegment::new(p1, p2, z));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Finding contour segments: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-        */
-
         // Reclass the input raster
         let num_procs = num_cpus::get() as isize;
 
@@ -587,32 +407,32 @@ impl WhiteboxTool for ContoursFromRaster {
             for col in 0..columns {
                 z = reclassed.get_value(row, col);
                 if z != nodata {
-                    for n in 0..8 {
+                    for n in 0..4 {
                         zn = reclassed.get_value(row + dy[n], col + dx[n]);
                         if z > zn && zn != nodata {
                             z1 = zn as isize + 1;
                             z2 = z as isize;
                             for contour_val in z1..=z2 {
-                                if n < 4 {
-                                    x = get_x_from_column(col);
-                                    y = get_y_from_row(row);
+                                // if n < 4 {
+                                x = get_x_from_column(col);
+                                y = get_y_from_row(row);
 
-                                    edge_x = x + edge_offsets_pt1_x[n];
-                                    edge_y = y + edge_offsets_pt1_y[n];
-                                    p1 = Point2D::new(edge_x, edge_y);
+                                edge_x = x + edge_offsets_pt1_x[n];
+                                edge_y = y + edge_offsets_pt1_y[n];
+                                p1 = Point2D::new(edge_x, edge_y);
 
-                                    tree.add([p1.x, p1.y], endnode).unwrap();
-                                    endnode += 1;
+                                tree.add([p1.x, p1.y], endnode).unwrap();
+                                endnode += 1;
 
-                                    edge_x = x + edge_offsets_pt3_x[n];
-                                    edge_y = y + edge_offsets_pt3_y[n];
-                                    p2 = Point2D::new(edge_x, edge_y);
+                                edge_x = x + edge_offsets_pt3_x[n];
+                                edge_y = y + edge_offsets_pt3_y[n];
+                                p2 = Point2D::new(edge_x, edge_y);
 
-                                    tree.add([p2.x, p2.y], endnode).unwrap();
-                                    endnode += 1;
+                                tree.add([p2.x, p2.y], endnode).unwrap();
+                                endnode += 1;
 
-                                    line_segments.push(LineSegment::new(p1, p2, contour_val as f64));
-                                }
+                                line_segments.push(LineSegment::new(p1, p2, contour_val as f64));
+                                // }
                             }
                         }
                     }
@@ -627,6 +447,8 @@ impl WhiteboxTool for ContoursFromRaster {
                 }
             }
         }
+
+        drop(reclassed);
 
         /*
             The structure of endnodes is as such:
@@ -647,7 +469,6 @@ impl WhiteboxTool for ContoursFromRaster {
         let mut line_start: usize;
         let mut fid = 1;
         let mut flag: bool;
-        // let mut num_points_removed = 0;
         for line_segment in 0..line_segments.len() {
             if segment_live[line_segment] {
                 z = line_segments[line_segment].value;
@@ -657,7 +478,7 @@ impl WhiteboxTool for ContoursFromRaster {
                 // check the first vertex as a potential line start
                 p1 = line_segments[line_segment].first_vertex();
                 current_node = line_segment * 2;
-                
+
                 let ret = tree
                     .within(&[p1.x, p1.y], precision, &squared_euclidean)
                     .unwrap();
@@ -680,7 +501,7 @@ impl WhiteboxTool for ContoursFromRaster {
                     // check the first vertex as a potential line start
                     p2 = line_segments[line_segment].last_vertex();
                     current_node = line_segment * 2 + 1;
-                    
+
                     let ret = tree
                         .within(&[p2.x, p2.y], precision, &squared_euclidean)
                         .unwrap();
@@ -700,7 +521,6 @@ impl WhiteboxTool for ContoursFromRaster {
                         line_start = current_node;
                     }
                 }
-
 
                 if line_start < num_nodes {
                     // there is only the node itself
@@ -768,7 +588,8 @@ impl WhiteboxTool for ContoursFromRaster {
                                 node_of_max_deflection = num_nodes;
                                 for n in 0..connected_nodes.len() {
                                     line_segment_n = connected_nodes[n] / 2;
-                                    p3 = if connected_nodes[n] % 2 == 0 { // get the other end of this segment
+                                    p3 = if connected_nodes[n] % 2 == 0 {
+                                        // get the other end of this segment
                                         line_segments[line_segment_n].last_vertex()
                                     } else {
                                         line_segments[line_segment_n].first_vertex()
@@ -849,7 +670,10 @@ impl WhiteboxTool for ContoursFromRaster {
                         sfg.add_part(&points);
                         output.add_record(sfg);
                         output.attributes.add_record(
-                            vec![FieldData::Int(fid as i32 + 1), FieldData::Real(base_contour + z * contour_interval)],
+                            vec![
+                                FieldData::Int(fid as i32 + 1),
+                                FieldData::Real(base_contour + z * contour_interval),
+                            ],
                             false,
                         );
                         fid += 1;
@@ -860,7 +684,7 @@ impl WhiteboxTool for ContoursFromRaster {
                 progress =
                     (100.0_f64 * line_segment as f64 / (line_segments.len() - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Trancing contours (Loop 1 of 2): {}%", progress);
+                    println!("Tracing contours (Loop 1 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -873,7 +697,7 @@ impl WhiteboxTool for ContoursFromRaster {
                 z = line_segments[line_segment].value;
 
                 line_start = line_segment * 2;
-                
+
                 // there is only the node itself
                 current_node = line_start;
                 let mut points = vec![];
@@ -939,7 +763,8 @@ impl WhiteboxTool for ContoursFromRaster {
                             node_of_max_deflection = num_nodes;
                             for n in 0..connected_nodes.len() {
                                 line_segment_n = connected_nodes[n] / 2;
-                                p3 = if connected_nodes[n] % 2 == 0 { // get the other end of this segment
+                                p3 = if connected_nodes[n] % 2 == 0 {
+                                    // get the other end of this segment
                                     line_segments[line_segment_n].last_vertex()
                                 } else {
                                     line_segments[line_segment_n].first_vertex()
@@ -961,7 +786,6 @@ impl WhiteboxTool for ContoursFromRaster {
 
                 num_line_points = points.len();
                 if num_line_points > 1 {
-
                     if points.len() > filter_size {
                         for a in 0..num_line_points {
                             x = 0f64;
@@ -969,7 +793,7 @@ impl WhiteboxTool for ContoursFromRaster {
                             for p in -filter_radius..=filter_radius {
                                 let mut point_id: isize = a as isize + p;
                                 if point_id < 0 {
-                                    point_id += num_line_points as isize - 1 ;
+                                    point_id += num_line_points as isize - 1;
                                 }
                                 if point_id >= num_line_points as isize {
                                     point_id -= num_line_points as isize - 1;
@@ -993,7 +817,7 @@ impl WhiteboxTool for ContoursFromRaster {
                             for p in -filter_radius..=filter_radius {
                                 let mut point_id: isize = a as isize + p;
                                 if point_id < 0 {
-                                    point_id += num_line_points as isize - 1 ;
+                                    point_id += num_line_points as isize - 1;
                                 }
                                 if point_id >= num_line_points as isize {
                                     point_id -= num_line_points as isize - 1;
@@ -1050,7 +874,10 @@ impl WhiteboxTool for ContoursFromRaster {
                         sfg.add_part(&points);
                         output.add_record(sfg);
                         output.attributes.add_record(
-                            vec![FieldData::Int(fid as i32 + 1), FieldData::Real(base_contour + z * contour_interval)],
+                            vec![
+                                FieldData::Int(fid as i32 + 1),
+                                FieldData::Real(base_contour + z * contour_interval),
+                            ],
                             false,
                         );
                         fid += 1;
@@ -1061,7 +888,7 @@ impl WhiteboxTool for ContoursFromRaster {
                 progress =
                     (100.0_f64 * line_segment as f64 / (line_segments.len() - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Trancing contours (Loop 2 of 2): {}%", progress);
+                    println!("Tracing contours (Loop 2 of 2): {}%", progress);
                     old_progress = progress;
                 }
             }

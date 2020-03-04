@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2020
-Last Modified: 21/02/2020
+Last Modified: 04/03/2020
 License: MIT
 */
 
@@ -11,12 +11,13 @@ use crate::raster::*;
 use crate::structures::{Array2D, Point2D};
 use crate::tools::*;
 use crate::vector::*;
+use kdtree::distance::squared_euclidean;
+use kdtree::KdTree;
 use std::collections::VecDeque;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-const EPSILON: f64 = std::f64::EPSILON;
 
 /// Converts a raster data set to a vector of the POLYGON geometry type. The user must specify
 /// the name of a raster file (`--input`) and the name of the output (`--output`) vector. All grid cells containing
@@ -291,27 +292,59 @@ impl WhiteboxTool for RasterToVectorPolygons {
          *
          */
 
-        let mut edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
-        let mut num_edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
-        let mut cell_edges: u8;
+        const EPSILON: f64 = std::f64::EPSILON;
+        let prec = (5f64 * EPSILON).tan();
+        let (mut p1, mut p2, mut p3): (Point2D, Point2D, Point2D);
+        // let mut edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
+        // let mut num_edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
+        // let mut cell_edges: u8;
         let mut z: u32;
         let mut zn: u32;
+        let (mut x, mut y): (f64, f64);
+        let (mut edge_x, mut edge_y): (f64, f64);
+        let mut line_segments: Vec<LineSegment> = vec![];
+        let edge_offsets_pt1_x = [-half_res_x, half_res_x, half_res_x, -half_res_x];
+        let edge_offsets_pt1_y = [half_res_y, half_res_y, -half_res_y, -half_res_y];
+        let edge_offsets_pt3_x = [half_res_x, half_res_x, -half_res_x, -half_res_x];
+        let edge_offsets_pt3_y = [half_res_y, -half_res_y, -half_res_y, half_res_y];
+        let dimensions = 2;
+        let capacity_per_node = 64;
+        let mut tree = KdTree::with_capacity(dimensions, capacity_per_node);
+        let mut endnode = 0usize;
         for row in 0..rows {
             for col in 0..columns {
                 z = clumps.get_value(row, col);
                 if z != 0 {
-                    cell_edges = 0u8;
-                    for n in 0..8 {
+                    // cell_edges = 0u8;
+                    for n in 0..4 {
                         zn = clumps.get_value(row + dy[n], col + dx[n]);
                         if z != zn {
-                            cell_edges |= 1u8 << n;
-                            if n < 4 {
-                                // Edges are only counted on the non-diagonal cells
-                                num_edges.increment(row, col, 1u8);
-                            }
+                            // cell_edges |= 1u8 << n;
+                            // if n < 4 {
+                            //     // Edges are only counted on the non-diagonal cells
+                            //     num_edges.increment(row, col, 1u8);
+                            // }
+                            x = get_x_from_column(col);
+                            y = get_y_from_row(row);
+
+                            edge_x = x + edge_offsets_pt1_x[n];
+                            edge_y = y + edge_offsets_pt1_y[n];
+                            p1 = Point2D::new(edge_x, edge_y);
+
+                            tree.add([p1.x, p1.y], endnode).unwrap();
+                            endnode += 1;
+
+                            edge_x = x + edge_offsets_pt3_x[n];
+                            edge_y = y + edge_offsets_pt3_y[n];
+                            p2 = Point2D::new(edge_x, edge_y);
+
+                            tree.add([p2.x, p2.y], endnode).unwrap();
+                            endnode += 1;
+
+                            line_segments.push(LineSegment::new(p1, p2, z));
                         }
                     }
-                    edges.set_value(row, col, cell_edges);
+                    // edges.set_value(row, col, cell_edges);
                 }
             }
 
@@ -326,121 +359,137 @@ impl WhiteboxTool for RasterToVectorPolygons {
 
         let mut geometries =
             vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize - 1];
-
-        let mut cell: (isize, isize);
-        let (mut x, mut y): (f64, f64);
-        let (mut edge_x, mut edge_y): (f64, f64);
-        let mut edge: u8;
-        let mut next_edge: u8;
+        let mut segment_live = vec![true; line_segments.len()];
+        let num_nodes = line_segments.len() * 2;
+        let mut line_segment_n: usize;
+        let mut current_node: usize;
+        let mut heading: f64;
+        let mut max_heading: f64;
+        let mut node_of_max_deflection: usize;
+        let mut node: usize;
+        let mut line_start: usize;
         let mut flag: bool;
-        let mut edges_val: u8;
-        let edge_update = [3, 0, 1, 2];
-        let edge_offsets_pt1_x = [-half_res_x, half_res_x, half_res_x, -half_res_x];
-        let edge_offsets_pt1_y = [half_res_y, half_res_y, -half_res_y, -half_res_y];
-        let edge_offsets_pt2_x = [half_res_x, half_res_x, -half_res_x, -half_res_x];
-        let edge_offsets_pt2_y = [half_res_y, -half_res_y, -half_res_y, half_res_y];
-        let (mut p1, mut p2, mut p3): (Point2D, Point2D, Point2D);
-        let prec = (5f64 * EPSILON).tan();
-        for row in 0..rows {
-            for col in 0..columns {
-                z = clumps.get_value(row, col);
-                cell_edges = edges.get_value(row, col);
-                if cell_edges > 0u8 && num_edges.get_value(row, col) > 0u8 && z != 0 {
-                    // find the seed edge to initiate a trace from
-                    for n in 0..4 {
-                        if (cell_edges >> n) & 1u8 == 1u8 {
-                            // we've found an active edge to start a trace from.
-                            let mut points = vec![];
-                            cell = (row, col);
-                            edge = n;
-                            flag = true;
-                            while flag {
-                                edges_val = edges.get_value(cell.0, cell.1);
+        for line_segment in 0..line_segments.len() {
+            if segment_live[line_segment] {
+                z = line_segments[line_segment].value;
 
-                                x = get_x_from_column(cell.1);
-                                y = get_y_from_row(cell.0);
+                line_start = line_segment * 2;
+                current_node = line_start;
+                let mut points = vec![];
+                flag = true;
+                while flag {
+                    line_segment_n = current_node / 2;
 
-                                edge_x = x + edge_offsets_pt1_x[edge as usize];
-                                edge_y = y + edge_offsets_pt1_y[edge as usize];
-                                points.push(Point2D::new(edge_x, edge_y));
+                    // Add the current_node to points.
+                    // Is the current_node a starting point?
+                    p1 = if current_node % 2 == 0 {
+                        line_segments[line_segment_n].first_vertex()
+                    } else {
+                        line_segments[line_segment_n].last_vertex()
+                    };
+                    points.push(p1);
 
-                                edge_x = x + edge_offsets_pt2_x[edge as usize];
-                                edge_y = y + edge_offsets_pt2_y[edge as usize];
-                                points.push(Point2D::new(edge_x, edge_y));
+                    // Is it the first node encountered from this segment?
+                    if segment_live[line_segment_n] {
+                        segment_live[line_segment_n] = false;
+                        // This is the first node encountered from this segment, retrieve the other end
+                        current_node = if current_node % 2 == 0 {
+                            current_node + 1
+                        } else {
+                            current_node - 1
+                        };
+                        points.push(line_segments[line_segment_n].half_point());
+                    } else {
+                        // We've now added both ends of this segment. Find the next connecting segment.
+                        let ret = tree
+                            .within(&[p1.x, p1.y], prec, &squared_euclidean)
+                            .unwrap();
 
-                                if num_edges.get_value(cell.0, cell.1) > 0u8 {
-                                    num_edges.decrement(cell.0, cell.1, 1u8);
+                        let mut connected_nodes: Vec<usize> = Vec::with_capacity(ret.len());
+                        for a in 0..ret.len() {
+                            node = *ret[a].1;
+                            line_segment_n = node / 2;
+                            zn = line_segments[line_segment_n].value;
+                            if zn == z && segment_live[line_segment_n] {
+                                connected_nodes.push(node);
+                            }
+                        }
 
-                                    // is there an edge with the diagonal?
-                                    if (edges_val >> (edge + 4)) & 1u8 == 0u8 {
-                                        // There's no edge with the diagonal. Move to the diagonal cell.
-                                        cell = (
-                                            cell.0 + dy[edge as usize + 4],
-                                            cell.1 + dx[edge as usize + 4],
-                                        );
-                                        edge = edge_update[edge as usize];
-                                    } else {
-                                        // there is an edge with the diagonal
-                                        next_edge = edge + 1; // retrieve the value of the next edge
-                                        if next_edge > 3 {
-                                            next_edge = 0;
-                                        }
-                                        // is there an edge with the next edge?
-                                        if (edges_val >> next_edge) & 1u8 == 0u8 {
-                                            // no, move to the adjacent cell; same edge
-                                            cell = (
-                                                cell.0 + dy[next_edge as usize],
-                                                cell.1 + dx[next_edge as usize],
-                                            );
-                                            // and remove the last point, since it's an unnecessary vertex along a straight
-                                            points.pop();
-                                        } else {
-                                            // yes, same cell, update edge
-                                            edge = next_edge;
-                                        }
-                                    }
+                        if connected_nodes.len() == 0 {
+                            flag = false; // end of the line; no other connected segments
+                        } else if connected_nodes.len() == 1 {
+                            current_node = connected_nodes[0]; // only one connected segment; move there.
+                        } else if connected_nodes.len() >= 2 {
+                            // there are two or more connected segments; choose the node the represents the greatest deflection in path
+                            line_segment_n = current_node / 2;
+                            p1 = if current_node % 2 == 0 {
+                                line_segments[line_segment_n].last_vertex()
+                            } else {
+                                line_segments[line_segment_n].first_vertex()
+                            };
+
+                            p2 = if current_node % 2 == 0 {
+                                line_segments[line_segment_n].first_vertex()
+                            } else {
+                                line_segments[line_segment_n].last_vertex()
+                            };
+
+                            max_heading = 0f64;
+                            node_of_max_deflection = num_nodes;
+                            for n in 0..connected_nodes.len() {
+                                line_segment_n = connected_nodes[n] / 2;
+                                p3 = if connected_nodes[n] % 2 == 0 {
+                                    // get the other end of this segment
+                                    line_segments[line_segment_n].last_vertex()
                                 } else {
-                                    // Stopping condition. We've arrived at the start again.
-                                    flag = false;
+                                    line_segments[line_segment_n].first_vertex()
+                                };
+                                heading = Point2D::change_in_heading(p1, p2, p3).abs();
+                                if heading > max_heading {
+                                    max_heading = heading;
+                                    node_of_max_deflection = n;
                                 }
                             }
-
-                            if points.len() > 1 {
-                                // Remove unnecessary points
-                                for a in (1..points.len() - 1).rev() {
-                                    p1 = points[a - 1];
-                                    p2 = points[a];
-                                    p3 = points[a + 1];
-                                    if ((p2.y - p1.y) * (p3.x - p2.x)
-                                        - (p3.y - p2.y) * (p2.x - p1.x))
-                                        .abs()
-                                        <= ((p2.x - p1.x) * (p3.x - p2.x)
-                                            + (p2.y - p1.y) * (p3.y - p2.y))
-                                            .abs()
-                                            * prec
-                                    {
-                                        points.remove(a);
-                                    }
-                                }
-                                if geometries[z as usize - 1].num_parts > 0 {
-                                    // It's a hole.
-                                    if is_clockwise_order(&points) {
-                                        points.reverse();
-                                    }
-                                }
-                                geometries[z as usize - 1].add_part(&points);
+                            if node_of_max_deflection < num_nodes {
+                                current_node = connected_nodes[node_of_max_deflection];
+                            } else {
+                                flag = false; // we should not get here
                             }
-
-                            break;
                         }
                     }
                 }
-            }
 
+                if points.len() > 2 {
+                    // Remove unnecessary points
+                    for a in (1..points.len() - 1).rev() {
+                        p1 = points[a - 1];
+                        p2 = points[a];
+                        p3 = points[a + 1];
+                        if ((p2.y - p1.y) * (p3.x - p2.x) - (p3.y - p2.y) * (p2.x - p1.x)).abs()
+                            <= ((p2.x - p1.x) * (p3.x - p2.x) + (p2.y - p1.y) * (p3.y - p2.y))
+                                .abs()
+                                * prec
+                        {
+                            points.remove(a);
+                        }
+                    }
+                    if points[0] != points[points.len()-1] {
+                        points.push(points[0].clone());
+                    }
+                    if geometries[z as usize - 1].num_parts > 0 {
+                        // It's a hole.
+                        if is_clockwise_order(&points) {
+                            points.reverse();
+                        }
+                    }
+                    geometries[z as usize - 1].add_part(&points);
+                }
+            }
             if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                progress =
+                    (100.0_f64 * line_segment as f64 / (line_segments.len() - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Vectorizing polygons: {}%", progress);
+                    println!("Tracing polygons: {}%", progress);
                     old_progress = progress;
                 }
             }
@@ -486,5 +535,37 @@ impl WhiteboxTool for RasterToVectorPolygons {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Clone, Copy)]
+struct LineSegment {
+    p1: Point2D,
+    p2: Point2D,
+    value: u32,
+}
+
+impl LineSegment {
+    fn new(p1: Point2D, p2: Point2D, value: u32) -> LineSegment {
+        LineSegment {
+            p1: p1,
+            p2: p2,
+            value: value,
+        }
+    }
+
+    pub fn first_vertex(&self) -> Point2D {
+        self.p1
+    }
+
+    pub fn last_vertex(&self) -> Point2D {
+        self.p2
+    }
+
+    pub fn half_point(&self) -> Point2D {
+        Point2D::new(
+            (self.p1.x + self.p2.x) / 2f64,
+            (self.p1.y + self.p2.y) / 2f64,
+        )
     }
 }
