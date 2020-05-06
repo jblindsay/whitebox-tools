@@ -272,6 +272,7 @@ impl ToolManager {
         tool_names.push("ClassifyBuildingsInLidar".to_string());
         tool_names.push("ClassifyOverlapPoints".to_string());
         tool_names.push("ClipLidarToPolygon".to_string());
+        // tool_names.push("ContourLidar".to_string());
         tool_names.push("ErasePolygonFromLidar".to_string());
         tool_names.push("FilterLidarClasses".to_string());
         tool_names.push("FilterLidarScanAngles".to_string());
@@ -425,6 +426,7 @@ impl ToolManager {
         tool_names.push("Aspect".to_string());
         tool_names.push("AverageNormalVectorAngularDeviation".to_string());
         tool_names.push("CircularVarianceOfAspect".to_string());
+        tool_names.push("ContoursFromPoints".to_string());
         tool_names.push("ContoursFromRaster".to_string());
         tool_names.push("DevFromMeanElev".to_string());
         tool_names.push("DiffFromMeanElev".to_string());
@@ -832,6 +834,7 @@ impl ToolManager {
             }
             "classifyoverlappoints" => Some(Box::new(lidar_analysis::ClassifyOverlapPoints::new())),
             "cliplidartopolygon" => Some(Box::new(lidar_analysis::ClipLidarToPolygon::new())),
+            // "contourlidar" => Some(Box::new(lidar_analysis::ContourLidar::new())),
             "erasepolygonfromlidar" => Some(Box::new(lidar_analysis::ErasePolygonFromLidar::new())),
             "filterlidarclasses" => Some(Box::new(lidar_analysis::FilterLidarClasses::new())),
             "filterlidarscanangles" => Some(Box::new(lidar_analysis::FilterLidarScanAngles::new())),
@@ -1045,6 +1048,7 @@ impl ToolManager {
             "circularvarianceofaspect" => {
                 Some(Box::new(terrain_analysis::CircularVarianceOfAspect::new()))
             }
+            "contoursfrompoints" => Some(Box::new(terrain_analysis::ContoursFromPoints::new())),
             "contoursfromraster" => Some(Box::new(terrain_analysis::ContoursFromRaster::new())),
             "devfrommeanelev" => Some(Box::new(terrain_analysis::DevFromMeanElev::new())),
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),

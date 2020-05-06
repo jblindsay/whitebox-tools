@@ -2,11 +2,11 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/10/2018
-Last Modified: 05/12/2018
+Last Modified: 26/03/2020
 License: MIT
 */
 
-use crate::algorithms::triangulate;
+use crate::algorithms::{is_clockwise_order, triangulate};
 use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
 use crate::vector::*;
@@ -325,7 +325,7 @@ impl WhiteboxTool for VoronoiDiagram {
                     .map(|e| delaunay.triangle_of_edge(e))
                     .collect();
 
-                let vertices: Vec<Point2D> = triangles
+                let mut vertices: Vec<Point2D> = triangles
                     .into_iter()
                     .map(|t| delaunay.triangle_center(&points, t))
                     .collect();
@@ -334,8 +334,10 @@ impl WhiteboxTool for VoronoiDiagram {
                     // It's a closed polygon. Notice that in order to
                     // enable a duplication of the first and last point,
                     // delaunay.edges_around_point has been modified:
-                    // } else if incoming == start {
-                    //       result.push(incoming);
+                    if !is_clockwise_order(&vertices) {
+                        // the part is assumed to be the hull and must be in clockwise order.
+                        vertices.reverse();
+                    }
                     let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
                     sfg.add_part(&vertices);
                     output.add_record(sfg);

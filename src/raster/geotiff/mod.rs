@@ -231,7 +231,6 @@ pub fn read_geotiff<'a>(
     //////////////////////////
     // Read the TIFF header //
     //////////////////////////
-
     let br = BufReader::new(f);
     let mut th = ByteOrderReader::<BufReader<File>>::new(br, configs.endian);
 
@@ -501,7 +500,7 @@ pub fn read_geotiff<'a>(
     configs.nodata = match ifd_map.get(&TAG_GDAL_NODATA) {
         Some(ifd) => {
             if bits_per_sample[0] == 32 && sample_format[0] == 3 {
-                (ifd.interpret_as_ascii().parse::<f32>().unwrap_or(-32768f32) as f64)
+                ifd.interpret_as_ascii().parse::<f32>().unwrap_or(-32768f32) as f64
             } else {
                 ifd.interpret_as_ascii().parse::<f64>().unwrap_or(-32768f64)
             }
@@ -843,6 +842,8 @@ pub fn read_geotiff<'a>(
         ));
     }
 
+    // println!("I'm here 1");
+
     let width = configs.columns;
     let height = configs.rows;
 
@@ -1050,6 +1051,10 @@ pub fn read_geotiff<'a>(
             }
         };
     }
+
+    // println!("I'm here 2");
+
+    // println!("rows {} cols {}", configs.rows, configs.columns);
 
     ////////////////////
     // Read the data! //

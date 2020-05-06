@@ -357,10 +357,12 @@ impl WhiteboxTool for LidarPointStats {
                 let mut tile = 0;
                 while tile < num_tiles {
                     // Get the next tile up for interpolation
-                    tile = match tile_list.lock().unwrap().next() {
-                        Some(val) => val,
-                        None => break, // There are no more tiles to interpolate
-                    };
+                    {
+                        tile = match tile_list.lock().unwrap().next() {
+                            Some(val) => val,
+                            None => break, // There are no more tiles to interpolate
+                        };
+                    }
 
                     let input_file = inputs[tile].replace("\"", "").clone();
                     if verbose && inputs.len() == 1 {

@@ -46,9 +46,11 @@ use nalgebra as na;
 use std::env;
 use std::io::Error;
 use std::path;
+use rstar;
 
 #[macro_use]
 extern crate serde_derive;
+// extern crate num_traits;
 
 /// WhiteboxTools is an advanced geospatial data analysis engine.
 ///

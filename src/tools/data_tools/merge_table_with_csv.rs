@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Prof. John Lindsay
 Created: 11/10/2018
-Last Modified: 07/08/2019
+Last Modified: 09/03/2020
 License: MIT
 */
 
@@ -232,7 +232,7 @@ impl WhiteboxTool for MergeTableWithCsv {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-import" {
+            } else if flag_val == "-import_field" || flag_val == "-import" {
                 import_field = if keyval {
                     vec[1].to_string()
                 } else {
@@ -264,6 +264,8 @@ impl WhiteboxTool for MergeTableWithCsv {
         };
         let input = Shapefile::read(&input_file)?;
 
+        let start = Instant::now();
+
         // read in the CSV file
         let mut data_map = HashMap::new();
         let (mut pkey_value, mut fkey_value): (String, String);
@@ -275,6 +277,7 @@ impl WhiteboxTool for MergeTableWithCsv {
         let mut record_num = 0;
         let mut delimiter = ",";
         let mut fkey_index = 99999;
+        let mut import_index = 99999;
         let mut field_indices_to_append = vec![];
         let mut field_lengths: Vec<u8> = vec![];
         let mut field_precision: Vec<u8> = vec![];
@@ -300,6 +303,9 @@ impl WhiteboxTool for MergeTableWithCsv {
                     if csv_headers[i] == foreign_key {
                         fkey_index = i;
                     }
+                    if csv_headers[i] == import_field {
+                        import_index = i;
+                    }
                 }
                 // was the foreign key found?
                 if fkey_index == 99999 {
@@ -319,7 +325,7 @@ impl WhiteboxTool for MergeTableWithCsv {
                 fkey_value = line_vec[fkey_index].to_string();
                 if record_num == 1 {
                     // the first data record
-                    if import_field.trim().is_empty() {
+                    if import_index > csv_num_fields {
                         // import all of the fields except the foreign key
                         for i in 0..csv_num_fields {
                             if i != fkey_index {
@@ -329,12 +335,8 @@ impl WhiteboxTool for MergeTableWithCsv {
                         }
                     } else {
                         // only import the import field
-                        for i in 0..csv_num_fields {
-                            if csv_headers[i] == import_field {
-                                field_types.push(get_type(line_vec[i]));
-                                field_indices_to_append.push(i);
-                            }
-                        }
+                        field_types.push(get_type(line_vec[import_index]));
+                        field_indices_to_append.push(import_index);
                     }
                     field_lengths = vec![0u8; field_indices_to_append.len()];
                     field_precision = vec![0u8; field_indices_to_append.len()];
@@ -345,24 +347,24 @@ impl WhiteboxTool for MergeTableWithCsv {
                     if line_vec[a].len() as u8 > field_lengths[i] {
                         field_lengths[i] = line_vec[a].len() as u8;
                     }
-                    match field_types[a] {
+                    match field_types[i] {
                         FieldDataType::Int => imported_data
-                            .push(FieldData::Int(line_vec[i].trim().parse::<i32>().unwrap())),
+                            .push(FieldData::Int(line_vec[a].trim().parse::<i32>().unwrap())),
                         FieldDataType::Real => {
                             let prec = get_precision(line_vec[a]);
                             if prec > field_precision[i] {
                                 field_precision[i] = prec;
                             }
                             imported_data
-                                .push(FieldData::Real(line_vec[i].trim().parse::<f64>().unwrap()))
+                                .push(FieldData::Real(line_vec[a].trim().parse::<f64>().unwrap()))
                         }
                         FieldDataType::Bool => imported_data
-                            .push(FieldData::Bool(line_vec[i].trim().parse::<bool>().unwrap())),
+                            .push(FieldData::Bool(line_vec[a].trim().parse::<bool>().unwrap())),
                         FieldDataType::Text => {
-                            imported_data.push(FieldData::Text(line_vec[i].trim().to_string()))
+                            imported_data.push(FieldData::Text(line_vec[a].trim().to_string()))
                         }
                         FieldDataType::Date => {
-                            imported_data.push(FieldData::Text(line_vec[i].trim().to_string()))
+                            imported_data.push(FieldData::Text(line_vec[a].trim().to_string()))
                         }
                     }
                 }
@@ -370,8 +372,6 @@ impl WhiteboxTool for MergeTableWithCsv {
             }
             record_num += 1;
         }
-
-        let start = Instant::now();
 
         // create output file
         let mut output =
@@ -382,9 +382,9 @@ impl WhiteboxTool for MergeTableWithCsv {
             a = field_indices_to_append[i];
             output.attributes.add_field(&AttributeField::new(
                 &csv_headers[a],
-                field_types[a].clone(),
-                field_lengths[a],
-                field_precision[a],
+                field_types[i].clone(),
+                field_lengths[i],
+                field_precision[i],
             ));
         }
 
@@ -396,10 +396,15 @@ impl WhiteboxTool for MergeTableWithCsv {
             // attributes
             let mut atts = input.attributes.get_record(record_num);
 
-            pkey_value = input
-                .attributes
-                .get_value(record_num, &primary_key)
-                .to_string();
+            pkey_value = match input.attributes.get_value(record_num, &primary_key) {
+                FieldData::Int(v) => v.to_string(),
+                FieldData::Real(v) => v.to_string(),
+                FieldData::Text(v) => v.to_string(),
+                FieldData::Date(v) => v.to_string(),
+                FieldData::Bool(v) => v.to_string(),
+                FieldData::Null => "null".to_string(),
+            };
+
             match data_map.get(&pkey_value) {
                 Some(v) => {
                     for a in v {
