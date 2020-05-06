@@ -376,7 +376,7 @@ impl WhiteboxTool for Mosaic {
 
         let tree = Arc::new(RTree::bulk_load(tile_aabb));
 
-        num_files = inputs.len();
+        // num_files = inputs.len();
 
         // create the output image
         let rows = ((north - south).abs() / resolution_y).ceil() as isize;
@@ -583,6 +583,7 @@ impl WhiteboxTool for Mosaic {
                 let x = x.clone();
                 let y = y.clone();
                 let tx = tx.clone();
+                let tree = tree.clone();
                 thread::spawn(move || {
                     let mut z: f64;
                     let shift_x = [0, 1, 0, 1];
@@ -594,14 +595,18 @@ impl WhiteboxTool for Mosaic {
                     let (mut origin_col, mut origin_row): (isize, isize);
                     let (mut dx, mut dy): (f64, f64);
                     let mut sum_dist: f64;
+                    let mut i: usize;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            let mut flag = true;
-                            for i in 0..num_files {
-                                if !flag {
-                                    break;
-                                }
+                            // let mut flag = true;
+                            // for i in 0..num_files {
+                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            for a in 0..ret.len() {
+                                i = ret[a].data;
+                                // if !flag {
+                                //     break;
+                                // }
                                 row_src = (inputs[i].configs.north - y[row as usize])
                                     / inputs[i].configs.resolution_y;
                                 col_src = (x[col as usize] - inputs[i].configs.west)
@@ -625,7 +630,8 @@ impl WhiteboxTool for Mosaic {
                                         neighbour[n][1] = 0f64;
                                     } else {
                                         data[col as usize] = neighbour[n][0];
-                                        flag = false;
+                                        break;
+                                        // flag = false;
                                     }
                                 }
 
@@ -635,7 +641,8 @@ impl WhiteboxTool for Mosaic {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false;
+                                    break;
+                                    // flag = false;
                                 }
                             }
                         }
