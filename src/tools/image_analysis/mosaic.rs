@@ -267,7 +267,7 @@ impl WhiteboxTool for Mosaic {
         }
         */
 
-        let mut num_files = input_vec.len();
+        let num_files = input_vec.len();
         println!("Number of tiles: {}", num_files);
         if num_files < 2 {
             return Err(Error::new(ErrorKind::InvalidInput,

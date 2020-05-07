@@ -65,6 +65,8 @@ Version 1.3.0 (XX-XX-2020)
 - The vector-to-raster conversion tools now preserve input projections.
 - Fixed a bug in the RasterToVectorPolygons tool.
 - Fixed several bugs in the MergeTableWithCsv tool.
+- Modified the FillMissingData tool to allow for the exclusion of edge-connected NoData cells from the operation.
+  This is better for irregular shaped DEMs that have large areas of NoData surrounding the valid data.
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.
