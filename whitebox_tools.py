@@ -54,12 +54,12 @@ class WhiteboxTools(object):
         else:
             self.ext = ''
         self.exe_name = "whitebox_tools{}".format(self.ext)
-        # self.__exe_path = os.path.dirname(shutil.which(
+        # self.exe_path = os.path.dirname(shutil.which(
         #     self.exe_name) or path.dirname(path.abspath(__file__)))
-        # self.__exe_path = os.path.dirname(os.path.join(os.path.realpath(__file__)))
-        self.__exe_path = path.dirname(path.abspath(__file__))
-        self.__work_dir = ""
-        self.__verbose = True
+        # self.exe_path = os.path.dirname(os.path.join(os.path.realpath(__file__)))
+        self.exe_path = path.dirname(path.abspath(__file__))
+        self.work_dir = ""
+        self.verbose = True
         self.cancel_op = False
         self.default_callback = default_callback
         self.__compress_rasters = False
@@ -68,7 +68,7 @@ class WhiteboxTools(object):
         ''' 
         Sets the directory to the WhiteboxTools executable file.
         '''
-        self.__exe_path = path_str
+        self.exe_path = path_str
 
     def set_working_dir(self, path_str):
         ''' 
@@ -77,7 +77,7 @@ class WhiteboxTools(object):
         directory, tool input parameters that are files need only
         specify the file name rather than the complete file path.
         '''
-        self.__work_dir = path.normpath(path_str)
+        self.work_dir = path.normpath(path_str)
 
     def set_verbose_mode(self, val=True):
         ''' 
@@ -89,7 +89,7 @@ class WhiteboxTools(object):
         can be problematic. By setting verbose mode to False, these
         messages are suppressed and tools run as background processes.
         '''
-        self.__verbose = val
+        self.verbose = val
 
     def set_compress_rasters(self, compress_rasters):
         ''' 
@@ -108,13 +108,13 @@ class WhiteboxTools(object):
             if callback is None:
                 callback = self.default_callback
 
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args2 = []
             args2.append("." + path.sep + self.exe_name)
             args2.append("--run=\"{}\"".format(to_camelcase(tool_name)))
 
-            if self.__work_dir.strip() != "":
-                args2.append("--wd=\"{}\"".format(self.__work_dir))
+            if self.work_dir.strip() != "":
+                args2.append("--wd=\"{}\"".format(self.work_dir))
 
             for arg in args:
                 args2.append(arg)
@@ -122,13 +122,13 @@ class WhiteboxTools(object):
             # args_str = args_str[:-1]
             # a.append("--args=\"{}\"".format(args_str))
 
-            if self.__verbose:
+            if self.verbose:
                 args2.append("-v")
 
             if self.__compress_rasters:
                 args2.append("--compress_rasters")
 
-            if self.__verbose:
+            if self.verbose:
                 cl = ""
                 for v in args2:
                     cl += v + " "
@@ -161,7 +161,7 @@ class WhiteboxTools(object):
         Retrieves the help description for WhiteboxTools.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("-h")
@@ -185,7 +185,7 @@ class WhiteboxTools(object):
         Retrieves the license information for WhiteboxTools.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--license")
@@ -209,7 +209,7 @@ class WhiteboxTools(object):
         Retrieves the version information for WhiteboxTools.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--version")
@@ -233,7 +233,7 @@ class WhiteboxTools(object):
         Retrieves the help description for a specific tool.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--toolhelp={}".format(to_camelcase(tool_name)))
@@ -257,7 +257,7 @@ class WhiteboxTools(object):
         Retrieves the tool parameter descriptions for a specific tool.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--toolparameters={}".format(to_camelcase(tool_name)))
@@ -281,7 +281,7 @@ class WhiteboxTools(object):
         Retrieve the toolbox for a specific tool.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--toolbox={}".format(to_camelcase(tool_name)))
@@ -306,7 +306,7 @@ class WhiteboxTools(object):
         on the projects source code repository.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--viewcode={}".format(to_camelcase(tool_name)))
@@ -330,7 +330,7 @@ class WhiteboxTools(object):
         Lists all available tools in WhiteboxTools.
         '''
         try:
-            os.chdir(self.__exe_path)
+            os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
             args.append("--listtools")
