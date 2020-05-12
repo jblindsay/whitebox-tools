@@ -57,6 +57,7 @@ for more details.
 ******************
 
 Version 1.3.0 (XX-XX-2020)
+- Tools will now output DEFLATE compressed GeoTIFFs when the --compress_rasters parameter is used.
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Added the ContoursFromPoints tool for creating a vector contour coverage from vector points.

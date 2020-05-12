@@ -334,7 +334,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             println!("Reading data...")
         };
 
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+        let input = Arc::new(Raster::new(&input_file, "r").expect("Error reading input raster"));
 
         let start = Instant::now();
 

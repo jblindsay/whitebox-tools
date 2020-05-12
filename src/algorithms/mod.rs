@@ -10,6 +10,7 @@ mod convex_hull;
 mod delaunay_triangulation;
 mod is_clockwise_order;
 mod line_ops;
+mod lzw;
 mod minimum_bounding_box;
 mod poly_area;
 mod poly_ops;
@@ -23,6 +24,7 @@ pub use self::is_clockwise_order::is_clockwise_order;
 pub use self::line_ops::{
     do_polylines_intersect, find_line_intersections, find_split_points_at_line_intersections,
 };
+pub use self::lzw::{lzw_decode, lzw_encode};
 pub use self::minimum_bounding_box::{minimum_bounding_box, MinimizationCriterion};
 pub use self::poly_area::polygon_area;
 pub use self::poly_ops::{

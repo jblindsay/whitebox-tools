@@ -62,6 +62,7 @@ class WhiteboxTools(object):
         self.verbose = True
         self.cancel_op = False
         self.default_callback = default_callback
+        self.compress_rasters = False
 
     def set_whitebox_dir(self, path_str):
         ''' 
@@ -90,6 +91,12 @@ class WhiteboxTools(object):
         '''
         self.verbose = val
 
+    def set_compress_raster(self, compress_rasters):
+        ''' 
+        Sets the flag used by WhiteboxTools to determine whether to use compression for output rasters.
+        '''
+        self.compress_rasters = compress_rasters
+
     def run_tool(self, tool_name, args, callback=None):
         ''' 
         Runs a tool and specifies tool arguments.
@@ -117,6 +124,9 @@ class WhiteboxTools(object):
 
             if self.verbose:
                 args2.append("-v")
+
+            if self.compress_rasters:
+                args2.append("--compress_rasters")
 
             if self.verbose:
                 cl = ""
