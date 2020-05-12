@@ -974,10 +974,10 @@ class WbRunner(tk.Frame):
 
     def update_compress(self):
         if wbt.compress_rasters:
-            wbt.compress_rasters = False
+            wbt.set_compress_rasters(False)
             self.filemenu.entryconfig(3, label = "Compress Output TIFFs")
         else:
-            wbt.compress_rasters = True
+            wbt.set_compress_rasters(True)
             self.filemenu.entryconfig(3, label = "Do Not Compress Output TIFFs")
 
     def get_toolboxes(self):
