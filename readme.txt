@@ -56,12 +56,18 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.X.X (XX-XX-2020)
+Version 1.3.0 (XX-XX-2020)
+- Tools will now output DEFLATE compressed GeoTIFFs when the --compress_rasters parameter is used.
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
+- Added the ContoursFromPoints tool for creating a vector contour coverage from vector points.
 - Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
+- Modified the Mosaic tool, which now runs much faster with large numbers of input tiles.
 - The vector-to-raster conversion tools now preserve input projections.
 - Fixed a bug in the RasterToVectorPolygons tool.
+- Fixed several bugs in the MergeTableWithCsv tool.
+- Modified the FillMissingData tool to allow for the exclusion of edge-connected NoData cells from the operation.
+  This is better for irregular shaped DEMs that have large areas of NoData surrounding the valid data.
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.

@@ -99,7 +99,7 @@ impl Point2D {
         if current.is_left(&previous, &next) >= 0.0 {
             ratio.acos()
         } else {
-            -1.0 * (ratio.acos())
+            -1.0 * ratio.acos()
         }
     }
 

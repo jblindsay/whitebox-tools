@@ -350,38 +350,38 @@ impl Polyline {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::Polyline;
-    use crate::structures::Point2D;
+// #[cfg(test)]
+// mod test {
+//     use super::Polyline;
+//     use crate::structures::Point2D;
 
-    #[test]
-    fn test_polyline_split() {
-        let mut pl = Polyline::new(
-            &vec![
-                Point2D::new(0.0, 0.0),
-                Point2D::new(10.0, 10.0),
-                Point2D::new(12.0, 6.0),
-                Point2D::new(6.0, 0.0),
-            ],
-            1,
-        );
-        pl.insert_split_point(0.5, Point2D::new(5.0, 5.0));
-        pl.insert_split_point(2.5, Point2D::new(9.0, 3.0));
-        let new_polylines = pl.split();
-        let new_polyline_should_be = vec![
-            Polyline::new(&vec![Point2D::new(0.0, 0.0), Point2D::new(5.0, 5.0)], 1),
-            Polyline::new(
-                &vec![
-                    Point2D::new(5.0, 5.0),
-                    Point2D::new(10.0, 10.0),
-                    Point2D::new(12.0, 6.0),
-                    Point2D::new(9.0, 3.0),
-                ],
-                1,
-            ),
-            Polyline::new(&vec![Point2D::new(9.0, 3.0), Point2D::new(6.0, 0.0)], 1),
-        ];
-        assert_eq!(new_polylines, new_polyline_should_be);
-    }
-}
+//     #[test]
+//     fn test_polyline_split() {
+//         let mut pl = Polyline::new(
+//             &vec![
+//                 Point2D::new(0.0, 0.0),
+//                 Point2D::new(10.0, 10.0),
+//                 Point2D::new(12.0, 6.0),
+//                 Point2D::new(6.0, 0.0),
+//             ],
+//             1,
+//         );
+//         pl.insert_split_point(0.5, Point2D::new(5.0, 5.0));
+//         pl.insert_split_point(2.5, Point2D::new(9.0, 3.0));
+//         let new_polylines = pl.split();
+//         let new_polyline_should_be = vec![
+//             Polyline::new(&vec![Point2D::new(0.0, 0.0), Point2D::new(5.0, 5.0)], 1),
+//             Polyline::new(
+//                 &vec![
+//                     Point2D::new(5.0, 5.0),
+//                     Point2D::new(10.0, 10.0),
+//                     Point2D::new(12.0, 6.0),
+//                     Point2D::new(9.0, 3.0),
+//                 ],
+//                 1,
+//             ),
+//             Polyline::new(&vec![Point2D::new(9.0, 3.0), Point2D::new(6.0, 0.0)], 1),
+//         ];
+//         assert_eq!(new_polylines, new_polyline_should_be);
+//     }
+// }

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/07/2017
-Last Modified: 30/08/2019
+Last Modified: 24/03/2020
 License: MIT
 
 NOTES:
@@ -499,10 +499,12 @@ impl WhiteboxTool for LidarIdwInterpolation {
                 let mut tile = 0;
                 while tile < num_tiles {
                     // Get the next tile up for interpolation
-                    tile = match tile_list.lock().unwrap().next() {
-                        Some(val) => val,
-                        None => break, // There are no more tiles to interpolate
-                    };
+                    {
+                        tile = match tile_list.lock().unwrap().next() {
+                            Some(val) => val,
+                            None => break, // There are no more tiles to interpolate
+                        };
+                    }
                     // for tile in (0..inputs.len()).filter(|t| t % num_procs2 as usize == tid as usize) {
                     let start_run = Instant::now();
 
@@ -792,203 +794,214 @@ impl WhiteboxTool for LidarIdwInterpolation {
                         }
                     }
 
-                    let west: f64 = bounding_boxes[tile].min_x;
-                    let north: f64 = bounding_boxes[tile].max_y;
-                    let rows: isize =
-                        (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
-                    let columns: isize =
-                        (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
-                    let south: f64 = north - rows as f64 * grid_res;
-                    let east = west + columns as f64 * grid_res;
-                    let nodata = -32768.0f64;
-
-                    let mut configs = RasterConfigs {
-                        ..Default::default()
-                    };
-                    configs.rows = rows as usize;
-                    configs.columns = columns as usize;
-                    configs.north = north;
-                    configs.south = south;
-                    configs.east = east;
-                    configs.west = west;
-                    configs.resolution_x = grid_res;
-                    configs.resolution_y = grid_res;
-                    configs.nodata = nodata;
-                    configs.data_type = DataType::F32;
-                    configs.photometric_interp = PhotometricInterpretation::Continuous;
-                    configs.palette = palette.clone();
-
-                    let mut output = Raster::initialize_using_config(&output_file, &configs);
-                    if interp_parameter == "rgb" {
-                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
-                        output.configs.data_type = DataType::RGBA32;
-                    }
-
-                    if num_tiles > 1 {
-                        let (mut x, mut y): (f64, f64);
-                        let mut zn: f64;
-                        let mut dist: f64;
-                        let mut val: f64;
-                        let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
-                        let (mut red, mut green, mut blue): (f64, f64, f64);
-                        let mut sum_weights: f64;
-                        for row in 0..rows {
-                            for col in 0..columns {
-                                x = west + (col as f64 + 0.5) * grid_res;
-                                y = north - (row as f64 + 0.5) * grid_res;
-                                let ret = frs.search(x, y);
-                                if ret.len() > 0 {
-                                    sum_weights = 0.0;
-                                    val = 0.0;
-                                    val_red = 0f64;
-                                    val_green = 0f64;
-                                    val_blue = 0f64;
-                                    for j in 0..ret.len() {
-                                        zn = ret[j].0;
-                                        dist = ret[j].1 as f64;
-                                        if dist > 0.0 {
-                                            if !interp_parameter_is_rgb {
-                                                val += zn / dist.powf(weight);
-                                            } else {
-                                                red = (zn as u32 & 0xFF) as f64;
-                                                green = ((zn as u32 >> 8) & 0xFF) as f64;
-                                                blue = ((zn as u32 >> 16) & 0xFF) as f64;
-                                                val_red += red / dist.powf(weight);
-                                                val_green += green / dist.powf(weight);
-                                                val_blue += blue / dist.powf(weight);
-                                            }
-                                            sum_weights += 1.0 / dist.powf(weight);
-                                        } else {
-                                            output.set_value(row, col, zn);
-                                            sum_weights = 0.0;
-                                            break;
-                                        }
-                                    }
-                                    if sum_weights > 0.0 {
-                                        if interp_parameter_is_rgb {
-                                            val = ((255u32 << 24)
-                                                | ((val_blue.round() as u32) << 16)
-                                                | ((val_green.round() as u32) << 8)
-                                                | (val_red.round() as u32))
-                                                as f64;
-                                        }
-                                        output.set_value(row, col, val / sum_weights);
-                                    }
-                                }
-                            }
-                            if verbose && inputs.len() == 1 {
-                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
-                                }
-                            }
-                        }
+                    if frs.size() == 0 {
+                        println!("Warning: No points found in {}.", inputs[tile].clone());
+                        tx2.send(tile).unwrap();
                     } else {
-                        // there's only one tile, so use all cores to interpolate this one tile.
-                        let frs = Arc::new(frs); // wrap FRS in an Arc
-                        let num_procs = num_cpus::get() as isize;
-                        let (tx, rx) = mpsc::channel();
-                        for tid in 0..num_procs {
-                            let frs = frs.clone();
-                            let tx1 = tx.clone();
-                            thread::spawn(move || {
-                                let (mut x, mut y): (f64, f64);
-                                let mut zn: f64;
-                                let mut dist: f64;
-                                let mut val: f64;
-                                let mut sum_weights: f64;
-                                let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
-                                let (mut red, mut green, mut blue): (f64, f64, f64);
-                                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                                    let mut data = vec![nodata; columns as usize];
-                                    for col in 0..columns {
-                                        x = west + (col as f64 + 0.5) * grid_res;
-                                        y = north - (row as f64 + 0.5) * grid_res;
-                                        let ret = frs.search(x, y);
-                                        if ret.len() > 0 {
-                                            sum_weights = 0.0;
-                                            val = 0.0;
-                                            val_red = 0f64;
-                                            val_green = 0f64;
-                                            val_blue = 0f64;
-                                            for j in 0..ret.len() {
-                                                zn = ret[j].0;
-                                                dist = ret[j].1 as f64;
-                                                if dist > 0.0 {
-                                                    if !interp_parameter_is_rgb {
-                                                        val += zn / dist.powf(weight);
-                                                    } else {
-                                                        red = (zn as u32 & 0xFF) as f64;
-                                                        green = ((zn as u32 >> 8) & 0xFF) as f64;
-                                                        blue = ((zn as u32 >> 16) & 0xFF) as f64;
-                                                        val_red += red / dist.powf(weight);
-                                                        val_green += green / dist.powf(weight);
-                                                        val_blue += blue / dist.powf(weight);
-                                                    }
-                                                    sum_weights += 1.0 / dist.powf(weight);
-                                                } else {
-                                                    data[col as usize] = zn;
-                                                    sum_weights = 0.0;
-                                                    break;
-                                                }
-                                            }
-                                            if sum_weights > 0.0 {
-                                                if interp_parameter_is_rgb {
-                                                    val = ((255u32 << 24)
-                                                        | ((val_blue.round() as u32) << 16)
-                                                        | ((val_green.round() as u32) << 8)
-                                                        | (val_red.round() as u32))
-                                                        as f64;
-                                                }
-                                                data[col as usize] = val / sum_weights;
-                                            }
-                                        }
-                                    }
-                                    tx1.send((row, data)).unwrap();
-                                }
-                            });
+                        let west: f64 = bounding_boxes[tile].min_x;
+                        let north: f64 = bounding_boxes[tile].max_y;
+                        let rows: isize =
+                            (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
+                        let columns: isize =
+                            (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
+                        let south: f64 = north - rows as f64 * grid_res;
+                        let east = west + columns as f64 * grid_res;
+                        let nodata = -32768.0f64;
+
+                        let mut configs = RasterConfigs {
+                            ..Default::default()
+                        };
+                        configs.rows = rows as usize;
+                        configs.columns = columns as usize;
+                        configs.north = north;
+                        configs.south = south;
+                        configs.east = east;
+                        configs.west = west;
+                        configs.resolution_x = grid_res;
+                        configs.resolution_y = grid_res;
+                        configs.nodata = nodata;
+                        configs.data_type = DataType::F32;
+                        configs.photometric_interp = PhotometricInterpretation::Continuous;
+                        configs.palette = palette.clone();
+
+                        let mut output = Raster::initialize_using_config(&output_file, &configs);
+                        if interp_parameter == "rgb" {
+                            output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                            output.configs.data_type = DataType::RGBA32;
                         }
 
-                        for row in 0..rows {
-                            let data = rx.recv().expect("Error receiving data from thread.");
-                            output.set_row_data(data.0, data.1);
-                            if verbose {
-                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
+                        if num_tiles > 1 {
+                            let (mut x, mut y): (f64, f64);
+                            let mut zn: f64;
+                            let mut dist: f64;
+                            let mut val: f64;
+                            let (mut val_red, mut val_green, mut val_blue): (f64, f64, f64);
+                            let (mut red, mut green, mut blue): (f64, f64, f64);
+                            let mut sum_weights: f64;
+                            for row in 0..rows {
+                                for col in 0..columns {
+                                    x = west + (col as f64 + 0.5) * grid_res;
+                                    y = north - (row as f64 + 0.5) * grid_res;
+                                    let ret = frs.search(x, y);
+                                    if ret.len() > 0 {
+                                        sum_weights = 0.0;
+                                        val = 0.0;
+                                        val_red = 0f64;
+                                        val_green = 0f64;
+                                        val_blue = 0f64;
+                                        for j in 0..ret.len() {
+                                            zn = ret[j].0;
+                                            dist = ret[j].1 as f64;
+                                            if dist > 0.0 {
+                                                if !interp_parameter_is_rgb {
+                                                    val += zn / dist.powf(weight);
+                                                } else {
+                                                    red = (zn as u32 & 0xFF) as f64;
+                                                    green = ((zn as u32 >> 8) & 0xFF) as f64;
+                                                    blue = ((zn as u32 >> 16) & 0xFF) as f64;
+                                                    val_red += red / dist.powf(weight);
+                                                    val_green += green / dist.powf(weight);
+                                                    val_blue += blue / dist.powf(weight);
+                                                }
+                                                sum_weights += 1.0 / dist.powf(weight);
+                                            } else {
+                                                output.set_value(row, col, zn);
+                                                sum_weights = 0.0;
+                                                break;
+                                            }
+                                        }
+                                        if sum_weights > 0.0 {
+                                            if interp_parameter_is_rgb {
+                                                val = ((255u32 << 24)
+                                                    | ((val_blue.round() as u32) << 16)
+                                                    | ((val_green.round() as u32) << 8)
+                                                    | (val_red.round() as u32))
+                                                    as f64;
+                                            }
+                                            output.set_value(row, col, val / sum_weights);
+                                        }
+                                    }
+                                }
+                                if verbose && inputs.len() == 1 {
+                                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
+                                }
+                            }
+                        } else {
+                            // there's only one tile, so use all cores to interpolate this one tile.
+                            let frs = Arc::new(frs); // wrap FRS in an Arc
+                            let num_procs = num_cpus::get() as isize;
+                            let (tx, rx) = mpsc::channel();
+                            for tid in 0..num_procs {
+                                let frs = frs.clone();
+                                let tx1 = tx.clone();
+                                thread::spawn(move || {
+                                    let (mut x, mut y): (f64, f64);
+                                    let mut zn: f64;
+                                    let mut dist: f64;
+                                    let mut val: f64;
+                                    let mut sum_weights: f64;
+                                    let (mut val_red, mut val_green, mut val_blue): (
+                                        f64,
+                                        f64,
+                                        f64,
+                                    );
+                                    let (mut red, mut green, mut blue): (f64, f64, f64);
+                                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                                        let mut data = vec![nodata; columns as usize];
+                                        for col in 0..columns {
+                                            x = west + (col as f64 + 0.5) * grid_res;
+                                            y = north - (row as f64 + 0.5) * grid_res;
+                                            let ret = frs.search(x, y);
+                                            if ret.len() > 0 {
+                                                sum_weights = 0.0;
+                                                val = 0.0;
+                                                val_red = 0f64;
+                                                val_green = 0f64;
+                                                val_blue = 0f64;
+                                                for j in 0..ret.len() {
+                                                    zn = ret[j].0;
+                                                    dist = ret[j].1 as f64;
+                                                    if dist > 0.0 {
+                                                        if !interp_parameter_is_rgb {
+                                                            val += zn / dist.powf(weight);
+                                                        } else {
+                                                            red = (zn as u32 & 0xFF) as f64;
+                                                            green =
+                                                                ((zn as u32 >> 8) & 0xFF) as f64;
+                                                            blue =
+                                                                ((zn as u32 >> 16) & 0xFF) as f64;
+                                                            val_red += red / dist.powf(weight);
+                                                            val_green += green / dist.powf(weight);
+                                                            val_blue += blue / dist.powf(weight);
+                                                        }
+                                                        sum_weights += 1.0 / dist.powf(weight);
+                                                    } else {
+                                                        data[col as usize] = zn;
+                                                        sum_weights = 0.0;
+                                                        break;
+                                                    }
+                                                }
+                                                if sum_weights > 0.0 {
+                                                    if interp_parameter_is_rgb {
+                                                        val = ((255u32 << 24)
+                                                            | ((val_blue.round() as u32) << 16)
+                                                            | ((val_green.round() as u32) << 8)
+                                                            | (val_red.round() as u32))
+                                                            as f64;
+                                                    }
+                                                    data[col as usize] = val / sum_weights;
+                                                }
+                                            }
+                                        }
+                                        tx1.send((row, data)).unwrap();
+                                    }
+                                });
+                            }
+
+                            for row in 0..rows {
+                                let data = rx.recv().expect("Error receiving data from thread.");
+                                output.set_row_data(data.0, data.1);
+                                if verbose {
+                                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
                                 }
                             }
                         }
+
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
+
+                        output.add_metadata_entry(format!(
+                            "Created by whitebox_tools\' {} tool",
+                            tool_name
+                        ));
+                        output.add_metadata_entry(format!("Input file: {}", input_file));
+                        output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                        output.add_metadata_entry(format!("Search radius: {}", search_radius));
+                        output.add_metadata_entry(format!("Weight: {}", weight));
+                        output.add_metadata_entry(format!(
+                            "Interpolation parameter: {}",
+                            interp_parameter
+                        ));
+                        output.add_metadata_entry(format!("Returns: {}", return_type));
+                        output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
+                        output.add_metadata_entry(format!(
+                            "Elapsed Time (including I/O): {}",
+                            elapsed_time_run
+                        ));
+
+                        if verbose && inputs.len() == 1 {
+                            println!("Saving data...")
+                        };
+
+                        let _ = output.write().unwrap();
                     }
-
-                    let elapsed_time_run = get_formatted_elapsed_time(start_run);
-
-                    output.add_metadata_entry(format!(
-                        "Created by whitebox_tools\' {} tool",
-                        tool_name
-                    ));
-                    output.add_metadata_entry(format!("Input file: {}", input_file));
-                    output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                    output.add_metadata_entry(format!("Search radius: {}", search_radius));
-                    output.add_metadata_entry(format!("Weight: {}", weight));
-                    output.add_metadata_entry(format!(
-                        "Interpolation parameter: {}",
-                        interp_parameter
-                    ));
-                    output.add_metadata_entry(format!("Returns: {}", return_type));
-                    output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-                    output.add_metadata_entry(format!(
-                        "Elapsed Time (including I/O): {}",
-                        elapsed_time_run
-                    ));
-
-                    if verbose && inputs.len() == 1 {
-                        println!("Saving data...")
-                    };
-
-                    let _ = output.write().unwrap();
 
                     tx2.send(tile).unwrap();
                 }

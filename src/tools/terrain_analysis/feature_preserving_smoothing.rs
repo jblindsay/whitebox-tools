@@ -41,8 +41,21 @@ use std::{f32, f64};
 /// also result in a slightly different output than what would be achieved with Sun's
 /// method.
 ///
+/// The user must specify the values of three key parameters, including the filter size
+/// (`--filter`), the normal difference threshold (`--norm_diff`), and the number of
+/// iterations (`--num_iter`). Lindsay et al. (2019) found that **the degree of smoothing
+/// was less impacted by the filter size than it was either the normal difference threshold
+/// and the number of iterations**. A filter size of 11, the default value, tends to work
+/// well in many cases. To increase the level of smoothing applied to the DEM, consider
+/// increasing the normal difference threshold, i.e. the angular difference in normal vectors
+/// between the center cell of a filter window and a neighbouring cell. This parameter determines
+/// which neighbouring values are included in a filtering operation and higher values will
+/// result in a greater number of neighbouring cells included, and therefore smooother surfaces.
+/// Similarly, increasing the number of iterations from the default value of 3 to upwards of
+/// 5-10 will result in significantly greater smoothing.
+///
 /// # Reference
-/// Lindsay JB, Francioni* A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of
+/// Lindsay JB, Francioni A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of
 /// drainage features. *Remote Sensing*, 11(16), 1926; DOI: 10.3390/rs11161926.
 ///
 /// Sun, X., Rosin, P., Martin, R., & Langbein, F. (2007). Fast and effective feature-preserving

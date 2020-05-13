@@ -949,13 +949,15 @@ class WbRunner(tk.Frame):
         #########################################################        
         menubar = tk.Menu(self)
 
-        filemenu = tk.Menu(menubar, tearoff=0)
-        filemenu.add_command(label="Set Working Directory", command=self.set_directory)
-        filemenu.add_command(label="Locate WhiteboxTools exe", command=self.select_exe)
-        filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
-        filemenu.add_separator()
-        filemenu.add_command(label="Exit", command=self.quit)
-        menubar.add_cascade(label="File", menu=filemenu)
+        self.filemenu = tk.Menu(menubar, tearoff=0)
+        self.filemenu.add_command(label="Set Working Directory", command=self.set_directory)
+        self.filemenu.add_command(label="Locate WhiteboxTools exe", command=self.select_exe)
+        self.filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
+        wbt.compress_rasters = True
+        self.filemenu.add_command(label="Do Not Compress Output TIFFs", command=self.update_compress)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label="Exit", command=self.quit)
+        menubar.add_cascade(label="File", menu=self.filemenu)
 
         editmenu = tk.Menu(menubar, tearoff=0)
         editmenu.add_command(label="Cut", command=lambda: self.focus_get().event_generate("<<Cut>>"))
@@ -970,9 +972,14 @@ class WbRunner(tk.Frame):
 
         self.master.config(menu=menubar)     
 
-    #########################################################
-    #        Functions (added/edited by Rachel)             #
-    #########################################################
+    def update_compress(self):
+        if wbt.compress_rasters:
+            wbt.set_compress_rasters(False)
+            self.filemenu.entryconfig(3, label = "Compress Output TIFFs")
+        else:
+            wbt.set_compress_rasters(True)
+            self.filemenu.entryconfig(3, label = "Do Not Compress Output TIFFs")
+
     def get_toolboxes(self):
         toolboxes = set()
         for item in wbt.toolbox().splitlines():  # run wbt.toolbox with no tool specified--returns all

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 08/11/2019
-Last Modified: 15/12/2019
+Last Modified: 24/03/2020
 License: MIT
 
 NOTES:
@@ -584,10 +584,12 @@ impl WhiteboxTool for LidarRbfInterpolation {
                 let mut tile = 0;
                 while tile < num_tiles {
                     // Get the next tile up for interpolation
-                    tile = match tile_list.lock().unwrap().next() {
-                        Some(val) => val,
-                        None => break, // There are no more tiles to interpolate
-                    };
+                    {
+                        tile = match tile_list.lock().unwrap().next() {
+                            Some(val) => val,
+                            None => break, // There are no more tiles to interpolate
+                        };
+                    }
                     // for tile in (0..inputs.len()).filter(|t| t % num_procs2 as usize == tid as usize) {
                     let start_run = Instant::now();
 
@@ -981,172 +983,181 @@ impl WhiteboxTool for LidarRbfInterpolation {
                         }
                     }
 
-                    let range = max_value - min_value;
-                    let range_threshold = range * 1f64; // only estimated values that are +/- 0.5 range beyond the min and max values will be output
-                    let mid_point = min_value + range / 2f64;
-
-                    let west: f64 = bounding_boxes[tile].min_x;
-                    let north: f64 = bounding_boxes[tile].max_y;
-                    let rows: isize =
-                        (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
-                    let columns: isize =
-                        (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
-                    let south: f64 = north - rows as f64 * grid_res;
-                    let east = west + columns as f64 * grid_res;
-                    let nodata = -32768.0f64;
-
-                    let mut configs = RasterConfigs {
-                        ..Default::default()
-                    };
-                    configs.rows = rows as usize;
-                    configs.columns = columns as usize;
-                    configs.north = north;
-                    configs.south = south;
-                    configs.east = east;
-                    configs.west = west;
-                    configs.resolution_x = grid_res;
-                    configs.resolution_y = grid_res;
-                    configs.nodata = nodata;
-                    configs.data_type = DataType::F32;
-                    configs.photometric_interp = PhotometricInterpretation::Continuous;
-                    configs.palette = palette.clone();
-
-                    let mut output = Raster::initialize_using_config(&output_file, &configs);
-                    if interp_parameter == "rgb" {
-                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
-                        output.configs.data_type = DataType::RGBA32;
-                    }
-
-                    if num_tiles > 1 {
-                        let (mut x, mut y): (f64, f64);
-                        let mut zn: f64;
-                        let mut point_num: usize;
-                        for row in 0..rows {
-                            for col in 0..columns {
-                                x = west + (col as f64 + 0.5) * grid_res;
-                                y = north - (row as f64 + 0.5) * grid_res;
-                                let ret = tree
-                                    .nearest(&[x, y], num_points, &squared_euclidean)
-                                    .unwrap();
-                                if ret.len() > 0 {
-                                    let mut centers: Vec<DVector<f64>> =
-                                        Vec::with_capacity(ret.len());
-                                    let mut vals: Vec<DVector<f64>> = Vec::with_capacity(ret.len());
-                                    for p in ret {
-                                        point_num = *(p.1);
-                                        centers.push(points[point_num].clone());
-                                        vals.push(z_values[point_num].clone());
-                                    }
-                                    let rbf = RadialBasisFunction::create(
-                                        centers, vals, basis_func, poly_order,
-                                    );
-                                    zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                    if (zn - mid_point).abs() < range_threshold {
-                                        // if the estimated value is well outside of the range of values in the input points, don't output it.
-                                        output.set_value(row, col, zn);
-                                    }
-                                } else {
-                                }
-                            }
-                            if verbose && inputs.len() == 1 {
-                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
-                                }
-                            }
-                        }
+                    if points.len() == 0 {
+                        println!("Warning: No points found in {}", inputs[tile].clone());
+                        tx2.send(tile).unwrap();
                     } else {
-                        // there's only one file, so use all cores to interpolate this one tile.
-                        let points = Arc::new(points);
-                        let z_values = Arc::new(z_values);
-                        let tree = Arc::new(tree);
-                        let num_procs = num_cpus::get() as isize;
-                        let (tx, rx) = mpsc::channel();
-                        for tid in 0..num_procs {
-                            let tree = tree.clone();
-                            let tx1 = tx.clone();
-                            let points = points.clone();
-                            let z_values = z_values.clone();
-                            thread::spawn(move || {
-                                let (mut x, mut y): (f64, f64);
-                                let mut zn: f64;
-                                let mut point_num: usize;
-                                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                                    let mut data = vec![nodata; columns as usize];
-                                    for col in 0..columns {
-                                        x = west + (col as f64 + 0.5) * grid_res;
-                                        y = north - (row as f64 + 0.5) * grid_res;
-                                        let ret = tree
-                                            .nearest(&[x, y], num_points, &squared_euclidean)
-                                            .unwrap();
-                                        if ret.len() > 0 {
-                                            let mut centers: Vec<DVector<f64>> =
-                                                Vec::with_capacity(ret.len());
-                                            let mut vals: Vec<DVector<f64>> =
-                                                Vec::with_capacity(ret.len());
-                                            for p in ret {
-                                                point_num = *(p.1);
-                                                centers.push(points[point_num].clone());
-                                                vals.push(z_values[point_num].clone());
-                                            }
-                                            let rbf = RadialBasisFunction::create(
-                                                centers, vals, basis_func, poly_order,
-                                            );
-                                            zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                            if (zn - mid_point).abs() < range_threshold {
-                                                // if the estimated value is well outside of the range of values in the input points, don't output it.
-                                                data[col as usize] = zn;
+                        let range = max_value - min_value;
+                        let range_threshold = range * 1f64; // only estimated values that are +/- 0.5 range beyond the min and max values will be output
+                        let mid_point = min_value + range / 2f64;
+
+                        let west: f64 = bounding_boxes[tile].min_x;
+                        let north: f64 = bounding_boxes[tile].max_y;
+                        let rows: isize =
+                            (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
+                        let columns: isize =
+                            (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
+                        let south: f64 = north - rows as f64 * grid_res;
+                        let east = west + columns as f64 * grid_res;
+                        let nodata = -32768.0f64;
+
+                        let mut configs = RasterConfigs {
+                            ..Default::default()
+                        };
+                        configs.rows = rows as usize;
+                        configs.columns = columns as usize;
+                        configs.north = north;
+                        configs.south = south;
+                        configs.east = east;
+                        configs.west = west;
+                        configs.resolution_x = grid_res;
+                        configs.resolution_y = grid_res;
+                        configs.nodata = nodata;
+                        configs.data_type = DataType::F32;
+                        configs.photometric_interp = PhotometricInterpretation::Continuous;
+                        configs.palette = palette.clone();
+
+                        let mut output = Raster::initialize_using_config(&output_file, &configs);
+                        if interp_parameter == "rgb" {
+                            output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                            output.configs.data_type = DataType::RGBA32;
+                        }
+
+                        if num_tiles > 1 {
+                            let (mut x, mut y): (f64, f64);
+                            let mut zn: f64;
+                            let mut point_num: usize;
+                            for row in 0..rows {
+                                for col in 0..columns {
+                                    x = west + (col as f64 + 0.5) * grid_res;
+                                    y = north - (row as f64 + 0.5) * grid_res;
+                                    let ret = tree
+                                        .nearest(&[x, y], num_points, &squared_euclidean)
+                                        .unwrap();
+                                    if ret.len() > 0 {
+                                        let mut centers: Vec<DVector<f64>> =
+                                            Vec::with_capacity(ret.len());
+                                        let mut vals: Vec<DVector<f64>> =
+                                            Vec::with_capacity(ret.len());
+                                        for p in ret {
+                                            point_num = *(p.1);
+                                            centers.push(points[point_num].clone());
+                                            vals.push(z_values[point_num].clone());
+                                        }
+                                        let rbf = RadialBasisFunction::create(
+                                            centers, vals, basis_func, poly_order,
+                                        );
+                                        zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
+                                        if (zn - mid_point).abs() < range_threshold {
+                                            // if the estimated value is well outside of the range of values in the input points, don't output it.
+                                            output.set_value(row, col, zn);
+                                        }
+                                    } else {
+                                    }
+                                }
+                                if verbose && inputs.len() == 1 {
+                                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
+                                }
+                            }
+                        } else {
+                            // there's only one file, so use all cores to interpolate this one tile.
+                            let points = Arc::new(points);
+                            let z_values = Arc::new(z_values);
+                            let tree = Arc::new(tree);
+                            let num_procs = num_cpus::get() as isize;
+                            let (tx, rx) = mpsc::channel();
+                            for tid in 0..num_procs {
+                                let tree = tree.clone();
+                                let tx1 = tx.clone();
+                                let points = points.clone();
+                                let z_values = z_values.clone();
+                                thread::spawn(move || {
+                                    let (mut x, mut y): (f64, f64);
+                                    let mut zn: f64;
+                                    let mut point_num: usize;
+                                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                                        let mut data = vec![nodata; columns as usize];
+                                        for col in 0..columns {
+                                            x = west + (col as f64 + 0.5) * grid_res;
+                                            y = north - (row as f64 + 0.5) * grid_res;
+                                            let ret = tree
+                                                .nearest(&[x, y], num_points, &squared_euclidean)
+                                                .unwrap();
+                                            if ret.len() > 0 {
+                                                let mut centers: Vec<DVector<f64>> =
+                                                    Vec::with_capacity(ret.len());
+                                                let mut vals: Vec<DVector<f64>> =
+                                                    Vec::with_capacity(ret.len());
+                                                for p in ret {
+                                                    point_num = *(p.1);
+                                                    centers.push(points[point_num].clone());
+                                                    vals.push(z_values[point_num].clone());
+                                                }
+                                                let rbf = RadialBasisFunction::create(
+                                                    centers, vals, basis_func, poly_order,
+                                                );
+                                                zn = rbf.eval(DVector::from_vec(vec![x, y]))[0];
+                                                if (zn - mid_point).abs() < range_threshold {
+                                                    // if the estimated value is well outside of the range of values in the input points, don't output it.
+                                                    data[col as usize] = zn;
+                                                }
                                             }
                                         }
+                                        tx1.send((row, data)).unwrap();
                                     }
-                                    tx1.send((row, data)).unwrap();
-                                }
-                            });
-                        }
+                                });
+                            }
 
-                        for row in 0..rows {
-                            let data = rx.recv().expect("Error receiving data from thread.");
-                            output.set_row_data(data.0, data.1);
-                            if verbose {
-                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
+                            for row in 0..rows {
+                                let data = rx.recv().expect("Error receiving data from thread.");
+                                output.set_row_data(data.0, data.1);
+                                if verbose {
+                                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
+                                    if progress != old_progress {
+                                        println!("Progress: {}%", progress);
+                                        old_progress = progress;
+                                    }
                                 }
                             }
                         }
+
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
+                        output.configs.display_max = max_value;
+                        output.configs.display_min = min_value;
+                        output.add_metadata_entry(format!(
+                            "Created by whitebox_tools\' {} tool",
+                            tool_name
+                        ));
+                        output.add_metadata_entry(format!("Input file: {}", input_file));
+                        output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                        output.add_metadata_entry(format!("Num. points: {}", num_points));
+                        output.add_metadata_entry(format!(
+                            "Radial basis function type: {}",
+                            func_type
+                        ));
+                        output.add_metadata_entry(format!("Polynomial order: {}", poly_order));
+                        output.add_metadata_entry(format!("Weight: {}", weight));
+                        output.add_metadata_entry(format!(
+                            "Interpolation parameter: {}",
+                            interp_parameter
+                        ));
+                        output.add_metadata_entry(format!("Returns: {}", return_type));
+                        output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
+                        output.add_metadata_entry(format!(
+                            "Elapsed Time (including I/O): {}",
+                            elapsed_time_run
+                        ));
+
+                        if verbose && inputs.len() == 1 {
+                            println!("Saving data...")
+                        };
+
+                        let _ = output.write().unwrap();
                     }
-
-                    let elapsed_time_run = get_formatted_elapsed_time(start_run);
-                    output.configs.display_max = max_value;
-                    output.configs.display_min = min_value;
-                    output.add_metadata_entry(format!(
-                        "Created by whitebox_tools\' {} tool",
-                        tool_name
-                    ));
-                    output.add_metadata_entry(format!("Input file: {}", input_file));
-                    output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                    output.add_metadata_entry(format!("Num. points: {}", num_points));
-                    output.add_metadata_entry(format!("Radial basis function type: {}", func_type));
-                    output.add_metadata_entry(format!("Polynomial order: {}", poly_order));
-                    output.add_metadata_entry(format!("Weight: {}", weight));
-                    output.add_metadata_entry(format!(
-                        "Interpolation parameter: {}",
-                        interp_parameter
-                    ));
-                    output.add_metadata_entry(format!("Returns: {}", return_type));
-                    output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-                    output.add_metadata_entry(format!(
-                        "Elapsed Time (including I/O): {}",
-                        elapsed_time_run
-                    ));
-
-                    if verbose && inputs.len() == 1 {
-                        println!("Saving data...")
-                    };
-
-                    let _ = output.write().unwrap();
 
                     tx2.send(tile).unwrap();
                 }

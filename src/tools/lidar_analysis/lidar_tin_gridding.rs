@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 31/08/2019
+Last Modified: 24/03/2020
 License: MIT
 */
 
@@ -466,10 +466,12 @@ impl WhiteboxTool for LidarTINGridding {
                 let mut tile = 0;
                 while tile < num_tiles {
                     // Get the next tile up for interpolation
-                    tile = match tile_list.lock().unwrap().next() {
-                        Some(val) => val,
-                        None => break, // There are no more tiles to interpolate
-                    };
+                    {
+                        tile = match tile_list.lock().unwrap().next() {
+                            Some(val) => val,
+                            None => break, // There are no more tiles to interpolate
+                        };
+                    }
                     let start_run = Instant::now();
 
                     let input_file = inputs[tile].replace("\"", "").clone();
@@ -740,259 +742,272 @@ impl WhiteboxTool for LidarTINGridding {
                     }
 
                     if points.len() == 0 {
-                        if verbose {
-                            println!("No points found in {}", inputs[tile].clone());
-                        }
+                        println!("Warning: No points found in {}.", inputs[tile].clone());
                         tx2.send(tile).unwrap();
-                    }
-
-                    let west: f64 = bounding_boxes[tile].min_x;
-                    let north: f64 = bounding_boxes[tile].max_y;
-                    let rows: isize =
-                        (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
-                    let columns: isize =
-                        (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
-                    let south: f64 = north - rows as f64 * grid_res;
-                    let east = west + columns as f64 * grid_res;
-                    let nodata = -32768.0f64;
-
-                    let mut configs = RasterConfigs {
-                        ..Default::default()
-                    };
-                    configs.rows = rows as usize;
-                    configs.columns = columns as usize;
-                    configs.north = north;
-                    configs.south = south;
-                    configs.east = east;
-                    configs.west = west;
-                    configs.resolution_x = grid_res;
-                    configs.resolution_y = grid_res;
-                    configs.nodata = nodata;
-                    configs.data_type = DataType::F32;
-                    configs.photometric_interp = PhotometricInterpretation::Continuous;
-
-                    let mut output = Raster::initialize_using_config(&output_file, &configs);
-                    if interp_parameter == "rgb" {
-                        output.configs.photometric_interp = PhotometricInterpretation::RGB;
-                        output.configs.data_type = DataType::RGBA32;
-                    }
-
-                    // do the triangulation
-                    if num_tiles == 1 && verbose {
-                        println!("Performing triangulation...");
-                    }
-                    let result = triangulate(&points).expect("No triangulation exists.");
-                    let num_triangles = result.triangles.len() / 3;
-
-                    let (mut p1, mut p2, mut p3): (usize, usize, usize);
-                    let (mut top, mut bottom, mut left, mut right): (f64, f64, f64, f64);
-
-                    let (mut top_row, mut bottom_row, mut left_col, mut right_col): (
-                        isize,
-                        isize,
-                        isize,
-                        isize,
-                    );
-                    let mut tri_points: Vec<Point2D> = vec![Point2D::new(0f64, 0f64); 4];
-                    let mut k: f64;
-                    let mut norm: Vector3<f64>;
-                    let (mut a, mut b, mut c): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
-                    let (mut x, mut y): (f64, f64);
-                    let mut zn: f64;
-                    let mut i: usize;
-                    if !interp_parameter_is_rgb {
-                        for triangle in 0..num_triangles {
-                            i = triangle * 3;
-                            p1 = result.triangles[i];
-                            p2 = result.triangles[i + 1];
-                            p3 = result.triangles[i + 2];
-
-                            if max_distance_squared(
-                                points[p1],
-                                points[p2],
-                                points[p3],
-                                z_values[p1],
-                                z_values[p2],
-                                z_values[p3],
-                            ) < max_triangle_edge_length
-                            {
-                                tri_points[0] = points[p1].clone();
-                                tri_points[1] = points[p2].clone();
-                                tri_points[2] = points[p3].clone();
-                                tri_points[3] = points[p1].clone();
-
-                                // get the equation of the plane
-                                a = Vector3::new(tri_points[0].x, tri_points[0].y, z_values[p1]);
-                                b = Vector3::new(tri_points[1].x, tri_points[1].y, z_values[p2]);
-                                c = Vector3::new(tri_points[2].x, tri_points[2].y, z_values[p3]);
-                                norm = (b - a).cross(&(c - a));
-                                k = -(tri_points[0].x * norm.x
-                                    + tri_points[0].y * norm.y
-                                    + norm.z * z_values[p1]);
-
-                                // find grid intersections with this triangle
-                                bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
-                                top = points[p1].y.max(points[p2].y.max(points[p3].y));
-                                left = points[p1].x.min(points[p2].x.min(points[p3].x));
-                                right = points[p1].x.max(points[p2].x.max(points[p3].x));
-
-                                bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
-                                top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
-                                left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
-                                right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
-
-                                for row in top_row..=bottom_row {
-                                    for col in left_col..=right_col {
-                                        x = west + col as f64 * grid_res;
-                                        y = north - row as f64 * grid_res;
-                                        if point_in_poly(&Point2D::new(x, y), &tri_points) {
-                                            // calculate the z values
-                                            zn = -(norm.x * x + norm.y * y + k) / norm.z;
-                                            output.set_value(row, col, zn);
-                                        }
-                                    }
-                                }
-
-                                if verbose && num_tiles == 1 {
-                                    progress = (100.0_f64 * triangle as f64
-                                        / (num_triangles - 1) as f64)
-                                        as i32;
-                                    if progress != old_progress {
-                                        println!("Progress: {}%", progress);
-                                        old_progress = progress;
-                                    }
-                                }
-                            }
-                        }
                     } else {
-                        let (mut k_r, mut k_g, mut k_b): (f64, f64, f64);
-                        let (mut norm_r, mut norm_g, mut norm_b): (
-                            Vector3<f64>,
-                            Vector3<f64>,
-                            Vector3<f64>,
+                        let west: f64 = bounding_boxes[tile].min_x;
+                        let north: f64 = bounding_boxes[tile].max_y;
+                        let rows: isize =
+                            (((north - bounding_boxes[tile].min_y) / grid_res).ceil()) as isize;
+                        let columns: isize =
+                            (((bounding_boxes[tile].max_x - west) / grid_res).ceil()) as isize;
+                        let south: f64 = north - rows as f64 * grid_res;
+                        let east = west + columns as f64 * grid_res;
+                        let nodata = -32768.0f64;
+
+                        let mut configs = RasterConfigs {
+                            ..Default::default()
+                        };
+                        configs.rows = rows as usize;
+                        configs.columns = columns as usize;
+                        configs.north = north;
+                        configs.south = south;
+                        configs.east = east;
+                        configs.west = west;
+                        configs.resolution_x = grid_res;
+                        configs.resolution_y = grid_res;
+                        configs.nodata = nodata;
+                        configs.data_type = DataType::F32;
+                        configs.photometric_interp = PhotometricInterpretation::Continuous;
+
+                        let mut output = Raster::initialize_using_config(&output_file, &configs);
+                        if interp_parameter == "rgb" {
+                            output.configs.photometric_interp = PhotometricInterpretation::RGB;
+                            output.configs.data_type = DataType::RGBA32;
+                        }
+
+                        // do the triangulation
+                        if num_tiles == 1 && verbose {
+                            println!("Performing triangulation...");
+                        }
+                        let result = triangulate(&points).expect("No triangulation exists.");
+                        let num_triangles = result.triangles.len() / 3;
+
+                        let (mut p1, mut p2, mut p3): (usize, usize, usize);
+                        let (mut top, mut bottom, mut left, mut right): (f64, f64, f64, f64);
+
+                        let (mut top_row, mut bottom_row, mut left_col, mut right_col): (
+                            isize,
+                            isize,
+                            isize,
+                            isize,
                         );
-                        let (mut red, mut green, mut blue): (f64, f64, f64);
-                        for triangle in 0..num_triangles {
-                            i = triangle * 3;
-                            p1 = result.triangles[i];
-                            p2 = result.triangles[i + 1];
-                            p3 = result.triangles[i + 2];
+                        let mut tri_points: Vec<Point2D> = vec![Point2D::new(0f64, 0f64); 4];
+                        let mut k: f64;
+                        let mut norm: Vector3<f64>;
+                        let (mut a, mut b, mut c): (Vector3<f64>, Vector3<f64>, Vector3<f64>);
+                        let (mut x, mut y): (f64, f64);
+                        let mut zn: f64;
+                        let mut i: usize;
+                        if !interp_parameter_is_rgb {
+                            for triangle in 0..num_triangles {
+                                i = triangle * 3;
+                                p1 = result.triangles[i];
+                                p2 = result.triangles[i + 1];
+                                p3 = result.triangles[i + 2];
 
-                            if max_distance_squared(
-                                points[p1],
-                                points[p2],
-                                points[p3],
-                                z_values[p1],
-                                z_values[p2],
-                                z_values[p3],
-                            ) < max_triangle_edge_length
-                            {
-                                tri_points[0] = points[p1].clone();
-                                tri_points[1] = points[p2].clone();
-                                tri_points[2] = points[p3].clone();
-                                tri_points[3] = points[p1].clone();
+                                if max_distance_squared(
+                                    points[p1],
+                                    points[p2],
+                                    points[p3],
+                                    z_values[p1],
+                                    z_values[p2],
+                                    z_values[p3],
+                                ) < max_triangle_edge_length
+                                {
+                                    tri_points[0] = points[p1].clone();
+                                    tri_points[1] = points[p2].clone();
+                                    tri_points[2] = points[p3].clone();
+                                    tri_points[3] = points[p1].clone();
 
-                                // get the equation of the plane
-                                red = (z_values[p1] as u32 & 0xFF) as f64;
-                                a = Vector3::new(tri_points[0].x, tri_points[0].y, red);
-                                red = (z_values[p2] as u32 & 0xFF) as f64;
-                                b = Vector3::new(tri_points[1].x, tri_points[1].y, red);
-                                red = (z_values[p3] as u32 & 0xFF) as f64;
-                                c = Vector3::new(tri_points[2].x, tri_points[2].y, red);
-                                norm_r = (b - a).cross(&(c - a));
-                                k_r = -(tri_points[2].x * norm_r.x
-                                    + tri_points[2].y * norm_r.y
-                                    + norm_r.z * red);
+                                    // get the equation of the plane
+                                    a = Vector3::new(
+                                        tri_points[0].x,
+                                        tri_points[0].y,
+                                        z_values[p1],
+                                    );
+                                    b = Vector3::new(
+                                        tri_points[1].x,
+                                        tri_points[1].y,
+                                        z_values[p2],
+                                    );
+                                    c = Vector3::new(
+                                        tri_points[2].x,
+                                        tri_points[2].y,
+                                        z_values[p3],
+                                    );
+                                    norm = (b - a).cross(&(c - a));
+                                    k = -(tri_points[0].x * norm.x
+                                        + tri_points[0].y * norm.y
+                                        + norm.z * z_values[p1]);
 
-                                green = ((z_values[p1] as u32 >> 8) & 0xFF) as f64;
-                                a = Vector3::new(tri_points[0].x, tri_points[0].y, green);
-                                green = ((z_values[p2] as u32 >> 8) & 0xFF) as f64;
-                                b = Vector3::new(tri_points[1].x, tri_points[1].y, green);
-                                green = ((z_values[p3] as u32 >> 8) & 0xFF) as f64;
-                                c = Vector3::new(tri_points[2].x, tri_points[2].y, green);
-                                norm_g = (b - a).cross(&(c - a));
-                                k_g = -(tri_points[2].x * norm_g.x
-                                    + tri_points[2].y * norm_g.y
-                                    + norm_g.z * green);
+                                    // find grid intersections with this triangle
+                                    bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+                                    top = points[p1].y.max(points[p2].y.max(points[p3].y));
+                                    left = points[p1].x.min(points[p2].x.min(points[p3].x));
+                                    right = points[p1].x.max(points[p2].x.max(points[p3].x));
 
-                                blue = ((z_values[p1] as u32 >> 16) & 0xFF) as f64;
-                                a = Vector3::new(tri_points[0].x, tri_points[0].y, blue);
-                                blue = ((z_values[p2] as u32 >> 16) & 0xFF) as f64;
-                                b = Vector3::new(tri_points[1].x, tri_points[1].y, blue);
-                                blue = ((z_values[p3] as u32 >> 16) & 0xFF) as f64;
-                                c = Vector3::new(tri_points[2].x, tri_points[2].y, blue);
-                                norm_b = (b - a).cross(&(c - a));
-                                k_b = -(tri_points[2].x * norm_b.x
-                                    + tri_points[2].y * norm_b.y
-                                    + norm_b.z * blue);
+                                    bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
+                                    top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
+                                    left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
+                                    right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
 
-                                // find grid intersections with this triangle
-                                bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
-                                top = points[p1].y.max(points[p2].y.max(points[p3].y));
-                                left = points[p1].x.min(points[p2].x.min(points[p3].x));
-                                right = points[p1].x.max(points[p2].x.max(points[p3].x));
+                                    for row in top_row..=bottom_row {
+                                        for col in left_col..=right_col {
+                                            x = west + col as f64 * grid_res;
+                                            y = north - row as f64 * grid_res;
+                                            if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                                                // calculate the z values
+                                                zn = -(norm.x * x + norm.y * y + k) / norm.z;
+                                                output.set_value(row, col, zn);
+                                            }
+                                        }
+                                    }
 
-                                bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
-                                top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
-                                left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
-                                right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
-
-                                for row in top_row..=bottom_row {
-                                    for col in left_col..=right_col {
-                                        x = west + col as f64 * grid_res;
-                                        y = north - row as f64 * grid_res;
-                                        if point_in_poly(&Point2D::new(x, y), &tri_points) {
-                                            // calculate the colour values
-                                            red = -(norm_r.x * x + norm_r.y * y + k_r) / norm_r.z;
-                                            green = -(norm_g.x * x + norm_g.y * y + k_g) / norm_g.z;
-                                            blue = -(norm_b.x * x + norm_b.y * y + k_b) / norm_b.z;
-                                            zn = ((255u32 << 24)
-                                                | ((blue.round() as u32) << 16)
-                                                | ((green.round() as u32) << 8)
-                                                | (red.round() as u32))
-                                                as f64;
-                                            output.set_value(row, col, zn);
+                                    if verbose && num_tiles == 1 {
+                                        progress = (100.0_f64 * triangle as f64
+                                            / (num_triangles - 1) as f64)
+                                            as i32;
+                                        if progress != old_progress {
+                                            println!("Progress: {}%", progress);
+                                            old_progress = progress;
                                         }
                                     }
                                 }
+                            }
+                        } else {
+                            let (mut k_r, mut k_g, mut k_b): (f64, f64, f64);
+                            let (mut norm_r, mut norm_g, mut norm_b): (
+                                Vector3<f64>,
+                                Vector3<f64>,
+                                Vector3<f64>,
+                            );
+                            let (mut red, mut green, mut blue): (f64, f64, f64);
+                            for triangle in 0..num_triangles {
+                                i = triangle * 3;
+                                p1 = result.triangles[i];
+                                p2 = result.triangles[i + 1];
+                                p3 = result.triangles[i + 2];
 
-                                if verbose && num_tiles == 1 {
-                                    progress = (100.0_f64 * triangle as f64
-                                        / (num_triangles - 1) as f64)
-                                        as i32;
-                                    if progress != old_progress {
-                                        println!("Progress: {}%", progress);
-                                        old_progress = progress;
+                                if max_distance_squared(
+                                    points[p1],
+                                    points[p2],
+                                    points[p3],
+                                    z_values[p1],
+                                    z_values[p2],
+                                    z_values[p3],
+                                ) < max_triangle_edge_length
+                                {
+                                    tri_points[0] = points[p1].clone();
+                                    tri_points[1] = points[p2].clone();
+                                    tri_points[2] = points[p3].clone();
+                                    tri_points[3] = points[p1].clone();
+
+                                    // get the equation of the plane
+                                    red = (z_values[p1] as u32 & 0xFF) as f64;
+                                    a = Vector3::new(tri_points[0].x, tri_points[0].y, red);
+                                    red = (z_values[p2] as u32 & 0xFF) as f64;
+                                    b = Vector3::new(tri_points[1].x, tri_points[1].y, red);
+                                    red = (z_values[p3] as u32 & 0xFF) as f64;
+                                    c = Vector3::new(tri_points[2].x, tri_points[2].y, red);
+                                    norm_r = (b - a).cross(&(c - a));
+                                    k_r = -(tri_points[2].x * norm_r.x
+                                        + tri_points[2].y * norm_r.y
+                                        + norm_r.z * red);
+
+                                    green = ((z_values[p1] as u32 >> 8) & 0xFF) as f64;
+                                    a = Vector3::new(tri_points[0].x, tri_points[0].y, green);
+                                    green = ((z_values[p2] as u32 >> 8) & 0xFF) as f64;
+                                    b = Vector3::new(tri_points[1].x, tri_points[1].y, green);
+                                    green = ((z_values[p3] as u32 >> 8) & 0xFF) as f64;
+                                    c = Vector3::new(tri_points[2].x, tri_points[2].y, green);
+                                    norm_g = (b - a).cross(&(c - a));
+                                    k_g = -(tri_points[2].x * norm_g.x
+                                        + tri_points[2].y * norm_g.y
+                                        + norm_g.z * green);
+
+                                    blue = ((z_values[p1] as u32 >> 16) & 0xFF) as f64;
+                                    a = Vector3::new(tri_points[0].x, tri_points[0].y, blue);
+                                    blue = ((z_values[p2] as u32 >> 16) & 0xFF) as f64;
+                                    b = Vector3::new(tri_points[1].x, tri_points[1].y, blue);
+                                    blue = ((z_values[p3] as u32 >> 16) & 0xFF) as f64;
+                                    c = Vector3::new(tri_points[2].x, tri_points[2].y, blue);
+                                    norm_b = (b - a).cross(&(c - a));
+                                    k_b = -(tri_points[2].x * norm_b.x
+                                        + tri_points[2].y * norm_b.y
+                                        + norm_b.z * blue);
+
+                                    // find grid intersections with this triangle
+                                    bottom = points[p1].y.min(points[p2].y.min(points[p3].y));
+                                    top = points[p1].y.max(points[p2].y.max(points[p3].y));
+                                    left = points[p1].x.min(points[p2].x.min(points[p3].x));
+                                    right = points[p1].x.max(points[p2].x.max(points[p3].x));
+
+                                    bottom_row = ((north - bottom) / grid_res).ceil() as isize; // output.get_row_from_y(bottom);
+                                    top_row = ((north - top) / grid_res).floor() as isize; // output.get_row_from_y(top);
+                                    left_col = ((left - west) / grid_res).floor() as isize; // output.get_column_from_x(left);
+                                    right_col = ((right - west) / grid_res).ceil() as isize; // output.get_column_from_x(right);
+
+                                    for row in top_row..=bottom_row {
+                                        for col in left_col..=right_col {
+                                            x = west + col as f64 * grid_res;
+                                            y = north - row as f64 * grid_res;
+                                            if point_in_poly(&Point2D::new(x, y), &tri_points) {
+                                                // calculate the colour values
+                                                red =
+                                                    -(norm_r.x * x + norm_r.y * y + k_r) / norm_r.z;
+                                                green =
+                                                    -(norm_g.x * x + norm_g.y * y + k_g) / norm_g.z;
+                                                blue =
+                                                    -(norm_b.x * x + norm_b.y * y + k_b) / norm_b.z;
+                                                zn = ((255u32 << 24)
+                                                    | ((blue.round() as u32) << 16)
+                                                    | ((green.round() as u32) << 8)
+                                                    | (red.round() as u32))
+                                                    as f64;
+                                                output.set_value(row, col, zn);
+                                            }
+                                        }
+                                    }
+
+                                    if verbose && num_tiles == 1 {
+                                        progress = (100.0_f64 * triangle as f64
+                                            / (num_triangles - 1) as f64)
+                                            as i32;
+                                        if progress != old_progress {
+                                            println!("Progress: {}%", progress);
+                                            old_progress = progress;
+                                        }
                                     }
                                 }
                             }
                         }
+
+                        let elapsed_time_run = get_formatted_elapsed_time(start_run);
+                        output.add_metadata_entry(format!(
+                            "Created by whitebox_tools\' {} tool",
+                            tool_name
+                        ));
+                        output.add_metadata_entry(format!("Input file: {}", input_file));
+                        output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
+                        output.add_metadata_entry(format!("Search radius: {}", search_radius));
+                        output.add_metadata_entry(format!(
+                            "Interpolation parameter: {}",
+                            interp_parameter
+                        ));
+                        output.add_metadata_entry(format!("Returns: {}", return_type));
+                        output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
+                        output.add_metadata_entry(format!(
+                            "Elapsed Time (including I/O): {}",
+                            elapsed_time_run
+                        ));
+
+                        if verbose && inputs.len() == 1 {
+                            println!("Saving data...")
+                        };
+
+                        let _ = output.write().unwrap();
                     }
-
-                    let elapsed_time_run = get_formatted_elapsed_time(start_run);
-                    output.add_metadata_entry(format!(
-                        "Created by whitebox_tools\' {} tool",
-                        tool_name
-                    ));
-                    output.add_metadata_entry(format!("Input file: {}", input_file));
-                    output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                    output.add_metadata_entry(format!("Search radius: {}", search_radius));
-                    output.add_metadata_entry(format!(
-                        "Interpolation parameter: {}",
-                        interp_parameter
-                    ));
-                    output.add_metadata_entry(format!("Returns: {}", return_type));
-                    output.add_metadata_entry(format!("Excluded classes: {}", exclude_cls_str));
-                    output.add_metadata_entry(format!(
-                        "Elapsed Time (including I/O): {}",
-                        elapsed_time_run
-                    ));
-
-                    if verbose && inputs.len() == 1 {
-                        println!("Saving data...")
-                    };
-
-                    let _ = output.write().unwrap();
 
                     tx2.send(tile).unwrap();
                 }

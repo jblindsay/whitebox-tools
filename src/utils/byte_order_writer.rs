@@ -19,6 +19,20 @@ impl<W: Write> ByteOrderWriter<W> {
         }
     }
 
+    // pub fn seek_from_start(&mut self, loc: u64) {
+    //     if loc < self.num_bytes_written as u64 {
+    //         let _ = self.writer.seek(SeekFrom::Start(loc));
+    //     }
+    // }
+
+    // pub fn seek_end(&mut self) {
+    //     let _ = self.writer.seek(SeekFrom::End(0));
+    // }
+
+    pub fn get_num_bytes_written(&self) -> usize {
+        self.num_bytes_written
+    }
+
     pub fn set_byte_order(&mut self, byte_order: Endianness) {
         self.is_le = byte_order == Endianness::LittleEndian;
     }
@@ -111,11 +125,17 @@ impl<W: Write> ByteOrderWriter<W> {
     }
 
     /// Returns the number of bytes written
-    pub fn len(&self) -> usize {
+    pub fn len(&mut self) -> usize {
         self.num_bytes_written
+        // // self.writer.stream_len().unwrap() as usize
+        // self.writer.seek(SeekFrom::End(0)).unwrap() as usize + 1
     }
 
     pub fn get_inner(&mut self) -> &W {
         &self.writer
+    }
+
+    pub fn into_inner(self) -> W {
+        self.writer
     }
 }

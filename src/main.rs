@@ -46,9 +46,15 @@ use nalgebra as na;
 use std::env;
 use std::io::Error;
 use std::path;
+use rstar;
 
 #[macro_use]
 extern crate serde_derive;
+
+extern crate late_static;
+use late_static::LateStatic;
+
+pub static USE_COMPRESSION: LateStatic<bool> = LateStatic::new();
 
 /// WhiteboxTools is an advanced geospatial data analysis engine.
 ///
@@ -104,6 +110,16 @@ fn run() -> Result<(), Error> {
         tm.list_tools();
 
         return Ok(());
+    }
+
+    if args.contains(&String::from("--compress_rasters")) {
+        unsafe {
+            LateStatic::assign(&USE_COMPRESSION, true);
+        }
+    } else {
+        unsafe {
+            LateStatic::assign(&USE_COMPRESSION, false);
+        }
     }
     for arg in args {
         let flag_val = arg.to_lowercase().replace("--", "-");

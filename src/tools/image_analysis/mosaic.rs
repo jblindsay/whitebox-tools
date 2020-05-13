@@ -7,10 +7,13 @@ License: MIT
 */
 
 use crate::raster::*;
+use crate::structures::RectangleWithData;
 use crate::tools::*;
+use rstar::RTree;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
@@ -21,7 +24,13 @@ use std::thread;
 /// one of three resampling methods including, nearest neighbour, bilinear interpolation,
 /// and cubic convolution. The order of the input source image files is important. Grid
 /// cells in the output image will be assigned the corresponding value determined from the
-/// first image found in the list to possess an overlapping coordinate.
+/// last image found in the list to possess an overlapping coordinate.
+/// 
+/// Note that when the `--inputs` parameter is left unspecified, the tool will use 
+/// all of the *.tif*, *.tiff*, *.rdc*, *.flt*, *.sdat*, and *.dep* files located in the working directory. 
+/// This can be a useful way of mosaicing large number of tiles, particularly when
+/// the text string that would be required to specify all of the input tiles is 
+/// longer than the allowable limit.
 ///
 /// This is the preferred mosaicing tool to use when appending multiple images with
 /// little to no overlapping areas, e.g. tiled data. When images have significant overlap
@@ -63,7 +72,7 @@ impl Mosaic {
             description: "Input raster files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Raster),
             default_value: None,
-            optional: false,
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -205,17 +214,61 @@ impl WhiteboxTool for Mosaic {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
+        let mut input_vec: Vec<String> = vec![];
+
+        let supported_raster_extensions = [".tif", ".tiff", ".dep", ".rdc", ".flt", ".sdat"];
+
+        if input_files.is_empty() {
+            if working_directory.is_empty() {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                    "This tool must be run by specifying either an individual input file or a working directory."));
+            }
+            if std::path::Path::new(&working_directory).is_dir() {
+                for entry in fs::read_dir(working_directory.clone())? {
+                    let s = entry?
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
+                    
+                    for extension in supported_raster_extensions.iter() {
+                        if s.to_lowercase().ends_with(extension) {
+                            input_vec.push(s);
+                            break;
+                        }
+                    }
+                }
+            } else {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!("The input directory ({}) is incorrect.", working_directory),
+                ));
+            }
+        } else {
+            let mut cmd = input_files.split(";");
+            input_vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(*x)).collect();
+            if input_vec.len() == 1 {
+                cmd = input_files.split(",");
+                input_vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(*x)).collect();
+            }
+        }
+
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        /*
         let mut cmd = input_files.split(";");
         let mut input_vec = cmd.collect::<Vec<&str>>();
         if input_vec.len() == 1 {
             cmd = input_files.split(",");
             input_vec = cmd.collect::<Vec<&str>>();
         }
+        */
+
         let num_files = input_vec.len();
+        println!("Number of tiles: {}", num_files);
         if num_files < 2 {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "There is something incorrect about the input files. At least two inputs are required to operate this tool."));
@@ -237,72 +290,93 @@ impl WhiteboxTool for Mosaic {
         let mut resolution_y = f64::INFINITY;
         let mut north_greater_than_south = true;
         let mut east_greater_than_west = true;
-        for i in 0..num_files {
-            let value = input_vec[i];
+
+        let mut tile_aabb = vec![];
+
+        let mut i = 0;
+        for a in 0..num_files {
+            let value = &(input_vec[a]);
             if !value.trim().is_empty() {
                 let mut input_file = value.trim().to_owned();
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
-                inputs.push(Raster::new(&input_file, "r")?);
-                nodata_vals.push(inputs[i].configs.nodata);
+                let res = Raster::new(&input_file, "r");
+                if res.is_ok() {
+                    inputs.push(res.unwrap()); //Raster::new(&input_file, "r")?).expect(&format!("Error reading file: {}", value)));
+                    nodata_vals.push(inputs[i].configs.nodata);
 
-                if i == 0 {
-                    if inputs[i].configs.north < inputs[i].configs.south {
-                        north_greater_than_south = false;
-                        north = f64::INFINITY;
-                        south = f64::NEG_INFINITY;
+                    if i == 0 {
+                        if inputs[i].configs.north < inputs[i].configs.south {
+                            north_greater_than_south = false;
+                            north = f64::INFINITY;
+                            south = f64::NEG_INFINITY;
+                        }
+                        if inputs[i].configs.east < inputs[i].configs.west {
+                            east_greater_than_west = false;
+                            east = f64::INFINITY;
+                            west = f64::NEG_INFINITY;
+                        }
                     }
-                    if inputs[i].configs.east < inputs[i].configs.west {
-                        east_greater_than_west = false;
-                        east = f64::INFINITY;
-                        west = f64::NEG_INFINITY;
-                    }
-                }
 
-                if north_greater_than_south {
-                    if inputs[i].configs.north > north {
-                        north = inputs[i].configs.north;
+                    if north_greater_than_south {
+                        if inputs[i].configs.north > north {
+                            north = inputs[i].configs.north;
+                        }
+                        if inputs[i].configs.south < south {
+                            south = inputs[i].configs.south;
+                        }
+                    } else {
+                        if inputs[i].configs.north < north {
+                            north = inputs[i].configs.north;
+                        }
+                        if inputs[i].configs.south > south {
+                            south = inputs[i].configs.south;
+                        }
                     }
-                    if inputs[i].configs.south < south {
-                        south = inputs[i].configs.south;
+
+                    if east_greater_than_west {
+                        if inputs[i].configs.east > east {
+                            east = inputs[i].configs.east;
+                        }
+                        if inputs[i].configs.west < west {
+                            west = inputs[i].configs.west;
+                        }
+                    } else {
+                        if inputs[i].configs.east < east {
+                            east = inputs[i].configs.east;
+                        }
+                        if inputs[i].configs.west > west {
+                            west = inputs[i].configs.west;
+                        }
                     }
+
+                    tile_aabb.push(RectangleWithData::new(
+                        i, 
+                        [inputs[i].configs.west - inputs[i].configs.resolution_x, inputs[i].configs.south - inputs[i].configs.resolution_y], 
+                        [inputs[i].configs.east + inputs[i].configs.resolution_x, inputs[i].configs.north + inputs[i].configs.resolution_y]
+                    ));
+
+                    if inputs[i].configs.resolution_x < resolution_x {
+                        resolution_x = inputs[i].configs.resolution_x;
+                    }
+                    if inputs[i].configs.resolution_y < resolution_y {
+                        resolution_y = inputs[i].configs.resolution_y;
+                    }
+
+                    i += 1;
                 } else {
-                    if inputs[i].configs.north < north {
-                        north = inputs[i].configs.north;
-                    }
-                    if inputs[i].configs.south > south {
-                        south = inputs[i].configs.south;
-                    }
-                }
-
-                if east_greater_than_west {
-                    if inputs[i].configs.east > east {
-                        east = inputs[i].configs.east;
-                    }
-                    if inputs[i].configs.west < west {
-                        west = inputs[i].configs.west;
-                    }
-                } else {
-                    if inputs[i].configs.east < east {
-                        east = inputs[i].configs.east;
-                    }
-                    if inputs[i].configs.west > west {
-                        west = inputs[i].configs.west;
-                    }
-                }
-
-                if inputs[i].configs.resolution_x < resolution_x {
-                    resolution_x = inputs[i].configs.resolution_x;
-                }
-                if inputs[i].configs.resolution_y < resolution_y {
-                    resolution_y = inputs[i].configs.resolution_y;
+                    println!("Warning: Error reading file {}", value);
                 }
             } else {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "There is a problem with the list of input files. At least one specified input is empty."));
             }
         }
+
+        let tree = Arc::new(RTree::bulk_load(tile_aabb));
+
+        // num_files = inputs.len();
 
         // create the output image
         let rows = ((north - south).abs() / resolution_y).ceil() as isize;
@@ -326,6 +400,10 @@ impl WhiteboxTool for Mosaic {
         configs.data_type = inputs[0].configs.data_type;
         configs.photometric_interp = inputs[0].configs.photometric_interp;
         configs.palette = inputs[0].configs.palette.clone();
+
+        if verbose {
+            println!("Output image size: ({} x {})", configs.rows, configs.columns);
+        }
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
 
@@ -353,18 +431,23 @@ impl WhiteboxTool for Mosaic {
                 let x = x.clone();
                 let y = y.clone();
                 let tx = tx.clone();
+                let tree = tree.clone();
                 thread::spawn(move || {
                     let mut z: f64;
                     let (mut col_src, mut row_src): (isize, isize);
+                    let mut i: usize;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            for i in 0..num_files {
+                            // for i in 0..num_files {
+                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+
+                            for a in 0..ret.len() {
+                                i = ret[a].data;
                                 row_src = inputs[i].get_row_from_y(y[row as usize]);
                                 col_src = inputs[i].get_column_from_x(x[col as usize]);
-                                // row_src = ((inputs[i].configs.north - y[row as usize]) / inputs[i].configs.resolution_y).round() as isize;
-                                //col_src = ((x[col as usize] - inputs[i].configs.west) / inputs[i].configs.resolution_x).round() as isize;
                                 z = inputs[i].get_value(row_src, col_src);
+
                                 if z != nodata_vals[i] {
                                     data[col as usize] = z;
                                     break;
@@ -375,6 +458,7 @@ impl WhiteboxTool for Mosaic {
                     }
                 });
             }
+
             for r in 0..rows {
                 let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
@@ -400,6 +484,7 @@ impl WhiteboxTool for Mosaic {
                 let x = x.clone();
                 let y = y.clone();
                 let tx = tx.clone();
+                let tree = tree.clone();
                 thread::spawn(move || {
                     let mut z: f64;
                     let shift_x = [-1, 0, 1, 2, -1, 0, 1, 2, -1, 0, 1, 2, -1, 0, 1, 2];
@@ -411,22 +496,30 @@ impl WhiteboxTool for Mosaic {
                     let (mut origin_row, mut origin_col): (isize, isize);
                     let (mut dx, mut dy): (f64, f64);
                     let mut sum_dist: f64;
+                    let mut i: usize;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            let mut flag = true;
-                            for i in 0..num_files {
-                                if !flag {
-                                    break;
-                                }
+                            // let mut flag = true;
+                            // for i in 0..num_files {
+                            //     if !flag {
+                            //         break;
+                            //     }
+                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            for a in 0..ret.len() {
+                                i = ret[a].data;
                                 // row_src = inputs[i].get_row_from_y(y[row as usize]);
                                 // col_src = inputs[i].get_column_from_x(x[col as usize]);
                                 row_src = (inputs[i].configs.north - y[row as usize])
                                     / inputs[i].configs.resolution_y;
                                 col_src = (x[col as usize] - inputs[i].configs.west)
                                     / inputs[i].configs.resolution_x;
+
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
+
+                                // z = inputs[i].get_value(origin_row, origin_col);
+                                    
                                 // if origin_row < 0 || origin_col < 0 { break; }
                                 // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
@@ -442,9 +535,10 @@ impl WhiteboxTool for Mosaic {
                                         sum_dist += neighbour[n][1];
                                     } else if neighbour[n][0] == nodata_vals[i] {
                                         neighbour[n][1] = 0f64;
-                                    } else {
+                                    } else { 
                                         data[col as usize] = neighbour[n][0];
-                                        flag = false;
+                                        // flag = false;
+                                        break;
                                     }
                                 }
 
@@ -454,7 +548,9 @@ impl WhiteboxTool for Mosaic {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false;
+
+                                    // flag = false;
+                                    break;
                                 }
                             }
                         }
@@ -487,6 +583,7 @@ impl WhiteboxTool for Mosaic {
                 let x = x.clone();
                 let y = y.clone();
                 let tx = tx.clone();
+                let tree = tree.clone();
                 thread::spawn(move || {
                     let mut z: f64;
                     let shift_x = [0, 1, 0, 1];
@@ -498,14 +595,18 @@ impl WhiteboxTool for Mosaic {
                     let (mut origin_col, mut origin_row): (isize, isize);
                     let (mut dx, mut dy): (f64, f64);
                     let mut sum_dist: f64;
+                    let mut i: usize;
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
-                            let mut flag = true;
-                            for i in 0..num_files {
-                                if !flag {
-                                    break;
-                                }
+                            // let mut flag = true;
+                            // for i in 0..num_files {
+                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            for a in 0..ret.len() {
+                                i = ret[a].data;
+                                // if !flag {
+                                //     break;
+                                // }
                                 row_src = (inputs[i].configs.north - y[row as usize])
                                     / inputs[i].configs.resolution_y;
                                 col_src = (x[col as usize] - inputs[i].configs.west)
@@ -529,7 +630,8 @@ impl WhiteboxTool for Mosaic {
                                         neighbour[n][1] = 0f64;
                                     } else {
                                         data[col as usize] = neighbour[n][0];
-                                        flag = false;
+                                        break;
+                                        // flag = false;
                                     }
                                 }
 
@@ -539,7 +641,8 @@ impl WhiteboxTool for Mosaic {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    flag = false;
+                                    break;
+                                    // flag = false;
                                 }
                             }
                         }

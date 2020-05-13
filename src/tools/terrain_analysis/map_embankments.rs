@@ -22,18 +22,8 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a vector contour coverage from an input raster surface model (`--input`), such as a digital
-/// elevation model (DEM). The user must specify the contour interval (`--interval`) and optionally, the base contour value (`--base`).
-/// The degree to which contours are smoothed is controlled by the **Smoothing Filter Size** parameter (`--smooth`). This value, which
-/// determines the size of a mean filter applied to the x-y position of vertices in each contour, should be an odd integer value, e.g.
-/// 3, 5, 7, 9, 11, etc. Larger values will result in smoother contour lines. The tolerance parameter (`--tolerance`) controls the
-/// amount of line generalization. That is, vertices in a contour line will be selectively removed from the line if they do not result in
-/// an angular deflection in the line's path of at least this threshold value. Increasing this value can significantly decrease the size
-/// of the output contour vector file, at the cost of generating straighter contour line segments.
-///
-/// # See Also
-/// `RasterToVectorPolygons`
-pub struct ContoursFromRaster {
+/// This tool can be used to map road and rail embankments in a digital elevation model (DEM).
+pub struct MapEmbankments {
     name: String,
     description: String,
     toolbox: String,
@@ -41,30 +31,50 @@ pub struct ContoursFromRaster {
     example_usage: String,
 }
 
-impl ContoursFromRaster {
-    pub fn new() -> ContoursFromRaster {
+impl MapEmbankments {
+    pub fn new() -> MapEmbankments {
         // public constructor
-        let name = "ContoursFromRaster".to_string();
+        let name = "MapEmbankments".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Derives a vector contour coverage from a raster surface.".to_string();
+        let description = "Maps road and rail embankments in a digital elevation model (DEM).".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input Raster Surface File".to_owned(),
-            flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input surface raster file.".to_owned(),
+            name: "Input DEM File".to_owned(),
+            flags: vec!["-i".to_owned(), "--input".to_owned(), "--dem".to_owned()],
+            description: "Input raster digital elevation model (DEM) file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
         });
 
         parameters.push(ToolParameter {
-            name: "Output Contour File".to_owned(),
-            flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output vector contour file.".to_owned(),
+            name: "Roads Vector File".to_owned(),
+            flags: vec!["--roads".to_owned()],
+            description: "Input vector roads file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
                 VectorGeometryType::Line,
             )),
+            default_value: None,
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Railway Vector File".to_owned(),
+            flags: vec!["--rail".to_owned()],
+            description: "Input vector railway file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Vector(
+                VectorGeometryType::Line,
+            )),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Raster Embankment File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description: "Output embankment raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
         });
@@ -79,31 +89,12 @@ impl ContoursFromRaster {
         });
 
         parameters.push(ToolParameter {
-            name: "Base Contour".to_owned(),
-            flags: vec!["--base".to_owned()],
-            description: "Base contour height.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("0.0".to_owned()),
-            optional: true,
-        });
-
-        parameters.push(ToolParameter {
             name: "Smoothing Filter Size".to_owned(),
             flags: vec!["--smooth".to_owned()],
             description: "Smoothing filter size (in num. points), e.g. 3, 5, 7, 9, 11..."
                 .to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("9".to_owned()),
-            optional: true,
-        });
-
-        parameters.push(ToolParameter {
-            name: "Tolerance".to_owned(),
-            flags: vec!["--tolerance".to_owned()],
-            description: "Tolerance factor, in degrees (0-45); determines generalization level."
-                .to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("10.0".to_owned()),
             optional: true,
         });
 
@@ -124,7 +115,7 @@ impl ContoursFromRaster {
         )
         .replace("*", &sep);
 
-        ContoursFromRaster {
+        MapEmbankments {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -134,7 +125,7 @@ impl ContoursFromRaster {
     }
 }
 
-impl WhiteboxTool for ContoursFromRaster {
+impl WhiteboxTool for MapEmbankments {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -176,11 +167,9 @@ impl WhiteboxTool for ContoursFromRaster {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
+        let mut roads_file = String::new();
+        let mut railway_file = String::new();
         let mut output_file = String::new();
-        let mut contour_interval = 10f64;
-        let mut base_contour = 0f64;
-        let mut deflection_tolerance = 10f64;
-        let mut filter_size = 9;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -266,10 +255,6 @@ impl WhiteboxTool for ContoursFromRaster {
                 };
                 if filter_size > 21 {
                     filter_size = 21;
-                }
-                if filter_size % 2 == 0 && filter_size != 0 {
-                    // must be an odd integer.
-                    filter_size += 1;
                 }
             }
         }
@@ -622,7 +607,7 @@ impl WhiteboxTool for ContoursFromRaster {
 
                     if points.len() > 1 {
                         // Smooth the points
-                        if points.len() > filter_size  && filter_size > 0 {
+                        if points.len() > filter_size {
                             for a in 0..points.len() {
                                 x = 0f64;
                                 y = 0f64;
@@ -797,7 +782,7 @@ impl WhiteboxTool for ContoursFromRaster {
 
                 num_line_points = points.len();
                 if num_line_points > 1 {
-                    if points.len() > filter_size  && filter_size > 0 {
+                    if points.len() > filter_size {
                         for a in 0..num_line_points {
                             x = 0f64;
                             y = 0f64;

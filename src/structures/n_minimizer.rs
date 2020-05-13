@@ -124,7 +124,7 @@ mod test {
     fn test_nminimizer_insert() {
         let mut lows = NMinimizer::new(4);
 
-        for val in [4.0, 3.0, -2.0, 9.0, 3.0, 2.0, 1.0, 8.0].into_iter() {
+        for val in [4.0, 3.0, -2.0, 9.0, 3.0, 2.0, 1.0, 8.0].iter() {
             lows.insert(*val);
         }
         assert_eq!(lows.get_minima(), vec![-2.0, 1.0, 2.0, 3.0]);

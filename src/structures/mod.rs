@@ -10,6 +10,7 @@ mod point2d;
 mod polyline;
 mod polynomial_regression_2d;
 mod radial_basis_function;
+mod rectangle_with_data;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::array2d::Array2D;
@@ -25,3 +26,4 @@ pub use self::polyline::MultiPolyline;
 pub use self::polyline::Polyline;
 pub use self::polynomial_regression_2d::PolynomialRegression2D;
 pub use self::radial_basis_function::{Basis, RadialBasisFunction};
+pub use self::rectangle_with_data::RectangleWithData;

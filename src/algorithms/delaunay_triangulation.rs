@@ -96,7 +96,7 @@ impl Triangulation {
 
     /// The number of triangles in the triangulation.
     pub fn len(&self) -> usize {
-        (self.triangles.len() / 3)
+        self.triangles.len() / 3
     }
 
     /// Next halfedge in a triangle.

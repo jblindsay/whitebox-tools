@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2020
-Last Modified: 04/03/2020
+Last Modified: 05/03/2020
 License: MIT
 */
 
@@ -295,9 +295,6 @@ impl WhiteboxTool for RasterToVectorPolygons {
         const EPSILON: f64 = std::f64::EPSILON;
         let prec = (5f64 * EPSILON).tan();
         let (mut p1, mut p2, mut p3): (Point2D, Point2D, Point2D);
-        // let mut edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
-        // let mut num_edges: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
-        // let mut cell_edges: u8;
         let mut z: u32;
         let mut zn: u32;
         let (mut x, mut y): (f64, f64);
@@ -315,15 +312,9 @@ impl WhiteboxTool for RasterToVectorPolygons {
             for col in 0..columns {
                 z = clumps.get_value(row, col);
                 if z != 0 {
-                    // cell_edges = 0u8;
                     for n in 0..4 {
                         zn = clumps.get_value(row + dy[n], col + dx[n]);
                         if z != zn {
-                            // cell_edges |= 1u8 << n;
-                            // if n < 4 {
-                            //     // Edges are only counted on the non-diagonal cells
-                            //     num_edges.increment(row, col, 1u8);
-                            // }
                             x = get_x_from_column(col);
                             y = get_y_from_row(row);
 
@@ -344,7 +335,6 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             line_segments.push(LineSegment::new(p1, p2, z));
                         }
                     }
-                    // edges.set_value(row, col, cell_edges);
                 }
             }
 
@@ -356,6 +346,8 @@ impl WhiteboxTool for RasterToVectorPolygons {
                 }
             }
         }
+
+        drop(clumps);
 
         let mut geometries =
             vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize - 1];
@@ -466,14 +458,13 @@ impl WhiteboxTool for RasterToVectorPolygons {
                         p2 = points[a];
                         p3 = points[a + 1];
                         if ((p2.y - p1.y) * (p3.x - p2.x) - (p3.y - p2.y) * (p2.x - p1.x)).abs()
-                            <= ((p2.x - p1.x) * (p3.x - p2.x) + (p2.y - p1.y) * (p3.y - p2.y))
-                                .abs()
+                            <= ((p2.x - p1.x) * (p3.x - p2.x) + (p2.y - p1.y) * (p3.y - p2.y)).abs()
                                 * prec
                         {
                             points.remove(a);
                         }
                     }
-                    if points[0] != points[points.len()-1] {
+                    if points[0] != points[points.len() - 1] {
                         points.push(points[0].clone());
                     }
                     if geometries[z as usize - 1].num_parts > 0 {
