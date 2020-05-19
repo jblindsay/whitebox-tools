@@ -5,13 +5,13 @@ pub mod tiff_consts;
 
 // use flate2::read::GzDecoder;
 // use crate::algorithms::lzw_encode;
+use super::super::USE_COMPRESSION;
 use crate::raster::geotiff::geokeys::*;
 use crate::raster::geotiff::tiff_consts::*;
 use crate::raster::*;
 use crate::spatial_ref_system::esri_wkt_from_epsg;
 use crate::structures::{Point2D, PolynomialRegression2D};
 use crate::utils::{ByteOrderReader, ByteOrderWriter, Endianness};
-use super::super::USE_COMPRESSION;
 use miniz_oxide::deflate::compress_to_vec_zlib;
 use miniz_oxide::inflate::decompress_to_vec_zlib;
 // use libflate::zlib::Decoder;
@@ -26,8 +26,8 @@ use ifd::{Entry, Ifd};
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Cursor, Error, ErrorKind, SeekFrom};
 // use std::io::Read;
-use std::mem;
 use std::io::Write;
+use std::mem;
 
 pub fn print_tags<'a>(file_name: &'a String) -> Result<(), Error> {
     let f = File::open(file_name.clone())?;
@@ -1617,7 +1617,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // get the ByteOrderWriter
     let f = File::create(r.file_name.clone())?;
     let mut writer = BufWriter::new(f);
-    
+
     // let mut bow = ByteOrderWriter::<BufWriter<File>>::new(writer, r.configs.endian);
 
     // get the bytes per pixel
@@ -1642,16 +1642,13 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         false
     };
 
-    let header_size = if !is_big_tiff {
-        8u64
-    } else {
-        16u64
-    };
+    let header_size = if !is_big_tiff { 8u64 } else { 16u64 };
 
     // get the offset to the first ifd
     let mut ifd_start_needs_extra_byte = false;
     let mut ifd_start = if !*USE_COMPRESSION {
-        let mut val = header_size + (r.configs.rows * r.configs.columns) as u64 * total_bytes_per_pixel as u64;
+        let mut val = header_size
+            + (r.configs.rows * r.configs.columns) as u64 * total_bytes_per_pixel as u64;
         if val % 2 == 1 {
             val += 1;
             ifd_start_needs_extra_byte = true;
@@ -1716,17 +1713,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_f64::<LittleEndian>(r.data[i] as f64).expect("Error writing byte data.");
+                                data.write_f64::<LittleEndian>(r.data[i] as f64)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_f64::<BigEndian>(r.data[i] as f64).expect("Error writing byte data.");
+                                data.write_f64::<BigEndian>(r.data[i] as f64)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1745,17 +1745,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_f32::<LittleEndian>(r.data[i] as f32).expect("Error writing byte data.");
+                                data.write_f32::<LittleEndian>(r.data[i] as f32)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_f32::<BigEndian>(r.data[i] as f32).expect("Error writing byte data.");
+                                data.write_f32::<BigEndian>(r.data[i] as f32)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1774,17 +1777,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u64::<LittleEndian>(r.data[i] as u64).expect("Error writing byte data.");
+                                data.write_u64::<LittleEndian>(r.data[i] as u64)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u64::<BigEndian>(r.data[i] as u64).expect("Error writing byte data.");
+                                data.write_u64::<BigEndian>(r.data[i] as u64)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1803,17 +1809,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u32::<LittleEndian>(r.data[i] as u32).expect("Error writing byte data.");
+                                data.write_u32::<LittleEndian>(r.data[i] as u32)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u32::<BigEndian>(r.data[i] as u32).expect("Error writing byte data.");
+                                data.write_u32::<BigEndian>(r.data[i] as u32)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1832,17 +1841,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u16::<LittleEndian>(r.data[i] as u16).expect("Error writing byte data.");
+                                data.write_u16::<LittleEndian>(r.data[i] as u16)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u16::<BigEndian>(r.data[i] as u16).expect("Error writing byte data.");
+                                data.write_u16::<BigEndian>(r.data[i] as u16)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1861,17 +1873,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u8(r.data[i] as u8).expect("Error writing byte data.");
+                                data.write_u8(r.data[i] as u8)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_u8(r.data[i] as u8).expect("Error writing byte data.");
+                                data.write_u8(r.data[i] as u8)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1890,17 +1905,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i64::<LittleEndian>(r.data[i] as i64).expect("Error writing byte data.");
+                                data.write_i64::<LittleEndian>(r.data[i] as i64)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i64::<BigEndian>(r.data[i] as i64).expect("Error writing byte data.");
+                                data.write_i64::<BigEndian>(r.data[i] as i64)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1919,17 +1937,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i32::<LittleEndian>(r.data[i] as i32).expect("Error writing byte data.");
+                                data.write_i32::<LittleEndian>(r.data[i] as i32)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i32::<BigEndian>(r.data[i] as i32).expect("Error writing byte data.");
+                                data.write_i32::<BigEndian>(r.data[i] as i32)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1948,17 +1969,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i16::<LittleEndian>(r.data[i] as i16).expect("Error writing byte data.");
+                                data.write_i16::<LittleEndian>(r.data[i] as i16)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i16::<BigEndian>(r.data[i] as i16).expect("Error writing byte data.");
+                                data.write_i16::<BigEndian>(r.data[i] as i16)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -1977,17 +2001,20 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                         if r.configs.endian == Endianness::LittleEndian {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i8(r.data[i] as i8).expect("Error writing byte data.");
+                                data.write_i8(r.data[i] as i8)
+                                    .expect("Error writing byte data.");
                             }
                         } else {
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                data.write_i8(r.data[i] as i8).expect("Error writing byte data.");
+                                data.write_i8(r.data[i] as i8)
+                                    .expect("Error writing byte data.");
                             }
                         }
                         // compress the data vec
                         let compressed = compress_to_vec_zlib(&data, 6);
-                        write_bytes(&mut writer, &compressed).expect("Error writing byte data to file.");
+                        write_bytes(&mut writer, &compressed)
+                            .expect("Error writing byte data to file.");
                         row_length_in_bytes = compressed.len() as u64;
                         strip_byte_counts.push(row_length_in_bytes);
                         strip_offsets.push(current_offset);
@@ -2403,7 +2430,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     if *USE_COMPRESSION {
         ifd_entries.push(Entry::new(
             TAG_COMPRESSION,
-            DT_SHORT,            1u64,
+            DT_SHORT,
+            1u64,
             COMPRESS_DEFLATE as u64,
         ));
     } else {
@@ -2445,12 +2473,16 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         ));
         if *USE_COMPRESSION {
             for val in strip_offsets {
-                larger_values_data.write_u32(val as u32).expect("Error writing the TIFF strip offsets tag");
+                larger_values_data
+                    .write_u32(val as u32)
+                    .expect("Error writing the TIFF strip offsets tag");
             }
         } else {
             let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel as u32;
             for i in 0..r.configs.rows as u32 {
-                larger_values_data.write_u32(header_size as u32 + row_length_in_bytes * i).expect("Error writing the TIFF strip offsets tag");
+                larger_values_data
+                    .write_u32(header_size as u32 + row_length_in_bytes * i)
+                    .expect("Error writing the TIFF strip offsets tag");
             }
         }
     } else {
@@ -2462,12 +2494,16 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         ));
         if *USE_COMPRESSION {
             for val in strip_offsets {
-                larger_values_data.write_u64(val).expect("Error writing the TIFF strip offsets tag");
+                larger_values_data
+                    .write_u64(val)
+                    .expect("Error writing the TIFF strip offsets tag");
             }
         } else {
             let row_length_in_bytes: u64 = r.configs.columns as u64 * total_bytes_per_pixel as u64;
             for i in 0..r.configs.rows as u64 {
-                larger_values_data.write_u64(header_size + row_length_in_bytes * i).expect("Error writing the TIFF strip offsets");
+                larger_values_data
+                    .write_u64(header_size + row_length_in_bytes * i)
+                    .expect("Error writing the TIFF strip offsets");
             }
         }
     }
@@ -2528,12 +2564,16 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         };
         if *USE_COMPRESSION {
             for val in strip_byte_counts {
-                larger_values_data.write_u32(val as u32).expect("Error writing the TIFF strip byte counts tag");
+                larger_values_data
+                    .write_u32(val as u32)
+                    .expect("Error writing the TIFF strip byte counts tag");
             }
         } else {
             let row_length_in_bytes: u32 = r.configs.columns as u32 * total_bytes_per_pixel;
             for _ in 0..r.configs.rows as u32 {
-                larger_values_data.write_u32(row_length_in_bytes).expect("Error writing the TIFF strip byte counts tag");
+                larger_values_data
+                    .write_u32(row_length_in_bytes)
+                    .expect("Error writing the TIFF strip byte counts tag");
             }
         }
     } else {
@@ -2557,12 +2597,16 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         };
         if *USE_COMPRESSION {
             for val in strip_byte_counts {
-                larger_values_data.write_u64(val).expect("Error writing the TIFF strip byte counts tag");
+                larger_values_data
+                    .write_u64(val)
+                    .expect("Error writing the TIFF strip byte counts tag");
             }
         } else {
             let row_length_in_bytes: u64 = r.configs.columns as u64 * total_bytes_per_pixel;
             for _ in 0..r.configs.rows as u32 {
-                larger_values_data.write_u64(row_length_in_bytes).expect("Error writing the TIFF strip byte counts tag");
+                larger_values_data
+                    .write_u64(row_length_in_bytes)
+                    .expect("Error writing the TIFF strip byte counts tag");
             }
         }
     }
@@ -3131,7 +3175,11 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 write_u32(&mut writer, r.configs.endian, ifde.offset as u32)?; // Value
             } else {
                 // it's an offset
-                write_u32(&mut writer, r.configs.endian, ifd_start as u32 + ifd_length as u32 + ifde.offset as u32)?;
+                write_u32(
+                    &mut writer,
+                    r.configs.endian,
+                    ifd_start as u32 + ifd_length as u32 + ifde.offset as u32,
+                )?;
             }
         }
 
@@ -3171,7 +3219,11 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
                 write_u64(&mut writer, r.configs.endian, ifde.offset)?;
             } else {
                 // it's an offset
-                write_u64(&mut writer, r.configs.endian, ifd_start + ifd_length + ifde.offset)?;
+                write_u64(
+                    &mut writer,
+                    r.configs.endian,
+                    ifd_start + ifd_length + ifde.offset,
+                )?;
             }
         }
 
@@ -3275,8 +3327,8 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
     //////////////////////////
     // Write the image data //
     //////////////////////////
-    
-    let use_compression = true; 
+
+    let use_compression = true;
     let mut strip_offsets = vec![];
     let mut strip_byte_counts = vec![];
     if use_compression {
@@ -3284,7 +3336,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         let mut current_offset = header_size;
         let mut row_length_in_bytes: u64;
-        
+
         match r.configs.photometric_interp {
             PhotometricInterpretation::Continuous
             | PhotometricInterpretation::Categorical
@@ -3466,7 +3518,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             }
         }
     } else {
-        
+
         match r.configs.photometric_interp {
             PhotometricInterpretation::Continuous
             | PhotometricInterpretation::Categorical
@@ -3642,7 +3694,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
         current_file_length += 1;
     }
 
-    // We need to update the offset to the IFD, now that we know the size of the image data, 
+    // We need to update the offset to the IFD, now that we know the size of the image data,
     // taking into account compression.
     if !is_big_tiff {
         bow.seek_from_start(4u64);
@@ -4582,7 +4634,11 @@ pub fn write_bytes<W: Write>(writer: &mut BufWriter<W>, bytes: &[u8]) -> Result<
     writer.write_all(bytes)
 }
 
-pub fn write_u16<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: u16) -> Result<(), Error> {
+pub fn write_u16<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: u16,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_u16::<LittleEndian>(value)
     } else {
@@ -4590,7 +4646,11 @@ pub fn write_u16<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_i16<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: i16) -> Result<(), Error> {
+pub fn write_i16<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: i16,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_i16::<LittleEndian>(value)
     } else {
@@ -4598,7 +4658,11 @@ pub fn write_i16<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_u32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: u32) -> Result<(), Error> {
+pub fn write_u32<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: u32,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_u32::<LittleEndian>(value)
     } else {
@@ -4606,7 +4670,11 @@ pub fn write_u32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_i32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: i32) -> Result<(), Error> {
+pub fn write_i32<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: i32,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_i32::<LittleEndian>(value)
     } else {
@@ -4614,7 +4682,11 @@ pub fn write_i32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_u64<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: u64) -> Result<(), Error> {
+pub fn write_u64<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: u64,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_u64::<LittleEndian>(value)
     } else {
@@ -4622,7 +4694,11 @@ pub fn write_u64<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_i64<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: i64) -> Result<(), Error> {
+pub fn write_i64<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: i64,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_i64::<LittleEndian>(value)
     } else {
@@ -4630,7 +4706,11 @@ pub fn write_i64<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_f32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: f32) -> Result<(), Error> {
+pub fn write_f32<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: f32,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_f32::<LittleEndian>(value)
     } else {
@@ -4638,7 +4718,11 @@ pub fn write_f32<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, va
     }
 }
 
-pub fn write_f64<W: Write>(writer: &mut BufWriter<W>, endianness: Endianness, value: f64) -> Result<(), Error> {
+pub fn write_f64<W: Write>(
+    writer: &mut BufWriter<W>,
+    endianness: Endianness,
+    value: f64,
+) -> Result<(), Error> {
     if endianness == Endianness::LittleEndian {
         writer.write_f64::<LittleEndian>(value)
     } else {

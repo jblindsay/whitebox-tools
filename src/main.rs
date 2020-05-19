@@ -43,10 +43,10 @@ pub mod vector;
 
 use crate::tools::ToolManager;
 use nalgebra as na;
+use rstar;
 use std::env;
 use std::io::Error;
 use std::path;
-use rstar;
 
 #[macro_use]
 extern crate serde_derive;

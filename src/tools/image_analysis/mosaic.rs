@@ -9,8 +9,8 @@ License: MIT
 use crate::raster::*;
 use crate::structures::RectangleWithData;
 use crate::tools::*;
-use rstar::RTree;
 use num_cpus;
+use rstar::RTree;
 use std::env;
 use std::f64;
 use std::fs;
@@ -25,11 +25,11 @@ use std::thread;
 /// and cubic convolution. The order of the input source image files is important. Grid
 /// cells in the output image will be assigned the corresponding value determined from the
 /// last image found in the list to possess an overlapping coordinate.
-/// 
-/// Note that when the `--inputs` parameter is left unspecified, the tool will use 
-/// all of the *.tif*, *.tiff*, *.rdc*, *.flt*, *.sdat*, and *.dep* files located in the working directory. 
+///
+/// Note that when the `--inputs` parameter is left unspecified, the tool will use
+/// all of the *.tif*, *.tiff*, *.rdc*, *.flt*, *.sdat*, and *.dep* files located in the working directory.
 /// This can be a useful way of mosaicing large number of tiles, particularly when
-/// the text string that would be required to specify all of the input tiles is 
+/// the text string that would be required to specify all of the input tiles is
 /// longer than the allowable limit.
 ///
 /// This is the preferred mosaicing tool to use when appending multiple images with
@@ -231,7 +231,7 @@ impl WhiteboxTool for Mosaic {
                         .to_str()
                         .expect("Error reading path string")
                         .to_string();
-                    
+
                     for extension in supported_raster_extensions.iter() {
                         if s.to_lowercase().ends_with(extension) {
                             input_vec.push(s);
@@ -247,10 +247,18 @@ impl WhiteboxTool for Mosaic {
             }
         } else {
             let mut cmd = input_files.split(";");
-            input_vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(*x)).collect();
+            input_vec = cmd
+                .collect::<Vec<&str>>()
+                .iter()
+                .map(|x| String::from(*x))
+                .collect();
             if input_vec.len() == 1 {
                 cmd = input_files.split(",");
-                input_vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(*x)).collect();
+                input_vec = cmd
+                    .collect::<Vec<&str>>()
+                    .iter()
+                    .map(|x| String::from(*x))
+                    .collect();
             }
         }
 
@@ -352,9 +360,15 @@ impl WhiteboxTool for Mosaic {
                     }
 
                     tile_aabb.push(RectangleWithData::new(
-                        i, 
-                        [inputs[i].configs.west - inputs[i].configs.resolution_x, inputs[i].configs.south - inputs[i].configs.resolution_y], 
-                        [inputs[i].configs.east + inputs[i].configs.resolution_x, inputs[i].configs.north + inputs[i].configs.resolution_y]
+                        i,
+                        [
+                            inputs[i].configs.west - inputs[i].configs.resolution_x,
+                            inputs[i].configs.south - inputs[i].configs.resolution_y,
+                        ],
+                        [
+                            inputs[i].configs.east + inputs[i].configs.resolution_x,
+                            inputs[i].configs.north + inputs[i].configs.resolution_y,
+                        ],
                     ));
 
                     if inputs[i].configs.resolution_x < resolution_x {
@@ -402,7 +416,10 @@ impl WhiteboxTool for Mosaic {
         configs.palette = inputs[0].configs.palette.clone();
 
         if verbose {
-            println!("Output image size: ({} x {})", configs.rows, configs.columns);
+            println!(
+                "Output image size: ({} x {})",
+                configs.rows, configs.columns
+            );
         }
 
         let mut output = Raster::initialize_using_config(&output_file, &configs);
@@ -440,7 +457,9 @@ impl WhiteboxTool for Mosaic {
                         let mut data = vec![nodata; columns as usize];
                         for col in 0..columns {
                             // for i in 0..num_files {
-                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            let ret = tree
+                                .locate_all_at_point(&[x[col as usize], y[row as usize]])
+                                .collect::<Vec<_>>();
 
                             for a in 0..ret.len() {
                                 i = ret[a].data;
@@ -505,7 +524,9 @@ impl WhiteboxTool for Mosaic {
                             //     if !flag {
                             //         break;
                             //     }
-                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            let ret = tree
+                                .locate_all_at_point(&[x[col as usize], y[row as usize]])
+                                .collect::<Vec<_>>();
                             for a in 0..ret.len() {
                                 i = ret[a].data;
                                 // row_src = inputs[i].get_row_from_y(y[row as usize]);
@@ -519,7 +540,7 @@ impl WhiteboxTool for Mosaic {
                                 origin_col = col_src.floor() as isize;
 
                                 // z = inputs[i].get_value(origin_row, origin_col);
-                                    
+
                                 // if origin_row < 0 || origin_col < 0 { break; }
                                 // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
@@ -535,7 +556,7 @@ impl WhiteboxTool for Mosaic {
                                         sum_dist += neighbour[n][1];
                                     } else if neighbour[n][0] == nodata_vals[i] {
                                         neighbour[n][1] = 0f64;
-                                    } else { 
+                                    } else {
                                         data[col as usize] = neighbour[n][0];
                                         // flag = false;
                                         break;
@@ -601,7 +622,9 @@ impl WhiteboxTool for Mosaic {
                         for col in 0..columns {
                             // let mut flag = true;
                             // for i in 0..num_files {
-                            let ret = tree.locate_all_at_point(&[x[col as usize], y[row as usize]]).collect::<Vec<_>>();
+                            let ret = tree
+                                .locate_all_at_point(&[x[col as usize], y[row as usize]])
+                                .collect::<Vec<_>>();
                             for a in 0..ret.len() {
                                 i = ret[a].data;
                                 // if !flag {

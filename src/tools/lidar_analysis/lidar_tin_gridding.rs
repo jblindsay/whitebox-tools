@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 24/03/2020
+Last Modified: 19/05/2020
 License: MIT
 */
 
@@ -389,6 +389,13 @@ impl WhiteboxTool for LidarTINGridding {
                             inputs[inputs.len() - 1]
                                 .replace(".las", ".tif")
                                 .replace(".LAS", ".tif"),
+                        )
+                    } else if s.to_lowercase().ends_with(".zlidar") {
+                        inputs.push(s);
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".zlidar", ".tif")
+                                .replace(".ZLIDAR", ".tif"),
                         )
                     } else if s.to_lowercase().ends_with(".zip") {
                         inputs.push(s);

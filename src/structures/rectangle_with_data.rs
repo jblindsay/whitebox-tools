@@ -1,12 +1,12 @@
 use crate::rstar::primitives::Rectangle;
-use crate::rstar::{AABB, Envelope, Point, PointDistance, RTreeObject};
+use crate::rstar::{Envelope, Point, PointDistance, RTreeObject, AABB};
 
 type RectangleF64 = Rectangle<[f64; 2]>;
 
 #[derive(Debug)]
 pub struct RectangleWithData<T> {
     pub data: T,
-    pub rectangle: RectangleF64
+    pub rectangle: RectangleF64,
 }
 
 impl<T> RectangleWithData<T> {
@@ -35,7 +35,10 @@ impl<T> RectangleWithData<T> {
 }
 
 impl<T> PointDistance for RectangleWithData<T> {
-    fn distance_2(&self, point: &<Self::Envelope as Envelope>::Point) -> <<Self::Envelope as Envelope>::Point as Point>::Scalar {
+    fn distance_2(
+        &self,
+        point: &<Self::Envelope as Envelope>::Point,
+    ) -> <<Self::Envelope as Envelope>::Point as Point>::Scalar {
         self.rectangle.distance_2(point)
     }
 
@@ -77,11 +80,10 @@ mod test {
 
     #[test]
     fn rectangle_locate_all_at_point() {
-
         let tree = RTree::bulk_load(vec![
             RectangleWithData::new(1, [0.0, 0.0], [2.0, 2.0]),
             RectangleWithData::new(2, [1.0, 1.0], [3.0, 3.0]),
-            RectangleWithData::new(3, [2.5, 2.5], [4.0, 4.0])
+            RectangleWithData::new(3, [2.5, 2.5], [4.0, 4.0]),
         ]);
 
         assert_eq!(tree.locate_all_at_point(&[1.5, 1.5]).count(), 2);

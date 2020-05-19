@@ -30,9 +30,9 @@ use std::thread;
 /// The filter size, specified in grid cells, is used to determine how far the algorithm will search for valid,
 /// non-NoData values. Therefore, setting a larger filter size allows for the filling of larger gaps in the input
 /// raster.
-/// 
-/// The `--no_edges` flag can be used to exclude NoData values that are connected to the edges of the raster. It is 
-/// usually the case that irregularly shaped DEMs have large regions of NoData values along the containing raster 
+///
+/// The `--no_edges` flag can be used to exclude NoData values that are connected to the edges of the raster. It is
+/// usually the case that irregularly shaped DEMs have large regions of NoData values along the containing raster
 /// edges. This flag can be used to exclude these regions from the gap-filling operation, leaving only interior gaps
 /// for filling.
 ///
@@ -93,8 +93,9 @@ impl FillMissingData {
         parameters.push(ToolParameter {
             name: "Exclude edge-of-raster-connected NoData cells?".to_owned(),
             flags: vec!["--no_edges".to_owned()],
-            description: "Optional flag indicating whether to exclude NoData cells in edge regions."
-                .to_owned(),
+            description:
+                "Optional flag indicating whether to exclude NoData cells in edge regions."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("true".to_string()),
             optional: true,
@@ -285,9 +286,9 @@ impl WhiteboxTool for FillMissingData {
                     edge_connected_nodata.set_value(row, 0, 1);
                 }
 
-                if input.get_value(row, columns-1) == nodata {
-                    stack.push((row, columns-1));
-                    edge_connected_nodata.set_value(row, columns-1, 1);
+                if input.get_value(row, columns - 1) == nodata {
+                    stack.push((row, columns - 1));
+                    edge_connected_nodata.set_value(row, columns - 1, 1);
                 }
             }
 
@@ -297,9 +298,9 @@ impl WhiteboxTool for FillMissingData {
                     edge_connected_nodata.set_value(0, col, 1);
                 }
 
-                if input.get_value(rows-1, col) == nodata {
-                    stack.push((rows-1, col));
-                    edge_connected_nodata.set_value(rows-1, col, 1);
+                if input.get_value(rows - 1, col) == nodata {
+                    stack.push((rows - 1, col));
+                    edge_connected_nodata.set_value(rows - 1, col, 1);
                 }
             }
 
@@ -307,15 +308,17 @@ impl WhiteboxTool for FillMissingData {
             let mut num_cells_popped = 0;
             while let Some(cell) = stack.pop() {
                 for n in 0..8 {
-                    if input.get_value(cell.0 + dy[n], cell.1 + dx[n]) == nodata 
-                    && edge_connected_nodata.get_value(cell.0 + dy[n], cell.1 + dx[n]) == 0 {
+                    if input.get_value(cell.0 + dy[n], cell.1 + dx[n]) == nodata
+                        && edge_connected_nodata.get_value(cell.0 + dy[n], cell.1 + dx[n]) == 0
+                    {
                         stack.push((cell.0 + dy[n], cell.1 + dx[n]));
                         edge_connected_nodata.set_value(cell.0 + dy[n], cell.1 + dx[n], 1);
                     }
                 }
                 if verbose {
                     num_cells_popped += 1;
-                    progress = (100.0_f64 * num_cells_popped as f64 / (rows * columns - 1) as f64) as usize;
+                    progress = (100.0_f64 * num_cells_popped as f64 / (rows * columns - 1) as f64)
+                        as usize;
                     if progress != old_progress {
                         println!("Finding edge-connected NoData cells: {}%", progress);
                         old_progress = progress;
@@ -323,7 +326,6 @@ impl WhiteboxTool for FillMissingData {
                 }
             }
         }
-
 
         // Interpolate the data holes. Start by locating all the edge cells.
         if verbose {
@@ -340,7 +342,9 @@ impl WhiteboxTool for FillMissingData {
                     for i in 0..8 {
                         row_n = row + dy[i];
                         col_n = col + dx[i];
-                        if input.get_value(row_n, col_n) == nodata && edge_connected_nodata.get_value(row_n, col_n) == 0 {
+                        if input.get_value(row_n, col_n) == nodata
+                            && edge_connected_nodata.get_value(row_n, col_n) == 0
+                        {
                             frs.insert(col as f64, row as f64, input[(row, col)]);
                             break;
                         }
@@ -377,7 +381,9 @@ impl WhiteboxTool for FillMissingData {
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
-                                if input.get_value(row, col) == nodata && edge_connected_nodata.get_value(row, col) == 0 {
+                                if input.get_value(row, col) == nodata
+                                    && edge_connected_nodata.get_value(row, col) == 0
+                                {
                                     sum_weights = 0f64;
                                     let ret = frs.search(col as f64, row as f64);
                                     for j in 0..ret.len() {
@@ -409,7 +415,9 @@ impl WhiteboxTool for FillMissingData {
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
-                                if input.get_value(row, col) == nodata && edge_connected_nodata.get_value(row, col) == 0 {
+                                if input.get_value(row, col) == nodata
+                                    && edge_connected_nodata.get_value(row, col) == 0
+                                {
                                     sum_weights = 0f64;
                                     let ret = frs.search(col as f64, row as f64);
                                     for j in 0..ret.len() {

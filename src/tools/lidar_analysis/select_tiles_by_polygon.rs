@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/08/2018
-Last Modified: 10/05/2019
+Last Modified: 19/05/2020
 License: MIT
 */
 
@@ -208,7 +208,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                     .to_str()
                     .expect("Error reading path string")
                     .to_string();
-                if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".laz") {
+                if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".laz") || s.to_lowercase().ends_with(".zlidar") {
                     inputs.push(s);
                 }
             }

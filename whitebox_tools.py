@@ -91,6 +91,12 @@ class WhiteboxTools(object):
         '''
         self.verbose = val
 
+    def set_default_callback(self, callback_func):
+        '''
+        Sets the default callback used for handling tool text outputs.
+        '''
+        self.default_callback = callback_func
+
     def set_compress_rasters(self, compress_rasters):
         ''' 
         Sets the flag used by WhiteboxTools to determine whether to use compression for output rasters.

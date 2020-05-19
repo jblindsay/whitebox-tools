@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2018
-Last Modified: 31/10/2019
+Last Modified: 19/05/2020
 License: MIT
 */
 
@@ -320,7 +320,7 @@ impl WhiteboxTool for LidarPointStats {
                         .to_str()
                         .expect("Error reading path string")
                         .to_string();
-                    if s.to_lowercase().ends_with(".las") {
+                    if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zip") {
                         inputs.push(s);

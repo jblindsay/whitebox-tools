@@ -282,6 +282,7 @@ impl ToolManager {
         tool_names.push("LasToAscii".to_string());
         tool_names.push("LasToMultipointShapefile".to_string());
         tool_names.push("LasToShapefile".to_string());
+        tool_names.push("LasToZlidar".to_string());
         tool_names.push("LidarClassifySubset".to_string());
         tool_names.push("LidarColourize".to_string());
         tool_names.push("LidarConstructVectorTIN".to_string());
@@ -311,6 +312,7 @@ impl ToolManager {
         tool_names.push("LidarTophatTransform".to_string());
         tool_names.push("NormalVectors".to_string());
         tool_names.push("SelectTilesByPolygon".to_string());
+        tool_names.push("ZlidarToLas".to_string());
 
         // mathematical and statistical_analysis
         tool_names.push("AbsoluteValue".to_string());
@@ -848,6 +850,7 @@ impl ToolManager {
                 Some(Box::new(lidar_analysis::LasToMultipointShapefile::new()))
             }
             "lastoshapefile" => Some(Box::new(lidar_analysis::LasToShapefile::new())),
+            "lastozlidar" => Some(Box::new(lidar_analysis::LasToZlidar::new())),
             "lidarclassifysubset" => Some(Box::new(lidar_analysis::LidarClassifySubset::new())),
             "lidarcolourize" => Some(Box::new(lidar_analysis::LidarColourize::new())),
             "lidarconstructvectortin" => {
@@ -885,6 +888,7 @@ impl ToolManager {
             "lidartophattransform" => Some(Box::new(lidar_analysis::LidarTophatTransform::new())),
             "normalvectors" => Some(Box::new(lidar_analysis::NormalVectors::new())),
             "selecttilesbypolygon" => Some(Box::new(lidar_analysis::SelectTilesByPolygon::new())),
+            "zlidartolas" => Some(Box::new(lidar_analysis::ZlidarToLas::new())),
 
             // mathematical and statistical_analysis
             "absolutevalue" => Some(Box::new(math_stat_analysis::AbsoluteValue::new())),

@@ -72,13 +72,16 @@ impl ImpoundmentSizeIndex {
         parameters.push(ToolParameter {
             name: "Output Type".to_owned(),
             flags: vec!["--out_type".to_owned()],
-            description: "Output type; one of 'depth' (default), 'volume', and 'area'.".to_owned(),
+            description:
+                "Output type; one of 'mean depth' (default), 'volume', 'area', 'max depth'."
+                    .to_owned(),
             parameter_type: ParameterType::OptionList(vec![
-                "depth".to_owned(),
+                "mean depth".to_owned(),
                 "volume".to_owned(),
                 "area".to_owned(),
+                "max depth".to_owned(),
             ]),
-            default_value: Some("depth".to_owned()),
+            default_value: Some("mean depth".to_owned()),
             optional: true,
         });
 
@@ -102,7 +105,7 @@ impl ImpoundmentSizeIndex {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif --out_type=depth --damlength=11", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=out.tif --out_type='max depth' --damlength=11", short_exe, name).replace("*", &sep);
 
         ImpoundmentSizeIndex {
             name: name,
@@ -196,8 +199,10 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 };
                 out_type = if val.contains("v") {
                     1
-                } else if val.contains("depth") {
+                } else if val.contains("mean depth") {
                     2
+                } else if val.contains("max depth") {
+                    3
                 } else {
                     0 // area
                 };
@@ -573,6 +578,8 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         let mut threshold: f64;
         let mut num_upslope: f64;
         let mut vol: f64;
+        let mut diff: f64;
+        let mut max_depth: f64;
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.reinitialize_values(0.0);
         while !stack.is_empty() {
@@ -591,13 +598,18 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 threshold = crest_elev.get_value(row_n, col_n);
                 num_upslope = 0f64;
                 vol = 0f64;
+                max_depth = 0f64;
                 upslope_elevs[row as usize][col as usize].push(z); // adding the elevation of row, col
                 for up_z in upslope_elevs[row as usize][col as usize].clone() {
                     if up_z < cutoff_z {
                         upslope_elevs[row_n as usize][col_n as usize].push(up_z);
                         if up_z < threshold {
                             num_upslope += 1f64;
-                            vol += threshold - up_z;
+                            diff = threshold - up_z;
+                            vol += diff;
+                            if max_depth < diff {
+                                max_depth = diff;
+                            }
                         }
                     }
                 }
@@ -609,10 +621,15 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 } else if out_type == 1 {
                     // volume
                     output.increment(row_n, col_n, vol);
-                } else {
+                } else if out_type == 1 {
                     // mean depth
                     if num_upslope > 0f64 {
                         output.increment(row_n, col_n, vol / (num_upslope * grid_area));
+                    }
+                } else {
+                    // max depth
+                    if output.get_value(row_n, col_n) < max_depth {
+                        output.set_value(row_n, col_n, max_depth);
                     }
                 }
 

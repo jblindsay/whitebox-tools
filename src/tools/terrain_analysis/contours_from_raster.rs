@@ -622,7 +622,7 @@ impl WhiteboxTool for ContoursFromRaster {
 
                     if points.len() > 1 {
                         // Smooth the points
-                        if points.len() > filter_size  && filter_size > 0 {
+                        if points.len() > filter_size && filter_size > 0 {
                             for a in 0..points.len() {
                                 x = 0f64;
                                 y = 0f64;
@@ -797,7 +797,7 @@ impl WhiteboxTool for ContoursFromRaster {
 
                 num_line_points = points.len();
                 if num_line_points > 1 {
-                    if points.len() > filter_size  && filter_size > 0 {
+                    if points.len() > filter_size && filter_size > 0 {
                         for a in 0..num_line_points {
                             x = 0f64;
                             y = 0f64;

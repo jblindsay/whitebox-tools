@@ -15,6 +15,7 @@ mod height_above_ground;
 mod las_to_ascii;
 mod las_to_multipoint_shapefile;
 mod las_to_shapefile;
+mod las_to_zlidar;
 mod lidar_classify_subset;
 mod lidar_colourize;
 mod lidar_construct_vector_tin;
@@ -44,6 +45,7 @@ mod lidar_tophat_transform;
 mod normal_vectors;
 mod remove_duplicates;
 mod select_tiles_by_polygon;
+mod zlidar_to_las;
 
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::ascii_to_las::AsciiToLas;
@@ -62,6 +64,7 @@ pub use self::height_above_ground::HeightAboveGround;
 pub use self::las_to_ascii::LasToAscii;
 pub use self::las_to_multipoint_shapefile::LasToMultipointShapefile;
 pub use self::las_to_shapefile::LasToShapefile;
+pub use self::las_to_zlidar::LasToZlidar;
 pub use self::lidar_classify_subset::LidarClassifySubset;
 pub use self::lidar_colourize::LidarColourize;
 pub use self::lidar_construct_vector_tin::LidarConstructVectorTIN;
@@ -91,3 +94,4 @@ pub use self::lidar_tophat_transform::LidarTophatTransform;
 pub use self::normal_vectors::NormalVectors;
 pub use self::remove_duplicates::LidarRemoveDuplicates;
 pub use self::select_tiles_by_polygon::SelectTilesByPolygon;
+pub use self::zlidar_to_las::ZlidarToLas;

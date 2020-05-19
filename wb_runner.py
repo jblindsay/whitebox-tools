@@ -110,7 +110,7 @@ class FileSelector(tk.Frame):
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
                 elif 'Lidar' in self.file_type:
-                    ftypes = [("LiDAR files", ('*.las', '*.zip'))]
+                    ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
                 elif 'Vector' in self.file_type:
                     ftypes = [("Shapefiles", "*.shp")]
                 elif 'Text' in self.file_type:
@@ -264,7 +264,7 @@ class FileOrFloat(tk.Frame):
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:
-                ftypes = [("LiDAR files", ('*.las', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
             elif 'Vector' in self.file_type:
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
@@ -419,7 +419,7 @@ class MultifileSelector(tk.Frame):
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:
-                ftypes = [("LiDAR files", ('*.las', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
             elif 'Vector' in self.file_type:
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
