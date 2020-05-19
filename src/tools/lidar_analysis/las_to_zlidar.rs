@@ -2,24 +2,27 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 13/05/2020
-Last Modified: 13/05/2020
+Last Modified: 15/05/2020
 License: MIT
 */
 
 use crate::lidar::*;
 use crate::tools::*;
 use std;
-use std::env;
+use std::{env, fs, path, thread};
 use std::io::{Error, ErrorKind};
-use std::path;
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
-use std::thread;
 
-/// This tool can be used to convert one or more LAS files into the *zlidar* compressed LiDAR data format.
+/// This tool can be used to convert one or more LAS files into the *zlidar* compressed 
+/// LiDAR data format. The tool takes a list of input LAS files (`--inputs`). If `--inputs`
+/// is unspecified, the tool will use all LAS files contained within the working directory 
+/// as the tool inputs. The user may also specify an optional output directory `--outdir`.
+/// If this parameter is unspecified, each output ZLidar file will be written to the same
+/// directory as the input files.
 ///
 /// # See Also
-/// `AsciiToLas`
+/// `ZlidarToLas`, `LasToShapefile`, `LasToAscii`
 pub struct LasToZlidar {
     name: String,
     description: String,
@@ -44,7 +47,7 @@ impl LasToZlidar {
             description: "Input LAS files.".to_owned(),
             parameter_type: ParameterType::FileList(ParameterFileType::Lidar),
             default_value: None,
-            optional: false,
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -174,15 +177,41 @@ impl WhiteboxTool for LasToZlidar {
             output_directory = format!("{}{}", output_directory, sep);
         }
 
-        let mut cmd = input_files.split(";");
-        let mut vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
-        if vec.len() == 1 {
-            cmd = input_files.split(",");
-            vec = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+        let mut inputs: Vec<String> = vec![];
+        if input_files.is_empty() {
+            if working_directory.is_empty() {
+                return Err(Error::new(ErrorKind::InvalidInput,
+                    "This tool must be run by specifying either an individual input file or a working directory."));
+            }
+            if std::path::Path::new(&working_directory).is_dir() {
+                for entry in fs::read_dir(working_directory.clone())? {
+                    let s = entry?
+                        .path()
+                        .into_os_string()
+                        .to_str()
+                        .expect("Error reading path string")
+                        .to_string();
+                    if s.to_lowercase().ends_with(".las") {
+                        inputs.push(s);
+                    }
+                }
+            } else {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    format!("The input directory ({}) is incorrect.", working_directory),
+                ));
+            }
+        } else {
+            let mut cmd = input_files.split(";");
+            inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+            if inputs.len() == 1 {
+                cmd = input_files.split(",");
+                inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+            }
         }
-        // let mut i = 1;
-        let num_files = vec.len();
-        let inputs = Arc::new(vec);
+        
+        let num_files = inputs.len();
+        let inputs = Arc::new(inputs);
         let working_directory = Arc::new(working_directory.to_owned());
         let output_directory = Arc::new(output_directory.clone());
         let tile_list = Arc::new(Mutex::new(0..num_files));
@@ -276,71 +305,6 @@ impl WhiteboxTool for LasToZlidar {
             }
         }
         
-        /*
-        let num_files = vec.len();
-        for value in vec {
-            if !value.trim().is_empty() {
-                let mut input_file = value.trim().to_owned();
-                if !input_file.contains(sep) && !input_file.contains("/") {
-                    input_file = format!("{}{}", working_directory, input_file);
-                }
-
-                let input: LasFile = match LasFile::new(&input_file, "r") {
-                    Ok(lf) => lf,
-                    Err(_) => {
-                        return Err(Error::new(
-                            ErrorKind::NotFound,
-                            format!("Error reading file: {}", input_file),
-                        ))
-                    }
-                };
-
-                let short_filename = input.get_short_filename();
-                let file_extension = get_file_extension(&input_file);
-                if file_extension.to_lowercase() != "las" {
-                    return Err(Error::new(
-                        ErrorKind::InvalidData,
-                        "All input files should be of LAS format.",
-                    ));
-                }
-
-                let output_file = if output_directory.is_empty() {
-                    input_file.replace(&format!(".{}", file_extension), ".zlidar")
-                } else {
-                    format!("{}{}.zlidar", output_directory, short_filename)
-                };
-                let mut output = LasFile::initialize_using_file(&output_file, &input);
-
-                let n_points = input.header.number_of_points as usize;
-
-                for p in 0..n_points {
-                    let pr = input.get_record(p);
-                    output.add_point_record(pr);
-                    if verbose && num_files == 1 {
-                        progress = (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
-                        if progress != old_progress {
-                            println!("Creating output: {}%", progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-                let _ = match output.write() {
-                    Ok(_) => {
-                        if verbose {
-                            if num_files == 1 {
-                                println!("Complete!")
-                            } else {
-                                println!("Completed conversion of {}", short_filename);
-                            }
-                        }
-                    }
-                    Err(e) => println!("error while writing: {:?}", e),
-                };
-            }
-            // i += 1;
-        }
-        */
-
         if verbose {
             let elapsed_time = get_formatted_elapsed_time(start);
             println!("{}", &format!("Elapsed Time: {}", elapsed_time));

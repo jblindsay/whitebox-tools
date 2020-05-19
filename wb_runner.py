@@ -96,7 +96,7 @@ class FileSelector(tk.Frame):
         try:
             result = self.value.get()
             if self.parameter_type == "Directory":
-                result = filedialog.askdirectory()
+                result = filedialog.askdirectory(initialdir=self.runner.working_dir, title="Select directory")
             elif "ExistingFile" in self.parameter_type:
                 ftypes = [('All files', '*.*')]
                 if 'RasterAndVector' in self.file_type:
@@ -1201,7 +1201,8 @@ class WbRunner(tk.Frame):
     def set_directory(self):
         try:
             self.working_dir = filedialog.askdirectory(
-                initialdir=self.exe_path)
+                initialdir=self.runner.working_dir, 
+                title="Select directory")
             wbt.set_working_dir(self.working_dir)
         except:
             messagebox.showinfo(

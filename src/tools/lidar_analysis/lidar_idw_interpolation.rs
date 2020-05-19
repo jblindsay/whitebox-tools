@@ -454,7 +454,8 @@ impl WhiteboxTool for LidarIdwInterpolation {
                 output_file = input_file
                     .clone()
                     .replace(".las", ".tif")
-                    .replace(".LAS", ".tif");
+                    .replace(".LAS", ".tif")
+                    .replace(".zlidar", ".tif");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
                 output_file = format!("{}{}", working_directory, output_file);

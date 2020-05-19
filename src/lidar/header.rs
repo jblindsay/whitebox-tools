@@ -159,7 +159,7 @@ impl LasHeader {
 
         bor.seek(0);
         header.file_signature = bor.read_utf8(4);
-        if header.file_signature != "LASF" {
+        if header.file_signature != "LASF" && header.file_signature != "ZLDR" {
             return Err(Error::new(ErrorKind::Other, format!("Error reading {}\n. Either the file is formatted incorrectly or it is an unsupported LAS version.", file_name)));
         }
         header.file_source_id = bor.read_u16()?;

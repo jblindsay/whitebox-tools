@@ -421,7 +421,8 @@ impl WhiteboxTool for LidarTINGridding {
                 output_file = input_file
                     .clone()
                     .replace(".las", ".tif")
-                    .replace(".LAS", ".tif");
+                    .replace(".LAS", ".tif")
+                    .replace(".zlidar", ".tif");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
                 output_file = format!("{}{}", working_directory, output_file);
@@ -483,7 +484,7 @@ impl WhiteboxTool for LidarTINGridding {
 
                     let input_file = inputs[tile].replace("\"", "").clone();
                     let output_file = outputs[tile].replace("\"", "").clone();
-
+                    
                     // Expand the bounding box to include the areas of overlap
                     let bb = BoundingBox {
                         min_x: bounding_boxes[tile].min_x - search_radius,
@@ -496,7 +497,7 @@ impl WhiteboxTool for LidarTINGridding {
                     let mut z_values = vec![];
 
                     if verbose && inputs.len() == 1 {
-                        println!("Reading input LAS file...");
+                        println!("Reading input LiDAR file...");
                     }
 
                     let mut progress: i32;

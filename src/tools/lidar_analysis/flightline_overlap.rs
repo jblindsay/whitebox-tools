@@ -249,7 +249,8 @@ impl WhiteboxTool for FlightlineOverlap {
                 output_file = input_file
                     .clone()
                     .replace(".las", ".tif")
-                    .replace(".LAS", ".tif");
+                    .replace(".LAS", ".tif")
+                    .replace(".zlidar", ".tif");
             }
             outputs.push(output_file);
         }
