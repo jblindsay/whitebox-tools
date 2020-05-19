@@ -1200,13 +1200,11 @@ class WbRunner(tk.Frame):
 
     def set_directory(self):
         try:
-            self.working_dir = filedialog.askdirectory(
-                initialdir=self.runner.working_dir, 
-                title="Select directory")
+            self.working_dir =filedialog.askdirectory(initialdir=self.working_dir)
             wbt.set_working_dir(self.working_dir)
         except:
             messagebox.showinfo(
-                "Warning", "Could not find WhiteboxTools executable file.")
+                "Warning", "Could not set the working directory.")
 
     def select_exe(self):
         try:
