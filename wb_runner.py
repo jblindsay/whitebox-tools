@@ -973,7 +973,7 @@ class WbRunner(tk.Frame):
         self.master.config(menu=menubar)     
 
     def update_compress(self):
-        if wbt.compress_rasters:
+        if wbt.get_compress_rasters():
             wbt.set_compress_rasters(False)
             self.filemenu.entryconfig(3, label = "Compress Output TIFFs")
         else:

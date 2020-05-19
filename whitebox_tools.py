@@ -102,7 +102,10 @@ class WhiteboxTools(object):
         Sets the flag used by WhiteboxTools to determine whether to use compression for output rasters.
         '''
         self.__compress_rasters = compress_rasters
-
+    
+    def get_compress_rasters(self):
+        return self.__compress_rasters
+        
     def run_tool(self, tool_name, args, callback=None):
         ''' 
         Runs a tool and specifies tool arguments.
