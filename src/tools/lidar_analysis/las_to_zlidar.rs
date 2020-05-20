@@ -296,7 +296,7 @@ impl WhiteboxTool for LasToZlidar {
             } else if tile == 99 {
                 println!("Completed conversion of {}", file_nm);
                 println!("...");
-            } else {
+            } else if file_nm.to_lowercase().contains("empty file name") {
                 println!("{}", file_nm);
             }
             if verbose {
