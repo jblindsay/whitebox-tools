@@ -953,7 +953,7 @@ class WbRunner(tk.Frame):
         self.filemenu.add_command(label="Set Working Directory", command=self.set_directory)
         self.filemenu.add_command(label="Locate WhiteboxTools exe", command=self.select_exe)
         self.filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
-        wbt.compress_rasters = True
+        wbt.set_compress_rasters(True)
         self.filemenu.add_command(label="Do Not Compress Output TIFFs", command=self.update_compress)
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=self.quit)
