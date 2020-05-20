@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 18/02/2018
-Last Modified: 19/05/2020
+Last Modified: 20/05/2020
 License: MIT
 */
 
@@ -406,13 +406,13 @@ impl WhiteboxTool for LidarPointStats {
                     let num_points_float: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
                     if num_points || num_pulses || avg_points_per_pulse {
-                        let out_file_num_pnts = input_file.replace(".las", "_num_pnts.tif").clone();
+                        let out_file_num_pnts = input_file.replace(".las", "_num_pnts.tif").replace(".zlidar", "_num_pnts.tif").clone();
                         let mut out_num_pnts =
                             Raster::initialize_using_config(&out_file_num_pnts, &configs);
                         out_num_pnts.reinitialize_values(0f64);
 
                         let out_file_num_pulses =
-                            input_file.replace(".las", "_num_pulses.tif").clone();
+                            input_file.replace(".las", "_num_pulses.tif").replace(".zlidar", "_num_pulses.tif").clone();
                         let mut out_num_pulses =
                             Raster::initialize_using_config(&out_file_num_pulses, &configs);
                         out_num_pulses.reinitialize_values(0f64);
@@ -450,7 +450,7 @@ impl WhiteboxTool for LidarPointStats {
 
                         if avg_points_per_pulse {
                             let out_file_avg_points_per_pulse = input_file
-                                .replace(".las", "_avg_points_per_pulse.tif")
+                                .replace(".las", "_avg_points_per_pulse.tif").replace(".zlidar", "_avg_points_per_pulse.tif")
                                 .clone();
                             let mut out_avg_points_per_pulse = Raster::initialize_using_config(
                                 &out_file_avg_points_per_pulse,
@@ -533,7 +533,7 @@ impl WhiteboxTool for LidarPointStats {
                         )
                         .unwrap();
                         let out_file_elev_range =
-                            input_file.replace(".las", "_elev_range.tif").clone();
+                            input_file.replace(".las", "_elev_range.tif").replace(".zlidar", "_elev_range.tif").clone();
                         let mut out_elev_range =
                             Raster::initialize_using_config(&out_file_elev_range, &configs);
 
@@ -544,7 +544,7 @@ impl WhiteboxTool for LidarPointStats {
                             Array2D::new(rows as isize, columns as isize, u16::min_value(), 0u16)
                                 .unwrap();
                         let out_file_intensity_range =
-                            input_file.replace(".las", "_intensity_range.tif").clone();
+                            input_file.replace(".las", "_intensity_range.tif").replace(".zlidar", "_intensity_range.tif").clone();
                         let mut out_intensity_range =
                             Raster::initialize_using_config(&out_file_intensity_range, &configs);
 
@@ -659,7 +659,7 @@ impl WhiteboxTool for LidarPointStats {
                             );
                         }
                         let out_file_predominant_class =
-                            input_file.replace(".las", "_predominant_class.tif").clone();
+                            input_file.replace(".las", "_predominant_class.tif").replace(".zlidar", "_predominant_class.tif").clone();
                         let mut out_predominant_class =
                             Raster::initialize_using_config(&out_file_predominant_class, &configs);
 
@@ -729,7 +729,8 @@ impl WhiteboxTool for LidarPointStats {
                     inputs[tile_completed]
                         .replace("\"", "")
                         .replace(working_directory, "")
-                        .replace(".las", ""),
+                        .replace(".las", "")
+                        .replace(".zlidar", ""),
                     tile + 1,
                     inputs.len()
                 );

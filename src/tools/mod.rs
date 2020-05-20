@@ -285,7 +285,7 @@ impl ToolManager {
         tool_names.push("LasToZlidar".to_string());
         tool_names.push("LidarClassifySubset".to_string());
         tool_names.push("LidarColourize".to_string());
-        tool_names.push("LidarConstructVectorTIN".to_string());
+        // tool_names.push("LidarConstructVectorTIN".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
         tool_names.push("LidarHexBinning".to_string());
@@ -853,9 +853,9 @@ impl ToolManager {
             "lastozlidar" => Some(Box::new(lidar_analysis::LasToZlidar::new())),
             "lidarclassifysubset" => Some(Box::new(lidar_analysis::LidarClassifySubset::new())),
             "lidarcolourize" => Some(Box::new(lidar_analysis::LidarColourize::new())),
-            "lidarconstructvectortin" => {
-                Some(Box::new(lidar_analysis::LidarConstructVectorTIN::new()))
-            }
+            // "lidarconstructvectortin" => {
+            //     Some(Box::new(lidar_analysis::LidarConstructVectorTIN::new()))
+            // }
             "lidarelevationslice" => Some(Box::new(lidar_analysis::LidarElevationSlice::new())),
             "lidargroundpointfilter" => {
                 Some(Box::new(lidar_analysis::LidarGroundPointFilter::new()))

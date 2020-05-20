@@ -74,6 +74,12 @@ Version 1.3.0 (XX-XX-2020)
 - Fixed several bugs in the MergeTableWithCsv tool.
 - Modified the FillMissingData tool to allow for the exclusion of edge-connected NoData cells from the operation.
   This is better for irregular shaped DEMs that have large areas of NoData surrounding the valid data.
+- The LidarConstructVectorTin tool has been depreciated. The tool was not creating the proper output.
+  Furthermore, since the number of points in the average LiDAR tile is usually many million, this tool
+  would usually produce Shapefiles that exceed the maximum allowable number of shape geometries. If 
+  a vector TIN is required for a LiDAR point set, users should convert the file to a Shapefile and then
+  use the ConstructVectorTin tool instead. And of course, if you are interested in a raster TIN from a 
+  LiDAR file, use the LidarTinGridding tool instead. 
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.

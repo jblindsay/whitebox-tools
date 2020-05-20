@@ -232,7 +232,9 @@ impl WhiteboxTool for LasToMultipointShapefile {
                     let output_file = input_file
                         .clone()
                         .replace(".las", ".shp")
-                        .replace(".LAS", ".shp");
+                        .replace(".LAS", ".shp")
+                        .replace(".zlidar", ".shp")
+                        .replace(".ZLIDAR", ".shp");
 
                     if verbose && num_tiles == 1 {
                         println!("Reading input LAS file...");

@@ -1,4 +1,6 @@
 /*
+NOTICE: THIS TOOL HAS BEEN DEPRECIATED. USE LASTOMULTISHAPFILE AND 
+CREATEVECTORTIN TOOLS INSTEAD.
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/09/2018

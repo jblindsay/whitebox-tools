@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/10/2018
-Last Modified: 19/05/2020
+Last Modified: 20/05/2020
 License: MIT
 */
 
@@ -175,17 +175,6 @@ impl WhiteboxTool for LasToShapefile {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            // match fs::read_dir(working_directory) {
-            //     Err(why) => println!("! {:?}", why.kind()),
-            //     Ok(paths) => {
-            //         for path in paths {
-            //             let s = format!("{:?}", path.unwrap().path());
-            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //             }
-            //         }
-            //     }
-            // }
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
@@ -237,7 +226,9 @@ impl WhiteboxTool for LasToShapefile {
                     let output_file = input_file
                         .clone()
                         .replace(".las", ".shp")
-                        .replace(".LAS", ".shp");
+                        .replace(".LAS", ".shp")
+                        .replace(".zlidar", ".shp")
+                        .replace(".ZLIDAR", ".shp");
 
                     if verbose && num_tiles == 1 {
                         println!("Reading input LAS file...");
