@@ -129,7 +129,7 @@ impl BreachDepressionsLeastCost {
         parameters.push(ToolParameter {
             name: "Maximum Search Distance (cells)".to_owned(),
             flags: vec!["--dist".to_owned()],
-            description: "".to_owned(),
+            description: "Maximum search distance for breach paths in cells.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: None,
             optional: false,
