@@ -464,7 +464,7 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             points.remove(a);
                         }
                     }
-                    if points[0] != points[points.len() - 1] {
+                    if !points[0].nearly_equals(&points[points.len() - 1]) {
                         points.push(points[0].clone());
                     }
                     if geometries[z as usize - 1].num_parts > 0 {

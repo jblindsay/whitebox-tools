@@ -2980,6 +2980,9 @@ impl LasFile {
         let block_size = 50_000usize;
         let mut block_start = 0usize;
         let mut block_end = block_size;
+        if block_end > self.header.number_of_points as usize {
+            block_end = self.header.number_of_points as usize;
+        }
         let mut flag = true;
         // let mut avg_comp = vec![0f64; 10];
         // let mut avg_comp_size = vec![0f64; 10];
