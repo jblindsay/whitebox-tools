@@ -1363,7 +1363,7 @@ impl LasFile {
                 let mut num_bytes = vec![];
 
                 // Start by reading the point data table
-                let num_fields = bor.read_u16().expect("Error while reading byte data.");
+                let num_fields = bor.read_u8().expect("Error while reading byte data.");
                 block_bytes = 4u64 + 20u64 * num_fields as u64;
                 let compression_method = bor.read_u8().expect("Error while reading byte data.");
                 if compression_method != 0 {
@@ -1372,11 +1372,14 @@ impl LasFile {
                         "Unsupported compression method.",
                     ));
                 }
-                let zldr_version = bor.read_u8().expect("Error while reading byte data.");
-                if zldr_version > 1 {
+                let major_version = bor.read_u8().expect("Error while reading byte data.");
+                let minor_version = bor.read_u8().expect("Error while reading byte data.");
+                // Acceptable versions include 0.0, 0.1, 1.0
+                if !(major_version == 0 && minor_version <= 1) &&
+                !(major_version == 1 && minor_version == 0) {
                     return Err(Error::new(
                         ErrorKind::Other,
-                        format!("Unsupported ZLidar version {}.", zldr_version),
+                        format!("Unsupported ZLidar version {}.{}.", major_version, minor_version),
                     ));
                 }
                 let mut return_field = -1isize;
@@ -3487,14 +3490,16 @@ impl LasFile {
 
             // Now write the data. Start with the point data table
             let table_length = 4u64 + data_code.len() as u64 * 20u64;
-            writer
-                .write_u16::<LittleEndian>(data_code.len() as u16)
+            // writer
+            //     .write_u16::<LittleEndian>(data_code.len() as u16)
+            //     .expect("Error writing byte data to file.");
+            writer.write_u8(data_code.len() as u8)
                 .expect("Error writing byte data to file.");
             let compression_method = 0u8; // DEFLATE (ZLIB)
-            writer
-                .write_u8(compression_method)
+            writer.write_u8(compression_method)
                 .expect("Error writing byte data to file.");
-            writer.write_u8(1u8).expect("Error writing byte data to file."); // zlidar version number
+            writer.write_u8(1u8).expect("Error writing byte data to file."); // zlidar major version number
+            writer.write_u8(0u8).expect("Error writing byte data to file."); // zlidar minor version number
 
             for i in 0..data_code.len() {
                 let mut data = Vec::with_capacity(20);
