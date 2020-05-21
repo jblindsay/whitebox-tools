@@ -3017,9 +3017,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             // y
@@ -3044,9 +3047,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             // z
@@ -3128,9 +3134,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             // intensity
@@ -3150,9 +3159,12 @@ impl LasFile {
                 byte_counts.push(data_length_in_bytes);
                 offsets.push(current_offset);
                 current_offset += data_length_in_bytes;
-                for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                    output_data.push(0u8);
-                    current_offset += 1;
+                // byte alignment to words.
+                if data_length_in_bytes % 4 > 0 {
+                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                        output_data.push(0u8);
+                        current_offset += 1;
+                    }
                 }
             }
 
@@ -3181,9 +3193,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             // total_bytes += data2.len();
@@ -3194,9 +3209,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
             drop(data2);
 
@@ -3216,9 +3234,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             // user data
@@ -3235,9 +3256,12 @@ impl LasFile {
                 byte_counts.push(data_length_in_bytes);
                 offsets.push(current_offset);
                 current_offset += data_length_in_bytes;
-                for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                    output_data.push(0u8);
-                    current_offset += 1;
+                // byte alignment to words.
+                if data_length_in_bytes % 4 > 0 {
+                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                        output_data.push(0u8);
+                        current_offset += 1;
+                    }
                 }
             }
 
@@ -3255,9 +3279,12 @@ impl LasFile {
             byte_counts.push(data_length_in_bytes);
             offsets.push(current_offset);
             current_offset += data_length_in_bytes;
-            for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                output_data.push(0u8);
-                current_offset += 1;
+            // byte alignment to words.
+            if data_length_in_bytes % 4 > 0 {
+                for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                    output_data.push(0u8);
+                    current_offset += 1;
+                }
             }
 
             match self.header.point_format {
@@ -3282,9 +3309,12 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    // byte alignment to words.
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
                 }
                 2 => {
@@ -3312,9 +3342,12 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    // byte alignment to words.
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
 
                     // g
@@ -3326,9 +3359,12 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    // byte alignment to words.
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
 
                     // b
@@ -3340,9 +3376,12 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    // byte alignment to words.
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
                     drop(data_r);
                     drop(data_g);
@@ -3376,9 +3415,11 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
 
                     // r
@@ -3390,9 +3431,11 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
 
                     // g
@@ -3404,9 +3447,11 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
 
                     // b
@@ -3418,9 +3463,11 @@ impl LasFile {
                     byte_counts.push(data_length_in_bytes);
                     offsets.push(current_offset);
                     current_offset += data_length_in_bytes;
-                    for _ in 0..(4 - (data_length_in_bytes % 4)) {
-                        output_data.push(0u8);
-                        current_offset += 1;
+                    if data_length_in_bytes % 4 > 0 {
+                        for _ in 0..(4 - (data_length_in_bytes % 4)) {
+                            output_data.push(0u8);
+                            current_offset += 1;
+                        }
                     }
                     drop(data_r);
                     drop(data_g);
