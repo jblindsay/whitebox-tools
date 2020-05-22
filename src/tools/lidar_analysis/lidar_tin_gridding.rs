@@ -437,7 +437,7 @@ impl WhiteboxTool for LidarTINGridding {
         */
         let mut bounding_boxes = vec![];
         for in_file in &inputs {
-            let header = LasHeader::read_las_header(&in_file.replace("\"", ""))?;
+            let header = LasHeader::read_las_header(&in_file.replace("\"", "")).expect(&format!("Error while reading LiDAR file header ({}).", in_file));
             bounding_boxes.push(BoundingBox {
                 min_x: header.min_x,
                 max_x: header.max_x,
