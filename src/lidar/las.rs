@@ -1392,7 +1392,9 @@ impl LasFile {
                     num_bytes.push(bor.read_u64().expect("Error while reading byte data."));
                     block_bytes += num_bytes[i];
                     // Don't forget about word alignment bytes
-                    block_bytes += 4 - (num_bytes[i] % 4);
+                    if block_bytes % 4 > 0 {
+                        block_bytes += 4 - (num_bytes[i] % 4);
+                    }
                     // println!("field_type: {} offset: {} num_bytes: {}", field_type[i], offset[i], num_bytes[i]);
                 }
 
