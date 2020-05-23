@@ -291,9 +291,9 @@ impl WhiteboxTool for LasToZlidar {
         let mut old_progress: usize = 1;
         for tile in 0..num_files {
             let file_nm = rx.recv().expect("Error receiving data from thread.");
-            if !file_nm.contains("Empty") && num_files > 1 && tile < 99 {
+            if verbose && !file_nm.contains("Empty") && num_files > 1 && tile < 99 {
                 println!("Completed conversion of {} ({} of {})", file_nm, tile+1, num_files);
-            } else if tile == 99 {
+            } else if verbose && tile == 99 {
                 println!("Completed conversion of {} ({} of {})", file_nm, tile+1, num_files);
                 println!("...");
             } else if file_nm.to_lowercase().contains("empty file name") {
