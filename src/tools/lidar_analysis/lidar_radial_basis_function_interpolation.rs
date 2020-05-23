@@ -1177,17 +1177,28 @@ impl WhiteboxTool for LidarRbfInterpolation {
         for tile in 0..inputs.len() {
             let tile_completed = rx2.recv().unwrap();
             if verbose {
-                println!(
-                    "Finished interpolating {} ({} of {})",
-                    inputs[tile_completed]
-                        .replace("\"", "")
-                        .replace(working_directory, "")
-                        .replace(".las", ""),
-                    tile + 1,
-                    inputs.len()
-                );
-            }
-            if verbose {
+                if tile < 98 {
+                    println!(
+                        "Finished {} ({} of {})",
+                        inputs[tile_completed]
+                            .replace("\"", "")
+                            .replace(working_directory, "")
+                            .replace(".las", ""),
+                        tile + 1,
+                        inputs.len()
+                    );
+                } else if tile == 99 {
+                    println!(
+                        "Finished {} ({} of {})",
+                        inputs[tile_completed]
+                            .replace("\"", "")
+                            .replace(working_directory, "")
+                            .replace(".las", ""),
+                        tile + 1,
+                        inputs.len()
+                    );
+                    println!("...");
+                }
                 progress = (100.0_f64 * tile as f64 / (inputs.len() - 1) as f64) as i32;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
