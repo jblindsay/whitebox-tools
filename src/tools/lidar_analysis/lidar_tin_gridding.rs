@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/09/2018
-Last Modified: 19/05/2020
+Last Modified: 25/05/2020
 License: MIT
 */
 
@@ -366,7 +366,7 @@ impl WhiteboxTool for LidarTINGridding {
             early_returns = false;
         }
 
-        let search_radius = 1f64;
+        let search_radius = grid_res * 5f64; // this is an important parameter for minimizing edge effect when interpolating tiles.
 
         let mut inputs = vec![];
         let mut outputs = vec![];
