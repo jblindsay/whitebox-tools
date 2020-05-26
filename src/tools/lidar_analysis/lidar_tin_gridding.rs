@@ -11,6 +11,7 @@ use crate::algorithms::{point_in_poly, triangulate};
 use crate::lidar::*;
 use crate::na;
 use crate::raster::*;
+use crate::spatial_ref_system::esri_wkt_from_epsg;
 use crate::structures::{BoundingBox, Point2D};
 use crate::tools::*;
 use num_cpus;
@@ -502,7 +503,7 @@ impl WhiteboxTool for LidarTINGridding {
 
                     let mut progress: i32;
                     let mut old_progress: i32 = -1;
-
+                    let mut epsg_code = 0u16;
                     for m in 0..inputs.len() {
                         if bounding_boxes[m].overlaps(bb) {
                             let input =
@@ -517,6 +518,7 @@ impl WhiteboxTool for LidarTINGridding {
 
                             let n_points = input.header.number_of_points as usize;
                             let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
+                            epsg_code = input.get_epsg_code();
 
                             match &interp_parameter as &str {
                                 "elevation" | "z" => {
@@ -777,6 +779,8 @@ impl WhiteboxTool for LidarTINGridding {
                         configs.nodata = nodata;
                         configs.data_type = DataType::F32;
                         configs.photometric_interp = PhotometricInterpretation::Continuous;
+                        configs.epsg_code = epsg_code;
+                        configs.projection = esri_wkt_from_epsg(epsg_code);
 
                         let mut output = Raster::initialize_using_config(&output_file, &configs);
                         if interp_parameter == "rgb" {

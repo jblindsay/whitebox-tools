@@ -486,6 +486,10 @@ impl LasFile {
         self.wkt.clone()
     }
 
+    pub fn get_epsg_code(&self) -> u16 {
+        self.geokeys.find_epsg_code()
+    }
+
     pub fn read(&mut self) -> Result<(), Error> {
         if self.file_name.to_lowercase().ends_with(".zlidar") {
             return self.read_zlidar_data();
