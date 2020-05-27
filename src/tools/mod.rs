@@ -138,6 +138,7 @@ impl ToolManager {
         tool_names.push("SymmetricalDifference".to_string());
         tool_names.push("TINGridding".to_string());
         tool_names.push("Union".to_string());
+        tool_names.push("UpdateNodataCells".to_string());
         tool_names.push("VectorHexBinning".to_string());
         tool_names.push("VoronoiDiagram".to_string());
         tool_names.push("WeightedOverlay".to_string());
@@ -640,6 +641,7 @@ impl ToolManager {
             "symmetricaldifference" => Some(Box::new(gis_analysis::SymmetricalDifference::new())),
             "tingridding" => Some(Box::new(gis_analysis::TINGridding::new())),
             "union" => Some(Box::new(gis_analysis::Union::new())),
+            "updatenodatacells" => Some(Box::new(gis_analysis::UpdateNodataCells::new())),
             "vectorhexbinning" => Some(Box::new(gis_analysis::VectorHexBinning::new())),
             "voronoidiagram" => Some(Box::new(gis_analysis::VoronoiDiagram::new())),
             "weightedoverlay" => Some(Box::new(gis_analysis::WeightedOverlay::new())),

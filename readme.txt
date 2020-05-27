@@ -67,6 +67,7 @@ Version 1.3.0 (XX-XX-2020)
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Added the ContoursFromPoints tool for creating a vector contour coverage from vector points.
+- Added the UpdateNodataCells tool.
 - Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
 - Modified the Mosaic tool, which now runs much faster with large numbers of input tiles.
 - The vector-to-raster conversion tools now preserve input projections.
