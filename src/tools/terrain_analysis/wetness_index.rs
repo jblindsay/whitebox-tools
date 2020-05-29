@@ -46,7 +46,7 @@ impl WetnessIndex {
         parameters.push(ToolParameter {
             name: "Input Slope File".to_owned(),
             flags: vec!["--slope".to_owned()],
-            description: "Input raster slope file.".to_owned(),
+            description: "Input raster slope file (in degrees).".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
