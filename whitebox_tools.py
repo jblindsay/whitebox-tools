@@ -405,6 +405,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2033,6 +2034,22 @@ class WhiteboxTools(object):
         args.append("--snap={}".format(snap))
         return self.run_tool('union', args, callback) # returns 1 if error
 
+    def update_nodata_cells(self, input1, input2, output, callback=None):
+        """Replaces the NoData values in an input raster with the corresponding values contained in a second update layer.
+
+        Keyword arguments:
+
+        input1 -- Input raster file 1. 
+        input2 -- Input raster file 2; update layer. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('update_nodata_cells', args, callback) # returns 1 if error
+
     def weighted_overlay(self, factors, weights, output, cost=None, constraints=None, scale_max=1.0, callback=None):
         """Performs a weighted sum on multiple input rasters after converting each image to a common scale. The tool performs a multi-criteria evaluation (MCE).
 
@@ -3408,7 +3425,7 @@ class WhiteboxTools(object):
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        dist -- . 
+        dist -- Maximum search distance for breach paths in cells. 
         max_cost -- Optional maximum breach cost (default is Inf). 
         min_dist -- Optional flag indicating whether to minimize breach distances. 
         flat_increment -- Optional elevation increment applied to flat areas. 
@@ -5760,28 +5777,6 @@ class WhiteboxTools(object):
         args.append("--in_image='{}'".format(in_image))
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_colourize', args, callback) # returns 1 if error
-
-    def lidar_construct_vector_tin(self, i=None, output=None, returns="all", exclude_cls=None, minz=None, maxz=None, callback=None):
-        """Creates a vector triangular irregular network (TIN) fitted to LiDAR points.
-
-        Keyword arguments:
-
-        i -- Input LiDAR file (including extension). 
-        output -- Output raster file (including extension). 
-        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
-        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
-        minz -- Optional minimum elevation for inclusion in interpolation. 
-        maxz -- Optional maximum elevation for inclusion in interpolation. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        if i is not None: args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
-        args.append("--returns={}".format(returns))
-        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
-        if minz is not None: args.append("--minz='{}'".format(minz))
-        if maxz is not None: args.append("--maxz='{}'".format(maxz))
-        return self.run_tool('lidar_construct_vector_tin', args, callback) # returns 1 if error
 
     def lidar_elevation_slice(self, i, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=None):
         """Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.

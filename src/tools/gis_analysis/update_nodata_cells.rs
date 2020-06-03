@@ -1,30 +1,27 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 05/07/2017
-Last Modified: 01/06/2020
+Created: 26/05/2020
+Last Modified: 26/05/2020
 License: MIT
 */
 
 use crate::raster::*;
 use crate::tools::*;
-use num_cpus;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::sync::mpsc;
-use std::sync::Arc;
-use std::thread;
 
-/// This tool can be used to identify areas of NoData values within an input image.The user must specify the name
-/// of the input and output (`--input` and `--output`) raster images. Grid cells containing the NoData value in
-/// the input image will be assigned a value of 1.0 in the output image. All non-NoData valued grid cells will
-/// be assigned 0.0 in the output image.
+/// This tool will assign the *NoData* valued cells in an input raster (`--input1`) the
+/// values contained in the corresponding grid cells in a second input raster (`--input2`).
+/// This operation is sometimes necessary because most other overlay operations exclude
+/// areas of *NoData* values from the analysis. This tool can be used when there is need
+/// to update the values of a raster within these missing data areas.
 ///
 /// # See Also
-/// `SetNodataValue`, `ConvertNodataToZero`
-pub struct IsNoData {
+/// `IsNodata`
+pub struct UpdateNodataCells {
     name: String,
     description: String,
     toolbox: String,
@@ -32,18 +29,28 @@ pub struct IsNoData {
     example_usage: String,
 }
 
-impl IsNoData {
-    /// public constructor
-    pub fn new() -> IsNoData {
-        let name = "IsNoData".to_string();
-        let toolbox = "Math and Stats Tools".to_string();
-        let description = "Identifies NoData valued pixels in an image.".to_string();
+impl UpdateNodataCells {
+    pub fn new() -> UpdateNodataCells {
+        // public constructor
+        let name = "UpdateNodataCells".to_string();
+        let toolbox = "GIS Analysis/Overlay Tools".to_string();
+        let description =
+            "Replaces the NoData values in an input raster with the corresponding values contained in a second update layer.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
-            name: "Input File".to_owned(),
-            flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input raster file.".to_owned(),
+            name: "Input File 1".to_owned(),
+            flags: vec!["--input1".to_owned()],
+            description: "Input raster file 1.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Input File 2 (Update Layer)".to_owned(),
+            flags: vec!["--input2".to_owned()],
+            description: "Input raster file 2; update layer.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
@@ -70,12 +77,12 @@ impl IsNoData {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --input1=input1.tif --input2=update_layer.tif -o=output.tif",
             short_exe, name
         )
         .replace("*", &sep);
 
-        IsNoData {
+        UpdateNodataCells {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -85,7 +92,7 @@ impl IsNoData {
     }
 }
 
-impl WhiteboxTool for IsNoData {
+impl WhiteboxTool for UpdateNodataCells {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -99,17 +106,10 @@ impl WhiteboxTool for IsNoData {
     }
 
     fn get_tool_parameters(&self) -> String {
-        let mut s = String::from("{\"parameters\": [");
-        for i in 0..self.parameters.len() {
-            if i < self.parameters.len() - 1 {
-                s.push_str(&(self.parameters[i].to_string()));
-                s.push_str(",");
-            } else {
-                s.push_str(&(self.parameters[i].to_string()));
-            }
+        match serde_json::to_string(&self.parameters) {
+            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
+            Err(err) => return format!("{:?}", err),
         }
-        s.push_str("]}");
-        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -126,7 +126,8 @@ impl WhiteboxTool for IsNoData {
         working_directory: &'a str,
         verbose: bool,
     ) -> Result<(), Error> {
-        let mut input_file = String::new();
+        let mut input_file1 = String::new();
+        let mut input_file2 = String::new();
         let mut output_file = String::new();
 
         if args.len() == 0 {
@@ -144,18 +145,25 @@ impl WhiteboxTool for IsNoData {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-i1" || flag_val == "-input1" {
+                input_file1 = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-i2" || flag_val == "-input2" {
+                input_file2 = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
             }
         }
 
@@ -170,8 +178,11 @@ impl WhiteboxTool for IsNoData {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !input_file.contains(&sep) && !input_file.contains("/") {
-            input_file = format!("{}{}", working_directory, input_file);
+        if !input_file1.contains(&sep) && !input_file1.contains("/") {
+            input_file1 = format!("{}{}", working_directory, input_file1);
+        }
+        if !input_file2.contains(&sep) && !input_file2.contains("/") {
+            input_file2 = format!("{}{}", working_directory, input_file2);
         }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
@@ -180,44 +191,42 @@ impl WhiteboxTool for IsNoData {
         if verbose {
             println!("Reading data...")
         };
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+
+        let input1 = Raster::new(&input_file1, "r")?;
+        let input2 = Raster::new(&input_file2, "r")?;
 
         let start = Instant::now();
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
 
-        let num_procs = num_cpus::get() as isize;
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let mut z: f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data: Vec<f64> = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            data[col as usize] = 0f64;
-                        } else {
-                            data[col as usize] = 1f64;
-                        }
-                    }
-                    tx.send((row, data)).unwrap();
-                }
-            });
+        let rows = input1.configs.rows as isize;
+        let columns = input1.configs.columns as isize;
+        if input2.configs.rows != rows as usize || input2.configs.columns != columns as usize {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input rasters must have the same dimensions (i.e. number of rows and columns).",
+            ));
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.data_type = DataType::I16;
-        output.configs.nodata = -32768.0;
-        for r in 0..rows {
-            let (row, data) = rx.recv().expect("Error receiving data from thread.");
-            output.set_row_data(row, data);
+        let nodata1 = input1.configs.nodata;
+        let nodata2 = input2.configs.nodata;
 
+        let mut output = Raster::initialize_using_file(&output_file, &input1);
+        output
+            .set_data_from_raster(&input1)
+            .expect("Error while copying input data to output raster.");
+
+        let (mut z1, mut z2): (f64, f64);
+        for row in 0..rows {
+            for col in 0..columns {
+                z1 = input1.get_value(row, col);
+                if z1 == nodata1 {
+                    z2 = input2.get_value(row, col);
+                    if z2 != nodata2 {
+                        output.set_value(row, col, z2);
+                    }
+                }
+            }
             if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Progress: {}%", progress);
                     old_progress = progress;
@@ -226,13 +235,12 @@ impl WhiteboxTool for IsNoData {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "black_white.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Input file: {}", input_file1));
+        output.add_metadata_entry(format!("Update file: {}", input_file2));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
@@ -246,6 +254,7 @@ impl WhiteboxTool for IsNoData {
             }
             Err(e) => return Err(e),
         };
+
         if verbose {
             println!(
                 "{}",

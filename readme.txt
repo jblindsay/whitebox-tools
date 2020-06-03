@@ -67,6 +67,7 @@ Version 1.3.0 (XX-XX-2020)
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Added the ContoursFromPoints tool for creating a vector contour coverage from vector points.
+- Added the UpdateNodataCells tool.
 - Modified the Slope tool to optionally output in degrees, radians, or percent gradient.
 - Modified the Mosaic tool, which now runs much faster with large numbers of input tiles.
 - The vector-to-raster conversion tools now preserve input projections.
@@ -80,6 +81,7 @@ Version 1.3.0 (XX-XX-2020)
   a vector TIN is required for a LiDAR point set, users should convert the file to a Shapefile and then
   use the ConstructVectorTin tool instead. And of course, if you are interested in a raster TIN from a 
   LiDAR file, use the LidarTinGridding tool instead. 
+- FlattenLakes now handles multipart lake polygons.
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.

@@ -476,6 +476,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                     }
                 });
             }
+
             for r in 0..rows {
                 let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 output.set_row_data(row, data);

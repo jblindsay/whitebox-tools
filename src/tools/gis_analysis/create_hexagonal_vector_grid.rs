@@ -254,7 +254,9 @@ impl WhiteboxTool for CreateHexagonalVectorGrid {
                 ),
                 input.projection,
             )
-        } else if input_file.to_lowercase().ends_with(".las") || input_file.to_lowercase().ends_with(".zlidar") {
+        } else if input_file.to_lowercase().ends_with(".las")
+            || input_file.to_lowercase().ends_with(".zlidar")
+        {
             let mut input = LasFile::new(&input_file, "r")?;
             (
                 BoundingBox::new(

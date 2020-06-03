@@ -208,7 +208,10 @@ impl WhiteboxTool for SelectTilesByPolygon {
                     .to_str()
                     .expect("Error reading path string")
                     .to_string();
-                if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".laz") || s.to_lowercase().ends_with(".zlidar") {
+                if s.to_lowercase().ends_with(".las")
+                    || s.to_lowercase().ends_with(".laz")
+                    || s.to_lowercase().ends_with(".zlidar")
+                {
                     inputs.push(s);
                 }
             }

@@ -1379,11 +1379,15 @@ impl LasFile {
                 let major_version = bor.read_u8().expect("Error while reading byte data.");
                 let minor_version = bor.read_u8().expect("Error while reading byte data.");
                 // Acceptable versions include 0.0, 0.1, 1.0
-                if !(major_version == 0 && minor_version <= 1) &&
-                !(major_version == 1 && minor_version == 0) {
+                if !(major_version == 0 && minor_version <= 1)
+                    && !(major_version == 1 && minor_version == 0)
+                {
                     return Err(Error::new(
                         ErrorKind::Other,
-                        format!("Unsupported ZLidar version {}.{}.", major_version, minor_version),
+                        format!(
+                            "Unsupported ZLidar version {}.{}.",
+                            major_version, minor_version
+                        ),
                     ));
                 }
                 let mut return_field = -1isize;
@@ -1427,7 +1431,7 @@ impl LasFile {
                     bor.read_exact(&mut compressed)?;
                     let decompressed = decompress_to_vec_zlib(&compressed)
                         .expect("DEFLATE failed to decompress data.");
-                            
+
                     match field_type[i] {
                         0 => {
                             // x
@@ -1441,7 +1445,8 @@ impl LasFile {
                             let mut prev_val = 0i32;
                             for j in 0..num_points_in_block {
                                 vali32 = bor2.read_i32().expect("Error reading byte data.");
-                                val = (vali32 + prev_val) as f64 * self.header.x_scale_factor + self.header.x_offset;
+                                val = (vali32 + prev_val) as f64 * self.header.x_scale_factor
+                                    + self.header.x_offset;
 
                                 // pt = point_num + j;
                                 // if pt >= 500_000 && pt < 500_100 {
@@ -1465,8 +1470,9 @@ impl LasFile {
                             let mut prev_val = 0i32;
                             for j in 0..num_points_in_block {
                                 vali32 = bor2.read_i32().expect("Error reading byte data.");
-                                val = (vali32 + prev_val) as f64 * self.header.y_scale_factor + self.header.y_offset;
-                                
+                                val = (vali32 + prev_val) as f64 * self.header.y_scale_factor
+                                    + self.header.y_offset;
+
                                 // pt = point_num + j;
                                 // if pt >= 500_000 && pt < 500_100 {
                                 //     println!("{} {} {} {}", vali32+prev_val, vali32, prev_val, val);
@@ -1491,7 +1497,7 @@ impl LasFile {
                             // for j in 0..num_points_in_block {
                             //     vali32 = bor2.read_i32().expect("Error reading byte data.");
                             //     val = (vali32 + prev_val) as f64 * self.header.z_scale_factor + self.header.z_offset;
-                                
+
                             //     pt = point_num + j;
                             //     // if pt >= 500_000 && pt < 500_100 {
                             //     //     println!("{} {} {} {}", vali32+prev_val, vali32, prev_val, val);
@@ -1502,7 +1508,6 @@ impl LasFile {
                             //     }
                             //     self.point_data[pt].z = val;
                             // }
-
 
                             let mut prev_val = 0i32;
                             let mut prev_late_val = 0i32;
@@ -1516,7 +1521,8 @@ impl LasFile {
                                 };
 
                                 vali32 = bor2.read_i32().expect("Error reading byte data.");
-                                val = (vali32 + prev_val) as f64 * self.header.z_scale_factor + self.header.z_offset;
+                                val = (vali32 + prev_val) as f64 * self.header.z_scale_factor
+                                    + self.header.z_offset;
                                 self.point_data[pt].z = val;
 
                                 if self.point_data[pt].is_late_return() {
@@ -1526,12 +1532,11 @@ impl LasFile {
                                 }
                             }
 
-
                             // let mut prev_val = 0i32;
                             // for j in 0..num_points_in_block {
                             //     vali32 = bor2.read_i32().expect("Error reading byte data.");
                             //     val = (vali32 + prev_val) as f64 * self.header.z_scale_factor + self.header.z_offset;
-                                
+
                             //     pt = point_num + j;
                             //     if pt >= 500_000 && pt < 500_100 {
                             //         println!("{} {} {} {}", vali32+prev_val, vali32, prev_val, val);
@@ -1649,7 +1654,8 @@ impl LasFile {
                         10 => {
                             // red
                             if self.colour_data.len() == 0 {
-                                self.colour_data = vec![Default::default(); self.header.number_of_points as usize];
+                                self.colour_data =
+                                    vec![Default::default(); self.header.number_of_points as usize];
                             }
                             num_points_in_block = decompressed.len() / 2;
                             let mut bor2 = ByteOrderReader::<Cursor<Vec<u8>>>::new(
@@ -1665,7 +1671,8 @@ impl LasFile {
                         11 => {
                             // green
                             if self.colour_data.len() == 0 {
-                                self.colour_data = vec![Default::default(); self.header.number_of_points as usize];
+                                self.colour_data =
+                                    vec![Default::default(); self.header.number_of_points as usize];
                             }
                             num_points_in_block = decompressed.len() / 2;
                             let mut bor2 = ByteOrderReader::<Cursor<Vec<u8>>>::new(
@@ -1681,7 +1688,8 @@ impl LasFile {
                         12 => {
                             // blue
                             if self.colour_data.len() == 0 {
-                                self.colour_data = vec![Default::default(); self.header.number_of_points as usize];
+                                self.colour_data =
+                                    vec![Default::default(); self.header.number_of_points as usize];
                             }
                             num_points_in_block = decompressed.len() / 2;
                             let mut bor2 = ByteOrderReader::<Cursor<Vec<u8>>>::new(
@@ -3015,7 +3023,8 @@ impl LasFile {
             let mut data = Vec::with_capacity(block_size * 4);
             let mut prev_val = 0i32;
             for i in block_start..block_end {
-                val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor) as i32;
+                val = ((self.point_data[i].x - self.header.x_offset) / self.header.x_scale_factor)
+                    as i32;
                 data.write_i32::<LittleEndian>(val - prev_val)
                     .expect("Error writing byte data.");
                 // if i >= 500_000 && i < 500_100 {
@@ -3049,7 +3058,7 @@ impl LasFile {
                     as i32;
                 data.write_i32::<LittleEndian>(val - prev_val)
                     .expect("Error writing byte data.");
-                
+
                 // if i >= 500_000 && i < 500_100 {
                 //     println!("{} {} {} {}", val, val - prev_val, prev_val, self.point_data[i].y);
                 // }
@@ -3107,7 +3116,7 @@ impl LasFile {
             //     }
             //     prev_val = val;
             // }
-            
+
             // prev_val = 0i32;
             // for i in block_start..block_end {
             //     val = ((self.point_data[i].z - self.header.z_offset) / self.header.z_scale_factor)
@@ -3499,13 +3508,19 @@ impl LasFile {
             // writer
             //     .write_u16::<LittleEndian>(data_code.len() as u16)
             //     .expect("Error writing byte data to file.");
-            writer.write_u8(data_code.len() as u8)
+            writer
+                .write_u8(data_code.len() as u8)
                 .expect("Error writing byte data to file.");
             let compression_method = 0u8; // DEFLATE (ZLIB)
-            writer.write_u8(compression_method)
+            writer
+                .write_u8(compression_method)
                 .expect("Error writing byte data to file.");
-            writer.write_u8(1u8).expect("Error writing byte data to file."); // zlidar major version number
-            writer.write_u8(0u8).expect("Error writing byte data to file."); // zlidar minor version number
+            writer
+                .write_u8(1u8)
+                .expect("Error writing byte data to file."); // zlidar major version number
+            writer
+                .write_u8(0u8)
+                .expect("Error writing byte data to file."); // zlidar minor version number
 
             for i in 0..data_code.len() {
                 let mut data = Vec::with_capacity(20);

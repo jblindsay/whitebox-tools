@@ -14,12 +14,12 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool can be used to modify the value of pixels containing the NoData value for an input raster image.
-/// This operation differs from the `SetNoDataValue` tool, which sets the NoData value for an image in the
+/// This operation differs from the `SetNodataValue` tool, which sets the NoData value for an image in the
 /// image header without actually modifying pixel values. Also, `SetNodataValue` does not
 /// overwrite the input file, while the `ModifyNoDataValue` tool does.
 ///
 /// # See Also
-/// `SetNoDataValue`, `ConvertNodataToZero`
+/// `SetNodataValue`, `ConvertNodataToZero`
 pub struct ModifyNoDataValue {
     name: String,
     description: String,

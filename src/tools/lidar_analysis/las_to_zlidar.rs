@@ -9,14 +9,14 @@ License: MIT
 use crate::lidar::*;
 use crate::tools::*;
 use std;
-use std::{env, fs, path, thread};
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
+use std::{env, fs, path, thread};
 
-/// This tool can be used to convert one or more LAS files into the *zlidar* compressed 
+/// This tool can be used to convert one or more LAS files into the *zlidar* compressed
 /// LiDAR data format. The tool takes a list of input LAS files (`--inputs`). If `--inputs`
-/// is unspecified, the tool will use all LAS files contained within the working directory 
+/// is unspecified, the tool will use all LAS files contained within the working directory
 /// as the tool inputs. The user may also specify an optional output directory `--outdir`.
 /// If this parameter is unspecified, each output ZLidar file will be written to the same
 /// directory as the input files.
@@ -173,7 +173,7 @@ impl WhiteboxTool for LasToZlidar {
 
         let start = Instant::now();
 
-        if !output_directory.is_empty() && !output_directory.ends_with(sep) { 
+        if !output_directory.is_empty() && !output_directory.ends_with(sep) {
             output_directory = format!("{}{}", output_directory, sep);
         }
 
@@ -203,13 +203,21 @@ impl WhiteboxTool for LasToZlidar {
             }
         } else {
             let mut cmd = input_files.split(";");
-            inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+            inputs = cmd
+                .collect::<Vec<&str>>()
+                .iter()
+                .map(|x| String::from(x.trim()))
+                .collect::<Vec<String>>();
             if inputs.len() == 1 {
                 cmd = input_files.split(",");
-                inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+                inputs = cmd
+                    .collect::<Vec<&str>>()
+                    .iter()
+                    .map(|x| String::from(x.trim()))
+                    .collect::<Vec<String>>();
             }
         }
-        
+
         let num_files = inputs.len();
         let inputs = Arc::new(inputs);
         let working_directory = Arc::new(working_directory.to_owned());
@@ -246,27 +254,28 @@ impl WhiteboxTool for LasToZlidar {
                                 panic!(format!("Error reading file: {}", input_file));
                             }
                         };
-        
+
                         let short_filename = input.get_short_filename();
                         let file_extension = get_file_extension(&input_file);
                         if file_extension.to_lowercase() != "las" {
                             panic!("All input files should be of LAS format.")
                         }
-        
+
                         let output_file = if output_directory.is_empty() {
                             input_file.replace(&format!(".{}", file_extension), ".zlidar")
                         } else {
                             format!("{}{}.zlidar", output_directory, short_filename)
                         };
                         let mut output = LasFile::initialize_using_file(&output_file, &input);
-        
+
                         let n_points = input.header.number_of_points as usize;
-        
+
                         for p in 0..n_points {
                             let pr = input.get_record(p);
                             output.add_point_record(pr);
                             if verbose && num_files == 1 {
-                                progress = (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
+                                progress =
+                                    (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
                                 if progress != old_progress {
                                     println!("Creating output: {}%", progress);
                                     old_progress = progress;
@@ -292,9 +301,19 @@ impl WhiteboxTool for LasToZlidar {
         for tile in 0..num_files {
             let file_nm = rx.recv().expect("Error receiving data from thread.");
             if verbose && !file_nm.contains("Empty") && num_files > 1 && tile < 99 {
-                println!("Completed conversion of {} ({} of {})", file_nm, tile+1, num_files);
+                println!(
+                    "Completed conversion of {} ({} of {})",
+                    file_nm,
+                    tile + 1,
+                    num_files
+                );
             } else if verbose && tile == 99 {
-                println!("Completed conversion of {} ({} of {})", file_nm, tile+1, num_files);
+                println!(
+                    "Completed conversion of {} ({} of {})",
+                    file_nm,
+                    tile + 1,
+                    num_files
+                );
                 println!("...");
             } else if file_nm.to_lowercase().contains("empty file name") {
                 println!("{}", file_nm);
@@ -307,12 +326,11 @@ impl WhiteboxTool for LasToZlidar {
                 }
             }
         }
-        
+
         if verbose {
             let elapsed_time = get_formatted_elapsed_time(start);
             println!("{}", &format!("Elapsed Time: {}", elapsed_time));
         }
-        
 
         Ok(())
     }

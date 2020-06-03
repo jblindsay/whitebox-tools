@@ -9,15 +9,15 @@ License: MIT
 use crate::lidar::*;
 use crate::tools::*;
 use std;
-use std::{env, fs, path, thread};
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
+use std::{env, fs, path, thread};
 
-/// This tool can be used to convert one or more *ZLidar* files ('*.zlidar') files into the *LAS* 
-/// LiDAR data format. ZLidar files are a compressed form of the LAS data format. The tool takes 
+/// This tool can be used to convert one or more *ZLidar* files ('*.zlidar') files into the *LAS*
+/// LiDAR data format. ZLidar files are a compressed form of the LAS data format. The tool takes
 /// a list of input LAS files (`--inputs`). If `--inputs`
-/// is unspecified, the tool will use all ZLidar files contained within the working directory 
+/// is unspecified, the tool will use all ZLidar files contained within the working directory
 /// as the tool inputs. The user may also specify an optional output directory `--outdir`.
 /// If this parameter is unspecified, each output LAS file will be written to the same
 /// directory as the input files.
@@ -172,7 +172,7 @@ impl WhiteboxTool for ZlidarToLas {
 
         let start = Instant::now();
 
-        if !output_directory.is_empty() && !output_directory.ends_with(sep) { 
+        if !output_directory.is_empty() && !output_directory.ends_with(sep) {
             output_directory = format!("{}{}", output_directory, sep);
         }
 
@@ -202,10 +202,18 @@ impl WhiteboxTool for ZlidarToLas {
             }
         } else {
             let mut cmd = input_files.split(";");
-            inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+            inputs = cmd
+                .collect::<Vec<&str>>()
+                .iter()
+                .map(|x| String::from(x.trim()))
+                .collect::<Vec<String>>();
             if inputs.len() == 1 {
                 cmd = input_files.split(",");
-                inputs = cmd.collect::<Vec<&str>>().iter().map(|x| String::from(x.trim())).collect::<Vec<String>>();
+                inputs = cmd
+                    .collect::<Vec<&str>>()
+                    .iter()
+                    .map(|x| String::from(x.trim()))
+                    .collect::<Vec<String>>();
             }
         }
 
@@ -245,27 +253,28 @@ impl WhiteboxTool for ZlidarToLas {
                                 panic!(format!("Error reading file: {}", input_file));
                             }
                         };
-        
+
                         let short_filename = input.get_short_filename();
                         let file_extension = get_file_extension(&input_file);
                         if file_extension.to_lowercase() != "zlidar" {
                             panic!("All input files should be of zlidar format.")
                         }
-        
+
                         let output_file = if output_directory.is_empty() {
                             input_file.replace(&format!(".{}", file_extension), ".las")
                         } else {
                             format!("{}{}.las", output_directory, short_filename)
                         };
                         let mut output = LasFile::initialize_using_file(&output_file, &input);
-        
+
                         let n_points = input.header.number_of_points as usize;
-        
+
                         for p in 0..n_points {
                             let pr = input.get_record(p);
                             output.add_point_record(pr);
                             if verbose && num_files == 1 {
-                                progress = (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
+                                progress =
+                                    (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
                                 if progress != old_progress {
                                     println!("Creating output: {}%", progress);
                                     old_progress = progress;

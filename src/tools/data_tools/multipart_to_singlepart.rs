@@ -6,7 +6,7 @@ Last Modified: 17/10/2019
 License: MIT
 */
 
-use crate::algorithms::is_clockwise_order;
+use crate::algorithms::{is_clockwise_order, point_in_poly};
 use crate::tools::*;
 use crate::vector::*;
 use std::env;
@@ -212,62 +212,63 @@ impl WhiteboxTool for MultiPartToSinglePart {
 
         // create output file
         let mut output =
-            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, false)?;
+            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, true)?;
 
         // add the attributes
-        output
-            .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
-        for att in input.attributes.get_fields() {
-            let mut att_clone = att.clone();
-            if att_clone.name == "FID" {
-                att_clone.name = String::from("SRC_FID");
-            }
-            output.attributes.add_field(&att_clone);
-        }
+        // output
+        //     .attributes
+        //     .add_field(&AttributeField::new("FID", FieldDataType::Int, 6u8, 0u8));
+        // for att in input.attributes.get_fields() {
+        //     let mut att_clone = att.clone();
+        //     if att_clone.name == "FID" {
+        //         att_clone.name = String::from("SRC_FID");
+        //     }
+        //     output.attributes.add_field(&att_clone);
+        // }
 
         let (mut part_start, mut part_end): (usize, usize);
-        let mut fid = 1i32;
+        // let mut fid = 1i32;
 
         if !exclude_holes || input.header.shape_type.base_shape_type() == ShapeType::PolyLine {
             let mut points_in_part: usize;
 
             for record_num in 0..input.num_records {
                 let record = input.get_record(record_num);
+                if record.shape_type != ShapeType::Null {
+                    let atts = input.attributes.get_record(record_num);
+                    // atts.insert(0, FieldData::Int(fid));
+                    // fid += 1;
+                    for part in 0..record.num_parts as usize {
+                        let mut sfg = ShapefileGeometry::new(input.header.shape_type);
 
-                for part in 0..record.num_parts as usize {
-                    let mut sfg = ShapefileGeometry::new(input.header.shape_type);
+                        part_start = record.parts[part] as usize;
+                        part_end = if part < record.num_parts as usize - 1 {
+                            record.parts[part + 1] as usize - 1
+                        } else {
+                            record.num_points as usize - 1
+                        };
 
-                    part_start = record.parts[part] as usize;
-                    part_end = if part < record.num_parts as usize - 1 {
-                        record.parts[part + 1] as usize - 1
-                    } else {
-                        record.num_points as usize - 1
-                    };
+                        points_in_part = part_end - part_start + 1;
 
-                    points_in_part = part_end - part_start + 1;
-
-                    let mut points: Vec<Point2D> = Vec::with_capacity(points_in_part + 1);
-                    for i in part_start..=part_end {
-                        points.push(record.points[i].clone());
-                    }
-
-                    if input.header.shape_type.base_shape_type() == ShapeType::Polygon {
-                        // make sure the points are in clockwise order
-                        if !is_clockwise_order(&points) {
-                            // the first part is assumed to be the hull and must be in clockwise order.
-                            points.reverse();
+                        let mut points: Vec<Point2D> = Vec::with_capacity(points_in_part + 1);
+                        for i in part_start..=part_end {
+                            points.push(record.points[i].clone());
                         }
+
+                        if input.header.shape_type.base_shape_type() == ShapeType::Polygon {
+                            // make sure the points are in clockwise order
+                            if !is_clockwise_order(&points) {
+                                // the first part is assumed to be the hull and must be in clockwise order.
+                                points.reverse();
+                            }
+                        }
+
+                        sfg.add_part(&points);
+
+                        output.add_record(sfg);
+
+                        output.attributes.add_record(atts.clone(), false);
                     }
-
-                    sfg.add_part(&points);
-
-                    output.add_record(sfg);
-
-                    let mut atts = input.attributes.get_record(record_num);
-                    atts.insert(0, FieldData::Int(fid));
-                    fid += 1;
-                    output.attributes.add_record(atts.clone(), false);
                 }
 
                 if verbose {
@@ -282,40 +283,77 @@ impl WhiteboxTool for MultiPartToSinglePart {
         } else {
             for record_num in 0..input.num_records {
                 let record = input.get_record(record_num);
+                if record.shape_type != ShapeType::Null {
+                    let atts = input.attributes.get_record(record_num);
+                    // atts.insert(0, FieldData::Int(fid));
+                    // fid += 1;
 
-                let mut num_composite_features = 0;
-                for part in 0..record.num_parts {
-                    if !record.is_hole(part) {
-                        num_composite_features += 1;
+                    let mut num_composite_features = 0;
+                    for part in 0..record.num_parts {
+                        if !record.is_hole(part) {
+                            num_composite_features += 1;
+                        }
                     }
-                }
 
-                let mut geometries =
-                    vec![ShapefileGeometry::new(input.header.shape_type); num_composite_features];
+                    if num_composite_features > 0 {
+                        let mut geometries = vec![
+                            ShapefileGeometry::new(input.header.shape_type);
+                            num_composite_features
+                        ];
 
-                let mut feature_num = -1isize;
-                for part in 0..record.num_parts as usize {
-                    if !record.is_hole(part as i32) {
-                        feature_num += 1;
+                        let mut hull_vertices = vec![];
+
+                        // Add the hulls first
+                        let mut feature_num = 0usize;
+                        // let mut p: Point2D;
+                        for part in 0..record.num_parts as usize {
+                            if !record.is_hole(part as i32) {
+                                part_start = record.parts[part] as usize;
+                                part_end = if part < record.num_parts as usize - 1 {
+                                    record.parts[part + 1] as usize - 1
+                                } else {
+                                    record.num_points as usize - 1
+                                };
+
+                                geometries[feature_num]
+                                    .add_part(&record.points[part_start..=part_end].to_vec());
+
+                                hull_vertices.push(record.points[part_start..=part_end].to_vec());
+                                // p = hull_vertices[feature_num][0].clone();
+                                // hull_vertices[feature_num].push(p); // close the loop.
+
+                                feature_num += 1;
+                            }
+                        }
+
+                        // now add the holes to their containing hulls
+                        for part in 0..record.num_parts as usize {
+                            if record.is_hole(part as i32) {
+                                part_start = record.parts[part] as usize;
+                                part_end = if part < record.num_parts as usize - 1 {
+                                    record.parts[part + 1] as usize - 1
+                                } else {
+                                    record.num_points as usize - 1
+                                };
+
+                                // which hull is this hole contained within?
+                                for a in 0..num_composite_features {
+                                    if point_in_poly(&record.points[part_start], &hull_vertices[a])
+                                    {
+                                        geometries[a].add_part(
+                                            &record.points[part_start..=part_end].to_vec(),
+                                        );
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        for f in 0..num_composite_features {
+                            output.add_record(geometries[f].clone());
+                            output.attributes.add_record(atts.clone(), false);
+                        }
                     }
-                    part_start = record.parts[part] as usize;
-                    part_end = if part < record.num_parts as usize - 1 {
-                        record.parts[part + 1] as usize - 1
-                    } else {
-                        record.num_points as usize - 1
-                    };
-
-                    geometries[feature_num as usize]
-                        .add_part(&record.points[part_start..part_end].to_vec());
-                }
-
-                for f in 0..num_composite_features {
-                    output.add_record(geometries[f].clone());
-
-                    let mut atts = input.attributes.get_record(record_num);
-                    atts.insert(0, FieldData::Int(fid));
-                    fid += 1;
-                    output.attributes.add_record(atts.clone(), false);
                 }
 
                 if verbose {
