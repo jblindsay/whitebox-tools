@@ -17,7 +17,8 @@ use crate::tools::*;
 use num_cpus;
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
-use std::sync::{Arc, Mutex};
+// use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::{env, f64, fs, path, thread};
 
 pub struct LidarTINGridding {
@@ -455,17 +456,18 @@ impl WhiteboxTool for LidarTINGridding {
         }
 
         let num_tiles = inputs.len();
-        let tile_list = Arc::new(Mutex::new(0..num_tiles));
+        // let tile_list = Arc::new(Mutex::new(0..num_tiles));
+        let num_procs = num_cpus::get();
         let inputs = Arc::new(inputs);
         let outputs = Arc::new(outputs);
         let bounding_boxes = Arc::new(bounding_boxes);
-        let num_procs2 = num_cpus::get() as isize;
+        // let num_procs2 = num_cpus::get() as isize;
         let (tx2, rx2) = mpsc::channel();
-        for _ in 0..num_procs2 {
+        for tid in 0..num_procs {
             let inputs = inputs.clone();
             let outputs = outputs.clone();
             let bounding_boxes = bounding_boxes.clone();
-            let tile_list = tile_list.clone();
+            // let tile_list = tile_list.clone();
             // copy over the string parameters
             let interp_parameter = interp_parameter.clone();
             // let palette = palette.clone();
@@ -475,15 +477,16 @@ impl WhiteboxTool for LidarTINGridding {
             let include_class_vals = include_class_vals.clone();
             let tx2 = tx2.clone();
             thread::spawn(move || {
-                let mut tile = 0;
-                while tile < num_tiles {
-                    // Get the next tile up for interpolation
-                    {
-                        tile = match tile_list.lock().unwrap().next() {
-                            Some(val) => val,
-                            None => break, // There are no more tiles to interpolate
-                        };
-                    }
+                for tile in (0..num_tiles).filter(|t| t % num_procs == tid) {
+                // let mut tile = 0;
+                // while tile < num_tiles {
+                //     // Get the next tile up for interpolation
+                //     {
+                //         tile = match tile_list.lock().unwrap().next() {
+                //             Some(val) => val,
+                //             None => break, // There are no more tiles to interpolate
+                //         };
+                //     }
                     let start_run = Instant::now();
 
                     let input_file = inputs[tile].replace("\"", "").clone();
@@ -813,8 +816,8 @@ impl WhiteboxTool for LidarTINGridding {
                         }
                     }
 
-                    if points.len() == 0 {
-                        println!("Warning: No points found in {}", inputs[tile].clone());
+                    if points.len() < 3 {
+                        println!("Warning: No eligible points found in {}", inputs[tile].clone());
                         tx2.send(tile).unwrap();
                     } else {
                         let west: f64 = bounding_boxes[tile].min_x;
@@ -1080,10 +1083,10 @@ impl WhiteboxTool for LidarTINGridding {
                             println!("Saving data...")
                         };
 
-                        let _ = output.write().unwrap();
-                    }
+                        let _ = output.write().expect("Error writing file.");
 
-                    tx2.send(tile).unwrap();
+                        tx2.send(tile).unwrap();
+                    }
                 }
             });
         }

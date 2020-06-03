@@ -89,7 +89,7 @@ impl Mosaic {
             flags: vec!["--method".to_owned()], 
             description: "Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 'cc' (cubic convolution)".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["nn".to_owned(), "bilinear".to_owned(), "cc".to_owned()]),
-            default_value: Some("cc".to_owned()),
+            default_value: Some("nn".to_owned()),
             optional: true
         });
 
@@ -152,7 +152,7 @@ impl WhiteboxTool for Mosaic {
     ) -> Result<(), Error> {
         let mut input_files = String::new();
         let mut output_file = String::new();
-        let mut method = String::from("cc");
+        let mut method = String::from("nn");
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -385,6 +385,14 @@ impl WhiteboxTool for Mosaic {
             } else {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "There is a problem with the list of input files. At least one specified input is empty."));
+            }
+
+            if verbose {
+                progress = (100.0_f64 * a as f64 / (num_files - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress: {}%", progress);
+                    old_progress = progress;
+                }
             }
         }
 
