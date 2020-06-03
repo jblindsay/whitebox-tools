@@ -438,7 +438,10 @@ impl WhiteboxTool for LidarTINGridding {
         */
         let mut bounding_boxes = vec![];
         for in_file in &inputs {
-            let header = LasHeader::read_las_header(&in_file.replace("\"", "")).expect(&format!("Error while reading LiDAR file header ({}).", in_file));
+            let header = LasHeader::read_las_header(&in_file.replace("\"", "")).expect(&format!(
+                "Error while reading LiDAR file header ({}).",
+                in_file
+            ));
             bounding_boxes.push(BoundingBox {
                 min_x: header.min_x,
                 max_x: header.max_x,
@@ -485,7 +488,7 @@ impl WhiteboxTool for LidarTINGridding {
 
                     let input_file = inputs[tile].replace("\"", "").clone();
                     let output_file = outputs[tile].replace("\"", "").clone();
-                    
+
                     // Expand the bounding box to include the areas of overlap
                     let bb = BoundingBox {
                         min_x: bounding_boxes[tile].min_x - search_radius,
@@ -506,253 +509,312 @@ impl WhiteboxTool for LidarTINGridding {
                     let mut epsg_code = 0u16;
                     for m in 0..inputs.len() {
                         if bounding_boxes[m].overlaps(bb) {
-                            let input =
-                                match LasFile::new(&inputs[m].replace("\"", "").clone(), "r") {
-                                    Ok(lf) => lf,
-                                    Err(err) => panic!(
-                                        "Error reading file {}: {}",
-                                        inputs[m].replace("\"", ""),
-                                        err
-                                    ),
-                                };
+                            // let input =
+                            //     match LasFile::new(&inputs[m].replace("\"", "").clone(), "r") {
+                            //         Ok(lf) => lf,
+                            //         Err(err) => panic!(
+                            //             "Error reading file {}: {}",
+                            //             inputs[m].replace("\"", ""),
+                            //             err
+                            //         ),
+                            //     };
 
-                            let n_points = input.header.number_of_points as usize;
-                            let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
-                            epsg_code = input.get_epsg_code();
+                            match LasFile::new(&inputs[m].replace("\"", "").clone(), "r") {
+                                Ok(input) => {
+                                    let n_points = input.header.number_of_points as usize;
+                                    let num_points: f64 =
+                                        (input.header.number_of_points - 1) as f64; // used for progress calculation only
+                                    epsg_code = input.get_epsg_code();
 
-                            match &interp_parameter as &str {
-                                "elevation" | "z" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                    match &interp_parameter as &str {
+                                        "elevation" | "z" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.z);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values.push(p.z);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "intensity" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "intensity" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.intensity as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values.push(p.intensity as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "scan angle" | "scan_angle" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "scan angle" | "scan_angle" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.scan_angle as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values.push(p.scan_angle as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "class" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "class" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.classification() as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values.push(p.classification() as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "return_number" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "return_number" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.return_number() as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values
+                                                                    .push(p.return_number() as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "number_of_returns" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "number_of_returns" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.number_of_returns() as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values
+                                                                    .push(p.number_of_returns()
+                                                                        as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                "rgb" => {
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        "rgb" => {
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        // let val = input.get_rgb(i); // ((a << 24) | (b << 16) | (g << 8) | r) as f64;
-                                                        z_values.push(p.number_of_returns() as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                // let val = input.get_rgb(i); // ((a << 24) | (b << 16) | (g << 8) | r) as f64;
+                                                                z_values
+                                                                    .push(p.number_of_returns()
+                                                                        as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
-                                    }
-                                }
-                                _ => {
-                                    // user data
-                                    for i in 0..n_points {
-                                        let p: PointData = input[i];
-                                        if !p.withheld() {
-                                            if all_returns
-                                                || (p.is_late_return() & late_returns)
-                                                || (p.is_early_return() & early_returns)
-                                            {
-                                                if include_class_vals[p.classification() as usize] {
-                                                    if bb.is_point_in_box(p.x, p.y)
-                                                        && p.z >= min_z
-                                                        && p.z <= max_z
+                                        _ => {
+                                            // user data
+                                            for i in 0..n_points {
+                                                let p: PointData = input[i];
+                                                if !p.withheld() {
+                                                    if all_returns
+                                                        || (p.is_late_return() & late_returns)
+                                                        || (p.is_early_return() & early_returns)
                                                     {
-                                                        points.push(Point2D { x: p.x, y: p.y });
-                                                        z_values.push(p.user_data as f64);
+                                                        if include_class_vals
+                                                            [p.classification() as usize]
+                                                        {
+                                                            if bb.is_point_in_box(p.x, p.y)
+                                                                && p.z >= min_z
+                                                                && p.z <= max_z
+                                                            {
+                                                                points.push(Point2D {
+                                                                    x: p.x,
+                                                                    y: p.y,
+                                                                });
+                                                                z_values.push(p.user_data as f64);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                if verbose && inputs.len() == 1 {
+                                                    progress =
+                                                        (100.0_f64 * i as f64 / num_points) as i32;
+                                                    if progress != old_progress {
+                                                        println!("Reading points: {}%", progress);
+                                                        old_progress = progress;
                                                     }
                                                 }
                                             }
                                         }
-                                        if verbose && inputs.len() == 1 {
-                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
-                                            if progress != old_progress {
-                                                println!("Reading points: {}%", progress);
-                                                old_progress = progress;
-                                            }
-                                        }
                                     }
                                 }
-                            }
+                                Err(_err) => {} // do nothing
+                            };
                         }
                     }
 
                     if points.len() == 0 {
-                        println!("Warning: No points found in {}.", inputs[tile].clone());
+                        println!("Warning: No points found in {}", inputs[tile].clone());
                         tx2.send(tile).unwrap();
                     } else {
                         let west: f64 = bounding_boxes[tile].min_x;

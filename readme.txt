@@ -81,6 +81,7 @@ Version 1.3.0 (XX-XX-2020)
   a vector TIN is required for a LiDAR point set, users should convert the file to a Shapefile and then
   use the ConstructVectorTin tool instead. And of course, if you are interested in a raster TIN from a 
   LiDAR file, use the LidarTinGridding tool instead. 
+- FlattenLakes now handles multipart lake polygons.
 
 Version 1.2.0 (21-02-2020)
 - Added the RasterToVectorPolygons tool, which now completes the raster-vector conversion tool set.

@@ -212,7 +212,7 @@ impl WhiteboxTool for RemovePolygonHoles {
                 //     sfg.add_part(&record.points[part_start..part_end]);
                 // }
                 if !record.is_hole(part as i32) {
-                    sfg.add_part(&record.points[part_start..part_end]);
+                    sfg.add_part(&record.points[part_start..=part_end]);
                 }
             }
             output.add_record(sfg);

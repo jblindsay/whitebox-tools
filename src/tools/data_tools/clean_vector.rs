@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 30/06/2019
-Last Modified: 30/06/2019
+Last Modified: 27/05/2020
 License: MIT
 */
 
@@ -183,15 +183,15 @@ impl WhiteboxTool for CleanVector {
             Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, true)?;
 
         let mut num_vertices: usize;
-
+        let (mut part_start, mut part_end): (usize, usize);
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
 
             if record.shape_type != ShapeType::Null {
                 num_vertices = record.points.len();
-                // At the moment, this is pretty crude. It would be better to do this for each
-                // part in a geometry.
                 match record.shape_type.base_shape_type() {
+                    // At the moment, this is pretty crude. It would be better to do this for each
+                    // part in a geometry.
                     ShapeType::PolyLine => {
                         if num_vertices > 1 {
                             output.add_record(record.clone());
@@ -201,8 +201,33 @@ impl WhiteboxTool for CleanVector {
                         }
                     }
                     ShapeType::Polygon => {
-                        if num_vertices > 2 {
-                            output.add_record(record.clone());
+                        let mut geometry = ShapefileGeometry::new(ShapeType::Polygon);
+                        let mut something_to_add = false;
+                        for part in 0..record.num_parts as usize {
+                            part_start = record.parts[part] as usize;
+                            part_end = if part < record.num_parts as usize - 1 {
+                                record.parts[part + 1] as usize - 1
+                            } else {
+                                record.num_points as usize - 1
+                            };
+
+                            num_vertices = part_end - part_start + 1;
+
+                            if num_vertices > 2 {
+                                let mut points: Vec<Point2D> = Vec::with_capacity(num_vertices + 1);
+                                for i in part_start..=part_end {
+                                    points.push(record.points[i].clone());
+                                }
+                                if record.points[part_start] != record.points[part_end] {
+                                    points.push(record.points[part_start].clone());
+                                }
+
+                                geometry.add_part(&points);
+                                something_to_add = true;
+                            }
+                        }
+                        if something_to_add {
+                            output.add_record(geometry);
                             output
                                 .attributes
                                 .add_record(input.attributes.get_record(record_num), false);

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/07/2017
-Last Modified: 12/10/2018
+Last Modified: 01/06/2020
 License: MIT
 */
 
@@ -210,6 +210,8 @@ impl WhiteboxTool for IsNoData {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::I16;
+        output.configs.nodata = -32768.0;
         for r in 0..rows {
             let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);

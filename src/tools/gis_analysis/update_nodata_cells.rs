@@ -15,8 +15,8 @@ use std::path;
 
 /// This tool will assign the *NoData* valued cells in an input raster (`--input1`) the
 /// values contained in the corresponding grid cells in a second input raster (`--input2`).
-/// This operation is sometimes necessary because most other overlay operations exclude 
-/// areas of *NoData* values from the analysis. This tool can be used when there is need 
+/// This operation is sometimes necessary because most other overlay operations exclude
+/// areas of *NoData* values from the analysis. This tool can be used when there is need
 /// to update the values of a raster within these missing data areas.
 ///
 /// # See Also
@@ -199,7 +199,7 @@ impl WhiteboxTool for UpdateNodataCells {
 
         let rows = input1.configs.rows as isize;
         let columns = input1.configs.columns as isize;
-        if input2.configs.rows != rows as usize  || input2.configs.columns != columns as usize {
+        if input2.configs.rows != rows as usize || input2.configs.columns != columns as usize {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "The input rasters must have the same dimensions (i.e. number of rows and columns).",
@@ -210,7 +210,9 @@ impl WhiteboxTool for UpdateNodataCells {
         let nodata2 = input2.configs.nodata;
 
         let mut output = Raster::initialize_using_file(&output_file, &input1);
-        output.set_data_from_raster(&input1).expect("Error while copying input data to output raster.");
+        output
+            .set_data_from_raster(&input1)
+            .expect("Error while copying input data to output raster.");
 
         let (mut z1, mut z2): (f64, f64);
         for row in 0..rows {
