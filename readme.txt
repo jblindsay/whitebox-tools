@@ -56,14 +56,14 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.3.0 (XX-XX-2020)
+Version 1.3.0 (07-06-2020)
 - Tools will now output DEFLATE compressed GeoTIFFs when the --compress_rasters parameter is used.
 - Added support for a newly developed compressed LiDAR data format, the ZLidar file. All tools
   that accepted LAS file inputs and produced LAS outputs can now use '*.zlidar' files as well. I 
   have also added the LasToZlidar and ZlidarToLas tools to perform conversions. While the ZLidar
-  format does not yield compression rates as good as the popular LAZ file format, you can expect 
-  ZLidar files to be between 20-30% of the size of the equivalent LAS file. A file specification 
-  will be published in the near future to describe the open ZLidar data format.
+  format does not yield compression rates quite as good as the popular LAZ file format, you can  
+  expect ZLidar files to be between 20-30% of the size of the equivalent LAS file. A file  
+  specification will be published in the near future to describe the open ZLidar data format.
 - Added the AsciiToLas tool.
 - Added the ContoursFromRaster tool for creating a vector contour coverage from a raster surface model (DEM).
 - Added the ContoursFromPoints tool for creating a vector contour coverage from vector points.

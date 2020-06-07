@@ -421,6 +421,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3353,7 +3354,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         sca -- Input raster specific contributing area (SCA) file. 
-        slope -- Input raster slope file. 
+        slope -- Input raster slope file (in degrees). 
         output -- Output raster file. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -4469,7 +4470,7 @@ class WhiteboxTools(object):
         args.append("--class_change={}".format(class_change))
         return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
 
-    def mosaic(self, output, inputs=None, method="cc", callback=None):
+    def mosaic(self, output, inputs=None, method="nn", callback=None):
         """Mosaics two or more images together.
 
         Keyword arguments:
