@@ -11,7 +11,7 @@ use crate::tools::*;
 use std;
 use std::io::{Error, ErrorKind};
 use std::sync::mpsc;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::{env, fs, path, thread};
 
 /// This tool can be used to convert one or more LAS files into the *zlidar* compressed
@@ -222,25 +222,26 @@ impl WhiteboxTool for LasToZlidar {
         let inputs = Arc::new(inputs);
         let working_directory = Arc::new(working_directory.to_owned());
         let output_directory = Arc::new(output_directory.clone());
-        let tile_list = Arc::new(Mutex::new(0..num_files));
-        let num_procs = num_cpus::get() as isize;
+        // let tile_list = Arc::new(Mutex::new(0..num_files));
+        let num_procs = num_cpus::get();
         let (tx, rx) = mpsc::channel();
-        for _ in 0..num_procs {
+        for tid in 0..num_procs {
             let inputs = inputs.clone();
-            let tile_list = tile_list.clone();
+            // let tile_list = tile_list.clone();
             let working_directory = working_directory.clone();
             let output_directory = output_directory.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let mut k = 0;
+                // let mut k = 0;
                 let mut progress: usize;
                 let mut old_progress: usize = 1;
-                while k < num_files {
+                for k in (0..num_files).filter(|t| t % num_procs == tid) {
+                // while k < num_files {
                     // Get the next tile up for examination
-                    k = match tile_list.lock().unwrap().next() {
-                        Some(val) => val,
-                        None => break, // There are no more tiles to examine
-                    };
+                    // k = match tile_list.lock().unwrap().next() {
+                    //     Some(val) => val,
+                    //     None => break, // There are no more tiles to examine
+                    // };
 
                     let mut input_file = inputs[k].replace("\"", "").clone();
                     if !input_file.is_empty() {
@@ -248,47 +249,47 @@ impl WhiteboxTool for LasToZlidar {
                             input_file = format!("{}{}", working_directory, input_file);
                         }
 
-                        let input: LasFile = match LasFile::new(&input_file, "r") {
-                            Ok(lf) => lf,
+                        match LasFile::new(&input_file, "r") {
+                            Ok(input) => {
+                                let short_filename = input.get_short_filename();
+                                let file_extension = get_file_extension(&input_file);
+                                if file_extension.to_lowercase() != "las" {
+                                    panic!("All input files should be of LAS format.")
+                                }
+
+                                let output_file = if output_directory.is_empty() {
+                                    input_file.replace(&format!(".{}", file_extension), ".zlidar")
+                                } else {
+                                    format!("{}{}.zlidar", output_directory, short_filename)
+                                };
+                                let mut output = LasFile::initialize_using_file(&output_file, &input);
+
+                                let n_points = input.header.number_of_points as usize;
+
+                                for p in 0..n_points {
+                                    let pr = input.get_record(p);
+                                    output.add_point_record(pr);
+                                    if verbose && num_files == 1 {
+                                        progress =
+                                            (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
+                                        if progress != old_progress {
+                                            println!("Creating output: {}%", progress);
+                                            old_progress = progress;
+                                        }
+                                    }
+                                }
+                                let _ = match output.write() {
+                                    Ok(_) => {
+                                        // do nothing
+                                    }
+                                    Err(e) => println!("Error while writing: {:?}", e),
+                                };
+                                tx.send(short_filename.clone()).unwrap();
+                            },
                             Err(_) => {
                                 panic!(format!("Error reading file: {}", input_file));
                             }
                         };
-
-                        let short_filename = input.get_short_filename();
-                        let file_extension = get_file_extension(&input_file);
-                        if file_extension.to_lowercase() != "las" {
-                            panic!("All input files should be of LAS format.")
-                        }
-
-                        let output_file = if output_directory.is_empty() {
-                            input_file.replace(&format!(".{}", file_extension), ".zlidar")
-                        } else {
-                            format!("{}{}.zlidar", output_directory, short_filename)
-                        };
-                        let mut output = LasFile::initialize_using_file(&output_file, &input);
-
-                        let n_points = input.header.number_of_points as usize;
-
-                        for p in 0..n_points {
-                            let pr = input.get_record(p);
-                            output.add_point_record(pr);
-                            if verbose && num_files == 1 {
-                                progress =
-                                    (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
-                                if progress != old_progress {
-                                    println!("Creating output: {}%", progress);
-                                    old_progress = progress;
-                                }
-                            }
-                        }
-                        let _ = match output.write() {
-                            Ok(_) => {
-                                // do nothing
-                            }
-                            Err(e) => println!("error while writing: {:?}", e),
-                        };
-                        tx.send(short_filename.clone()).unwrap();
                     } else {
                         tx.send(format!("Empty file name for tile {}.", k)).unwrap();
                     }

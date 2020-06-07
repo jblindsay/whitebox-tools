@@ -1165,9 +1165,9 @@ impl WhiteboxTool for LidarRbfInterpolation {
                         };
 
                         let _ = output.write().unwrap();
-                    }
 
-                    tx2.send(tile).unwrap();
+                        tx2.send(tile).unwrap();
+                    }
                 }
             });
         }
@@ -1177,7 +1177,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
         for tile in 0..inputs.len() {
             let tile_completed = rx2.recv().unwrap();
             if verbose {
-                if tile < 98 {
+                if tile <= 98 {
                     println!(
                         "Finished {} ({} of {})",
                         inputs[tile_completed]

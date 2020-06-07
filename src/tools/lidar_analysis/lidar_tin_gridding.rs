@@ -1096,7 +1096,7 @@ impl WhiteboxTool for LidarTINGridding {
         for tile in 0..inputs.len() {
             let tile_completed = rx2.recv().unwrap();
             if verbose {
-                if tile < 98 {
+                if tile <= 98 {
                     println!(
                         "Finished {} ({} of {})",
                         inputs[tile_completed]

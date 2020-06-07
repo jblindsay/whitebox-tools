@@ -51,7 +51,7 @@ use std::thread;
 ///
 /// In addition to the input DEM (`--dem`) and output p<sub>dep</sub> file name (`--output`), the user
 /// must specify the nature of the error model, including the root-mean-square error (`--rmse`) and
-/// the error field correlation length (`--range`). These parameters determine the statistical frequency
+/// the error field correlation length (`--range`, in map units). These parameters determine the statistical frequency
 /// distribution and spatial characteristics of the modeled error fields added to the DEM in each
 /// iteration of the simulation. The user must also specify the number of iterations (`--iterations`).
 /// A larger number of iterations will produce a smoother p<sub>dep</sub> raster.
