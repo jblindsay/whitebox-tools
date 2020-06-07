@@ -122,21 +122,18 @@ fn run() -> Result<(), Error> {
         }
     }
     for arg in args {
-        let flag_val = arg.to_lowercase().replace("--", "-");
+        let split: Vec<&str> = arg.split('=').collect();
+        let key = String::from(split[0]);
+        let mut v = String::from("");
+        if split.len() == 2 {
+            v = String::from(split[1]);
+        }
+
+        let flag_val = key.to_lowercase().replace("--", "-");
         if flag_val == "-h" || flag_val == "-help" {
             help();
             return Ok(());
         } else if flag_val.starts_with("-cd") || flag_val.starts_with("-wd") {
-            let mut v = arg
-                .replace("--cd", "")
-                .replace("--wd", "")
-                .replace("-cd", "")
-                .replace("-wd", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
             if v.trim().is_empty() {
                 finding_working_dir = true;
             }
@@ -144,80 +141,39 @@ fn run() -> Result<(), Error> {
                 v.push_str(sep);
             }
             working_dir = v.to_string();
-        } else if arg.starts_with("-run") || arg.starts_with("--run") || arg.starts_with("-r") {
-            let mut v = arg
-                .replace("--run", "")
-                .replace("-run", "")
-                .replace("-r", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
+        } else if flag_val.starts_with("-run") || flag_val.starts_with("--run") || flag_val.starts_with("-r") {
             tool_name = v;
             run_tool = true;
-        } else if arg.starts_with("-toolhelp") || arg.starts_with("--toolhelp") {
-            let mut v = arg
-                .replace("--toolhelp", "")
-                .replace("-toolhelp", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
+        } else if flag_val.starts_with("-toolhelp") || flag_val.starts_with("--toolhelp") {
             tool_name = v;
             tool_help = true;
-        } else if arg.starts_with("-toolparameters") || arg.starts_with("--toolparameters") {
-            let mut v = arg
-                .replace("--toolparameters", "")
-                .replace("-toolparameters", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
+        } else if flag_val.starts_with("-toolparameters") || flag_val.starts_with("--toolparameters") {
             tool_name = v;
             tool_parameters = true;
-        } else if arg.starts_with("-toolbox") || arg.starts_with("--toolbox") {
-            let mut v = arg
-                .replace("--toolbox", "")
-                .replace("-toolhelp", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
+        } else if flag_val.starts_with("-toolbox") || flag_val.starts_with("--toolbox") {
             tool_name = v;
             toolbox = true;
-        } else if arg.starts_with("-listtools")
-            || arg.starts_with("--listtools")
-            || arg.starts_with("-list_tools")
-            || arg.starts_with("--list_tools")
+        } else if flag_val.starts_with("-listtools")
+            || flag_val.starts_with("--listtools")
+            || flag_val.starts_with("-list_tools")
+            || flag_val.starts_with("--list_tools")
         {
             list_tools = true;
-        } else if arg.starts_with("-viewcode") || arg.starts_with("--viewcode") {
-            let mut v = arg
-                .replace("--viewcode", "")
-                .replace("-viewcode", "")
-                .replace("\"", "")
-                .replace("\'", "");
-            if v.starts_with("=") {
-                v = v[1..v.len()].to_string();
-            }
+        } else if flag_val.starts_with("-viewcode") || flag_val.starts_with("--viewcode") {
             tool_name = v;
             view_code = true;
-        } else if arg.starts_with("-license")
-            || arg.starts_with("-licence")
-            || arg.starts_with("--license")
-            || arg.starts_with("--licence")
-            || arg.starts_with("-l")
+        } else if flag_val.starts_with("-license")
+            || flag_val.starts_with("-licence")
+            || flag_val.starts_with("--license")
+            || flag_val.starts_with("--licence")
+            || flag_val.starts_with("-l")
         {
             license();
             return Ok(());
-        } else if arg.starts_with("-version") || arg.starts_with("--version") {
+        } else if flag_val.starts_with("-version") || flag_val.starts_with("--version") {
             version();
             return Ok(());
-        } else if arg.trim() == "-v" {
+        } else if flag_val.trim() == "-v" {
             verbose = true;
         } else if arg.starts_with("-") {
             // it's an arg to be fed to the tool
