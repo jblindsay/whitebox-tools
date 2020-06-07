@@ -250,7 +250,7 @@ impl WhiteboxTool for RasterStreamsToVector {
         // add the attributes
         output
             .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 5u8, 0u8));
+            .add_field(&AttributeField::new("FID", FieldDataType::Int, 7u8, 0u8));
         output.attributes.add_field(&AttributeField::new(
             "STRM_VAL",
             FieldDataType::Real,

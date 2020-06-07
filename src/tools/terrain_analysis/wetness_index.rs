@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 2, 2017
-Last Modified: January 21, 2018
+Created: 02/07/2017
+Last Modified: 21/01/2018
 License: MIT
 */
 
@@ -17,6 +17,24 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
+/// This tool can be used to calculate the topographic wetness index, commonly used in the TOPMODEL rainfall-runoff framework. 
+/// The index describes the propensity for a site to be saturated to the surface given its contributing area and local slope 
+/// characteristics. It is calculated as:
+/// 
+/// > WI = Ln(As / tan(Slope))
+///
+/// Where `As` is the specific catchment area (i.e. the upslope contributing area per unit contour length) estimated using one of 
+/// the available flow accumulation algorithms in the Hydrological Analysis toolbox. Notice that `As` must not be log-transformed 
+/// prior to being used; log-transformation of `As` is a common practice when visualizing the data. The slope image should be 
+/// measured in degrees and can be created from the base digital elevation model (DEM) using the `Slope` tool. Grid cells with a 
+/// slope of zero will be assigned **NoData** in the output image to compensate for the fact that division by zero is infinity. 
+/// These very flat sites likely coincide with the wettest parts of the landscape. The input images must have the same grid dimensions.
+/// 
+/// Grid cells possessing the NoData value in either of the input images are assigned NoData value in the output image. The output 
+/// raster is of the float data type and continuous data scale.
+///
+/// See Also
+/// `Slope`, `D8FlowAccumulation`, `DInfFlowAccumulation`, `Fd8FlowAccumulation`, `BreachDepressionsLeastCost`
 pub struct WetnessIndex {
     name: String,
     description: String,
