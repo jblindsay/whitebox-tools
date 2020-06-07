@@ -18,6 +18,10 @@ import re
 # import shutil
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
+running_windows = platform.system() == 'Windows'
+
+if running_windows:
+    from subprocess import STARTUPINFO, STARTF_USESHOWWINDOW
 
 def default_callback(value):
     ''' 
@@ -49,7 +53,7 @@ class WhiteboxTools(object):
     '''
 
     def __init__(self):
-        if platform.system() == 'Windows':
+        if running_windows:
             self.ext = '.exe'
         else:
             self.ext = ''
@@ -62,6 +66,7 @@ class WhiteboxTools(object):
         self.verbose = True
         self.cancel_op = False
         self.default_callback = default_callback
+        self.start_minimized = False
         self.__compress_rasters = False
 
     def set_whitebox_dir(self, path_str):
@@ -143,10 +148,20 @@ class WhiteboxTools(object):
                     cl += v + " "
                 callback(cl.strip() + "\n")
 
-            proc = Popen(args2, shell=False, stdout=PIPE,
-                         stderr=STDOUT, bufsize=1, universal_newlines=True)
+            proc = None
 
-            while True:
+            if running_windows and self.start_minimized == True:
+                si = STARTUPINFO()
+                si.dwFlags = STARTF_USESHOWWINDOW
+                si.wShowWindow = 6 #Set window minimized
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True,
+                            startupinfo=si)
+            else:
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True)
+
+            while proc is not None:
                 line = proc.stdout.readline()
                 sys.stdout.flush()
                 if line != '':

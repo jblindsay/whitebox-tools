@@ -39,25 +39,25 @@ pub fn read_arcascii(
                 data.reserve(configs.rows * configs.columns);
             }
         } else if vec[0].to_lowercase().contains("xllcorner") {
-            xllcenter = vec[vec.len() - 1]
-                .trim()
-                .to_string()
-                .parse::<f64>()
-                .unwrap();
-        } else if vec[0].to_lowercase().contains("yllcorner") {
-            yllcenter = vec[vec.len() - 1]
-                .trim()
-                .to_string()
-                .parse::<f64>()
-                .unwrap();
-        } else if vec[0].to_lowercase().contains("xllcenter") {
             xllcorner = vec[vec.len() - 1]
                 .trim()
                 .to_string()
                 .parse::<f64>()
                 .unwrap();
-        } else if vec[0].to_lowercase().contains("yllcenter") {
+        } else if vec[0].to_lowercase().contains("yllcorner") {
             yllcorner = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+        } else if vec[0].to_lowercase().contains("xllcenter") {
+            xllcenter = vec[vec.len() - 1]
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+        } else if vec[0].to_lowercase().contains("yllcenter") {
+            yllcenter = vec[vec.len() - 1]
                 .trim()
                 .to_string()
                 .parse::<f64>()
@@ -95,21 +95,17 @@ pub fn read_arcascii(
         }
     }
 
-    // set the North, East, South, and West coodinates
+    // set the North, East, South, and West coordinates
     if xllcorner != f64::NEG_INFINITY {
-        //h.cellCornerMode = true
         configs.east = xllcorner + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcorner;
         configs.south = yllcorner;
         configs.north = yllcorner + (configs.rows as f64) * configs.resolution_y;
     } else {
-        //h.cellCornerMode = false
-        configs.east = xllcenter - (0.5 * configs.resolution_x)
-            + (configs.columns as f64) * configs.resolution_x;
+        configs.east = xllcenter - (0.5 * configs.resolution_x) + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcenter - (0.5 * configs.resolution_x);
         configs.south = yllcenter - (0.5 * configs.resolution_y);
-        configs.north =
-            yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
+        configs.north = yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
     configs.photometric_interp = PhotometricInterpretation::Continuous;
