@@ -62,6 +62,8 @@ use std::thread;
 /// the file size of the DEM**. If your computer possesses insufficient memory, you may consider
 /// splitting the input DEM apart into smaller tiles.
 ///
+/// ![](../../doc_img/StochasticDepressionAnalysis_fig1.png)
+///
 /// # Reference
 /// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in
 /// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.

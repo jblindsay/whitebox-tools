@@ -102,10 +102,12 @@ pub fn read_arcascii(
         configs.south = yllcorner;
         configs.north = yllcorner + (configs.rows as f64) * configs.resolution_y;
     } else {
-        configs.east = xllcenter - (0.5 * configs.resolution_x) + (configs.columns as f64) * configs.resolution_x;
+        configs.east = xllcenter - (0.5 * configs.resolution_x)
+            + (configs.columns as f64) * configs.resolution_x;
         configs.west = xllcenter - (0.5 * configs.resolution_x);
         configs.south = yllcenter - (0.5 * configs.resolution_y);
-        configs.north = yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
+        configs.north =
+            yllcenter - (0.5 * configs.resolution_y) + (configs.rows as f64) * configs.resolution_y;
     }
 
     configs.photometric_interp = PhotometricInterpretation::Continuous;

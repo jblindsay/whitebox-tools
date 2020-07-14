@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/10/2018
-Last Modified: 26/03/2020
+Last Modified: 16/06/2020
 License: MIT
 */
 
@@ -217,7 +217,8 @@ impl WhiteboxTool for VoronoiDiagram {
         }
 
         // create output file
-        let mut output = Shapefile::new(&output_file, ShapeType::Polygon)?;
+        let mut output = Shapefile::new(&output_file, ShapeType::Polygon)
+            .expect("Error while creating output file.");
 
         // set the projection information
         output.projection = input.projection.clone();
@@ -228,11 +229,12 @@ impl WhiteboxTool for VoronoiDiagram {
 
         // Read the points in
         let mut points: Vec<Point2D> = vec![];
-
+        let mut record_numbers = vec![]; // this is necessary for multipoint vectors
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
             for i in 0..record.num_points as usize {
                 points.push(Point2D::new(record.points[i].x, record.points[i].y));
+                record_numbers.push(record_num);
             }
 
             if verbose {
@@ -255,7 +257,7 @@ impl WhiteboxTool for VoronoiDiagram {
         // expand the box by a factor of the average point spacing.
         let expansion = ((input.header.x_max - input.header.x_min)
             * (input.header.y_max - input.header.y_min)
-            / input.num_records as f64)
+            / record_numbers.len() as f64)
             .sqrt();
         ghost_box.expand_by(2.0 * expansion);
 
@@ -312,7 +314,7 @@ impl WhiteboxTool for VoronoiDiagram {
 
         // Now create the Voronoi cells
         const EMPTY: usize = usize::max_value();
-        for p in 0..input.num_records {
+        for p in 0..record_numbers.len() {
             // get the edge that is incoming to 'p'
             let edge = match point_edge_map.get(&p) {
                 Some(e) => *e,
@@ -343,9 +345,10 @@ impl WhiteboxTool for VoronoiDiagram {
                     output.add_record(sfg);
 
                     // now get the attributes of the parent point.
-                    output
-                        .attributes
-                        .add_record(input.attributes.get_record(p).clone(), false);
+                    output.attributes.add_record(
+                        input.attributes.get_record(record_numbers[p]).clone(),
+                        false,
+                    );
                 }
             }
 

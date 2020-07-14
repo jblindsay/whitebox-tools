@@ -478,15 +478,15 @@ impl WhiteboxTool for LidarTINGridding {
             let tx2 = tx2.clone();
             thread::spawn(move || {
                 for tile in (0..num_tiles).filter(|t| t % num_procs == tid) {
-                // let mut tile = 0;
-                // while tile < num_tiles {
-                //     // Get the next tile up for interpolation
-                //     {
-                //         tile = match tile_list.lock().unwrap().next() {
-                //             Some(val) => val,
-                //             None => break, // There are no more tiles to interpolate
-                //         };
-                //     }
+                    // let mut tile = 0;
+                    // while tile < num_tiles {
+                    //     // Get the next tile up for interpolation
+                    //     {
+                    //         tile = match tile_list.lock().unwrap().next() {
+                    //             Some(val) => val,
+                    //             None => break, // There are no more tiles to interpolate
+                    //         };
+                    //     }
                     let start_run = Instant::now();
 
                     let input_file = inputs[tile].replace("\"", "").clone();
@@ -817,7 +817,10 @@ impl WhiteboxTool for LidarTINGridding {
                     }
 
                     if points.len() < 3 {
-                        println!("Warning: No eligible points found in {}", inputs[tile].clone());
+                        println!(
+                            "Warning: No eligible points found in {}",
+                            inputs[tile].clone()
+                        );
                         tx2.send(tile).unwrap();
                     } else {
                         let west: f64 = bounding_boxes[tile].min_x;

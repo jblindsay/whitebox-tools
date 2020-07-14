@@ -27,6 +27,8 @@ use std::process::Command;
 ///
 /// Use the `LidarPointStats` tool instead to examine the spatial distribution of LiDAR points.
 ///
+/// ![](../../doc_img/LidarHistogram_fig1.png)
+///
 /// # See Also
 /// `LidarPointStats`
 pub struct LidarHistogram {

@@ -14,11 +14,12 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::{env, fs, path, thread};
 
-/// This tool can be used to convert one or more LAS files into the *zlidar* compressed
+/// This tool can be used to convert one or more LAS files into the
+/// [*zLidar*](https://jblindsay.github.io/zLidar_spec/intro.html) compressed
 /// LiDAR data format. The tool takes a list of input LAS files (`--inputs`). If `--inputs`
 /// is unspecified, the tool will use all LAS files contained within the working directory
 /// as the tool inputs. The user may also specify an optional output directory `--outdir`.
-/// If this parameter is unspecified, each output ZLidar file will be written to the same
+/// If this parameter is unspecified, each output zLidar file will be written to the same
 /// directory as the input files.
 ///
 /// # See Also
@@ -236,7 +237,7 @@ impl WhiteboxTool for LasToZlidar {
                 let mut progress: usize;
                 let mut old_progress: usize = 1;
                 for k in (0..num_files).filter(|t| t % num_procs == tid) {
-                // while k < num_files {
+                    // while k < num_files {
                     // Get the next tile up for examination
                     // k = match tile_list.lock().unwrap().next() {
                     //     Some(val) => val,
@@ -262,7 +263,8 @@ impl WhiteboxTool for LasToZlidar {
                                 } else {
                                     format!("{}{}.zlidar", output_directory, short_filename)
                                 };
-                                let mut output = LasFile::initialize_using_file(&output_file, &input);
+                                let mut output =
+                                    LasFile::initialize_using_file(&output_file, &input);
 
                                 let n_points = input.header.number_of_points as usize;
 
@@ -270,8 +272,9 @@ impl WhiteboxTool for LasToZlidar {
                                     let pr = input.get_record(p);
                                     output.add_point_record(pr);
                                     if verbose && num_files == 1 {
-                                        progress =
-                                            (100.0_f64 * (p + 1) as f64 / (n_points - 1) as f64) as usize;
+                                        progress = (100.0_f64 * (p + 1) as f64
+                                            / (n_points - 1) as f64)
+                                            as usize;
                                         if progress != old_progress {
                                             println!("Creating output: {}%", progress);
                                             old_progress = progress;
@@ -285,7 +288,7 @@ impl WhiteboxTool for LasToZlidar {
                                     Err(e) => println!("Error while writing: {:?}", e),
                                 };
                                 tx.send(short_filename.clone()).unwrap();
-                            },
+                            }
                             Err(_) => {
                                 panic!(format!("Error reading file: {}", input_file));
                             }

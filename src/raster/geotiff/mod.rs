@@ -2039,31 +2039,81 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
             PhotometricInterpretation::RGB => {
                 match r.configs.data_type {
                     DataType::RGB24 => {
-                        let mut bytes: [u8; 3] = [0u8; 3];
+                        // let mut bytes: [u8; 3] = [0u8; 3];
                         let mut i: usize;
+                        let mut val: u32;
                         for row in 0..r.configs.rows {
+                            let mut data = Vec::with_capacity(r.configs.columns * 3);
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                let val = r.data[i] as u32;
-                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
-                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[0] = (val & 0xFF) as u8; // red
-                                write_bytes(&mut writer, &bytes)?;
+                                val = r.data[i] as u32;
+                                data.write_u8((val & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // red
+
+                                data.write_u8(((val >> 8u32) & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // green
+
+                                data.write_u8(((val >> 16u32) & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // blue
+                            }
+                            // compress the data vec
+                            let compressed = compress_to_vec_zlib(&data, 6);
+                            write_bytes(&mut writer, &compressed)
+                                .expect("Error writing byte data to file.");
+                            row_length_in_bytes = compressed.len() as u64;
+                            strip_byte_counts.push(row_length_in_bytes);
+                            strip_offsets.push(current_offset);
+                            current_offset += row_length_in_bytes;
+                            if row_length_in_bytes % 2 != 0 {
+                                // This is just because the data must start on a word (i.e. an even value).
+                                write_u8(&mut writer, 0u8).expect("Error writing data to file.");
+                                current_offset += 1;
                             }
                         }
                     }
                     DataType::RGBA32 | DataType::U32 => {
                         let mut i: usize;
-                        let mut bytes: [u8; 4] = [0u8; 4];
+                        // let mut bytes: [u8; 4] = [0u8; 4];
+                        let mut val: u32;
                         for row in 0..r.configs.rows {
+                            let mut data = Vec::with_capacity(r.configs.columns * 4);
                             for col in 0..r.configs.columns {
                                 i = row * r.configs.columns + col;
-                                let val = r.data[i] as u32;
-                                bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
-                                bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
-                                bytes[0] = (val & 0xFF) as u8; // red
-                                bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
-                                write_bytes(&mut writer, &bytes)?;
+                                val = r.data[i] as u32;
+                                data.write_u8((val & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // red
+
+                                data.write_u8(((val >> 8u32) & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // green
+
+                                data.write_u8(((val >> 16u32) & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // blue
+
+                                data.write_u8(((val >> 24u32) & 0xFF) as u8)
+                                    .expect("Error writing byte data."); // a
+                            }
+                            // for col in 0..r.configs.columns {
+                            //     i = row * r.configs.columns + col;
+                            //     val = r.data[i] as u32;
+                            //     bytes[2] = ((val >> 16u32) & 0xFF) as u8; // blue
+                            //     bytes[1] = ((val >> 8u32) & 0xFF) as u8; // green
+                            //     bytes[0] = (val & 0xFF) as u8; // red
+                            //     bytes[3] = ((val >> 24u32) & 0xFF) as u8; // a
+                            //     write_bytes(&mut writer, &bytes)?;
+                            // }
+
+                            // compress the data vec
+                            let compressed = compress_to_vec_zlib(&data, 6);
+                            write_bytes(&mut writer, &compressed)
+                                .expect("Error writing byte data to file.");
+                            row_length_in_bytes = compressed.len() as u64;
+                            strip_byte_counts.push(row_length_in_bytes);
+                            strip_offsets.push(current_offset);
+                            current_offset += row_length_in_bytes;
+                            if row_length_in_bytes % 2 != 0 {
+                                // This is just because the data must start on a word (i.e. an even value).
+                                write_u8(&mut writer, 0u8).expect("Error writing data to file.");
+                                current_offset += 1;
                             }
                         }
                     }

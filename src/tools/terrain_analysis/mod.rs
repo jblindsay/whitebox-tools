@@ -2,6 +2,7 @@
 mod aspect;
 mod average_normal_vector_angular_deviation;
 mod circular_variance_of_aspect;
+mod colour_shaded_relief;
 mod contours_from_points;
 mod contours_from_raster;
 mod dev_from_mean_elev;
@@ -64,6 +65,7 @@ mod wetness_index;
 pub use self::aspect::Aspect;
 pub use self::average_normal_vector_angular_deviation::AverageNormalVectorAngularDeviation;
 pub use self::circular_variance_of_aspect::CircularVarianceOfAspect;
+pub use self::colour_shaded_relief::ColourShadedRelief;
 pub use self::contours_from_points::ContoursFromPoints;
 pub use self::contours_from_raster::ContoursFromRaster;
 pub use self::dev_from_mean_elev::DevFromMeanElev;

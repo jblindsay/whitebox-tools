@@ -10,7 +10,7 @@ use std::{f64, fmt};
 
 const EPSILON: f64 = std::f64::EPSILON; //f64::EPSILON * 2.0;
 
-const EPSILON_SQRD: f64 = EPSILON * EPSILON;
+// const EPSILON_SQRD: f64 = EPSILON * EPSILON;
 
 /// A 2-D point, with x and y fields.
 #[derive(Default, Copy, Clone, Debug, PartialEq)]
@@ -190,8 +190,9 @@ impl Point2D {
 
     pub fn nearly_equals(&self, other: &Self) -> bool {
         // (self.x - other.x).abs() <= EPSILON && (self.y - other.y).abs() <= EPSILON
-        ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
-            <= EPSILON_SQRD
+        // ((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+        //     <= EPSILON_SQRD
+        (self.x - other.x).hypot(self.y - other.y) <= 1e-10
     }
 
     /// Tests if a point is Left|On|Right of an infinite line,

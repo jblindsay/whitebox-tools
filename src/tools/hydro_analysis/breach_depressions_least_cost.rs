@@ -23,7 +23,7 @@ use std::thread;
 
 /// This tool can be used to perform a type of optimal depression breaching to prepare a
 /// digital elevation model (DEM) for hydrological analysis. Depression breaching is a common
-/// alternative to depression filling (`FillDepression`) and often offers a lower-impact
+/// alternative to depression filling (`FillDepressions`) and often offers a lower-impact
 /// solution to the removal of topographic depressions. This tool implements a method that is
 /// loosely based on the algorithm described by Lindsay and Dhun (2015), furthering the earlier
 /// algorithm with efficiency optimizations and other significant enhancements. The approach uses a least-cost

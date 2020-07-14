@@ -8,7 +8,7 @@ License: MIT
 
 use crate::structures::Point2D;
 
-/// Calculates the area of a polygon defined by a series of verticies.
+/// Calculates the area of a polygon defined by a series of vertices.
 pub fn polygon_area(vertices: &[Point2D]) -> f64 {
     let num_vertices = vertices.len();
 

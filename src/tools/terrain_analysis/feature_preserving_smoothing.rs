@@ -54,6 +54,12 @@ use std::{f32, f64};
 /// Similarly, increasing the number of iterations from the default value of 3 to upwards of
 /// 5-10 will result in significantly greater smoothing.
 ///
+/// Before smoothing treatment:
+/// ![](../../doc_img/FeaturePreservingSmoothing_fig1.png)
+///
+/// After smoothing treatment with FPS:
+/// ![](../../doc_img/FeaturePreservingSmoothing_fig2.png)
+///
 /// # Reference
 /// Lindsay JB, Francioni A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of
 /// drainage features. *Remote Sensing*, 11(16), 1926; DOI: 10.3390/rs11161926.

@@ -23,6 +23,8 @@ use std::process::Command;
 /// input digital elevation models (DEMs) (`--inputs`). A hypsometric curve is a histogram or cumulative
 /// distribution function of elevations in a geographical area.
 ///
+/// ![](../../doc_img/HypsometricAnalysis_fig1.png)
+///
 /// # See Also
 /// `SlopeVsElevationPlot`
 pub struct HypsometricAnalysis {

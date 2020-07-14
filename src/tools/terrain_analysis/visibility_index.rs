@@ -39,6 +39,8 @@ use std::thread;
 /// considered before running this tool on a particular data set. This tool is best to apply
 /// on computer systems with high core-counts and plenty of memory.
 ///
+/// ![](../../doc_img/VisiibilityIndex_fig1.png)
+///
 /// # See Also
 /// `Viewshed`
 pub struct VisibilityIndex {

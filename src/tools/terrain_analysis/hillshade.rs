@@ -330,6 +330,9 @@ impl WhiteboxTool for Hillshade {
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
                             if fx != 0f64 {
                                 tan_slope = (fx * fx + fy * fy).sqrt();
+                                if tan_slope < 0.00017 {
+                                    tan_slope = 0.00017;
+                                }
                                 aspect = PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs());
                                 term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                                 term2 = sin_theta / tan_slope;

@@ -35,6 +35,8 @@ use std::thread;
 /// watershed file, the second DEM file to the second watershed file, etc.). Each watershed file may contain one or more
 /// watersheds, designated by unique identifiers.
 ///
+/// ![](../../doc_img/SlopeVsElevationPlot_fig1.png)
+///
 /// # See Also
 /// `HypsometricAnalysis`
 pub struct SlopeVsElevationPlot {
@@ -249,6 +251,10 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
+
+                if verbose {
+                    println!("Reading data...");
+                }
                 let input = Arc::new(Raster::new(&input_file, "r")?);
 
                 if num_files == 1 {
@@ -393,6 +399,9 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                 let mut input_file = input_files[i].to_string();
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
+                }
+                if verbose {
+                    println!("Reading data...");
                 }
                 let input = Arc::new(Raster::new(&input_file, "r")?);
                 if num_files == 1 {

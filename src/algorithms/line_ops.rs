@@ -40,6 +40,58 @@ use crate::structures::{BoundingBox, LineSegment, Point2D, Polyline};
 //     false
 // }
 
+/// Perpendicular distance from a point to a line
+pub fn point_line_distance(point: &Point2D, start: &Point2D, end: &Point2D) -> f64 {
+    if start == end {
+        return point.distance(&start);
+    } else {
+        let numerator = ((end.x - start.x) * (start.y - point.y)
+            - (start.x - point.x) * (end.y - start.y))
+            .abs();
+        let denominator = start.distance(&end);
+        numerator / denominator
+    }
+}
+
+/// An implementation of the Ramer–Douglas–Peucker line-simplification algorithm.
+/// Based on the RDP crate.
+///
+/// References:
+/// Douglas, D.H., Peucker, T.K., 1973. Algorithms for the reduction of the number of points required to
+/// represent a digitized line or its caricature. Cartographica: The International Journal for Geographic
+/// Information and Geovisualization 10, 112–122. DOI
+///
+/// Ramer, U., 1972. An iterative procedure for the polygonal approximation of plane curves. Computer
+/// Graphics and Image Processing 1, 244–256. DOI
+pub fn simplify_rdp(points: &[Point2D], epsilon: &f64) -> Vec<Point2D> {
+    if points.is_empty() || points.len() == 1 {
+        return points.to_vec();
+    }
+    let mut dmax = 0.0;
+    let mut index: usize = 0;
+    let mut distance: f64;
+    for (i, _) in points.iter().enumerate().take(points.len() - 1).skip(1) {
+        distance = point_line_distance(
+            &points[i],
+            &*points.first().unwrap(),
+            &*points.last().unwrap(),
+        );
+        if distance > dmax {
+            index = i;
+            dmax = distance;
+        }
+    }
+    if dmax > *epsilon {
+        let mut intermediate = simplify_rdp(&points[..index + 1], &*epsilon);
+        intermediate.pop();
+        // recur!
+        intermediate.extend_from_slice(&simplify_rdp(&points[index..], &*epsilon));
+        intermediate
+    } else {
+        vec![*points.first().unwrap(), *points.last().unwrap()]
+    }
+}
+
 pub fn find_line_intersections(line1: &[Point2D], line2: &[Point2D]) -> Vec<LineSegment> {
     let mut ret: Vec<LineSegment> = vec![];
     let box1 = BoundingBox::from_points(&line1);

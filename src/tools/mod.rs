@@ -303,6 +303,7 @@ impl ToolManager {
         tool_names.push("LidarRansacPlanes".to_string());
         tool_names.push("LidarRemoveDuplicates".to_string());
         tool_names.push("LidarRemoveOutliers".to_string());
+        tool_names.push("LidarRooftopAnalysis".to_string());
         tool_names.push("LidarSegmentation".to_string());
         tool_names.push("LidarSegmentationBasedFilter".to_string());
         tool_names.push("LidarThin".to_string());
@@ -449,6 +450,7 @@ impl ToolManager {
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
+        tool_names.push("ColourShadedRelief".to_string());
         tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxAnisotropyDevSignature".to_string());
         tool_names.push("MaxBranchLength".to_string());
@@ -878,6 +880,7 @@ impl ToolManager {
             "lidarransacplanes" => Some(Box::new(lidar_analysis::LidarRansacPlanes::new())),
             "lidarremoveduplicates" => Some(Box::new(lidar_analysis::LidarRemoveDuplicates::new())),
             "lidarremoveoutliers" => Some(Box::new(lidar_analysis::LidarRemoveOutliers::new())),
+            "lidarrooftopanalysis" => Some(Box::new(lidar_analysis::LidarRooftopAnalysis::new())),
             "lidarsegmentation" => Some(Box::new(lidar_analysis::LidarSegmentation::new())),
             "lidarsegmentationbasedfilter" => {
                 Some(Box::new(lidar_analysis::LidarSegmentationBasedFilter::new()))
@@ -1080,6 +1083,7 @@ impl ToolManager {
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),
+            "colourshadedrelief" => Some(Box::new(terrain_analysis::ColourShadedRelief::new())),
             "maxanisotropydev" => Some(Box::new(terrain_analysis::MaxAnisotropyDev::new())),
             "maxanisotropydevsignature" => {
                 Some(Box::new(terrain_analysis::MaxAnisotropyDevSignature::new()))

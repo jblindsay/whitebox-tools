@@ -1359,6 +1359,9 @@ impl LasFile {
             let mut pt: usize;
             let mut num_points_in_block = 0usize;
             let mut flag = true;
+            let mut num_fields: u8;
+            let mut compression_method: u8;
+            let (mut major_version, mut minor_version): (u8, u8);
             while flag {
                 bor.seek(next_offset);
 
@@ -1367,17 +1370,17 @@ impl LasFile {
                 let mut num_bytes = vec![];
 
                 // Start by reading the point data table
-                let num_fields = bor.read_u8().expect("Error while reading byte data.");
+                num_fields = bor.read_u8().expect("Error while reading byte data.");
                 block_bytes = 4u64 + 20u64 * num_fields as u64;
-                let compression_method = bor.read_u8().expect("Error while reading byte data.");
+                compression_method = bor.read_u8().expect("Error while reading byte data.");
                 if compression_method != 0 {
                     return Err(Error::new(
                         ErrorKind::Other,
                         "Unsupported compression method.",
                     ));
                 }
-                let major_version = bor.read_u8().expect("Error while reading byte data.");
-                let minor_version = bor.read_u8().expect("Error while reading byte data.");
+                major_version = bor.read_u8().expect("Error while reading byte data.");
+                minor_version = bor.read_u8().expect("Error while reading byte data.");
                 // Acceptable versions include 0.0, 0.1, 1.0
                 if !(major_version == 0 && minor_version <= 1)
                     && !(major_version == 1 && minor_version == 0)
@@ -3750,6 +3753,24 @@ pub enum LidarPointRecord {
         colour_data: ColourData,
         wave_packet: WaveformPacket,
     },
+}
+
+impl LidarPointRecord {
+    pub fn get_point_data(&self) -> PointData {
+        return match self {
+            LidarPointRecord::PointRecord0 { point_data } => point_data.clone(),
+            LidarPointRecord::PointRecord1 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord2 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord3 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord4 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord5 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord6 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord7 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord8 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord9 { point_data, .. } => point_data.clone(),
+            LidarPointRecord::PointRecord10 { point_data, .. } => point_data.clone(),
+        };
+    }
 }
 
 #[derive(Default, Copy, Clone, Debug)]

@@ -291,7 +291,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64
+                                progress = (100.0_f64 * (r - starting_row) as f64
                                     / (ending_row - starting_row) as f64)
                                     as usize;
                                 if progress != old_progress {
@@ -355,7 +355,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64
+                                progress = (100.0_f64 * (r - starting_row) as f64
                                     / (ending_row - starting_row) as f64)
                                     as usize;
                                 if progress != old_progress {
@@ -507,7 +507,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64
+                                progress = (100.0_f64 * (r - starting_row) as f64
                                     / (ending_row - starting_row) as f64)
                                     as usize;
                                 if progress != old_progress {
@@ -571,7 +571,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                                 }
                             }
                             if verbose {
-                                progress = (100.0_f64 * r as f64
+                                progress = (100.0_f64 * (r - starting_row) as f64
                                     / (ending_row - starting_row) as f64)
                                     as usize;
                                 if progress != old_progress {

@@ -14,16 +14,16 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::{env, fs, path, thread};
 
-/// This tool can be used to convert one or more *ZLidar* files ('*.zlidar') files into the *LAS*
-/// LiDAR data format. ZLidar files are a compressed form of the LAS data format. The tool takes
-/// a list of input LAS files (`--inputs`). If `--inputs`
+/// This tool can be used to convert one or more *zLidar* files ('*.zlidar') files into the *LAS*
+/// LiDAR data format. [zLidar](https://jblindsay.github.io/zLidar_spec/intro.html) files are a compressed
+/// form of the LAS data format. The tool takes a list of input LAS files (`--inputs`). If `--inputs`
 /// is unspecified, the tool will use all ZLidar files contained within the working directory
 /// as the tool inputs. The user may also specify an optional output directory `--outdir`.
 /// If this parameter is unspecified, each output LAS file will be written to the same
 /// directory as the input files.
 ///
 /// # See Also
-/// `LasToZlidar`, `ShapefileToLas`, `AsciiToLas`
+/// `LasToZlidar`, `AsciiToLas`
 pub struct ZlidarToLas {
     name: String,
     description: String,

@@ -23,6 +23,7 @@ pub use self::delaunay_triangulation::{triangulate, Triangulation};
 pub use self::is_clockwise_order::is_clockwise_order;
 pub use self::line_ops::{
     do_polylines_intersect, find_line_intersections, find_split_points_at_line_intersections,
+    point_line_distance, simplify_rdp,
 };
 pub use self::lzw::{lzw_decode, lzw_encode};
 pub use self::minimum_bounding_box::{minimum_bounding_box, MinimizationCriterion};

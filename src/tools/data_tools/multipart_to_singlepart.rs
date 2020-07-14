@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/09/2018
-Last Modified: 17/10/2019
+Last Modified: 16/06/2020
 License: MIT
 */
 
@@ -19,7 +19,8 @@ use std::path;
 /// own entry in the associated attribute file. For polygon-type vectors, the user may optionally
 /// choose to exclude hole-parts from being separated from their containing polygons. That is,
 /// with the `--exclude_holes` flag, hole parts in the input vector will continue to belong to
-/// their enclosing polygon in the output vector.
+/// their enclosing polygon in the output vector. The tool will also convert MultiPoint Shapefiles
+/// into single Point vectors.
 ///
 /// # See Also
 /// `SinglePartToMultiPart`
@@ -200,9 +201,10 @@ impl WhiteboxTool for MultiPartToSinglePart {
 
         let input = Shapefile::read(&input_file)?;
 
-        // make sure the input vector file is of polygon type
+        // make sure the input vector file is of polyline, polygon, or multipoint type
         if input.header.shape_type.base_shape_type() != ShapeType::PolyLine
             && input.header.shape_type.base_shape_type() != ShapeType::Polygon
+            && input.header.shape_type.base_shape_type() != ShapeType::MultiPoint
         {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -211,8 +213,13 @@ impl WhiteboxTool for MultiPartToSinglePart {
         }
 
         // create output file
-        let mut output =
-            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, true)?;
+        let mut output = if input.header.shape_type.base_shape_type() != ShapeType::MultiPoint {
+            Shapefile::initialize_using_file(&output_file, &input, input.header.shape_type, true)
+                .expect("Error while creating output file.")
+        } else {
+            Shapefile::initialize_using_file(&output_file, &input, ShapeType::Point, true)
+                .expect("Error while creating output file.")
+        };
 
         // add the attributes
         // output
@@ -229,7 +236,30 @@ impl WhiteboxTool for MultiPartToSinglePart {
         let (mut part_start, mut part_end): (usize, usize);
         // let mut fid = 1i32;
 
-        if !exclude_holes || input.header.shape_type.base_shape_type() == ShapeType::PolyLine {
+        if input.header.shape_type.base_shape_type() == ShapeType::MultiPoint {
+            for record_num in 0..input.num_records {
+                let record = input.get_record(record_num);
+                if record.shape_type != ShapeType::Null {
+                    let atts = input.attributes.get_record(record_num);
+
+                    // each point becomes a record in the output
+                    for i in 0..record.points.len() {
+                        output.add_point_record(record.points[i].x, record.points[i].y);
+                        output.attributes.add_record(atts.clone(), false);
+                    }
+                }
+
+                if verbose {
+                    progress =
+                        (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!("Progress: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else if !exclude_holes || input.header.shape_type.base_shape_type() == ShapeType::PolyLine
+        {
             let mut points_in_part: usize;
 
             for record_num in 0..input.num_records {
@@ -281,6 +311,7 @@ impl WhiteboxTool for MultiPartToSinglePart {
                 }
             }
         } else {
+            // polygon with holes
             for record_num in 0..input.num_records {
                 let record = input.get_record(record_num);
                 if record.shape_type != ShapeType::Null {

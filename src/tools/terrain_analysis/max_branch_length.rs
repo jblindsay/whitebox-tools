@@ -42,6 +42,8 @@ use std::thread;
 /// dispersion of materials across the landscape, in much the same way that stream ordering can be used
 /// to assess stream size.
 ///
+/// ![](../../doc_img/MaxBranchLength_fig1.png)
+///
 /// # See Also
 /// `FlowLengthDiff`
 ///
