@@ -424,7 +424,9 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         for s in min_scale..(min_scale + num_steps) {
             let midpoint = min_scale
                 + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
-            println!("Loop {} / {}", s - min_scale + 1, num_steps);
+            if verbose {
+                println!("Loop {} / {}", s - min_scale + 1, num_steps);
+            }
 
             let filter_size = midpoint * 2 + 1;
 

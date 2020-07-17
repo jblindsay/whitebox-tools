@@ -1099,22 +1099,32 @@ pub fn read_geotiff<'a>(
                         // buf = packbits_decoder(th.buffer[offset..(offset + n)].to_vec());
                         let mut b = vec![0u8; n];
                         th.seek(offset);
-                        th.read_exact(&mut b)?;
+                        th.read_exact(&mut b).expect("Error reading bytes from file.");
                         buf = packbits_decoder(b);
                     }
-                    COMPRESS_LZW => {
-                        let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
-                        th.seek(offset);
-                        let mut b = vec![0u8; n];
-                        th.read_exact(&mut b)?;
-                        let mut compressed = &b[0..];
-                        // let mut compressed = &th.buffer[offset..(offset + n)];
-                        while compressed.len() > 0 {
-                            let (start, bytes) = dec.decode_bytes(&compressed).unwrap();
-                            compressed = &compressed[start..];
-                            buf.extend(bytes.iter().map(|&i| i));
-                        }
-                    }
+                    // COMPRESS_LZW => {
+                    //     if configs.endian == Endianness::LittleEndian {
+                    //         let mut dec = lzw::DecoderEarlyChange::new(lzw::LsbReader::new(), 8u8);
+                    //         th.seek(offset);
+                    //         th.seek(offset);
+                    //         let mut compressed = vec![0u8; n];
+                    //         th.read_exact(&mut compressed).expect("Error reading bytes from file.");
+                    //         let (start, bytes) = dec.decode_bytes(&compressed).expect("Error encountered while decoding the LZW compressed GeoTIFF file.");
+                    //         buf.extend(bytes.iter().map(|&i| i));
+                    //     } else { // BigEndian
+                    //         let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
+                    //         th.seek(offset);
+                    //         let mut b = vec![0u8; n];
+                    //         th.read_exact(&mut b).expect("Error reading bytes from file.");
+                    //         let mut compressed = &b[0..];
+                    //         // let mut compressed = &th.buffer[offset..(offset + n)];
+                    //         while compressed.len() > 0 {
+                    //             let (start, bytes) = dec.decode_bytes(&compressed).expect("Error encountered while decoding the LZW compressed GeoTIFF file.");
+                    //             compressed = &compressed[start..];
+                    //             buf.extend(bytes.iter().map(|&i| i));
+                    //         }
+                    //     }
+                    // }
                     COMPRESS_DEFLATE => {
                         // let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
                         // let compressed = &th.buffer[offset..(offset + n)];
@@ -1122,15 +1132,15 @@ pub fn read_geotiff<'a>(
                         // decoder.read_to_end(&mut buf).unwrap();
                         th.seek(offset);
                         let mut compressed = vec![0u8; n];
-                        th.read_exact(&mut compressed)?;
+                        th.read_exact(&mut compressed).expect("Error reading bytes from file.");
                         // let mut decoder = Decoder::new(&compressed[..])?;
                         // decoder.read_to_end(&mut buf).unwrap();
-                        buf.extend(decompress_to_vec_zlib(&compressed).expect("DEFLATE failed to decompress data."));
+                        buf.extend(decompress_to_vec_zlib(&compressed).expect("Error encountered while decoding the DEFLATE compressed GeoTIFF file."));
                     }
                     _ => {
                         return Err(Error::new(
                             ErrorKind::InvalidData,
-                            "The WhiteboxTools GeoTIFF decoder currently only supports PACKBITS, LZW, and DEFLATE compression.",
+                            "The WhiteboxTools GeoTIFF decoder currently only supports PACKBITS and DEFLATE compression.",
                         ))
                     }
                 }
@@ -1575,7 +1585,7 @@ pub fn read_geotiff<'a>(
         }
     }
 
-    // Check to see if a predictor is used with LZW
+    // Check to see if a predictor is used with LZW and DEFLATE
     match ifd_map.get(&317) {
         Some(ifd) => {
             if ifd.interpret_as_u16()[0] == 2 {

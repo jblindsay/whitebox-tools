@@ -405,7 +405,7 @@ impl WhiteboxTool for HorizonAngle {
                                                 if slope > current_max_val {
                                                     current_max_val = slope;
                                                 // max_val_dist = dist;
-                                                } else if current_max_val < 0f64 {
+                                                // } else if current_max_val < 0f64 {
                                                     // max_val_dist = dist;
                                                 }
                                             }

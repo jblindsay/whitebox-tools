@@ -351,7 +351,9 @@ impl WhiteboxTool for MaxElevationDeviation {
         let num_procs = num_cpus::get() as isize;
 
         let mut output_mag = Raster::initialize_using_file(&output_mag_file, &input);
+        output_mag.configs.data_type = DataType::F32;
         let mut output_scale = Raster::initialize_using_file(&output_scale_file, &input);
+        output_scale.configs.data_type = DataType::I16;
 
         let num_loops = (max_scale - min_scale) / step;
         let mut loop_num = 0;

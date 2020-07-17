@@ -33,10 +33,10 @@ use std::thread;
 /// from 0 to 90 degrees), the hillshade weight (`--hs_weight`; 0-1), image brightness (`--brightness`; 0-1), and atmospheric
 /// effects (`--atmospheric`; 0-1). The hillshade weight can be used to increase or subdue the relative prevalence of the
 /// hillshading effect in the output image. The image brightness parameter is used to create an overall brighter or
-/// darker version of the terrain rendering; note however, that very high values may oversaturate the well-illuminated
+/// darker version of the terrain rendering; note however, that very high values may over-saturate the well-illuminated
 /// portions of the terrain. The atmospheric effects parameter can be used to introduce a haze or atmosphere effect to 
 /// the output image. It is intended to reproduce the effect of viewing mountain valley bottoms through a thicker and 
-/// more dense atmosphere. Values greater than zero will introduce a slighly blue tint, particularly at lower altitudes,
+/// more dense atmosphere. Values greater than zero will introduce a slightly blue tint, particularly at lower altitudes,
 /// blur the hillshade edges slightly, and create a random haze-like speckle in lower areas. The user must also specify 
 /// the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important when the vertical and horizontal 
 /// units are not the same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the 
@@ -62,7 +62,7 @@ impl ColourShadedRelief {
         // public constructor
         let name = "ColourShadedRelief".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Creates an Imhof hillshade image from an input DEM.".to_string();
+        let description = "Creates an colour shaded relief image from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -83,21 +83,21 @@ impl ColourShadedRelief {
             optional: false,
         });
 
-        parameters.push(ToolParameter {
-            name: "Illumination Source Azimuth (degrees)".to_owned(),
-            flags: vec!["--azimuth".to_owned()],
-            description: "Illumination source azimuth in degrees.".to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: Some("315.0".to_owned()),
-            optional: true,
-        });
+        // parameters.push(ToolParameter {
+        //     name: "Illumination Source Azimuth (degrees)".to_owned(),
+        //     flags: vec!["--azimuth".to_owned()],
+        //     description: "Illumination source azimuth in degrees.".to_owned(),
+        //     parameter_type: ParameterType::Float,
+        //     default_value: Some("315.0".to_owned()),
+        //     optional: true,
+        // });
 
         parameters.push(ToolParameter {
             name: "Illumination Source Altitude (degrees)".to_owned(),
             flags: vec!["--altitude".to_owned()],
             description: "Illumination source altitude in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("30.0".to_owned()),
+            default_value: Some("45.0".to_owned()),
             optional: true,
         });
 
@@ -148,7 +148,7 @@ impl ColourShadedRelief {
                 "deep".to_owned()
             ]),
             default_value: Some("atlas".to_owned()),
-            optional: false,
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -183,7 +183,7 @@ impl ColourShadedRelief {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --azimuth=315.0 --altitude=30.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --azimuth=315.0 --altitude=45.0 --hs_weight=0.3 --brightness=0.6 --atmospheric=0.2 --palette=arid", short_exe, name).replace("*", &sep);
 
         ColourShadedRelief {
             name: name,
@@ -238,8 +238,8 @@ impl WhiteboxTool for ColourShadedRelief {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut azimuth = 315.0f64;
-        let mut altitude = 30.0f64;
+        // let mut azimuth = 315.0f64;
+        let mut altitude = 45.0f64;
         let mut z_factor = 1f64;
         let mut hs_alpha = 0.5f32;
         let mut brightness = 0.5f32;
@@ -275,18 +275,18 @@ impl WhiteboxTool for ColourShadedRelief {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if flag_val == "-azimuth" {
-                if keyval {
-                    azimuth = vec[1]
-                        .to_string()
-                        .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                } else {
-                    azimuth = args[i + 1]
-                        .to_string()
-                        .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                }
+            // } else if flag_val == "-azimuth" {
+            //     if keyval {
+            //         azimuth = vec[1]
+            //             .to_string()
+            //             .parse::<f64>()
+            //             .expect(&format!("Error parsing {}", flag_val));
+            //     } else {
+            //         azimuth = args[i + 1]
+            //             .to_string()
+            //             .parse::<f64>()
+            //             .expect(&format!("Error parsing {}", flag_val));
+            //     }
             } else if flag_val == "-altitude" {
                 if keyval {
                     altitude = vec[1]
@@ -407,7 +407,7 @@ impl WhiteboxTool for ColourShadedRelief {
 
         let start = Instant::now();
 
-        azimuth = (azimuth - 90f64).to_radians();
+        // azimuth = (azimuth - 90f64).to_radians();
         altitude = altitude.to_radians();
         let sin_theta = altitude.sin();
         let cos_theta = altitude.cos();
@@ -425,7 +425,7 @@ impl WhiteboxTool for ColourShadedRelief {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let mut hs: Array2D<i16> = Array2D::new(rows, columns, -32768i16, -32768i16)?;
-
+        let multidirection360mode = true;
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -437,8 +437,50 @@ impl WhiteboxTool for ColourShadedRelief {
                 let columns = input.configs.columns as isize;
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+
+                let azimuths = if multidirection360mode {
+                    vec![
+                        (0f64 - 90f64).to_radians(), 
+                        (45f64 - 90f64).to_radians(), 
+                        (90f64 - 90f64).to_radians(), 
+                        (135f64 - 90f64).to_radians(),
+                        (180f64 - 90f64).to_radians(),
+                        (225f64 - 90f64).to_radians(), 
+                        (270f64 - 90f64).to_radians(), 
+                        (315f64 - 90f64).to_radians(),
+                    ]
+                } else { 
+                    vec![
+                        (225f64 - 90f64).to_radians(), 
+                        (270f64 - 90f64).to_radians(), 
+                        (315f64 - 90f64).to_radians(), 
+                        (360f64 - 90f64).to_radians()
+                    ]
+                };
+
+                let weights = if multidirection360mode {
+                    vec![
+                        0.15f64, 
+                        0.125f64, 
+                        0.1f64, 
+                        0.05f64,
+                        0.1f64, 
+                        0.125f64, 
+                        0.15f64, 
+                        0.20f64,
+                    ]
+                } else {
+                    vec![
+                        0.1f64, 
+                        0.4f64, 
+                        0.4f64, 
+                        0.1f64
+                    ]
+                };
+
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
+                let mut azimuth: f64;
                 let (mut term1, mut term2, mut term3): (f64, f64, f64);
                 let (mut fx, mut fy): (f64, f64);
                 let mut tan_slope: f64;
@@ -472,8 +514,12 @@ impl WhiteboxTool for ColourShadedRelief {
                             };
                             term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
                             term2 = sin_theta / tan_slope;
-                            term3 = cos_theta * (azimuth - aspect).sin();
-                            z = term1 * (term2 - term3);
+                            z = 0f64;
+                            for a in 0..azimuths.len() {
+                                azimuth = azimuths[a];
+                                term3 = cos_theta * (azimuth - aspect).sin();
+                                z += term1 * (term2 - term3) * weights[a];
+                            }
                             z = z * 32767.0;
                             if z < 0.0 {
                                 z = 0.0;
@@ -568,7 +614,7 @@ impl WhiteboxTool for ColourShadedRelief {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let out_nodata = 0f64;
-        output.configs.nodata =out_nodata;
+        output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
         output.configs.data_type = DataType::RGB24;
 
@@ -1229,7 +1275,7 @@ impl WhiteboxTool for ColourShadedRelief {
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Azimuth: {}", azimuth));
+        // output.add_metadata_entry(format!("Azimuth: {}", azimuth));
         output.add_metadata_entry(format!("Altitude: {}", altitude));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));

@@ -11,15 +11,18 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::f64::consts::PI;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates slope aspect (i.e. slope orientation in degrees clockwise from north) for each grid cell
-/// in an input digital elevation model (DEM). The user must specify the name of the input
-/// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
+/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM).
+/// The user must specify the  name of the input DEM and the output hillshade image name. Other parameters that must
+/// be specified include the illumination source azimuth (`--azimuth`), or sun direction (0-360 degrees), the
+/// illumination source altitude (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle
+/// from 0 to 90 degrees) and the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important
 /// when the vertical and horizontal units are not the same in the DEM. When this is the case,
 /// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
 /// DEM is in the geographic coordinate system (latitude and longitude), the following equation
@@ -29,32 +32,21 @@ use std::thread;
 ///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
 ///
-/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given
-/// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),
+/// The hillshade value (*HS*) of a DEM grid cell is calculate as:
 ///
-/// |  7  |  8  |  1  | \
-/// |  6  |  9  |  2  | \
-/// |  5  |  4  |  3  |
+/// > *HS* = tan(*s*) / [1 - tan(*s*)<sup>2</sup>]<sup>0.5</sup> x [sin(*Alt*) / tan(*s*) - cos(*Alt*) x sin(*Az* - *a*)]
 ///
-/// > aspect = 180 - arctan(f<sub>y</sub> / f<sub>x</sub>) + 90(f<sub>x</sub> / |f<sub>x</sub>|)
-///
-/// where,
-///
-/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
-///
-///  and,
-///
-/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / 8 * &Delta;y
-///
-/// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
+/// where *s* and *a* are the local slope gradient and aspect (orientation) respectively and *Alt* and *Az*
+/// are the illumination source altitude and azimuth respectively. Slope and aspect are calculated using
+/// Horn's (1981) 3rd-order finate difference method.
 ///
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
 ///
 /// # See Also
-/// `Slope`, `PlanCurvature`, `ProfileCurvature`
-pub struct Aspect {
+/// `Aspect`, `Slope`
+pub struct MultidirectionalHillshade {
     name: String,
     description: String,
     toolbox: String,
@@ -62,12 +54,12 @@ pub struct Aspect {
     example_usage: String,
 }
 
-impl Aspect {
-    pub fn new() -> Aspect {
+impl MultidirectionalHillshade {
+    pub fn new() -> MultidirectionalHillshade {
         // public constructor
-        let name = "Aspect".to_string();
+        let name = "Hillshade".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates an aspect raster from an input DEM.".to_string();
+        let description = "Calculates a hillshade raster from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -89,6 +81,15 @@ impl Aspect {
         });
 
         parameters.push(ToolParameter {
+            name: "Altitude (degrees)".to_owned(),
+            flags: vec!["--altitude".to_owned()],
+            description: "Illumination source altitude in degrees.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("45.0".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
             name: "Z Conversion Factor".to_owned(),
             flags: vec!["--zfactor".to_owned()],
             description:
@@ -96,6 +97,16 @@ impl Aspect {
                     .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("1.0".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Full 360-degree mode?".to_owned(),
+            flags: vec!["--full_mode".to_owned()],
+            description: "Optional flag indicating whether to use full 360-degrees of illumination sources."
+                .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_string()),
             optional: true,
         });
 
@@ -110,13 +121,9 @@ impl Aspect {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(
-            ">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif",
-            short_exe, name
-        )
-        .replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --altitude=30.0", short_exe, name).replace("*", &sep);
 
-        Aspect {
+        MultidirectionalHillshade {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -126,7 +133,7 @@ impl Aspect {
     }
 }
 
-impl WhiteboxTool for Aspect {
+impl WhiteboxTool for MultidirectionalHillshade {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -140,10 +147,17 @@ impl WhiteboxTool for Aspect {
     }
 
     fn get_tool_parameters(&self) -> String {
-        match serde_json::to_string(&self.parameters) {
-            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
-            Err(err) => return format!("{:?}", err),
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
         }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -162,7 +176,9 @@ impl WhiteboxTool for Aspect {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
+        let mut altitude = 30.0f64;
         let mut z_factor = 1f64;
+        let mut multidirection360mode = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -191,6 +207,22 @@ impl WhiteboxTool for Aspect {
                     output_file = vec[1].to_string();
                 } else {
                     output_file = args[i + 1].to_string();
+                }
+            } else if flag_val == "-altitude" {
+                if keyval {
+                    altitude = vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
+                } else {
+                    altitude = args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val));
+                }
+            } else if flag_val == "-full_mode" || flag_val == "-fullmode" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    multidirection360mode = true;
                 }
             } else if flag_val == "-zfactor" {
                 if keyval {
@@ -230,12 +262,12 @@ impl WhiteboxTool for Aspect {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
 
         let start = Instant::now();
 
+        altitude = altitude.to_radians();
+        let sin_theta = altitude.sin();
+        let cos_theta = altitude.cos();
         let eight_grid_res = input.configs.resolution_x * 8.0;
 
         if input.is_in_geographic_coordinates() {
@@ -247,54 +279,129 @@ impl WhiteboxTool for Aspect {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
-            output.configs.data_type = DataType::F32;
-        }
+        let mut configs = input.configs.clone();
+        configs.data_type = DataType::I16;
+        configs.nodata = -32768f64;
+        let mut output = Raster::initialize_using_config(&output_file, &configs);
+        let out_nodata = output.configs.nodata;
+        let rows = input.configs.rows as isize;
 
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
-            let tx = tx.clone();
+            let tx1 = tx.clone();
             thread::spawn(move || {
-                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let nodata = input.configs.nodata;
+                let columns = input.configs.columns as isize;
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let azimuths = if multidirection360mode {
+                    vec![
+                        (0f64 - 90f64).to_radians(), 
+                        (45f64 - 90f64).to_radians(), 
+                        (90f64 - 90f64).to_radians(), 
+                        (135f64 - 90f64).to_radians(),
+                        (180f64 - 90f64).to_radians(),
+                        (225f64 - 90f64).to_radians(), 
+                        (270f64 - 90f64).to_radians(), 
+                        (315f64 - 90f64).to_radians(),
+                    ]
+                } else { 
+                    vec![
+                        (225f64 - 90f64).to_radians(), 
+                        (270f64 - 90f64).to_radians(), 
+                        (315f64 - 90f64).to_radians(), 
+                        (360f64 - 90f64).to_radians()
+                    ]
+                };
+
+                let weights = if multidirection360mode {
+                    vec![
+                        0.15f64, 
+                        0.125f64, 
+                        0.1f64, 
+                        0.05f64,
+                        0.1f64, 
+                        0.125f64, 
+                        0.15f64, 
+                        0.20f64,
+                    ]
+                } else {
+                    vec![
+                        0.1f64, 
+                        0.4f64, 
+                        0.4f64, 
+                        0.1f64
+                    ]
+                };
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
+                let mut azimuth: f64;
+                let (mut term1, mut term2, mut term3): (f64, f64, f64);
                 let (mut fx, mut fy): (f64, f64);
+                let mut tan_slope: f64;
+                let mut aspect: f64;
+                let half_pi = PI / 2f64;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
+                            z = z * z_factor;
                             for c in 0..8 {
-                                n[c] = input[(row + dy[c], col + dx[c])];
+                                n[c] = input.get_value(row + d_y[c], col + d_x[c]);
                                 if n[c] != nodata {
                                     n[c] = n[c] * z_factor;
                                 } else {
-                                    n[c] = z * z_factor;
+                                    n[c] = z;
                                 }
                             }
+                            // calculate slope and aspect
+                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            if fx == 0f64 { fx = 0.00001; }
-                            // if fx != 0f64 {
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2])
-                                / eight_grid_res;
-                            data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees()
-                                + 90f64 * (fx / (fx).abs());
-                            // } else {
-                            //     data[col as usize] = -1f64;
-                            // }
+                            tan_slope = (fx * fx + fy * fy).sqrt();
+                            if tan_slope < 0.00017 {
+                                tan_slope = 0.00017;
+                            }
+                            aspect = if fx != 0f64 {
+                                PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs())
+                            } else {
+                                PI
+                            };
+                            term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                            term2 = sin_theta / tan_slope;
+
+                            z = 0f64;
+                            for a in 0..azimuths.len() {
+                                azimuth = azimuths[a];
+                                term3 = cos_theta * (azimuth - aspect).sin();
+                                z += term1 * (term2 - term3) * weights[a];
+                            }
+                            z = z * 32767.0;
+                            if z < 0.0 {
+                                z = 0.0;
+                            }
+                            data[col as usize] = z.round();
                         }
                     }
-                    tx.send((row, data)).unwrap();
+                    tx1.send((row, data)).unwrap();
                 }
             });
         }
 
+        let mut histo: [f64; 32768] = [0.0; 32768];
+        let mut num_cells = 0.0;
         for row in 0..rows {
             let data = rx.recv().expect("Error receiving data from thread.");
+            let mut bin: usize;
+            for col in 0..data.1.len() {
+                if data.1[col] != out_nodata {
+                    bin = data.1[col] as usize;
+                    histo[bin] += 1.0;
+                    num_cells += 1.0;
+                }
+            }
             output.set_row_data(data.0, data.1);
 
             if verbose {
@@ -306,13 +413,41 @@ impl WhiteboxTool for Aspect {
             }
         }
 
+        let mut new_min = 0;
+        let mut new_max = 0;
+        let clip_percent = 0.01;
+        let target_cell_num = num_cells * clip_percent;
+        let mut sum = 0.0;
+        for c in 0..32768 {
+            sum += histo[c];
+            if sum >= target_cell_num {
+                new_min = c;
+                break;
+            }
+        }
+
+        sum = 0.0;
+        for c in (0..32768).rev() {
+            sum += histo[c];
+            if sum >= target_cell_num {
+                new_max = c;
+                break;
+            }
+        }
+
+        if new_max > new_min {
+            output.configs.display_min = new_min as f64;
+            output.configs.display_max = new_max as f64;
+        }
+
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "pointer.plt".to_string();
+        output.configs.palette = "grey.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Altitude: {}", altitude));
         output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
