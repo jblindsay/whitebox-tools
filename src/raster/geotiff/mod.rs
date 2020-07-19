@@ -1584,11 +1584,15 @@ pub fn read_geotiff<'a>(
                 let mut idx: usize;
                 for row in 0..configs.rows {
                     for col in 1..configs.columns {
-                        //(0..configs.columns-1).rev() {
                         idx = row * configs.columns + col;
                         data[idx] += data[idx - 1];
                     }
                 }
+            } else if ifd.interpret_as_u16()[0] == 3 {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "The GeoTIFF reader does not currently support floating-point predictors (PREDICTOR=3).",
+                ))
             }
         }
         _ => {} // do nothing,
