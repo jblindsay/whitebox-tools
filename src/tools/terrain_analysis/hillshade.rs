@@ -45,7 +45,7 @@ use std::thread;
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
 ///
 /// # See Also
-/// `Aspect`, `Slope`
+/// `HypsometricallyTintedHillshade`, `MultidirectionalHillshade`, `Aspect`, `Slope`
 pub struct Hillshade {
     name: String,
     description: String,

@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 22/06/2017
-Last Modified: 30/01/2020
+Created: 19/07/2020
+Last Modified: 19/07/2020
 License: MIT
 */
 
@@ -18,10 +18,10 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM).
-/// The user must specify the  name of the input DEM and the output hillshade image name. Other parameters that must
-/// be specified include the illumination source azimuth (`--azimuth`), or sun direction (0-360 degrees), the
-/// illumination source altitude (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle
+/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM) 
+/// with multiple sources of illumination. The user must specify the  name of the input DEM (`--dem`) and the output 
+/// hillshade image name (`--output`). Other parameters that must be specified include the altitude of the illumination 
+/// sources (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle
 /// from 0 to 90 degrees) and the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important
 /// when the vertical and horizontal units are not the same in the DEM. When this is the case,
 /// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
@@ -30,7 +30,8 @@ use std::thread;
 ///
 /// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
 ///
-/// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// where `mid_lat` is the latitude of the centre of the raster, in radians. The Z conversion factor can also be used
+/// used to apply a vertical exageration to further emphasize landforms within the hillshade output.
 ///
 /// The hillshade value (*HS*) of a DEM grid cell is calculate as:
 ///
@@ -40,12 +41,14 @@ use std::thread;
 /// are the illumination source altitude and azimuth respectively. Slope and aspect are calculated using
 /// Horn's (1981) 3rd-order finate difference method.
 ///
-/// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
-/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// Lastly, the user must specify whether or not to use full 360-degrees of illumination sources (`--full_mode`). When this 
+/// flag is not specified, the tool will perform a weighted summation of the hillshade images from four illumination azimuth 
+/// positions at 225, 270, 315, and 360 (0) degrees, given weights of 0.1, 0.4, 0.4, and 0.1 respectively. When run in the 
+/// full 360-degree mode, eight illumination source azimuths are used to calculate the output at 0, 45, 90, 135, 180, 225, 
+/// 270, and 315 degrees, with weights of 0.15, 0.125, 0.1, 0.05, 0.1, 0.125, 0.15, and 0.2 respectively. 
 ///
 /// # See Also
-/// `Aspect`, `Slope`
+/// `Hillshade`, HypsometricallyTintedHillshade, `Aspect`, `Slope`
 pub struct MultidirectionalHillshade {
     name: String,
     description: String,

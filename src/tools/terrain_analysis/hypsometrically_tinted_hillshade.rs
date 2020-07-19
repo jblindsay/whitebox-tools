@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/07/2020
-Last Modified: 14/07/2020
+Last Modified: 19/07/2020
 License: MIT
 */
 
@@ -22,7 +22,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool creates a colour shaded relief (Swiss hillshading) image from an input digital elevation model (DEM).
+/// This tool creates a hypsometrically tinted shaded relief (Swiss hillshading) image from an input digital elevation model (DEM).
 /// The tool combines a colourized version of the DEM with varying illumination provided by a hillshade image, to
 /// produce a composite relief model that can be used to visual topography for more effective interpretation of
 /// landscapes. The output (`--output`) of the tool is a 24-bit red-green-blue (RGB) colour image.
@@ -48,8 +48,8 @@ use std::thread;
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
 ///
 /// # See Also
-/// `Hillshade`, `Aspect`, `Slope`
-pub struct ColourShadedRelief {
+/// `Hillshade`, `MultidirectionalHillshade`, `Aspect`, `Slope`
+pub struct HypsometricallyTintedHillshade {
     name: String,
     description: String,
     toolbox: String,
@@ -57,10 +57,10 @@ pub struct ColourShadedRelief {
     example_usage: String,
 }
 
-impl ColourShadedRelief {
-    pub fn new() -> ColourShadedRelief {
+impl HypsometricallyTintedHillshade {
+    pub fn new() -> HypsometricallyTintedHillshade {
         // public constructor
-        let name = "ColourShadedRelief".to_string();
+        let name = "HypsometricallyTintedHillshade".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description = "Creates an colour shaded relief image from an input DEM.".to_string();
 
@@ -172,6 +172,16 @@ impl ColourShadedRelief {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Full 360-degree hillshade mode?".to_owned(),
+            flags: vec!["--full_mode".to_owned()],
+            description: "Optional flag indicating whether to use full 360-degrees of illumination sources."
+                .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_string()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -183,9 +193,9 @@ impl ColourShadedRelief {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --azimuth=315.0 --altitude=45.0 --hs_weight=0.3 --brightness=0.6 --atmospheric=0.2 --palette=arid", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --altitude=45.0 --hs_weight=0.3 --brightness=0.6 --atmospheric=0.2 --palette=arid --full_mode", short_exe, name).replace("*", &sep);
 
-        ColourShadedRelief {
+        HypsometricallyTintedHillshade {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -195,7 +205,7 @@ impl ColourShadedRelief {
     }
 }
 
-impl WhiteboxTool for ColourShadedRelief {
+impl WhiteboxTool for HypsometricallyTintedHillshade {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -238,6 +248,7 @@ impl WhiteboxTool for ColourShadedRelief {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
+        let mut multidirection360mode = false;
         // let mut azimuth = 315.0f64;
         let mut altitude = 45.0f64;
         let mut z_factor = 1f64;
@@ -376,6 +387,10 @@ impl WhiteboxTool for ColourShadedRelief {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val));
                 }
+            } else if flag_val == "-full_mode" || flag_val == "-fullmode" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    multidirection360mode = true;
+                }
             }
         }
 
@@ -425,7 +440,6 @@ impl WhiteboxTool for ColourShadedRelief {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let mut hs: Array2D<i16> = Array2D::new(rows, columns, -32768i16, -32768i16)?;
-        let multidirection360mode = true;
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {

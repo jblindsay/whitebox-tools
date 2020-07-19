@@ -57,10 +57,12 @@ for more details.
 ******************
 
 Version 1.X.X (XX-XX-2020)
-- Added the ColourShadedRelief tool.
+- Added the ColourShadedRelief tool to create hypsometric tinted hillshades.
+- Added the MultidirectionalHillshade tool.
 - The MultiPartToSinglePart tool now handles MultiPoint vectors.
 - Fixed a bug with the VoronoiDiagram to better handle MultiPoint vectors.
-- Fixed an issue with writing compressed RGB GeoTIFFs
+- Fixed an issue with writing compressed RGB GeoTIFFs.
+- Fixed an issue reading LZW compressed GeoTIFFs.
 
 Version 1.3.0 (07-06-2020)
 - Tools will now output DEFLATE compressed GeoTIFFs when the --compress_rasters parameter is used.

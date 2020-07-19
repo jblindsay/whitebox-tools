@@ -450,7 +450,7 @@ impl ToolManager {
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
-        tool_names.push("ColourShadedRelief".to_string());
+        tool_names.push("HypsometricallyTintedHillshade".to_string());
         tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxAnisotropyDevSignature".to_string());
         tool_names.push("MaxBranchLength".to_string());
@@ -1084,7 +1084,7 @@ impl ToolManager {
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),
-            "colourshadedrelief" => Some(Box::new(terrain_analysis::ColourShadedRelief::new())),
+            "hypsometricallytintedhillshade" => Some(Box::new(terrain_analysis::HypsometricallyTintedHillshade::new())),
             "maxanisotropydev" => Some(Box::new(terrain_analysis::MaxAnisotropyDev::new())),
             "maxanisotropydevsignature" => {
                 Some(Box::new(terrain_analysis::MaxAnisotropyDevSignature::new()))

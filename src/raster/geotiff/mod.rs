@@ -4,7 +4,6 @@ pub mod ifd;
 pub mod tiff_consts;
 
 // use flate2::read::GzDecoder;
-// use crate::algorithms::lzw_encode;
 use super::super::USE_COMPRESSION;
 use crate::raster::geotiff::geokeys::*;
 use crate::raster::geotiff::tiff_consts::*;
@@ -1102,29 +1101,20 @@ pub fn read_geotiff<'a>(
                         th.read_exact(&mut b).expect("Error reading bytes from file.");
                         buf = packbits_decoder(b);
                     }
-                    // COMPRESS_LZW => {
-                    //     if configs.endian == Endianness::LittleEndian {
-                    //         let mut dec = lzw::DecoderEarlyChange::new(lzw::LsbReader::new(), 8u8);
-                    //         th.seek(offset);
-                    //         th.seek(offset);
-                    //         let mut compressed = vec![0u8; n];
-                    //         th.read_exact(&mut compressed).expect("Error reading bytes from file.");
-                    //         let (start, bytes) = dec.decode_bytes(&compressed).expect("Error encountered while decoding the LZW compressed GeoTIFF file.");
-                    //         buf.extend(bytes.iter().map(|&i| i));
-                    //     } else { // BigEndian
-                    //         let mut dec = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8u8);
-                    //         th.seek(offset);
-                    //         let mut b = vec![0u8; n];
-                    //         th.read_exact(&mut b).expect("Error reading bytes from file.");
-                    //         let mut compressed = &b[0..];
-                    //         // let mut compressed = &th.buffer[offset..(offset + n)];
-                    //         while compressed.len() > 0 {
-                    //             let (start, bytes) = dec.decode_bytes(&compressed).expect("Error encountered while decoding the LZW compressed GeoTIFF file.");
-                    //             compressed = &compressed[start..];
-                    //             buf.extend(bytes.iter().map(|&i| i));
-                    //         }
-                    //     }
-                    // }
+                    COMPRESS_LZW => {
+                        let mut compressed = vec![0; n];
+                        th.seek(offset);
+                        th.read_exact(&mut compressed).expect("Error reading bytes from file.");
+                        let max_uncompressed_length = block_width * block_height * bits_per_sample.len() * bits_per_sample[0] as usize / 8;
+                        buf = Vec::with_capacity(max_uncompressed_length);
+                        let mut decoder = lzw::DecoderEarlyChange::new(lzw::MsbReader::new(), 8);
+                        let mut bytes_read = 0;
+                        while bytes_read < n && buf.len() < max_uncompressed_length {
+                            let (len, bytes) = decoder.decode_bytes(&compressed[bytes_read..]).expect("Error encountered while decoding the LZW compressed GeoTIFF file.");
+                            bytes_read += len;
+                            buf.extend_from_slice(bytes);
+                        }
+                    }
                     COMPRESS_DEFLATE => {
                         // let mut dec = GzDecoder::new(th.buffer[offset..(offset + n)].to_vec());
                         // let compressed = &th.buffer[offset..(offset + n)];
