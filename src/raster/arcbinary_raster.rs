@@ -7,6 +7,7 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Error;
 use std::mem;
+use std::convert::TryInto;
 
 pub fn read_arcbinary(
     file_name: &String,
@@ -116,10 +117,14 @@ pub fn read_arcbinary(
         .unwrap();
     let mut f = File::open(data_file.clone())?;
 
+    configs.minimum = f64::INFINITY;
+    configs.maximum = f64::NEG_INFINITY;
+
     let data_size = 4;
     let num_cells = configs.rows * configs.columns;
     let buf_size = 1_000_000usize;
     let mut j = 0;
+    let mut z: f64;
     while j < num_cells {
         let mut buffer = vec![0; buf_size * data_size];
 
@@ -128,14 +133,18 @@ pub fn read_arcbinary(
         let mut offset: usize;
         for i in 0..buf_size {
             offset = i * 4;
-            data.push(unsafe {
-                mem::transmute::<[u8; 4], f32>([
-                    buffer[offset],
-                    buffer[offset + 1],
-                    buffer[offset + 2],
-                    buffer[offset + 3],
-                ])
-            } as f64);
+            z = if configs.endian == Endianness::LittleEndian {
+                f32::from_le_bytes(get_four_bytes(&buffer[offset..offset+4])) as f64
+            } else {
+                f32::from_be_bytes(get_four_bytes(&buffer[offset..offset+4])) as f64
+            };
+            data.push(z);
+
+            if z != configs.nodata {
+                if z < configs.minimum { configs.minimum = z; }
+                if z > configs.maximum { configs.maximum = z; }
+            }
+
             j += 1;
             if j == num_cells {
                 break;
@@ -144,6 +153,10 @@ pub fn read_arcbinary(
     }
 
     Ok(())
+}
+
+fn get_four_bytes(buf: &[u8]) -> [u8; 4] {
+    buf.try_into().expect("Error: Slice with incorrect length specified to get_four_bytes.")
 }
 
 pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {

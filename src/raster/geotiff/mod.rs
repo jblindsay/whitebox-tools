@@ -1136,6 +1136,7 @@ pub fn read_geotiff<'a>(
                 }
             }
 
+            // println!("{:?}", &buf[0..8]);
             let mut bor = ByteOrderReader::<Cursor<Vec<u8>>>::new(Cursor::new(buf), configs.endian);
 
             let xmin = i * block_width;
@@ -1588,7 +1589,39 @@ pub fn read_geotiff<'a>(
                         data[idx] += data[idx - 1];
                     }
                 }
-            } else if ifd.interpret_as_u16()[0] == 3 {
+            }
+            // if ifd.interpret_as_u16()[0] == 3 {
+            //     if configs.endian == Endianness::LittleEndian {
+            //         if configs.data_type == DataType::F32 {
+            //             let mut in_val: f32;
+            //             let mut out_val: f32;
+            //             let mut in_bytes: [u8; 4];
+            //             let mut out_bytes = [0u8; 4];
+            //             let mut idx: usize;
+            //             for row in 0..configs.rows {
+            //                 for col in 1..configs.columns {
+            //                     idx = row * configs.columns + col;
+            //                     in_val = data[idx] as f32;
+            //                     in_bytes = in_val.to_le_bytes();
+            //                     for b in 0..4 {
+            //                         out_bytes[4-b-1] = in_bytes[b];
+            //                     }
+            //                     out_val = f32::from_le_bytes(out_bytes);
+            //                     data[idx] = out_val as f64;
+            //                 }
+            //             }
+            //         } else { // F64
+                    
+            //         }
+            //     } else {
+            //         if configs.data_type == DataType::F32 {
+
+            //         } else { // F64
+                    
+            //         }
+            //     }
+
+            if ifd.interpret_as_u16()[0] == 3 {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
                     "The GeoTIFF reader does not currently support floating-point predictors (PREDICTOR=3).",

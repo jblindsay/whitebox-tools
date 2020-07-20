@@ -57,7 +57,7 @@ for more details.
 ******************
 
 Version 1.X.X (XX-XX-2020)
-- Added the ColourShadedRelief tool to create hypsometric tinted hillshades.
+- Added the HypsometricallyTintedHillshade tool to create hypsometric tinted hillshades.
 - Added the MultidirectionalHillshade tool.
 - The MultiPartToSinglePart tool now handles MultiPoint vectors.
 - Fixed a bug with the VoronoiDiagram to better handle MultiPoint vectors.
