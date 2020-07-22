@@ -178,7 +178,7 @@ impl HypsometricallyTintedHillshade {
             description: "Optional flag indicating whether to use full 360-degrees of illumination sources."
                 .to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: Some("true".to_string()),
+            default_value: Some("false".to_string()),
             optional: true,
         });
 

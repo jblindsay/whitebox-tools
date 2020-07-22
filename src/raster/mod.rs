@@ -8,6 +8,7 @@ License: MIT
 
 pub mod arcascii_raster;
 pub mod arcbinary_raster;
+pub mod esri_bil;
 pub mod geotiff;
 pub mod grass_raster;
 pub mod idrisi_raster;
@@ -18,6 +19,7 @@ pub mod whitebox_raster;
 
 use self::arcascii_raster::*;
 use self::arcbinary_raster::*;
+use self::esri_bil::*;
 use self::geotiff::*;
 use self::grass_raster::*;
 use self::idrisi_raster::*;
@@ -139,6 +141,10 @@ impl Raster {
                 }
                 RasterType::ArcAscii => {
                     let _ = read_arcascii(&r.file_name, &mut r.configs, &mut r.data)?;
+                    return Ok(r);
+                }
+                RasterType::EsriBil => {
+                    let _ = read_esri_bil(&r.file_name, &mut r.configs, &mut r.data)?;
                     return Ok(r);
                 }
                 RasterType::GeoTiff => {
@@ -1062,6 +1068,12 @@ impl Raster {
                     Err(e) => println!("error while writing: {:?}", e),
                 };
             }
+            RasterType::EsriBil => {
+                let _ = match write_esri_bil(self) {
+                    Ok(_) => (),
+                    Err(e) => println!("error while writing: {:?}", e),
+                };
+            }
             RasterType::GeoTiff => {
                 let _ = match write_geotiff(self) {
                     Ok(_) => (),
@@ -1241,13 +1253,14 @@ pub enum RasterType {
     Unknown,
     ArcAscii,
     ArcBinary,
+    EsriBil,
     GeoTiff,
     GrassAscii,
     IdrisiBinary,
     SagaBinary,
     Surfer7Binary,
     SurferAscii,
-    Whitebox, // EsriBIL
+    Whitebox,
 }
 
 impl Default for RasterType {
@@ -1276,6 +1289,8 @@ fn get_raster_type_from_file(file_name: String, file_mode: String) -> RasterType
         || extension == "gtiff"
     {
         return RasterType::GeoTiff;
+    } else if extension == "bil" {
+        return RasterType::EsriBil;
     } else if extension == "flt" {
         return RasterType::ArcBinary;
     } else if extension == "rdc" || extension == "rst" {

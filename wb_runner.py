@@ -101,12 +101,12 @@ class FileSelector(tk.Frame):
                 ftypes = [('All files', '*.*')]
                 if 'RasterAndVector' in self.file_type:
                     ftypes = [("Shapefiles", "*.shp"), ('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
+                                                '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
                 elif 'Raster' in self.file_type:
                     ftypes = [('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
+                                                '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
                 elif 'Lidar' in self.file_type:
@@ -255,12 +255,12 @@ class FileOrFloat(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'RasterAndVector' in self.file_type:
                     ftypes = [("Shapefiles", "*.shp"), ('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
+                                                '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
             elif 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                            '*.tiff', '*.flt',
+                                            '*.tiff', '*.bil', '*.flt',
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:
@@ -410,12 +410,12 @@ class MultifileSelector(tk.Frame):
             ftypes = [('All files', '*.*')]
             if 'RasterAndVector' in self.file_type:
                     ftypes = [("Shapefiles", "*.shp"), ('Raster files', ('*.dep', '*.tif',
-                                                '*.tiff', '*.flt',
+                                                '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
             elif 'Raster' in self.file_type:
                 ftypes = [('Raster files', ('*.dep', '*.tif',
-                                            '*.tiff', '*.flt',
+                                            '*.tiff', '*.bil', '*.flt',
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:

@@ -56,9 +56,10 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.X.X (XX-XX-2020)
+Version 1.3.1 (23-07-2020)
 - Added the HypsometricallyTintedHillshade tool to create hypsometric tinted hillshades.
 - Added the MultidirectionalHillshade tool.
+- Added the ability to read/write in the Esri BIL raster format.
 - The MultiPartToSinglePart tool now handles MultiPoint vectors.
 - Fixed a bug with the VoronoiDiagram to better handle MultiPoint vectors.
 - Fixed an issue with writing compressed RGB GeoTIFFs.
