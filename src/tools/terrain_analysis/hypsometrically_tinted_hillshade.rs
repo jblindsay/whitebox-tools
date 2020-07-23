@@ -134,7 +134,7 @@ impl HypsometricallyTintedHillshade {
             name: "Palette".to_owned(),
             flags: vec!["--palette".to_owned()],
             description:
-                "Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep."
+                "Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'."
                     .to_owned(),
             parameter_type: ParameterType::OptionList(vec![
                 "atlas".to_owned(),

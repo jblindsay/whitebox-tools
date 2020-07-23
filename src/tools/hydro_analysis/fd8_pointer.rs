@@ -251,6 +251,7 @@ impl WhiteboxTool for FD8Pointer {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.data_type = DataType::U8;
         output.configs.palette = "spectrum.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
