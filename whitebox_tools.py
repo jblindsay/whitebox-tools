@@ -422,6 +422,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2680,6 +2681,36 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('hypsometric_analysis', args, callback) # returns 1 if error
 
+    def hypsometrically_tinted_hillshade(self, dem, output, altitude=45.0, hs_weight=0.5, brightness=0.5, atmospheric=0.0, palette="atlas", reverse=False, zfactor=1.0, full_mode=False, callback=None):
+        """Creates an colour shaded relief image from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        altitude -- Illumination source altitude in degrees. 
+        hs_weight -- Weight given to hillshade relative to relief (0.0-1.0). 
+        brightness -- Brightness factor (0.0-1.0). 
+        atmospheric -- Atmospheric effects weight (0.0-1.0). 
+        palette -- Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep. 
+        reverse -- Optional flag indicating whether to use reverse the palette. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        full_mode -- Optional flag indicating whether to use full 360-degrees of illumination sources. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--altitude={}".format(altitude))
+        args.append("--hs_weight={}".format(hs_weight))
+        args.append("--brightness={}".format(brightness))
+        args.append("--atmospheric={}".format(atmospheric))
+        args.append("--palette={}".format(palette))
+        if reverse: args.append("--reverse")
+        args.append("--zfactor={}".format(zfactor))
+        if full_mode: args.append("--full_mode")
+        return self.run_tool('hypsometrically_tinted_hillshade', args, callback) # returns 1 if error
+
     def max_anisotropy_dev(self, dem, out_mag, out_scale, max_scale, min_scale=3, step=2, callback=None):
         """Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
 
@@ -2833,6 +2864,26 @@ class WhiteboxTools(object):
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         return self.run_tool('min_downslope_elev_change', args, callback) # returns 1 if error
+
+    def multidirectional_hillshade(self, dem, output, altitude=45.0, zfactor=1.0, full_mode=False, callback=None):
+        """Calculates a multi-direction hillshade raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        altitude -- Illumination source altitude in degrees. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        full_mode -- Optional flag indicating whether to use full 360-degrees of illumination sources. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--altitude={}".format(altitude))
+        args.append("--zfactor={}".format(zfactor))
+        if full_mode: args.append("--full_mode")
+        return self.run_tool('multidirectional_hillshade', args, callback) # returns 1 if error
 
     def multiscale_elevation_percentile(self, dem, out_mag, out_scale, sig_digits=3, min_scale=4, step=1, num_steps=10, step_nonlinearity=1.0, callback=None):
         """Calculates surface roughness over a range of spatial scales.
@@ -6163,6 +6214,40 @@ class WhiteboxTools(object):
         if use_median: args.append("--use_median")
         if classify: args.append("--classify")
         return self.run_tool('lidar_remove_outliers', args, callback) # returns 1 if error
+
+    def lidar_rooftop_analysis(self, buildings, output, i=None, radius=2.0, num_iter=50, num_samples=10, threshold=0.15, model_size=15, max_slope=65.0, norm_diff=10.0, azimuth=180.0, altitude=30.0, callback=None):
+        """Identifies roof segments in a LiDAR point cloud.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file. 
+        buildings -- Input vector build footprint polygons file. 
+        output -- Output vector polygon file. 
+        radius -- Search Radius. 
+        num_iter -- Number of iterations. 
+        num_samples -- Number of sample points on which to build the model. 
+        threshold -- Threshold used to determine inlier points. 
+        model_size -- Acceptable model size. 
+        max_slope -- Maximum planar slope. 
+        norm_diff -- Maximum difference in normal vectors, in degrees. 
+        azimuth -- Illumination source azimuth in degrees. 
+        altitude -- Illumination source altitude in degrees. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        args.append("--buildings='{}'".format(buildings))
+        args.append("--output='{}'".format(output))
+        args.append("--radius={}".format(radius))
+        args.append("--num_iter={}".format(num_iter))
+        args.append("--num_samples={}".format(num_samples))
+        args.append("--threshold={}".format(threshold))
+        args.append("--model_size={}".format(model_size))
+        args.append("--max_slope={}".format(max_slope))
+        args.append("--norm_diff={}".format(norm_diff))
+        args.append("--azimuth={}".format(azimuth))
+        args.append("--altitude={}".format(altitude))
+        return self.run_tool('lidar_rooftop_analysis', args, callback) # returns 1 if error
 
     def lidar_segmentation(self, i, output, radius=2.0, num_iter=50, num_samples=10, threshold=0.15, model_size=15, max_slope=80.0, norm_diff=10.0, maxzdiff=1.0, classes=False, ground=False, callback=None):
         """Segments a LiDAR point cloud based on differences in the orientation of fitted planar surfaces and point proximity.
