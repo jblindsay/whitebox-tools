@@ -47,6 +47,15 @@ use std::thread;
 /// full 360-degree mode, eight illumination source azimuths are used to calculate the output at 0, 45, 90, 135, 180, 225, 
 /// 270, and 315 degrees, with weights of 0.15, 0.125, 0.1, 0.05, 0.1, 0.125, 0.15, and 0.2 respectively. 
 ///
+/// Classic hillshade (Azimuth=315, Altitude=45.0)
+/// ![](../../doc_img/MultidirectionalHillshade_fig1.png)
+///
+/// Multi-directional hillshade (Altitude=45.0, Four-direction mode)
+/// ![](../../doc_img/MultidirectionalHillshade_fig2.png)
+/// 
+/// Multi-directional hillshade (Altitude=45.0, 360-degree mode)
+/// ![](../../doc_img/MultidirectionalHillshade_fig3.png)
+///
 /// # See Also
 /// `Hillshade`, HypsometricallyTintedHillshade, `Aspect`, `Slope`
 pub struct MultidirectionalHillshade {
@@ -60,9 +69,9 @@ pub struct MultidirectionalHillshade {
 impl MultidirectionalHillshade {
     pub fn new() -> MultidirectionalHillshade {
         // public constructor
-        let name = "Hillshade".to_string();
+        let name = "MultidirectionalHillshade".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates a hillshade raster from an input DEM.".to_string();
+        let description = "Calculates a multi-direction hillshade raster from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

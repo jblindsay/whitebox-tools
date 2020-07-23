@@ -38,6 +38,13 @@ for tb in sorted(tb_set):
     tb_dict[tb] = []
 
 tools = wbt.list_tools()
+
+print(tools)
+# if "MultidirectionalHillshade" in tools:
+#     print("It's here!")
+# else:
+#     print("It's not here")
+
 # for t in tools.split("\n"):
 #     if t.strip() and "Available Tools" not in t:
 # tool = t.strip().split(":")[0]

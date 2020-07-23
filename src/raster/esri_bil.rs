@@ -353,6 +353,11 @@ fn get_eight_bytes(buf: &[u8]) -> [u8; 8] {
 }
 
 pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
+    if r.configs.photometric_interp == PhotometricInterpretation::RGB {
+        panic!("Single-band Esri BIL files are not suitable for storing RGB data. WhiteboxTools 
+        presently only supports single-band BIL files. Use a GeoTiff format instead.");
+    }
+
     /*
         Save the header file.
 

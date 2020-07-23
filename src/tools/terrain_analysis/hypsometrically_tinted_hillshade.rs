@@ -46,6 +46,8 @@ use std::thread;
 /// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
 ///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// 
+/// ![](../../doc_img/hypsometricallyTintedHillshade_fig1.png)
 ///
 /// # See Also
 /// `Hillshade`, `MultidirectionalHillshade`, `Aspect`, `Slope`
