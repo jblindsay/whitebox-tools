@@ -392,11 +392,21 @@ pub fn read_geotiff<'a>(
 
             ifd_map.insert(tag_id, ifd.clone());
         }
-        if !is_big_tiff {
-            ifd_offset = th.read_u32()? as usize;
-        } else {
-            ifd_offset = th.read_u64()? as usize;
-        }
+        // WhiteboxTools currently only supports single-band rasters. 
+        // Sometimes GeoTIFF contain multiple bands. When this is the case,
+        // only the first band should be read. This is often the case when
+        // users have used pyramiding on their file. To get the tags of the
+        // other bands, uncomment the code below; however, doing so may
+        // cause erratic behaviour of certain tools. e.g. see issue # 102
+        // clip_raster_to_polygon issue
+
+        // if !is_big_tiff {
+        //     ifd_offset = th.read_u32()? as usize;
+        // } else {
+        //     ifd_offset = th.read_u64()? as usize;
+        // }
+
+        ifd_offset = 0; // comment this out if you want to read additional images.
     }
 
     configs.columns = match ifd_map.get(&256) {

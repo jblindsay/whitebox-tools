@@ -242,6 +242,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                 isize,
             );
             let num_records = polygons.num_records;
+
             for record_num in 0..polygons.num_records {
                 let record = polygons.get_record(record_num);
 
@@ -283,6 +284,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                             y = input.get_y_from_row(r);
                             for c in starting_col..ending_col {
                                 x = input.get_x_from_column(c);
+
                                 if point_in_poly(
                                     &Point2D { x: x, y: y },
                                     &record.points[start_point_in_part..end_point_in_part + 1],
