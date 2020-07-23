@@ -26,7 +26,7 @@ use std::thread;
 use std::{env, fs};
 const EPSILON: f64 = std::f64::EPSILON;
 
-/// This tool can be used to
+/// This tool can be used to identify roof segments in a LiDAR point cloud.
 ///
 /// # See Also
 /// `ClassifyBuildingsInLidar`, `ClipLidarToPolygon`
