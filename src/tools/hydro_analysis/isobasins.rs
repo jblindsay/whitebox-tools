@@ -12,7 +12,9 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
-use std::io::{Error, ErrorKind};
+use std::io::prelude::*;
+use std::io::{BufWriter, Error, ErrorKind};
+use std::fs::File;
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -24,6 +26,11 @@ use std::thread;
 /// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using either
 /// the `BreachDepressions` or `FillDepressions` tool. Several temporary rasters are created during the execution
 /// and stored in memory of this tool.
+///
+/// The tool can optionally (`--connections`) output a CSV table that contains the upstream/downstream connections
+/// among isobasins. That is, this table will identify the downstream basin of each isobasin, or will list N/A in
+/// the event that there is no downstream basin, i.e. if it drains to an edge. The output CSV file will have the 
+/// same name as the output raster, but with a *.csv file extension.
 ///
 /// # See Also
 /// `Watershed`, `Basins`, `BreachDepressions`, `FillDepressions`
@@ -70,6 +77,15 @@ impl Isobasins {
             parameter_type: ParameterType::Integer,
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output basin upstream-downstream connections?".to_owned(),
+            flags: vec!["--connections".to_owned()],
+            description: "Output upstream-downstream flow connections among basins?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -136,6 +152,7 @@ impl WhiteboxTool for Isobasins {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut target_size = -1;
+        let mut output_connections = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -171,6 +188,10 @@ impl WhiteboxTool for Isobasins {
                 } else {
                     args[i + 1].to_string().parse::<isize>().unwrap()
                 };
+            } else if flag_val == "-connections" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    output_connections = true;
+                }
             }
         }
 
@@ -218,7 +239,6 @@ impl WhiteboxTool for Isobasins {
         let cell_size_x = input.configs.resolution_x;
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
-
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -316,11 +336,11 @@ impl WhiteboxTool for Isobasins {
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<i8> = vec![-1i8; columns as usize];
                     for col in 0..columns {
-                        z = input[(row, col)];
+                        z = input.get_value(row, col);
                         if z != nodata {
                             count = 0i8;
                             for i in 0..8 {
-                                if flow_dir[(row + dy[i], col + dx[i])] == inflowing_vals[i] {
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
                                     count += 1;
                                 }
                             }
@@ -362,6 +382,9 @@ impl WhiteboxTool for Isobasins {
         let mut accum: Array2D<usize> = Array2D::new(rows, columns, 1, 0)?;
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.data_type = DataType::I32;
+        let out_nodata = -32768f64;
+        output.configs.nodata = out_nodata;
+        output.reinitialize_values(out_nodata);
         let mut outlet_id = 1f64;
         // output.reinitialize_values(1.0);
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
@@ -437,6 +460,8 @@ impl WhiteboxTool for Isobasins {
                 }
             }
         }
+        
+        let num_outlets = outlet_id as usize - 1;
 
         //////////////////////////////////////////
         // Trace flowpaths to their pour points //
@@ -446,7 +471,7 @@ impl WhiteboxTool for Isobasins {
         for row in 0..rows {
             for col in 0..columns {
                 z = input.get_value(row, col);
-                if z != nodata && output.get_value(row, col) == nodata {
+                if z != nodata && output.get_value(row, col) == out_nodata {
                     // trace the flowpath from this cell until you find an outlet ID in the output
                     outlet_id = nodata;
                     flag = true;
@@ -462,7 +487,7 @@ impl WhiteboxTool for Isobasins {
 
                             // if the new cell already has a value in the output, use that as the outletID
                             z = output.get_value(row_n, col_n);
-                            if z != nodata {
+                            if z != out_nodata {
                                 outlet_id = z;
                                 flag = false;
                             }
@@ -485,7 +510,7 @@ impl WhiteboxTool for Isobasins {
 
                             // if the new cell already has a value in the output, use that as the outletID
                             z = output.get_value(row_n, col_n);
-                            if z != nodata {
+                            if z != out_nodata {
                                 outlet_id = z;
                                 flag = false;
                             }
@@ -502,6 +527,62 @@ impl WhiteboxTool for Isobasins {
                     println!("Labelling basins: {}%", progress);
                     old_progress = progress;
                 }
+            }
+        }
+
+        if output_connections {
+            let mut connections_table = vec![-1isize; num_outlets];
+            let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+            let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+            let mut z_n: f64;
+            for row in 0..rows {
+                for col in 0..columns {
+                    z = output.get_value(row, col);
+                    if z != out_nodata {
+                        for i in 0..8 {
+                            z_n = output.get_value(row+ dy[i], col + dx[i]);
+                            if z_n != z && z_n != out_nodata {
+                                // neighbouring cell is in a different basin
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
+                                    // neighbour cell flows into (row, col)
+                                    connections_table[z_n as usize] = z as isize;
+                                }
+                            }
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Labelling basins connections: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }   
+            
+            let csv_file = path::Path::new(&output_file)
+                .with_extension("csv")
+                .into_os_string()
+                .into_string()
+                .expect("Error when trying to create CSV file.");
+
+            let f = File::create(csv_file).expect("Error while creating CSV file.");
+            let mut writer = BufWriter::new(f);
+            writer.write_all("UPSTREAM,DOWNSTREAM\n".as_bytes()).expect("Error while writing to CSV file.");
+            for i in 1..num_outlets {
+                if connections_table[i] != -1 {
+                    let s = format!("{},{}\n", i, connections_table[i]);
+                    writer.write_all(s.as_bytes()).expect("Error while writing to CSV file.");
+                } else {
+                    let s = format!("{},N/A\n", i);
+                    writer.write_all(s.as_bytes()).expect("Error while writing to CSV file.");
+                }
+            }
+
+            let _ = writer.flush();
+
+            if verbose {
+                println!("Please see {} for basin connection table.", csv_file);
             }
         }
 
