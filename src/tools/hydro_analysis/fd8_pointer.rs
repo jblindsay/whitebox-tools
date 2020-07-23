@@ -205,6 +205,7 @@ impl WhiteboxTool for FD8Pointer {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
         let nodata = input.configs.nodata;
+        let out_nodata = -32768f64;
         let columns = input.configs.columns as isize;
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
@@ -216,7 +217,7 @@ impl WhiteboxTool for FD8Pointer {
                 let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let (mut z, mut zn, mut dir): (f64, f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
@@ -228,8 +229,6 @@ impl WhiteboxTool for FD8Pointer {
                                 }
                             }
                             data[col as usize] = dir;
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -251,6 +250,7 @@ impl WhiteboxTool for FD8Pointer {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.nodata = out_nodata;
         output.configs.data_type = DataType::I16;
         output.configs.palette = "spectrum.plt".to_string();
         output.add_metadata_entry(format!(

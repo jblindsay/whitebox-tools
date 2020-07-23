@@ -224,8 +224,9 @@ impl WhiteboxTool for D8Pointer {
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
         let nodata = input.configs.nodata;
+        let out_nodata = -32768f64;
         let columns = input.configs.columns as isize;
-
+        
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
@@ -250,7 +251,7 @@ impl WhiteboxTool for D8Pointer {
                 };
                 let (mut z, mut z_n, mut slope): (f64, f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
@@ -271,8 +272,6 @@ impl WhiteboxTool for D8Pointer {
                             } else {
                                 data[col as usize] = 0f64;
                             }
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -294,6 +293,7 @@ impl WhiteboxTool for D8Pointer {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.nodata = out_nodata;
         output.configs.data_type = DataType::I16;
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
