@@ -58,6 +58,7 @@ for more details.
 
 Version 1.X.X (XX-XX-2020)
 - The D8 and FD8 flow pointer tools now output byte rasters.
+- The Isobasins tool now optionally outputs an upstream/downstream connections table.
 
 Version 1.3.1 (23-07-2020)
 - Added the HypsometricallyTintedHillshade tool to create hypsometric tinted hillshades.

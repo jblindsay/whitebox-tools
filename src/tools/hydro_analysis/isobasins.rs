@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/12/2017
-Last Modified: 13/02/2020
+Last Modified: 24/07/2020
 License: MIT
 */
 
@@ -566,7 +566,7 @@ impl WhiteboxTool for Isobasins {
                 .into_string()
                 .expect("Error when trying to create CSV file.");
 
-            let f = File::create(csv_file).expect("Error while creating CSV file.");
+            let f = File::create(csv_file.clone()).expect("Error while creating CSV file.");
             let mut writer = BufWriter::new(f);
             writer.write_all("UPSTREAM,DOWNSTREAM\n".as_bytes()).expect("Error while writing to CSV file.");
             for i in 1..num_outlets {

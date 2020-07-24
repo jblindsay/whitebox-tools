@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 20/09/2018
-Last Modified: 13/10/2018
+Last Modified: 24/07/2020
 License: MIT
 */
 
@@ -218,7 +218,7 @@ impl WhiteboxTool for CentroidVector {
                 }
             }
 
-            // output the medoid point
+            // output the centroid point
             x_total /= input.num_records as f64;
             y_total /= input.num_records as f64;
 
@@ -241,12 +241,12 @@ impl WhiteboxTool for CentroidVector {
         } else {
             // create output file
             let mut output =
-                Shapefile::initialize_using_file(&output_file, &input, ShapeType::Point, false)?;
+                Shapefile::initialize_using_file(&output_file, &input, ShapeType::Point, true)?;
 
             // add the attributes
-            output
-                .attributes
-                .add_field(&AttributeField::new("FID", FieldDataType::Int, 2u8, 0u8));
+            // output
+            //     .attributes
+            //     .add_field(&AttributeField::new("FID", FieldDataType::Int, 2u8, 0u8));
 
             let mut num_points: usize;
             // output a medoid for each feature in the input file
@@ -264,9 +264,12 @@ impl WhiteboxTool for CentroidVector {
                 y_total /= num_points as f64;
 
                 output.add_point_record(x_total, y_total);
-                output
-                    .attributes
-                    .add_record(vec![FieldData::Int(record_num as i32 + 1i32)], false);
+                // output
+                //     .attributes
+                //     .add_record(vec![FieldData::Int(record_num as i32 + 1i32)], false);
+                let atts = input.attributes.get_record(record_num);
+                output.attributes.add_record(atts.clone(), false);
+
 
                 if verbose {
                     progress =
