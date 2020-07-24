@@ -1270,9 +1270,8 @@ impl Shapefile {
                     FieldData::Text(v) => {
                         if v.len() < fl {
                             // add spaces at start
-                            let mut spcs: String = vec![' '; fl - v.len()].into_iter().collect();
-                            spcs.push_str(&v);
-                            writer.write_all(&spcs.as_bytes())?;
+                            let spcs: String = vec![' '; fl - v.len()].into_iter().collect();
+                            writer.write_all(&(format!("{}{}", v, spcs)).as_bytes())?;
                         } else if v.len() > fl {
                             writer.write_all(&v[0..fl].as_bytes())?;
                         } else {
