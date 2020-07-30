@@ -104,7 +104,7 @@ impl LidarTINGridding {
             flags: vec!["--exclude_cls".to_owned()], 
             description: "Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'.".to_owned(),
             parameter_type: ParameterType::String,
-            default_value: None,
+            default_value: Some("7,18".to_owned()),
             optional: true
         });
 

@@ -34,19 +34,19 @@ use std::thread;
 /// effects (`--atmospheric`; 0-1). The hillshade weight can be used to increase or subdue the relative prevalence of the
 /// hillshading effect in the output image. The image brightness parameter is used to create an overall brighter or
 /// darker version of the terrain rendering; note however, that very high values may over-saturate the well-illuminated
-/// portions of the terrain. The atmospheric effects parameter can be used to introduce a haze or atmosphere effect to 
-/// the output image. It is intended to reproduce the effect of viewing mountain valley bottoms through a thicker and 
+/// portions of the terrain. The atmospheric effects parameter can be used to introduce a haze or atmosphere effect to
+/// the output image. It is intended to reproduce the effect of viewing mountain valley bottoms through a thicker and
 /// more dense atmosphere. Values greater than zero will introduce a slightly blue tint, particularly at lower altitudes,
-/// blur the hillshade edges slightly, and create a random haze-like speckle in lower areas. The user must also specify 
-/// the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important when the vertical and horizontal 
-/// units are not the same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the 
+/// blur the hillshade edges slightly, and create a random haze-like speckle in lower areas. The user must also specify
+/// the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important when the vertical and horizontal
+/// units are not the same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
 /// Z conversion factor. If the DEM is in the geographic coordinate system (latitude and longitude), the following equation
 /// is used:
 ///
 /// > zfactor = 1.0 / (113200.0 x cos(mid_lat))
 ///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
-/// 
+///
 /// ![](../../doc_img/hypsometricallyTintedHillshade_fig1.png)
 ///
 /// # See Also
@@ -156,8 +156,7 @@ impl HypsometricallyTintedHillshade {
         parameters.push(ToolParameter {
             name: "Reverse palette?".to_owned(),
             flags: vec!["--reverse".to_owned()],
-            description: "Optional flag indicating whether to use reverse the palette."
-                .to_owned(),
+            description: "Optional flag indicating whether to use reverse the palette.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
             optional: true,
@@ -177,8 +176,9 @@ impl HypsometricallyTintedHillshade {
         parameters.push(ToolParameter {
             name: "Full 360-degree hillshade mode?".to_owned(),
             flags: vec!["--full_mode".to_owned()],
-            description: "Optional flag indicating whether to use full 360-degrees of illumination sources."
-                .to_owned(),
+            description:
+                "Optional flag indicating whether to use full 360-degrees of illumination sources."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
             optional: true,
@@ -456,42 +456,30 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
 
                 let azimuths = if multidirection360mode {
                     vec![
-                        (0f64 - 90f64).to_radians(), 
-                        (45f64 - 90f64).to_radians(), 
-                        (90f64 - 90f64).to_radians(), 
+                        (0f64 - 90f64).to_radians(),
+                        (45f64 - 90f64).to_radians(),
+                        (90f64 - 90f64).to_radians(),
                         (135f64 - 90f64).to_radians(),
                         (180f64 - 90f64).to_radians(),
-                        (225f64 - 90f64).to_radians(), 
-                        (270f64 - 90f64).to_radians(), 
+                        (225f64 - 90f64).to_radians(),
+                        (270f64 - 90f64).to_radians(),
                         (315f64 - 90f64).to_radians(),
                     ]
-                } else { 
+                } else {
                     vec![
-                        (225f64 - 90f64).to_radians(), 
-                        (270f64 - 90f64).to_radians(), 
-                        (315f64 - 90f64).to_radians(), 
-                        (360f64 - 90f64).to_radians()
+                        (225f64 - 90f64).to_radians(),
+                        (270f64 - 90f64).to_radians(),
+                        (315f64 - 90f64).to_radians(),
+                        (360f64 - 90f64).to_radians(),
                     ]
                 };
 
                 let weights = if multidirection360mode {
                     vec![
-                        0.15f64, 
-                        0.125f64, 
-                        0.1f64, 
-                        0.05f64,
-                        0.1f64, 
-                        0.125f64, 
-                        0.15f64, 
-                        0.20f64,
+                        0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
                     ]
                 } else {
-                    vec![
-                        0.1f64, 
-                        0.4f64, 
-                        0.4f64, 
-                        0.1f64
-                    ]
+                    vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
                 };
 
                 let mut n: [f64; 8] = [0.0; 8];
@@ -1231,18 +1219,21 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
                             } else {
                                 hs_proportion = (hs_val - new_min) as f32 / hs_range;
                             }
-                            
+
                             // x = -(hs_val as f32 - mu) / s;
                             // hs_proportion = 1f32 / (1f32 + std::f32::consts::E.powf(x));
 
                             // Scale the colour by again by elevation, with lower elevations having a light-blue (153, 204, 255) tinge.
                             // This calculates the atm portion and then re-scale the relief and hs portions accordingly
-                            
+
                             // Full shadow is (0f32, 50f32, 100f32), not black, which is too dark.
                             hs_proportion = relief_alpha + hs_alpha * hs_proportion;
-                            proportion_r = 1f32 * (1f32 - hs_proportion) + red_relief as f32 * hs_proportion;
-                            proportion_g = 25f32 * (1f32 - hs_proportion) + green_relief as f32 * hs_proportion;
-                            proportion_b = 50f32 * (1f32 - hs_proportion) + blue_relief as f32 * hs_proportion;
+                            proportion_r =
+                                1f32 * (1f32 - hs_proportion) + red_relief as f32 * hs_proportion;
+                            proportion_g = 25f32 * (1f32 - hs_proportion)
+                                + green_relief as f32 * hs_proportion;
+                            proportion_b =
+                                50f32 * (1f32 - hs_proportion) + blue_relief as f32 * hs_proportion;
 
                             red =
                                 ((proportion_r * (1f32 - alpha3)) + alpha3 * red_atm as f32) as u32;

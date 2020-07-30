@@ -116,32 +116,33 @@ impl LidarRooftopAnalysis {
         parameters.push(ToolParameter {
             name: "Inlier Threshold".to_owned(),
             flags: vec!["--threshold".to_owned()],
-            description: "Threshold used to determine inlier points.".to_owned(),
+            description: "Threshold used to determine inlier points (in elevation units)."
+                .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.15".to_owned()),
             optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Acceptable Model Size".to_owned(),
+            name: "Acceptable Model Size (points)".to_owned(),
             flags: vec!["--model_size".to_owned()],
-            description: "Acceptable model size.".to_owned(),
+            description: "Acceptable model size, in points.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("15".to_owned()),
             optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Maximum Planar Slope".to_owned(),
+            name: "Maximum Planar Slope (degrees)".to_owned(),
             flags: vec!["--max_slope".to_owned()],
-            description: "Maximum planar slope.".to_owned(),
+            description: "Maximum planar slope, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("65.0".to_owned()),
             optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Normal Difference Threshold".to_owned(),
+            name: "Normal Difference Threshold (degrees)".to_owned(),
             flags: vec!["--norm_diff".to_owned()],
             description: "Maximum difference in normal vectors, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
@@ -161,7 +162,7 @@ impl LidarRooftopAnalysis {
         parameters.push(ToolParameter {
             name: "Azimuth (degrees)".to_owned(),
             flags: vec!["--azimuth".to_owned()],
-            description: "Illumination source azimuth in degrees.".to_owned(),
+            description: "Illumination source azimuth, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("180.0".to_owned()),
             optional: true,

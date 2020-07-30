@@ -451,6 +451,7 @@ impl ToolManager {
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
         tool_names.push("HypsometricallyTintedHillshade".to_string());
+        tool_names.push("MapOffTerrainObjects".to_string());
         tool_names.push("MaxAnisotropyDev".to_string());
         tool_names.push("MaxAnisotropyDevSignature".to_string());
         tool_names.push("MaxBranchLength".to_string());
@@ -478,6 +479,7 @@ impl ToolManager {
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
+        tool_names.push("ShadowModel".to_string());
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
@@ -1084,7 +1086,10 @@ impl ToolManager {
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),
-            "hypsometricallytintedhillshade" => Some(Box::new(terrain_analysis::HypsometricallyTintedHillshade::new())),
+            "hypsometricallytintedhillshade" => Some(Box::new(
+                terrain_analysis::HypsometricallyTintedHillshade::new(),
+            )),
+            "mapoffterrainobjects" => Some(Box::new(terrain_analysis::MapOffTerrainObjects::new())),
             "maxanisotropydev" => Some(Box::new(terrain_analysis::MaxAnisotropyDev::new())),
             "maxanisotropydevsignature" => {
                 Some(Box::new(terrain_analysis::MaxAnisotropyDevSignature::new()))
@@ -1102,8 +1107,10 @@ impl ToolManager {
             "maxelevdevsignature" => Some(Box::new(terrain_analysis::MaxElevDevSignature::new())),
             "mindownslopeelevchange" => {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
-            },
-            "multidirectionalhillshade" => Some(Box::new(terrain_analysis::MultidirectionalHillshade::new())),
+            }
+            "multidirectionalhillshade" => {
+                Some(Box::new(terrain_analysis::MultidirectionalHillshade::new()))
+            }
             "multiscaleelevationpercentile" => Some(Box::new(
                 terrain_analysis::MultiscaleElevationPercentile::new(),
             )),
@@ -1138,6 +1145,8 @@ impl ToolManager {
                 Some(Box::new(terrain_analysis::RemoveOffTerrainObjects::new()))
             }
             "ruggednessindex" => Some(Box::new(terrain_analysis::RuggednessIndex::new())),
+            // "segmentterrain" => Some(Box::new(terrain_analysis::SegmentTerrain::new())),
+            "shadowmodel" => Some(Box::new(terrain_analysis::ShadowModel::new())),
             "sedimenttransportindex" => {
                 Some(Box::new(terrain_analysis::SedimentTransportIndex::new()))
             }

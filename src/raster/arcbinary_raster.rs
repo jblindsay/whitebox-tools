@@ -1,5 +1,6 @@
 use super::*;
 use crate::utils::Endianness;
+use std::convert::TryInto;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
@@ -7,7 +8,6 @@ use std::io::BufReader;
 use std::io::BufWriter;
 use std::io::Error;
 use std::mem;
-use std::convert::TryInto;
 
 pub fn read_arcbinary(
     file_name: &String,
@@ -134,15 +134,19 @@ pub fn read_arcbinary(
         for i in 0..buf_size {
             offset = i * 4;
             z = if configs.endian == Endianness::LittleEndian {
-                f32::from_le_bytes(get_four_bytes(&buffer[offset..offset+4])) as f64
+                f32::from_le_bytes(get_four_bytes(&buffer[offset..offset + 4])) as f64
             } else {
-                f32::from_be_bytes(get_four_bytes(&buffer[offset..offset+4])) as f64
+                f32::from_be_bytes(get_four_bytes(&buffer[offset..offset + 4])) as f64
             };
             data.push(z);
 
             if z != configs.nodata {
-                if z < configs.minimum { configs.minimum = z; }
-                if z > configs.maximum { configs.maximum = z; }
+                if z < configs.minimum {
+                    configs.minimum = z;
+                }
+                if z > configs.maximum {
+                    configs.maximum = z;
+                }
             }
 
             j += 1;
@@ -156,7 +160,8 @@ pub fn read_arcbinary(
 }
 
 fn get_four_bytes(buf: &[u8]) -> [u8; 4] {
-    buf.try_into().expect("Error: Slice with incorrect length specified to get_four_bytes.")
+    buf.try_into()
+        .expect("Error: Slice with incorrect length specified to get_four_bytes.")
 }
 
 pub fn write_arcbinary<'a>(r: &'a mut Raster) -> Result<(), Error> {

@@ -270,7 +270,6 @@ impl WhiteboxTool for CentroidVector {
                 let atts = input.attributes.get_record(record_num);
                 output.attributes.add_record(atts.clone(), false);
 
-
                 if verbose {
                     progress =
                         (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;

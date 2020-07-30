@@ -42,6 +42,7 @@ use std::path::Path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+// use rayon::prelude::*;
 
 /// Raster is a common data structure that abstracts over several raster data formats,
 /// including GeoTIFFs, ArcGIS ASCII and binary rasters, Whitebox rasters, Idrisi
@@ -492,27 +493,31 @@ impl Raster {
     }
 
     pub fn increment_row_data(&mut self, row: isize, values: Vec<f64>) {
-        for column in 0..values.len() {
-            if row >= 0 {
-                let c: usize = column as usize;
-                let r: usize = row as usize;
-                if c < self.configs.columns && r < self.configs.rows {
-                    let idx = r * self.configs.columns + c;
-                    self.data[idx] += values[c];
-                }
+        assert!(values.len() == self.configs.columns);
+        if row < 0 { return; }
+        let r = row as usize;
+        if r >= self.configs.rows { return; }
+        for column in 0..self.configs.columns {
+            let idx = r * self.configs.columns + column;
+            if self.data[idx] != self.configs.nodata {
+                self.data[idx] += values[column];
+            } else {
+                self.data[idx] = values[column];
             }
         }
     }
 
     pub fn decrement_row_data(&mut self, row: isize, values: Vec<f64>) {
-        for column in 0..values.len() {
-            if row >= 0 {
-                let c: usize = column as usize;
-                let r: usize = row as usize;
-                if c < self.configs.columns && r < self.configs.rows {
-                    let idx = r * self.configs.columns + c;
-                    self.data[idx] -= values[c];
-                }
+        assert!(values.len() == self.configs.columns);
+        if row < 0 { return; }
+        let r = row  as usize;
+        if r >= self.configs.rows { return; }
+        for column in 0..self.configs.columns {
+            let idx = r * self.configs.columns + column;
+            if self.data[idx] != self.configs.nodata {
+                self.data[idx] -= values[column];
+            } else {
+                self.data[idx] = values[column];
             }
         }
     }

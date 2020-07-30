@@ -226,7 +226,7 @@ impl WhiteboxTool for D8Pointer {
         let nodata = input.configs.nodata;
         let out_nodata = -32768f64;
         let columns = input.configs.columns as isize;
-        
+
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {

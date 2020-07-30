@@ -18,9 +18,9 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM) 
-/// with multiple sources of illumination. The user must specify the  name of the input DEM (`--dem`) and the output 
-/// hillshade image name (`--output`). Other parameters that must be specified include the altitude of the illumination 
+/// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM)
+/// with multiple sources of illumination. The user must specify the  name of the input DEM (`--dem`) and the output
+/// hillshade image name (`--output`). Other parameters that must be specified include the altitude of the illumination
 /// sources (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle
 /// from 0 to 90 degrees) and the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important
 /// when the vertical and horizontal units are not the same in the DEM. When this is the case,
@@ -41,18 +41,18 @@ use std::thread;
 /// are the illumination source altitude and azimuth respectively. Slope and aspect are calculated using
 /// Horn's (1981) 3rd-order finate difference method.
 ///
-/// Lastly, the user must specify whether or not to use full 360-degrees of illumination sources (`--full_mode`). When this 
-/// flag is not specified, the tool will perform a weighted summation of the hillshade images from four illumination azimuth 
-/// positions at 225, 270, 315, and 360 (0) degrees, given weights of 0.1, 0.4, 0.4, and 0.1 respectively. When run in the 
-/// full 360-degree mode, eight illumination source azimuths are used to calculate the output at 0, 45, 90, 135, 180, 225, 
-/// 270, and 315 degrees, with weights of 0.15, 0.125, 0.1, 0.05, 0.1, 0.125, 0.15, and 0.2 respectively. 
+/// Lastly, the user must specify whether or not to use full 360-degrees of illumination sources (`--full_mode`). When this
+/// flag is not specified, the tool will perform a weighted summation of the hillshade images from four illumination azimuth
+/// positions at 225, 270, 315, and 360 (0) degrees, given weights of 0.1, 0.4, 0.4, and 0.1 respectively. When run in the
+/// full 360-degree mode, eight illumination source azimuths are used to calculate the output at 0, 45, 90, 135, 180, 225,
+/// 270, and 315 degrees, with weights of 0.15, 0.125, 0.1, 0.05, 0.1, 0.125, 0.15, and 0.2 respectively.
 ///
 /// Classic hillshade (Azimuth=315, Altitude=45.0)
 /// ![](../../doc_img/MultidirectionalHillshade_fig1.png)
 ///
 /// Multi-directional hillshade (Altitude=45.0, Four-direction mode)
 /// ![](../../doc_img/MultidirectionalHillshade_fig2.png)
-/// 
+///
 /// Multi-directional hillshade (Altitude=45.0, 360-degree mode)
 /// ![](../../doc_img/MultidirectionalHillshade_fig3.png)
 ///
@@ -71,7 +71,8 @@ impl MultidirectionalHillshade {
         // public constructor
         let name = "MultidirectionalHillshade".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates a multi-direction hillshade raster from an input DEM.".to_string();
+        let description =
+            "Calculates a multi-direction hillshade raster from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -115,8 +116,9 @@ impl MultidirectionalHillshade {
         parameters.push(ToolParameter {
             name: "Full 360-degree mode?".to_owned(),
             flags: vec!["--full_mode".to_owned()],
-            description: "Optional flag indicating whether to use full 360-degrees of illumination sources."
-                .to_owned(),
+            description:
+                "Optional flag indicating whether to use full 360-degrees of illumination sources."
+                    .to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
             optional: true,
@@ -133,7 +135,11 @@ impl MultidirectionalHillshade {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --altitude=30.0", short_exe, name).replace("*", &sep);
+        let usage = format!(
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --altitude=30.0",
+            short_exe, name
+        )
+        .replace("*", &sep);
 
         MultidirectionalHillshade {
             name: name,
@@ -310,42 +316,30 @@ impl WhiteboxTool for MultidirectionalHillshade {
                 let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let azimuths = if multidirection360mode {
                     vec![
-                        (0f64 - 90f64).to_radians(), 
-                        (45f64 - 90f64).to_radians(), 
-                        (90f64 - 90f64).to_radians(), 
+                        (0f64 - 90f64).to_radians(),
+                        (45f64 - 90f64).to_radians(),
+                        (90f64 - 90f64).to_radians(),
                         (135f64 - 90f64).to_radians(),
                         (180f64 - 90f64).to_radians(),
-                        (225f64 - 90f64).to_radians(), 
-                        (270f64 - 90f64).to_radians(), 
+                        (225f64 - 90f64).to_radians(),
+                        (270f64 - 90f64).to_radians(),
                         (315f64 - 90f64).to_radians(),
                     ]
-                } else { 
+                } else {
                     vec![
-                        (225f64 - 90f64).to_radians(), 
-                        (270f64 - 90f64).to_radians(), 
-                        (315f64 - 90f64).to_radians(), 
-                        (360f64 - 90f64).to_radians()
+                        (225f64 - 90f64).to_radians(),
+                        (270f64 - 90f64).to_radians(),
+                        (315f64 - 90f64).to_radians(),
+                        (360f64 - 90f64).to_radians(),
                     ]
                 };
 
                 let weights = if multidirection360mode {
                     vec![
-                        0.15f64, 
-                        0.125f64, 
-                        0.1f64, 
-                        0.05f64,
-                        0.1f64, 
-                        0.125f64, 
-                        0.15f64, 
-                        0.20f64,
+                        0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
                     ]
                 } else {
-                    vec![
-                        0.1f64, 
-                        0.4f64, 
-                        0.4f64, 
-                        0.1f64
-                    ]
+                    vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
                 };
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;

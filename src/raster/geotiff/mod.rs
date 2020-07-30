@@ -392,7 +392,7 @@ pub fn read_geotiff<'a>(
 
             ifd_map.insert(tag_id, ifd.clone());
         }
-        // WhiteboxTools currently only supports single-band rasters. 
+        // WhiteboxTools currently only supports single-band rasters.
         // Sometimes GeoTIFF contain multiple bands. When this is the case,
         // only the first band should be read. This is often the case when
         // users have used pyramiding on their file. To get the tags of the
@@ -1621,13 +1621,13 @@ pub fn read_geotiff<'a>(
             //                 }
             //             }
             //         } else { // F64
-                    
+
             //         }
             //     } else {
             //         if configs.data_type == DataType::F32 {
 
             //         } else { // F64
-                    
+
             //         }
             //     }
 
@@ -1635,7 +1635,7 @@ pub fn read_geotiff<'a>(
                 return Err(Error::new(
                     ErrorKind::InvalidData,
                     "The GeoTIFF reader does not currently support floating-point predictors (PREDICTOR=3).",
-                ))
+                ));
             }
         }
         _ => {} // do nothing,

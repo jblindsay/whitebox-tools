@@ -12,9 +12,9 @@ use crate::tools::*;
 use num_cpus;
 use std::env;
 use std::f64;
+use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufWriter, Error, ErrorKind};
-use std::fs::File;
 use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
@@ -29,7 +29,7 @@ use std::thread;
 ///
 /// The tool can optionally (`--connections`) output a CSV table that contains the upstream/downstream connections
 /// among isobasins. That is, this table will identify the downstream basin of each isobasin, or will list N/A in
-/// the event that there is no downstream basin, i.e. if it drains to an edge. The output CSV file will have the 
+/// the event that there is no downstream basin, i.e. if it drains to an edge. The output CSV file will have the
 /// same name as the output raster, but with a *.csv file extension.
 ///
 /// # See Also
@@ -340,7 +340,8 @@ impl WhiteboxTool for Isobasins {
                         if z != nodata {
                             count = 0i8;
                             for i in 0..8 {
-                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
+                                {
                                     count += 1;
                                 }
                             }
@@ -460,7 +461,7 @@ impl WhiteboxTool for Isobasins {
                 }
             }
         }
-        
+
         let num_outlets = outlet_id as usize - 1;
 
         //////////////////////////////////////////
@@ -540,10 +541,11 @@ impl WhiteboxTool for Isobasins {
                     z = output.get_value(row, col);
                     if z != out_nodata {
                         for i in 0..8 {
-                            z_n = output.get_value(row+ dy[i], col + dx[i]);
+                            z_n = output.get_value(row + dy[i], col + dx[i]);
                             if z_n != z && z_n != out_nodata {
                                 // neighbouring cell is in a different basin
-                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
+                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
+                                {
                                     // neighbour cell flows into (row, col)
                                     connections_table[z_n as usize] = z as isize;
                                 }
@@ -558,8 +560,8 @@ impl WhiteboxTool for Isobasins {
                         old_progress = progress;
                     }
                 }
-            }   
-            
+            }
+
             let csv_file = path::Path::new(&output_file)
                 .with_extension("csv")
                 .into_os_string()
@@ -568,14 +570,20 @@ impl WhiteboxTool for Isobasins {
 
             let f = File::create(csv_file.clone()).expect("Error while creating CSV file.");
             let mut writer = BufWriter::new(f);
-            writer.write_all("UPSTREAM,DOWNSTREAM\n".as_bytes()).expect("Error while writing to CSV file.");
+            writer
+                .write_all("UPSTREAM,DOWNSTREAM\n".as_bytes())
+                .expect("Error while writing to CSV file.");
             for i in 1..num_outlets {
                 if connections_table[i] != -1 {
                     let s = format!("{},{}\n", i, connections_table[i]);
-                    writer.write_all(s.as_bytes()).expect("Error while writing to CSV file.");
+                    writer
+                        .write_all(s.as_bytes())
+                        .expect("Error while writing to CSV file.");
                 } else {
                     let s = format!("{},N/A\n", i);
-                    writer.write_all(s.as_bytes()).expect("Error while writing to CSV file.");
+                    writer
+                        .write_all(s.as_bytes())
+                        .expect("Error while writing to CSV file.");
                 }
             }
 

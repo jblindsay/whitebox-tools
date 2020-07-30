@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 07/07/2017
-Last Modified: 30/01/2020
+Last Modified: 27/07/2020
 License: MIT
 
 NOTES: The tool should have the option to output a distance raster as well.
@@ -80,7 +80,7 @@ impl HorizonAngle {
         parameters.push(ToolParameter {
             name: "Azimuth".to_owned(),
             flags: vec!["--azimuth".to_owned()],
-            description: "Wind azimuth in degrees.".to_owned(),
+            description: "Azimuth, in degrees.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.0".to_owned()),
             optional: false,
@@ -89,10 +89,10 @@ impl HorizonAngle {
         parameters.push(ToolParameter {
             name: "Maximum Search Distance".to_owned(),
             flags: vec!["--max_dist".to_owned()],
-            description: "Optional maximum search distance (unspecified if none; in xy units)."
+            description: "Optional maximum search distance (unspecified if none; in xy units). Minimum value is 5 x cell size."
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: None,
+            default_value: Some("100.0".to_owned()),
             optional: true,
         });
 
@@ -162,8 +162,8 @@ impl WhiteboxTool for HorizonAngle {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut azimuth = 0.0;
-        let mut max_dist = f64::INFINITY;
+        let mut azimuth = 0.0f32;
+        let mut max_dist = f32::INFINITY;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -197,24 +197,24 @@ impl WhiteboxTool for HorizonAngle {
                 if keyval {
                     azimuth = vec[1]
                         .to_string()
-                        .parse::<f64>()
+                        .parse::<f32>()
                         .expect(&format!("Error parsing {}", flag_val));
                 } else {
                     azimuth = args[i + 1]
                         .to_string()
-                        .parse::<f64>()
+                        .parse::<f32>()
                         .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-max_dist" {
                 if keyval {
                     max_dist = vec[1]
                         .to_string()
-                        .parse::<f64>()
+                        .parse::<f32>()
                         .expect(&format!("Error parsing {}", flag_val));
                 } else {
                     max_dist = args[i + 1]
                         .to_string()
-                        .parse::<f64>()
+                        .parse::<f32>()
                         .expect(&format!("Error parsing {}", flag_val));
                 }
             }
@@ -241,194 +241,195 @@ impl WhiteboxTool for HorizonAngle {
         if verbose {
             println!("Reading data...")
         };
-        let input = Arc::new(Raster::new(&input_file, "r")?);
-
-        let start = Instant::now();
-
-        if azimuth > 360f64 || azimuth < 0f64 {
-            azimuth = 0.1;
-        }
-        if azimuth == 0f64 {
-            azimuth = 0.1;
-        }
-        if azimuth == 180f64 {
-            azimuth = 179.9;
-        }
-        if azimuth == 360f64 {
-            azimuth = 359.9;
-        }
-        let line_slope: f64;
-        if azimuth < 180f64 {
-            line_slope = (90f64 - azimuth).to_radians().tan();
-        } else {
-            line_slope = (270f64 - azimuth).to_radians().tan();
-        }
-
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
-
-        let mut cell_size = (input.configs.resolution_x + input.configs.resolution_y) / 2.0;
-        if input.is_in_geographic_coordinates() {
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+        let inputf64 = Arc::new(Raster::new(&input_file, "r")?);
+        let configs = inputf64.configs.clone();
+        let mut cell_size_x = configs.resolution_x as f32;
+        let mut cell_size_y = configs.resolution_y as f32;
+        // let mut cell_size = ((cell_size_x + cell_size_y) / 2.0) as f32;
+        if inputf64.is_in_geographic_coordinates() {
+            let mut mid_lat = ((configs.north - configs.south) / 2.0) as f32;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                cell_size = cell_size * (113200.0 * mid_lat.cos());
+                // cell_size = cell_size * (113200.0 * mid_lat.cos());
+                cell_size_x = cell_size_x * (113200.0 * mid_lat.cos());
+                cell_size_y = cell_size_y * (113200.0 * mid_lat.cos());
             }
         }
 
-        let x_step: isize;
-        let y_step: isize;
-        if azimuth > 0f64 && azimuth <= 90f64 {
-            x_step = 1;
-            y_step = 1;
-        } else if azimuth <= 180f64 {
-            x_step = 1;
-            y_step = -1;
-        } else if azimuth <= 270f64 {
-            x_step = -1;
-            y_step = -1;
-        } else {
-            x_step = -1;
-            y_step = 1;
+        if max_dist <= 5f32 * cell_size_x {
+            panic!("The maximum search distance parameter (--max_dist) must be larger than 5 x cell size.");
         }
 
+        // The longest that max_dist ever needs to be is the raster diagonal length.
+        let diag_length = ((configs.north - configs.south)*(configs.north - configs.south)+(configs.east - configs.west)*(configs.east - configs.west)).sqrt() as f32;
+        if max_dist > diag_length {
+            max_dist = diag_length;
+        }
+        
+        let input = inputf64.get_data_as_f32_array2d();
+
+        let start = Instant::now();
+
+        let line_slope: f32 = if azimuth < 180f32 {
+            (90f32 - azimuth).to_radians().tan()
+        } else {
+            (270f32 - azimuth).to_radians().tan()
+        };
+
+        let rows = configs.rows as isize;
+        let columns = configs.columns as isize;
+        let nodata = configs.nodata;
+        let nodata_f32 = nodata as f32;
+
+        drop(inputf64);
+
+        // Now perform the filter
         let num_procs = num_cpus::get() as isize;
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let mut z: f64;
-                let mut current_val: f64;
-                let mut y_intercept: f64;
-                let mut current_max_val: f64;
-                let a_small_value = -9999999f64;
+
+                // The ray-tracing operation can be viewed as a linear maximum filter. The first step 
+                // is to create the filter offsets and calculate the offset distances.
+
+                let x_step: isize;
+                let y_step: isize;
+                if azimuth > 0f32 && azimuth <= 90f32 {
+                    x_step = 1;
+                    y_step = 1;
+                } else if azimuth <= 180f32 {
+                    x_step = 1;
+                    y_step = -1;
+                } else if azimuth <= 270f32 {
+                    x_step = -1;
+                    y_step = -1;
+                } else {
+                    x_step = -1;
+                    y_step = 1;
+                }
+
                 let mut flag: bool;
-                // let mut max_val_dist: f64;
-                let (mut delta_x, mut delta_y): (f64, f64);
-                let (mut x, mut y): (f64, f64);
+                let (mut delta_x, mut delta_y): (f32, f32);
+                let (mut x, mut y): (f32, f32);
                 let (mut x1, mut y1): (isize, isize);
                 let (mut x2, mut y2): (isize, isize);
-                let (mut z1, mut z2): (f64, f64);
-                let mut dist: f64;
-                let mut slope: f64;
+                let (mut z1, mut z2): (f32, f32);
+                let mut dist: f32;
+                let mut weight: f32;
+                let mut offsets = vec![];
+
+                // Find all of the horizontal grid intersections.
+                if line_slope != 0f32 { // Otherwise, there are no horizontal intersections.
+                    y = 0f32;
+                    flag = true;
+                    while flag {
+                        y += y_step as f32;
+                        x = y / line_slope;
+
+                        // calculate the distance
+                        delta_x = x * cell_size_x;
+                        delta_y = -y * cell_size_y;
+                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                        if dist <= max_dist {
+                            x1 = x as isize;
+                            x2 = x1 + x_step;
+                            y1 = -y as isize;
+                            weight = x - x1 as f32;
+                            offsets.push((x1, y1, x2, y1, weight, dist));
+                        } else {
+                            flag = false;
+                        }
+                    }
+                }
+
+                // Find all of the vertical grid intersections.
+                if line_slope.abs() != 1f32 {
+                    x = 0f32;
+                    flag = true;
+                    while flag {
+                        x += x_step as f32;
+                        y = -(line_slope * x); // * -1f32;
+
+                        // calculate the distance
+                        delta_x = x * cell_size_x;
+                        delta_y = y * cell_size_y;
+
+                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                        if dist <= max_dist {
+                            y1 = y as isize;
+                            y2 = y1 - y_step;
+                            x1 = x as isize;
+                            weight = y - y1 as f32;
+                            offsets.push((x1, y1, x1, y2, weight, dist));
+                        } else {
+                            flag = false;
+                        }
+                    }
+                }
+
+                // Sort by distance.
+                offsets.sort_by(|a, b| a.4.partial_cmp(&b.4).unwrap());
+
+                let num_offsets = offsets.len();
+                let mut z: f32;
+                let mut slope: f32;
+                let early_stopping_slope = 80f32.to_radians().tan();
+                let mut current_elev: f32;
+                let mut current_max_slope: f32;
+                let mut current_max_elev: f32;
+                let a_small_value = -9999999f32;
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data: Vec<f64> = vec![nodata; columns as usize];
                     for col in 0..columns {
-                        current_val = input[(row, col)];
-                        if current_val != nodata {
-                            //calculate the y intercept of the line equation
-                            y_intercept = -row as f64 - line_slope * col as f64;
+                        current_elev = input.get_value(row, col);
+                        if current_elev != nodata_f32 {
 
-                            //find all of the vertical intersections
-                            current_max_val = a_small_value;
-                            // max_val_dist = a_small_value;
-                            x = col as f64;
+                            // Run down the offsets of the ray
+                            current_max_slope = a_small_value;
+                            current_max_elev = a_small_value;
+                            for i in 0..num_offsets {
+                                // Where are we on the grid?
+                                x1 = col + offsets[i].0;
+                                y1 = row + offsets[i].1;
+                                x2 = col + offsets[i].2;
+                                y2 = row + offsets[i].3;
+                                
+                                // What is the elevation?
+                                z1 = input.get_value(y1, x1);
+                                z2 = input.get_value(y2, x2);
 
-                            flag = true;
-                            while flag {
-                                x = x + x_step as f64;
-                                if x < 0.0 || x >= columns as f64 {
-                                    flag = false;
-                                // break;
-                                } else {
-                                    //calculate the Y value
-                                    y = (line_slope * x + y_intercept) * -1f64;
-                                    if y < 0f64 || y >= rows as f64 {
-                                        flag = false;
-                                    // break;
-                                    } else {
-                                        //calculate the distance
-                                        delta_x = (x - col as f64) * cell_size;
-                                        delta_y = (y - row as f64) * cell_size;
+                                if z1 == nodata_f32 && z2 == nodata_f32 {
+                                    break; // We're likely off the grid.
+                                } else if z1 == nodata_f32 {
+                                    z1 = z2;
+                                } else if z2 == nodata_f32 {
+                                    z2 = z2;
+                                }
 
-                                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                        if dist > max_dist {
-                                            flag = false;
-                                        // break;
-                                        } else {
-                                            //estimate z
-                                            y1 = y as isize;
-                                            y2 = y1 + y_step * -1isize;
-                                            z1 = input[(y1, x as isize)];
-                                            z2 = input[(y2, x as isize)];
-                                            z = z1 + (y - y1 as f64) * (z2 - z1);
-                                            //calculate the slope
-                                            slope = (z - current_val) / dist;
-                                            if slope > current_max_val {
-                                                current_max_val = slope;
-                                                // max_val_dist = dist;
-                                                // } else if current_max_val < 0f64 {
-                                                // max_val_dist = dist;
-                                            }
+                                z = z1 + offsets[i].4 * (z2 - z1);
+
+                                // All previous cells are nearer, and so if this isn't a higher 
+                                // cell than the current highest, it can't be the horizon cell.
+                                if z > current_max_elev {
+                                    current_max_elev = z;
+                                    
+                                    // Calculate the slope
+                                    slope = (z - current_elev) / offsets[i].5;
+                                    if slope > current_max_slope {
+                                        current_max_slope = slope;
+                                        if slope > early_stopping_slope {
+                                            break; // we're unlikely to find a farther horizon cell.
                                         }
                                     }
                                 }
                             }
 
-                            //find all of the horizontal intersections
-                            y = -row as f64;
-                            flag = true;
-                            while flag {
-                                y = y + y_step as f64;
-                                if -y < 0f64 || -y >= rows as f64 {
-                                    flag = false;
-                                // break;
-                                } else {
-                                    //calculate the X value
-                                    x = (y - y_intercept) / line_slope;
-                                    if x < 0f64 || x >= columns as f64 {
-                                        flag = false;
-                                    //break;
-                                    } else {
-                                        //calculate the distance
-                                        delta_x = (x - col as f64) * cell_size;
-                                        delta_y = (-y - row as f64) * cell_size;
-                                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                        if dist > max_dist {
-                                            flag = false;
-                                        // break;
-                                        } else {
-                                            //estimate z
-                                            x1 = x as isize;
-                                            x2 = x1 + x_step;
-                                            if x2 < 0 || x2 >= columns {
-                                                flag = false;
-                                            // break;
-                                            } else {
-                                                z1 = input[(-y as isize, x1)];
-                                                z2 = input[(y as isize, x2)];
-                                                z = z1 + (x - x1 as f64) * (z2 - z1);
-                                                //calculate the slope
-                                                slope = (z - current_val) / dist;
-                                                if slope > current_max_val {
-                                                    current_max_val = slope;
-                                                // max_val_dist = dist;
-                                                // } else if current_max_val < 0f64 {
-                                                    // max_val_dist = dist;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            z = current_max_val.atan().to_degrees();
-                            if z < -89f64 {
-                                z = 0f64;
-                            }
-                            if current_max_val != a_small_value {
-                                data[col as usize] = z;
-                            // if (saveDistance) {
-                            //     if (z < 0) { max_val_dist = max_val_dist * -1; }
-                            //     outputDist.setValue(row, col, max_val_dist);
-                            // }
+                            if current_max_slope == a_small_value {
+                                data[col as usize] = 0f64; // It's a zero-length scan. We didn't encounter any valid cells.
                             } else {
-                                data[col as usize] = nodata;
-                                // if (saveDistance) {
-                                //     outputDist.setValue(row, col, noData);
-                                // }
+                                data[col as usize] = current_max_slope.atan().to_degrees() as f64;
                             }
                         }
                     }
@@ -437,7 +438,7 @@ impl WhiteboxTool for HorizonAngle {
             });
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let mut output = Raster::initialize_from_array2d(&output_file, &configs, &input);
         for r in 0..rows {
             let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);

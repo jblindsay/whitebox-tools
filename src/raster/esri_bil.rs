@@ -1,10 +1,10 @@
 use super::*;
 use crate::utils::Endianness;
+use std::convert::TryInto;
 use std::f64;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{BufReader, BufWriter, Error, SeekFrom};
-use std::convert::TryInto;
 
 pub fn read_esri_bil(
     file_name: &String,
@@ -41,7 +41,7 @@ pub fn read_esri_bil(
                 value = v.to_lowercase().to_string();
                 break;
             }
-        };
+        }
 
         if key.contains("byteorder") {
             if value.contains("i") {
@@ -101,7 +101,8 @@ pub fn read_esri_bil(
             32 => configs.data_type = DataType::I32,
             _ => panic!("Unrecognized data type"),
         }
-    } else { // float
+    } else {
+        // float
         match nbits {
             32 => configs.data_type = DataType::F32,
             64 => configs.data_type = DataType::F64,
@@ -113,7 +114,6 @@ pub fn read_esri_bil(
     configs.west = ulxmap - configs.resolution_x / 2.0f64;
     configs.south = configs.north - configs.resolution_y * configs.rows as f64;
     configs.east = configs.west + configs.resolution_x * configs.columns as f64;
-
 
     // read the projection file
     let prj_file = Path::new(&file_name)
@@ -134,10 +134,9 @@ pub fn read_esri_bil(
         }
     }
 
-
     // read the data file
     data.reserve(configs.rows * configs.columns);
-    
+
     let data_file = Path::new(&file_name)
         .with_extension("bil")
         .into_os_string()
@@ -155,8 +154,10 @@ pub fn read_esri_bil(
             data_size = 1;
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
@@ -165,65 +166,87 @@ pub fn read_esri_bil(
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::U16 => {
             data_size = 2;
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        u16::from_le_bytes(get_two_bytes(&buffer[offset..offset+data_size])) as f64
+                        u16::from_le_bytes(get_two_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     } else {
-                        u16::from_be_bytes(get_two_bytes(&buffer[offset..offset+data_size])) as f64
+                        u16::from_be_bytes(get_two_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::U32 => {
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        u32::from_le_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        u32::from_le_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     } else {
-                        u32::from_be_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        u32::from_be_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::I8 => {
             data_size = 1;
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
@@ -232,106 +255,140 @@ pub fn read_esri_bil(
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::I16 => {
             data_size = 2;
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        i16::from_le_bytes(get_two_bytes(&buffer[offset..offset+data_size])) as f64
+                        i16::from_le_bytes(get_two_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     } else {
-                        i16::from_be_bytes(get_two_bytes(&buffer[offset..offset+data_size])) as f64
+                        i16::from_be_bytes(get_two_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::I32 => {
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        i32::from_le_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        i32::from_le_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     } else {
-                        i32::from_be_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        i32::from_be_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::F32 => {
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        f32::from_le_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        f32::from_le_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     } else {
-                        f32::from_be_bytes(get_four_bytes(&buffer[offset..offset+data_size])) as f64
+                        f32::from_be_bytes(get_four_bytes(&buffer[offset..offset + data_size]))
+                            as f64
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         DataType::F64 => {
             data_size = 8;
             for row in 0..configs.rows as u64 {
                 let mut buffer = vec![0; band_row_bytes];
-                f.seek(SeekFrom::Start(row * total_row_bytes)).expect("Error while seeking to position in BIL file.");
-                f.read(&mut buffer).expect("Error while reading from BIL data file.");
+                f.seek(SeekFrom::Start(row * total_row_bytes))
+                    .expect("Error while seeking to position in BIL file.");
+                f.read(&mut buffer)
+                    .expect("Error while reading from BIL data file.");
 
                 let mut offset: usize;
                 for col in 0..configs.columns {
                     offset = col * data_size;
                     z = if configs.endian == Endianness::LittleEndian {
-                        f64::from_le_bytes(get_eight_bytes(&buffer[offset..offset+data_size]))
+                        f64::from_le_bytes(get_eight_bytes(&buffer[offset..offset + data_size]))
                     } else {
-                        f64::from_be_bytes(get_eight_bytes(&buffer[offset..offset+data_size]))
+                        f64::from_be_bytes(get_eight_bytes(&buffer[offset..offset + data_size]))
                     };
                     data.push(z);
 
                     if z != configs.nodata {
-                        if z < configs.minimum { configs.minimum = z; }
-                        if z > configs.maximum { configs.maximum = z; }
+                        if z < configs.minimum {
+                            configs.minimum = z;
+                        }
+                        if z > configs.maximum {
+                            configs.maximum = z;
+                        }
                     }
                 }
             }
-        },
+        }
         _ => {
             panic!("Unsupported BIL data type.");
         }
@@ -341,21 +398,26 @@ pub fn read_esri_bil(
 }
 
 fn get_two_bytes(buf: &[u8]) -> [u8; 2] {
-    buf.try_into().expect("Error: Slice with incorrect length specified to get_two_bytes.")
+    buf.try_into()
+        .expect("Error: Slice with incorrect length specified to get_two_bytes.")
 }
 
 fn get_four_bytes(buf: &[u8]) -> [u8; 4] {
-    buf.try_into().expect("Error: Slice with incorrect length specified to get_four_bytes.")
+    buf.try_into()
+        .expect("Error: Slice with incorrect length specified to get_four_bytes.")
 }
 
 fn get_eight_bytes(buf: &[u8]) -> [u8; 8] {
-    buf.try_into().expect("Error: Slice with incorrect length specified to get_eight_bytes.")
+    buf.try_into()
+        .expect("Error: Slice with incorrect length specified to get_eight_bytes.")
 }
 
 pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
     if r.configs.photometric_interp == PhotometricInterpretation::RGB {
-        panic!("Single-band Esri BIL files are not suitable for storing RGB data. WhiteboxTools 
-        presently only supports single-band BIL files. Use a GeoTiff format instead.");
+        panic!(
+            "Single-band Esri BIL files are not suitable for storing RGB data. WhiteboxTools 
+        presently only supports single-band BIL files. Use a GeoTiff format instead."
+        );
     }
 
     /*
@@ -388,20 +450,32 @@ pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let mut writer = BufWriter::new(f);
 
     if r.configs.endian == Endianness::LittleEndian {
-        writer.write_all("BYTEORDER      I\n".as_bytes()).expect("Error while writing to BIL file.");
+        writer
+            .write_all("BYTEORDER      I\n".as_bytes())
+            .expect("Error while writing to BIL file.");
     } else {
-        writer.write_all("BYTEORDER      M\n".as_bytes()).expect("Error while writing to BIL file.");
+        writer
+            .write_all("BYTEORDER      M\n".as_bytes())
+            .expect("Error while writing to BIL file.");
     }
 
-    writer.write_all("LAYOUT         BIL\n".as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all("LAYOUT         BIL\n".as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("NROWS          {}\n", r.configs.rows);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("NCOLS          {}\n", r.configs.columns);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
-    writer.write_all("NBANDS         1\n".as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all("NBANDS         1\n".as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let nbits: usize;
     let pixel_type: String;
@@ -409,84 +483,107 @@ pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
         DataType::U8 => {
             nbits = 8;
             pixel_type = "UNSIGNEDINT".to_string();
-        },
+        }
         DataType::U16 => {
             nbits = 16;
             pixel_type = "UNSIGNEDINT".to_string();
-        },
+        }
         DataType::U32 => {
             nbits = 32;
             pixel_type = "UNSIGNEDINT".to_string();
-        },
+        }
         DataType::I8 => {
             nbits = 8;
             pixel_type = "SIGNEDINT".to_string();
-        },
+        }
         DataType::I16 => {
             nbits = 16;
             pixel_type = "SIGNEDINT".to_string();
-        },
+        }
         DataType::I32 => {
             nbits = 32;
             pixel_type = "SIGNEDINT".to_string();
-        },
+        }
         DataType::F32 => {
             nbits = 32;
             pixel_type = "FLOAT".to_string();
-        },
+        }
         DataType::F64 => {
             nbits = 64;
             pixel_type = "FLOAT".to_string();
-        },
-        _ => { panic!("The raster is of a data type that is not supported by the BIL raster format.")}
+        }
+        _ => panic!("The raster is of a data type that is not supported by the BIL raster format."),
     }
 
     let s = format!("NBITS          {}\n", nbits);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("BANDROWBYTES   {}\n", nbits / 4 * r.configs.columns);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("TOTALROWBYTES  {}\n", nbits / 4 * r.configs.columns);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("PIXELTYPE      {}\n", pixel_type);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
-    let s = format!("ULXMAP         {}\n", r.configs.west + r.configs.resolution_x / 2.0);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    let s = format!(
+        "ULXMAP         {}\n",
+        r.configs.west + r.configs.resolution_x / 2.0
+    );
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
-    let s = format!("ULYMAP         {}\n", r.configs.north - r.configs.resolution_y / 2.0);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    let s = format!(
+        "ULYMAP         {}\n",
+        r.configs.north - r.configs.resolution_y / 2.0
+    );
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("XDIM           {}\n", r.configs.resolution_x);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("YDIM           {}\n", r.configs.resolution_y);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let s = format!("NODATA         {}\n", r.configs.nodata);
-    writer.write_all(s.as_bytes()).expect("Error while writing to BIL file.");
+    writer
+        .write_all(s.as_bytes())
+        .expect("Error while writing to BIL file.");
 
     let _ = writer.flush();
-
 
     // output the projection file
     if !r.configs.projection.is_empty() {
         let prj_file = Path::new(&r.file_name)
-        .with_extension("prj")
-        .into_os_string()
-        .into_string()
-        .expect("Error when trying to create BIL projection (PRJ) file.");
+            .with_extension("prj")
+            .into_os_string()
+            .into_string()
+            .expect("Error when trying to create BIL projection (PRJ) file.");
         let f = File::create(&prj_file)?;
         let mut writer = BufWriter::new(f);
 
-        writer.write_all(r.configs.projection.as_bytes()).expect("Error while writing to BIL file.");
+        writer
+            .write_all(r.configs.projection.as_bytes())
+            .expect("Error while writing to BIL file.");
 
         let _ = writer.flush();
-
     }
-
 
     // write the data file
     let data_file = Path::new(&r.file_name)
@@ -500,45 +597,61 @@ pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
     match r.configs.data_type {
         DataType::U8 => {
             for i in 0..r.data.len() {
-                writer.write(&([r.data[i] as u8])).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&([r.data[i] as u8]))
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::U16 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as u16).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as u16).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::U32 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as u32).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as u32).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::I8 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as i8).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as i8).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::I16 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as i16).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as i16).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::I32 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as i32).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as i32).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::F32 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i] as f32).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i] as f32).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
+        }
         DataType::F64 => {
             for i in 0..r.data.len() {
-                writer.write(&(r.data[i]).to_le_bytes()).expect("Error writing bytes to BIL file.");
+                writer
+                    .write(&(r.data[i]).to_le_bytes())
+                    .expect("Error writing bytes to BIL file.");
             }
-        },
-        _ => { panic!("The raster is of a data type that is not supported by the BIL raster format.")}
+        }
+        _ => panic!("The raster is of a data type that is not supported by the BIL raster format."),
     }
 
     let _ = writer.flush();

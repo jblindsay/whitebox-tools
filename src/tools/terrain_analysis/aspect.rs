@@ -277,10 +277,11 @@ impl WhiteboxTool for Aspect {
                                 }
                             }
                             fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            if fx == 0f64 { fx = 0.00001; }
+                            if fx == 0f64 {
+                                fx = 0.00001;
+                            }
                             // if fx != 0f64 {
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2])
-                                / eight_grid_res;
+                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
                             data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees()
                                 + 90f64 * (fx / (fx).abs());
                             // } else {
