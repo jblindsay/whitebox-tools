@@ -320,16 +320,6 @@ impl WhiteboxTool for ShadowModel {
 
             if altitudes[0] > 0f32 { // This azimuth sees sunshine at least part of the year.
 
-                // /*
-                // The sun is actually 0.5 degrees in width. Therefore we will perform the horizon angle analysis twice,
-                // once for azimuth - 0.25 and once for azimuth + 0.25. We then take the minimum HA of the two. In this way,
-                // obstacles that are thinner than 0.5 angular degrees won't cast shadows. That is, if you have something 
-                // like a pole, despite being quite tall, it's shadow length is restricted by the fact that as you get farther
-                // away, in the direction of the falling shadow, it becomes narrower relative to the angular width of the sun.
-                // */
-
-                // azimuth -= 0.25f32;
-                
                 line_slope = if azimuth < 180f32 {
                     (90f32 - azimuth).to_radians().tan()
                 } else {
@@ -384,10 +374,10 @@ impl WhiteboxTool for ShadowModel {
                                 // calculate the distance
                                 delta_x = x * cell_size_x;
                                 delta_y = -y * cell_size_y;
-                                dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                                dist = delta_x.hypot(delta_y); 
                                 if dist <= max_dist {
-                                    x1 = x as isize;
-                                    x2 = x1 + x_step;
+                                    x1 = x.floor() as isize;
+                                    x2 = x1 + 1;
                                     y1 = -y as isize;
                                     weight = x - x1 as f32;
                                     offsets.push((x1, y1, x2, y1, weight, dist));
@@ -398,32 +388,85 @@ impl WhiteboxTool for ShadowModel {
                         }
 
                         // Find all of the vertical grid intersections.
-                        if line_slope.abs() != 1f32 {
-                            x = 0f32;
-                            flag = true;
-                            while flag {
-                                x += x_step as f32;
-                                y = -(line_slope * x); // * -1f32;
+                        x = 0f32;
+                        flag = true;
+                        while flag {
+                            x += x_step as f32;
+                            y = -(line_slope * x); // * -1f32;
 
-                                // calculate the distance
-                                delta_x = x * cell_size_x;
-                                delta_y = y * cell_size_y;
+                            // calculate the distance
+                            delta_x = x * cell_size_x;
+                            delta_y = y * cell_size_y;
 
-                                dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                if dist <= max_dist {
-                                    y1 = y as isize;
-                                    y2 = y1 - y_step;
-                                    x1 = x as isize;
-                                    weight = y - y1 as f32;
-                                    offsets.push((x1, y1, x1, y2, weight, dist));
-                                } else {
-                                    flag = false;
-                                }
+                            dist = delta_x.hypot(delta_y);
+                            if dist <= max_dist {
+                                y1 = y.floor() as isize;
+                                y2 = y1 + 1; // - y_step;
+                                x1 = x as isize;
+                                weight = y - y1 as f32;
+                                offsets.push((x1, y1, x1, y2, weight, dist));
+                            } else {
+                                flag = false;
                             }
                         }
 
                         // Sort by distance.
-                        offsets.sort_by(|a, b| a.4.partial_cmp(&b.4).unwrap());
+                        offsets.sort_by(|a, b| a.5.partial_cmp(&b.5).unwrap());
+
+
+                        // // Find all of the horizontal grid intersections.
+                        // if line_slope != 0f32 { // Otherwise, there are no horizontal intersections.
+                        //     y = 0f32;
+                        //     flag = true;
+                        //     while flag {
+                        //         y += y_step as f32;
+                        //         x = y / line_slope;
+
+                        //         // calculate the distance
+                        //         delta_x = x * cell_size_x;
+                        //         delta_y = -y * cell_size_y;
+                        //         dist = delta_x.hypot(delta_y); // (delta_x * delta_x + delta_y * delta_y).sqrt();
+                        //         if dist <= max_dist {
+                        //             x1 = x as isize;
+                        //             x2 = x1 + x_step;
+                        //             y1 = -y as isize;
+                        //             weight = x - x1 as f32;
+                        //             offsets.push((x1, y1, x2, y1, weight, dist));
+                        //         } else {
+                        //             flag = false;
+                        //         }
+                        //     }
+                        // }
+
+                        // // Find all of the vertical grid intersections.
+                        // if line_slope.abs() != 1f32 {
+                        //     x = 0f32;
+                        //     flag = true;
+                        //     while flag {
+                        //         x += x_step as f32;
+                        //         y = -(line_slope * x); // * -1f32;
+
+                        //         // calculate the distance
+                        //         delta_x = x * cell_size_x;
+                        //         delta_y = y * cell_size_y;
+
+                        //         dist = delta_x.hypot(delta_y); // (delta_x * delta_x + delta_y * delta_y).sqrt();
+                        //         if dist <= max_dist {
+                        //             y1 = y as isize;
+                        //             y2 = y1 - y_step;
+                        //             x1 = x as isize;
+                        //             weight = y - y1 as f32;
+                        //             offsets.push((x1, y1, x1, y2, weight, dist));
+                        //         } else {
+                        //             flag = false;
+                        //         }
+                        //     }
+                        // }
+
+                        // // Sort by distance.
+                        // offsets.sort_by(|a, b| a.5.partial_cmp(&b.5).unwrap());
+
+                        
 
                         let num_offsets = offsets.len();
                         let mut z: f32;
@@ -458,7 +501,7 @@ impl WhiteboxTool for ShadowModel {
                                         } else if z1 == nodata_f32 {
                                             z1 = z2;
                                         } else if z2 == nodata_f32 {
-                                            z2 = z2;
+                                            z2 = z1;
                                         }
 
                                         z = z1 + offsets[i].4 * (z2 - z1);
@@ -494,7 +537,6 @@ impl WhiteboxTool for ShadowModel {
                 for row in 0..rows {
                     let (r, data) = rx.recv().expect("Error receiving data from thread.");
                     horizon_angle.set_row_data(r, data);
-
                     if verbose {
                         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                         if progress != old_progress {
@@ -503,193 +545,6 @@ impl WhiteboxTool for ShadowModel {
                         }
                     }
                 }
-
-
-
-                /*
-                azimuth += 0.5f32;
-                line_slope = if azimuth < 180f32 {
-                    (90f32 - azimuth).to_radians().tan()
-                } else {
-                    (270f32 - azimuth).to_radians().tan()
-                };
-        
-                // Now perform the filter
-                let num_procs = num_cpus::get() as isize;
-                let (tx, rx) = mpsc::channel();
-                for tid in 0..num_procs {
-                    let input = input.clone();
-                    let tx = tx.clone();
-                    thread::spawn(move || {
-
-                        // The ray-tracing operation can be viewed as a linear maximum filter. The first step 
-                        // is to create the filter offsets and calculate the offset distances.
-
-                        let x_step: isize;
-                        let y_step: isize;
-                        if azimuth > 0f32 && azimuth <= 90f32 {
-                            x_step = 1;
-                            y_step = 1;
-                        } else if azimuth <= 180f32 {
-                            x_step = 1;
-                            y_step = -1;
-                        } else if azimuth <= 270f32 {
-                            x_step = -1;
-                            y_step = -1;
-                        } else {
-                            x_step = -1;
-                            y_step = 1;
-                        }
-
-                        let mut flag: bool;
-                        let (mut delta_x, mut delta_y): (f32, f32);
-                        let (mut x, mut y): (f32, f32);
-                        let (mut x1, mut y1): (isize, isize);
-                        let (mut x2, mut y2): (isize, isize);
-                        let (mut z1, mut z2): (f32, f32);
-                        let mut dist: f32;
-                        let mut weight: f32;
-                        let mut offsets = vec![];
-
-                        // Find all of the horizontal grid intersections.
-                        if line_slope != 0f32 { // Otherwise, there are no horizontal intersections.
-                            y = 0f32;
-                            flag = true;
-                            while flag {
-                                y += y_step as f32;
-                                x = y / line_slope;
-
-                                // calculate the distance
-                                delta_x = x * cell_size_x;
-                                delta_y = -y * cell_size_y;
-                                dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                if dist <= max_dist {
-                                    x1 = x as isize;
-                                    x2 = x1 + x_step;
-                                    y1 = -y as isize;
-                                    weight = x - x1 as f32;
-                                    offsets.push((x1, y1, x2, y1, weight, dist));
-                                } else {
-                                    flag = false;
-                                }
-                            }
-                        }
-
-                        // Find all of the vertical grid intersections.
-                        if line_slope.abs() != 1f32 {
-                            x = 0f32;
-                            flag = true;
-                            while flag {
-                                x += x_step as f32;
-                                y = -(line_slope * x); // * -1f32;
-
-                                // calculate the distance
-                                delta_x = x * cell_size_x;
-                                delta_y = y * cell_size_y;
-
-                                dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                                if dist <= max_dist {
-                                    y1 = y as isize;
-                                    y2 = y1 - y_step;
-                                    x1 = x as isize;
-                                    weight = y - y1 as f32;
-                                    offsets.push((x1, y1, x1, y2, weight, dist));
-                                } else {
-                                    flag = false;
-                                }
-                            }
-                        }
-
-                        // Sort by distance.
-                        offsets.sort_by(|a, b| a.4.partial_cmp(&b.4).unwrap());
-
-                        let num_offsets = offsets.len();
-                        let mut z: f32;
-                        let mut slope: f32;
-                        let early_stopping_slope = 80f32.to_radians().tan();
-                        let mut current_elev: f32;
-                        let mut current_max_slope: f32;
-                        let mut current_max_elev: f32;
-                        let a_small_value = -9999999f32;
-                        for row in (0..rows).filter(|r| r % num_procs == tid) {
-                            let mut data: Vec<f32> = vec![nodata_f32; columns as usize];
-                            for col in 0..columns {
-                                current_elev = input.get_value(row, col);
-                                if current_elev != nodata_f32 {
-
-                                    // Run down the offsets of the ray
-                                    current_max_slope = a_small_value;
-                                    current_max_elev = a_small_value;
-                                    for i in 0..num_offsets {
-                                        // Where are we on the grid?
-                                        x1 = col + offsets[i].0;
-                                        y1 = row + offsets[i].1;
-                                        x2 = col + offsets[i].2;
-                                        y2 = row + offsets[i].3;
-                                        
-                                        // What is the elevation?
-                                        z1 = input.get_value(y1, x1);
-                                        z2 = input.get_value(y2, x2);
-
-                                        if z1 == nodata_f32 && z2 == nodata_f32 {
-                                            break; // We're likely off the grid.
-                                        } else if z1 == nodata_f32 {
-                                            z1 = z2;
-                                        } else if z2 == nodata_f32 {
-                                            z2 = z2;
-                                        }
-
-                                        z = z1 + offsets[i].4 * (z2 - z1);
-
-                                        // All previous cells are nearer, and so if this isn't a higher 
-                                        // cell than the current highest, it can't be the horizon cell.
-                                        if z > current_max_elev {
-                                            current_max_elev = z;
-                                            
-                                            // Calculate the slope
-                                            slope = (z - current_elev) / offsets[i].5;
-                                            if slope > current_max_slope {
-                                                current_max_slope = slope;
-                                                if slope > early_stopping_slope {
-                                                    break; // we're unlikely to find a farther horizon cell.
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                    if current_max_slope == a_small_value {
-                                        data[col as usize] = 0f32; // It's a zero-length scan. We didn't encounter any valid cells.
-                                    } else {
-                                        data[col as usize] = current_max_slope.atan().to_degrees();
-                                    }
-                                }
-                            }
-                            tx.send((row, data)).unwrap();
-                        }
-                    });
-                }
-
-                let mut val: f32;
-                for row in 0..rows {
-                    let (r, data) = rx.recv().expect("Error receiving data from thread.");
-                    for col in 0..columns {
-                        val = data[col as usize];
-                        if val < horizon_angle.get_value(r, col) {
-                            horizon_angle.set_value(r, col, val);
-                        }
-                    }
-
-                    if verbose {
-                        progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                        if progress != old_progress {
-                            println!("Progress (Az={}): {}%", azimuth, progress);
-                            old_progress = progress;
-                        }
-                    }
-                }
-                azimuth -= 0.25f32;
-                */
-
 
 
                 // Loop through each cell in the grid, counting the number of days that it is in shadow.
@@ -822,6 +677,8 @@ fn find_alt(az: f64, lat: f64, lon: f64, julian_day: i64) -> f64 { //, utc_offse
     target_alt
 }
 
+
+// The following code has been modified from the original rust-sun library [https://github.com/flosse/rust-sun]
 
 // The `sun` crate is a library for calculating the position of the sun.
 // It is a port of the `JavaScript` library

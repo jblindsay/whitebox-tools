@@ -331,10 +331,10 @@ impl WhiteboxTool for HorizonAngle {
                         // calculate the distance
                         delta_x = x * cell_size_x;
                         delta_y = -y * cell_size_y;
-                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
+                        dist = delta_x.hypot(delta_y); 
                         if dist <= max_dist {
-                            x1 = x as isize;
-                            x2 = x1 + x_step;
+                            x1 = x.floor() as isize;
+                            x2 = x1 + 1;
                             y1 = -y as isize;
                             weight = x - x1 as f32;
                             offsets.push((x1, y1, x2, y1, weight, dist));
@@ -345,32 +345,30 @@ impl WhiteboxTool for HorizonAngle {
                 }
 
                 // Find all of the vertical grid intersections.
-                if line_slope.abs() != 1f32 {
-                    x = 0f32;
-                    flag = true;
-                    while flag {
-                        x += x_step as f32;
-                        y = -(line_slope * x); // * -1f32;
+                x = 0f32;
+                flag = true;
+                while flag {
+                    x += x_step as f32;
+                    y = -(line_slope * x); // * -1f32;
 
-                        // calculate the distance
-                        delta_x = x * cell_size_x;
-                        delta_y = y * cell_size_y;
+                    // calculate the distance
+                    delta_x = x * cell_size_x;
+                    delta_y = y * cell_size_y;
 
-                        dist = (delta_x * delta_x + delta_y * delta_y).sqrt();
-                        if dist <= max_dist {
-                            y1 = y as isize;
-                            y2 = y1 - y_step;
-                            x1 = x as isize;
-                            weight = y - y1 as f32;
-                            offsets.push((x1, y1, x1, y2, weight, dist));
-                        } else {
-                            flag = false;
-                        }
+                    dist = delta_x.hypot(delta_y);
+                    if dist <= max_dist {
+                        y1 = y.floor() as isize;
+                        y2 = y1 + 1; // - y_step;
+                        x1 = x as isize;
+                        weight = y - y1 as f32;
+                        offsets.push((x1, y1, x1, y2, weight, dist));
+                    } else {
+                        flag = false;
                     }
                 }
 
                 // Sort by distance.
-                offsets.sort_by(|a, b| a.4.partial_cmp(&b.4).unwrap());
+                offsets.sort_by(|a, b| a.5.partial_cmp(&b.5).unwrap());
 
                 let num_offsets = offsets.len();
                 let mut z: f32;

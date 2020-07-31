@@ -55,12 +55,12 @@ impl MapOffTerrainObjects {
         });
 
         parameters.push(ToolParameter {
-            name: "Maximum Elevation Change".to_owned(),
-            flags: vec!["--max_diff".to_owned()],
-            description: "Maximum allowable absolute elevation change (optional).".to_owned(),
+            name: "Maximum Slope".to_owned(),
+            flags: vec!["--max_slope".to_owned()],
+            description: "Maximum inter-cell absolute slope.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
-            optional: true,
+            default_value: Some("40.0".to_owned()),
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -132,7 +132,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut max_z_diff = f32::INFINITY;
+        let mut max_slope = f32::INFINITY;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -162,8 +162,8 @@ impl WhiteboxTool for MapOffTerrainObjects {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-max_diff" {
-                max_z_diff = if keyval {
+            } else if flag_val == "-max_slope" {
+                max_slope = if keyval {
                     vec[1]
                         .to_string()
                         .parse::<f32>()
@@ -195,6 +195,10 @@ impl WhiteboxTool for MapOffTerrainObjects {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
+        if max_slope < 1f32 { max_slope = 1f32; }
+        if max_slope > 90f32 { max_slope = 90f32; }
+        max_slope = max_slope.to_radians().tan();
+
         if verbose {
             println!("Reading data...")
         }
@@ -210,10 +214,9 @@ impl WhiteboxTool for MapOffTerrainObjects {
         let rows = input.rows as isize;
         let columns = input.columns as isize;
         let nodata = input.nodata;
-        // let res_x = configs.resolution_x as f32;
-        // let res_y = configs.resolution_y as f32;
-        // let eight_res_x = res_x * 8f32;
-        // let eight_res_y = res_y * 8f32;
+        let res_x = configs.resolution_x as f32;
+        let res_y = configs.resolution_y as f32;
+        let res_diag = res_x.hypot(res_y);
         
         /////////////////////////////////////////////
         // Performing the region-growing operation //
@@ -229,13 +232,12 @@ impl WhiteboxTool for MapOffTerrainObjects {
         output.reinitialize_values(-1f64);
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        // let mut stack = vec![];
+        let cellsize = [res_diag, res_x, res_diag, res_y, res_diag, res_x, res_diag, res_y];
         let mut fid = 1f64;
         let mut z: f32;
         let mut zn: f32;
         let (mut col_n, mut row_n): (isize, isize);
         let mut num_cells_popped = 0f64;
-        // let mut size: usize;
         let num_cells = (rows * columns - 1) as f64; // actually less one.
 
         for row in 0..rows {
@@ -255,7 +257,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
                                 col_n = cell.column + dx[n];
                                 zn = input.get_value(row_n, col_n);
                                 if zn != nodata && output.get_value(row_n, col_n) == -1f64 {
-                                    if (z - zn).abs() < max_z_diff {
+                                    if (z - zn).abs() / cellsize[n] < max_slope {
                                         stack.push(GridCell::new(row_n, col_n));
                                         output.set_value(row_n, col_n, fid);
                                     }
@@ -287,7 +289,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Max. z difference: {}", max_z_diff));
+        output.add_metadata_entry(format!("Max. absolute slope: {}", max_slope));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
