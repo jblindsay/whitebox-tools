@@ -251,10 +251,10 @@ impl WhiteboxTool for ReclassFromFile {
 
         if reclass_vals.len() % 3 != 0 && !assign_mode {
             return Err(Error::new(ErrorKind::InvalidInput,
-                "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
+                "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0 0.0 1.0'"));
         } else if reclass_vals.len() % 2 != 0 && assign_mode {
             return Err(Error::new(ErrorKind::InvalidInput,
-                "The reclass values string must include pair values (new value; old value), e.g. '1;10;2;20;3;30;4;40'"));
+                "The reclass values string must include pair values (new value; old value), e.g. '1 10 2 20'"));
         }
         let num_ranges = match assign_mode {
             false => reclass_vals.len() / 3,

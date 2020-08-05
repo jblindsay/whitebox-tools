@@ -151,6 +151,15 @@ impl LidarRansacPlanes {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Last Returns Only".to_owned(),
+            flags: vec!["--last_returns".to_owned()],
+            description: "Only include last- and only-return points.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -162,7 +171,7 @@ impl LidarRansacPlanes {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --num_iter=10 --num_samples=5 --threshold=0.25 --max_slope=70.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=\"input.las\" -o=\"output.las\" --radius=10.0 --num_iter=10 --num_samples=5 --threshold=0.25 --max_slope=70.0 --last_returns", short_exe, name).replace("*", &sep);
 
         LidarRansacPlanes {
             name: name,
@@ -224,6 +233,7 @@ impl WhiteboxTool for LidarRansacPlanes {
         let mut acceptable_model_size = 30;
         let mut filter = true;
         let mut max_slope = 75f64;
+        let mut last_returns = false;
 
         // read the arguments
         if args.len() == 0 {
@@ -330,6 +340,10 @@ impl WhiteboxTool for LidarRansacPlanes {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     filter = false;
                 }
+            } else if flag_val == "-last_returns" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    last_returns = true;
+                }
             }
         }
 
@@ -392,7 +406,9 @@ impl WhiteboxTool for LidarRansacPlanes {
         let mut frs: FixedRadiusSearch3D<usize> =
             FixedRadiusSearch3D::new(search_radius, DistanceMetric::SquaredEuclidean);
         for (i, p) in (&input).into_iter().enumerate() {
-            frs.insert(p.x, p.y, p.z, i);
+            if (!last_returns || (last_returns && p.is_late_return())) && !p.is_classified_noise() {
+                frs.insert(p.x, p.y, p.z, i);
+            }
             if verbose {
                 progress = (100.0_f64 * i as f64 / num_points) as i32;
                 if progress != old_progress {

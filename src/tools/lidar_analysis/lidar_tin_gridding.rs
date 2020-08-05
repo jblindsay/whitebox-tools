@@ -368,7 +368,7 @@ impl WhiteboxTool for LidarTINGridding {
             early_returns = false;
         }
 
-        let search_radius = grid_res * 5f64; // this is an important parameter for minimizing edge effect when interpolating tiles.
+        // let search_radius = grid_res * 5f64; // this is an important parameter for minimizing edge effect when interpolating tiles.
 
         let mut inputs = vec![];
         let mut outputs = vec![];
@@ -494,10 +494,10 @@ impl WhiteboxTool for LidarTINGridding {
 
                     // Expand the bounding box to include the areas of overlap
                     let bb = BoundingBox {
-                        min_x: bounding_boxes[tile].min_x - search_radius,
-                        max_x: bounding_boxes[tile].max_x + search_radius,
-                        min_y: bounding_boxes[tile].min_y - search_radius,
-                        max_y: bounding_boxes[tile].max_y + search_radius,
+                        min_x: bounding_boxes[tile].min_x - 2f64,
+                        max_x: bounding_boxes[tile].max_x + 2f64,
+                        min_y: bounding_boxes[tile].min_y - 2f64,
+                        max_y: bounding_boxes[tile].max_y + 2f64,
                     };
 
                     let mut points = vec![];
@@ -1070,7 +1070,6 @@ impl WhiteboxTool for LidarTINGridding {
                         ));
                         output.add_metadata_entry(format!("Input file: {}", input_file));
                         output.add_metadata_entry(format!("Grid resolution: {}", grid_res));
-                        output.add_metadata_entry(format!("Search radius: {}", search_radius));
                         output.add_metadata_entry(format!(
                             "Interpolation parameter: {}",
                             interp_parameter

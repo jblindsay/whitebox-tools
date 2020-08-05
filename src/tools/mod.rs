@@ -87,6 +87,7 @@ impl ToolManager {
         tool_names.push("ExtendVectorLines".to_string());
         tool_names.push("ExtractNodes".to_string());
         tool_names.push("ExtractRasterValuesAtPoints".to_string());
+        tool_names.push("FilterRasterFeaturesByArea".to_string());
         tool_names.push("FindLowestOrHighestPoints".to_string());
         tool_names.push("FindPatchOrClassEdgeCells".to_string());
         tool_names.push("HighestPosition".to_string());
@@ -479,7 +480,7 @@ impl ToolManager {
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
-        tool_names.push("ShadowModel".to_string());
+        tool_names.push("ShadowTime".to_string());
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
@@ -579,6 +580,7 @@ impl ToolManager {
             "extractrastervaluesatpoints" => {
                 Some(Box::new(gis_analysis::ExtractRasterValuesAtPoints::new()))
             }
+            "filterrasterfeaturesbyarea" => Some(Box::new(gis_analysis::FilterRasterFeaturesByArea::new())),
             "findlowestorhighestpoints" => {
                 Some(Box::new(gis_analysis::FindLowestOrHighestPoints::new()))
             }
@@ -1146,7 +1148,7 @@ impl ToolManager {
             }
             "ruggednessindex" => Some(Box::new(terrain_analysis::RuggednessIndex::new())),
             // "segmentterrain" => Some(Box::new(terrain_analysis::SegmentTerrain::new())),
-            "shadowmodel" => Some(Box::new(terrain_analysis::ShadowModel::new())),
+            "shadowtime" => Some(Box::new(terrain_analysis::ShadowTime::new())),
             "sedimenttransportindex" => {
                 Some(Box::new(terrain_analysis::SedimentTransportIndex::new()))
             }

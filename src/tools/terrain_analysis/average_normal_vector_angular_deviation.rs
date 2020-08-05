@@ -330,7 +330,9 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                                         z_final += weights[a] * zn;
                                     }
                                 }
-                                data[col as usize] = z_final / sum;
+                                if sum > 0.0 {
+                                    data[col as usize] = z_final / sum;
+                                }
                             }
                         }
 

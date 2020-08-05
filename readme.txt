@@ -57,8 +57,9 @@ for more details.
 ******************
 
 Version 1.X.X (XX-XX-2020)
-- Added the ShadowModel model tool for modelling the proportion of daytime that a location is in shadow.
+- Added the ShadowTime model tool for modelling the proportion of daytime that a location is in shadow.
 - Added the MapOffTerrainObjects tool.
+- Added the FilterRasterFeaturesByArea tool.
 - The D8 and FD8 flow pointer tools now output byte rasters.
 - The Isobasins tool now optionally outputs an upstream/downstream connections table.
 - The HorizonAngle tool has had significant performance improvements.

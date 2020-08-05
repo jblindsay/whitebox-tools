@@ -27,6 +27,9 @@ use std::path;
 /// `--maintain_dimensions` parameter is used, in which case the output grid extent will match that of the input raster.
 /// The grid resolution of output raster is the same as the input raster.
 ///
+/// It is very important that the input raster and the input vector polygon file share the same projection. The result
+/// is unlikely to be satisfactory otherwise.
+///
 /// # See Also
 /// `ErasePolygonFromRaster`
 pub struct ClipRasterToPolygon {
@@ -428,6 +431,13 @@ impl WhiteboxTool for ClipRasterToPolygon {
             let south: f64 = north - rows as f64 * input.configs.resolution_y;
             let east = west + columns as f64 * input.configs.resolution_x;
 
+            if rows > 500_000 || columns > 500_000 {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The output rasters dimensions are too big. This is may be due to a projection inconsistency between the input raster and the polygon file.",
+                ));
+            }
+
             let mut configs = RasterConfigs {
                 ..Default::default()
             };
@@ -458,10 +468,11 @@ impl WhiteboxTool for ClipRasterToPolygon {
                 isize,
             );
             let num_records = polygons.num_records;
+            let mut part_num: i32;
             for record_num in 0..polygons.num_records {
                 let record = polygons.get_record(record_num);
 
-                let mut part_num = 1;
+                part_num = 1;
                 for part in 0..record.num_parts as usize {
                     if !record.is_hole(part as i32) {
                         // Add these cells in

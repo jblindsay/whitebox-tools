@@ -21,7 +21,7 @@ use crate::structures::Array2D;
 use rayon::prelude::*;
 
 /// This tool calculates the proportion of time a location is within an area of shadow.
-pub struct ShadowModel {
+pub struct ShadowTime {
     name: String,
     description: String,
     toolbox: String,
@@ -29,10 +29,10 @@ pub struct ShadowModel {
     example_usage: String,
 }
 
-impl ShadowModel {
+impl ShadowTime {
     /// public constructor
-    pub fn new() -> ShadowModel {
-        let name = "ShadowModel".to_string();
+    pub fn new() -> ShadowTime {
+        let name = "ShadowTime".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
             "Calculates the proportion of time a location is within an area of shadow."
@@ -82,7 +82,7 @@ impl ShadowModel {
             description: "Centre point latitude.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true,
+            optional: false,
         });
 
         parameters.push(ToolParameter {
@@ -91,7 +91,7 @@ impl ShadowModel {
             description: "Centre point longitude.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
-            optional: true,
+            optional: false,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -107,7 +107,7 @@ impl ShadowModel {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif --az_fraction=15.0 --max_dist=100.0 --lat=43.545 --long=-80.248", short_exe, name).replace("*", &sep);
 
-        ShadowModel {
+        ShadowTime {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -117,7 +117,7 @@ impl ShadowModel {
     }
 }
 
-impl WhiteboxTool for ShadowModel {
+impl WhiteboxTool for ShadowTime {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -162,10 +162,10 @@ impl WhiteboxTool for ShadowModel {
         let mut output_file = String::new();
         let mut az_fraction = 0.0f32;
         let mut max_dist = f32::INFINITY;
-        // let mut latitude = 0f32;
-        // let mut longitude = 0f32;
-        let mut latitude = 43.5448;
-        let mut longitude = -80.2482;
+        let mut latitude = 0f32;
+        let mut longitude = 0f32;
+        // let mut latitude = 43.5448;
+        // let mut longitude = -80.2482;
     
 
         if args.len() == 0 {
@@ -413,61 +413,6 @@ impl WhiteboxTool for ShadowModel {
                         // Sort by distance.
                         offsets.sort_by(|a, b| a.5.partial_cmp(&b.5).unwrap());
 
-
-                        // // Find all of the horizontal grid intersections.
-                        // if line_slope != 0f32 { // Otherwise, there are no horizontal intersections.
-                        //     y = 0f32;
-                        //     flag = true;
-                        //     while flag {
-                        //         y += y_step as f32;
-                        //         x = y / line_slope;
-
-                        //         // calculate the distance
-                        //         delta_x = x * cell_size_x;
-                        //         delta_y = -y * cell_size_y;
-                        //         dist = delta_x.hypot(delta_y); // (delta_x * delta_x + delta_y * delta_y).sqrt();
-                        //         if dist <= max_dist {
-                        //             x1 = x as isize;
-                        //             x2 = x1 + x_step;
-                        //             y1 = -y as isize;
-                        //             weight = x - x1 as f32;
-                        //             offsets.push((x1, y1, x2, y1, weight, dist));
-                        //         } else {
-                        //             flag = false;
-                        //         }
-                        //     }
-                        // }
-
-                        // // Find all of the vertical grid intersections.
-                        // if line_slope.abs() != 1f32 {
-                        //     x = 0f32;
-                        //     flag = true;
-                        //     while flag {
-                        //         x += x_step as f32;
-                        //         y = -(line_slope * x); // * -1f32;
-
-                        //         // calculate the distance
-                        //         delta_x = x * cell_size_x;
-                        //         delta_y = y * cell_size_y;
-
-                        //         dist = delta_x.hypot(delta_y); // (delta_x * delta_x + delta_y * delta_y).sqrt();
-                        //         if dist <= max_dist {
-                        //             y1 = y as isize;
-                        //             y2 = y1 - y_step;
-                        //             x1 = x as isize;
-                        //             weight = y - y1 as f32;
-                        //             offsets.push((x1, y1, x1, y2, weight, dist));
-                        //         } else {
-                        //             flag = false;
-                        //         }
-                        //     }
-                        // }
-
-                        // // Sort by distance.
-                        // offsets.sort_by(|a, b| a.5.partial_cmp(&b.5).unwrap());
-
-                        
-
                         let num_offsets = offsets.len();
                         let mut z: f32;
                         let mut slope: f32;
@@ -551,8 +496,6 @@ impl WhiteboxTool for ShadowModel {
                 // Specifically, we want to count the number of days for which the sun is above the 
                 // horizon at the azimuth (i.e. altitudes[day] > 0) but below the local horizon angle.
 
-                // let mut num_times_in_shadow: f64;
-                // let mut ha: f32;
                 for row in 0..rows {
                     let values = horizon_angle.get_row_data(row);
                     let new_vals = values.par_iter()
