@@ -22,7 +22,8 @@ use std::thread;
 /// D8 (O'Callaghan and Mark, 1984) algorithm. This algorithm is an example of single-flow-direction
 /// (SFD) method because the flow entering each grid cell is routed to only one downslope neighbour,
 /// i.e. flow divergence is not permitted. The user must specify the name of the input digital
-/// elevation model (DEM) or D8 flow pointer (`DInfPointer`) raster (`--input`). If an input DEM is used, it must have
+/// elevation model (DEM) or flow pointer raster (`--input`) derived using the D8 or Rho8 method 
+/// (`D8Pointer`, `Rho8Pointer`). If an input DEM is used, it must have
 /// been hydrologically corrected to remove all spurious depressions and flat areas. DEM pre-processing
 /// is usually achieved using the `BreachDepressionsLeastCost` or `FillDepressions` tools. If a D8 pointer
 /// raster is input, the user must also specify the optional `--pntr` flag. If the D8 pointer follows
@@ -46,7 +47,7 @@ use std::thread;
 /// value in the output flow-accumulation image.
 ///
 /// # See Also:
-/// `DInfPointer`, `DInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`
+/// `Rho8Pointer`, `D8Pointer`, `DInfPointer`, `DInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`
 pub struct D8FlowAccumulation {
     name: String,
     description: String,
