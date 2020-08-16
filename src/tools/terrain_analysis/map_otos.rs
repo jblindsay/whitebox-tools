@@ -63,6 +63,15 @@ impl MapOffTerrainObjects {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Minimum Feature Size".to_owned(),
+            flags: vec!["--min_size".to_owned()],
+            description: "Minimum feature size, in grid cells.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: Some("1".to_owned()),
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -133,6 +142,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut max_slope = f32::INFINITY;
+        let mut min_size = 0usize;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -172,6 +182,18 @@ impl WhiteboxTool for MapOffTerrainObjects {
                     args[i + 1]
                         .to_string()
                         .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+            } else if flag_val == "-min_size" {
+                min_size = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<usize>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<usize>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
             }
@@ -239,6 +261,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
         let (mut col_n, mut row_n): (isize, isize);
         let mut num_cells_popped = 0f64;
         let num_cells = (rows * columns - 1) as f64; // actually less one.
+        let mut size: usize;
 
         for row in 0..rows {
             for col in 0..columns {
@@ -248,6 +271,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
                         let mut stack = vec![];
                         stack.push(GridCell::new(row, col));
                         output.set_value(row, col, fid);
+                        size = 1;
 
                         // Perform a region-growing operation.
                         while let Some(cell) = stack.pop() {
@@ -260,6 +284,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
                                     if (z - zn).abs() / cellsize[n] < max_slope {
                                         stack.push(GridCell::new(row_n, col_n));
                                         output.set_value(row_n, col_n, fid);
+                                        size += 1;
                                     }
                                 }
                             }
@@ -274,7 +299,25 @@ impl WhiteboxTool for MapOffTerrainObjects {
                                 }
                             }
                         }
-                        fid += 1f64;
+
+                        if size < min_size {
+                            stack.push(GridCell::new(row, col));
+                            output.set_value(row, col, 1f64);
+                            
+                            // Perform a region-growing operation.
+                            while let Some(cell) = stack.pop() {
+                                for n in 0..8 {
+                                    row_n = cell.row + dy[n];
+                                    col_n = cell.column + dx[n];
+                                    if input.get_value(row_n, col_n) as f64 == fid {
+                                        stack.push(GridCell::new(row_n, col_n));
+                                        output.set_value(row_n, col_n, 1f64);
+                                    }
+                                }
+                            }
+                        } else {
+                            fid += 1f64;
+                        }
                     }
                 } else {
                     output.set_value(row, col, -32768.0);
@@ -290,6 +333,7 @@ impl WhiteboxTool for MapOffTerrainObjects {
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
         output.add_metadata_entry(format!("Max. absolute slope: {}", max_slope));
+        output.add_metadata_entry(format!("Min. feature size: {}", min_size));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {

@@ -349,6 +349,161 @@ impl WhiteboxTool for RasterToVectorPolygons {
 
         drop(clumps);
 
+        
+        let mut geometries =
+            vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize - 1];
+        let mut node_live = vec![true; line_segments.len() * 2];
+        let num_nodes = line_segments.len() * 2;
+        let mut line_segment_n: usize;
+        let mut current_node: usize;
+        let mut node_n: usize;
+        let mut heading: f64;
+        let mut max_heading: f64;
+        let mut node_of_max_deflection: usize;
+        let mut line_segment: usize;
+        let mut line_start: usize;
+        let mut flag: bool;
+        for node in 0..line_segments.len() * 2 {
+            if node_live[node] {
+                line_segment = node / 2;
+                z = line_segments[line_segment].value;
+
+                line_start = node;
+                current_node = node;
+                let mut points = vec![];
+                flag = true;
+                while flag {
+                    line_segment_n = current_node / 2;
+
+                    // Add the current_node to points.
+                    p1 = if current_node % 2 == 0 {
+                        line_segments[line_segment_n].first_vertex()
+                    } else {
+                        line_segments[line_segment_n].last_vertex()
+                    };
+                    points.push(p1);
+                    node_live[current_node] = false;
+
+                    // We've now added both ends of this segment. Find the next connecting segment.
+                    let ret = tree
+                        .within(&[p1.x, p1.y], prec, &squared_euclidean)
+                        .unwrap();
+
+                    let mut connected_nodes: Vec<usize> = Vec::with_capacity(ret.len());
+                    for a in 0..ret.len() {
+                        node_n = *ret[a].1;
+                        line_segment_n = node_n / 2;
+                        zn = line_segments[line_segment_n].value;
+                        if zn == z && node_live[node_n] {
+                            connected_nodes.push(node_n);
+                        }
+                    }
+
+                    if connected_nodes.len() == 0 {
+                        // Retrieve the other end
+                        current_node = if current_node % 2 == 0 {
+                            current_node + 1
+                        } else {
+                            current_node - 1
+                        };
+
+                        // Is the other end of this segment still live? If not, end the trace.
+                        if !node_live[current_node] {
+                            p1 = if line_start % 2 == 0 {
+                                line_segments[line_start / 2].first_vertex()
+                            } else {
+                                line_segments[line_start / 2].last_vertex()
+                            };
+                            points.push(p1);
+                            // flag = false;
+                            break;
+                        }
+                    } else if connected_nodes.len() == 1 {
+                        // only one connected segment; move there.
+                        // current_node = connected_nodes[0]; 
+                        current_node = if connected_nodes[0] % 2 == 0 {
+                            connected_nodes[0] + 1
+                        } else {
+                            connected_nodes[0] - 1
+                        };
+                        node_live[connected_nodes[0]] = false;
+                    } else { // connected_nodes.len() >= 2
+                        // there are two or more connected segments; choose the node the represents the greatest deflection in path
+                        
+                        // current point is already in p1.
+                        p2 = points[points.len() - 2]; // previous point
+
+                        max_heading = -10f64;
+                        node_of_max_deflection = num_nodes;
+                        for n in 0..connected_nodes.len() {
+                            line_segment_n = connected_nodes[n] / 2;
+                            p3 = if connected_nodes[n] % 2 == 0 {
+                                // get the other end of this segment
+                                line_segments[line_segment_n].last_vertex()
+                            } else {
+                                line_segments[line_segment_n].first_vertex()
+                            };
+                            heading = -Point2D::change_in_heading(p2, p1, p3); //.abs(); // go left if you can.
+                            if heading > max_heading && heading != 0f64 { // never go straight if you have the option not to.
+                                max_heading = heading;
+                                node_of_max_deflection = n;
+                            }
+                        }
+                        if node_of_max_deflection < num_nodes { // none found.
+                            // current_node = connected_nodes[node_of_max_deflection];
+                            // Retrieve the other end
+                            current_node = if connected_nodes[node_of_max_deflection] % 2 == 0 {
+                                connected_nodes[node_of_max_deflection] + 1
+                            } else {
+                                connected_nodes[node_of_max_deflection] - 1
+                            };
+                            node_live[connected_nodes[node_of_max_deflection]] = false;
+                        } else {
+                            flag = false; // we should not get here
+                        }
+                    }
+                }
+
+                if points.len() > 2 {
+                    // Remove unnecessary points
+                    for a in (1..points.len() - 1).rev() {
+                        p1 = points[a - 1];
+                        p2 = points[a];
+                        p3 = points[a + 1];
+                        if ((p2.y - p1.y) * (p3.x - p2.x) - (p3.y - p2.y) * (p2.x - p1.x)).abs()
+                            <= ((p2.x - p1.x) * (p3.x - p2.x) + (p2.y - p1.y) * (p3.y - p2.y)).abs()
+                                * prec
+                        {
+                            points.remove(a);
+                        }
+                    }
+                    if points.len() > 2 {
+                        if !points[0].nearly_equals(&points[points.len() - 1]) {
+                            points.push(points[0].clone());
+                        }
+
+                        if geometries[z as usize - 1].num_parts > 0 {
+                            // It's a hole.
+                            if is_clockwise_order(&points) {
+                                points.reverse();
+                            }
+                        }
+                        geometries[z as usize - 1].add_part(&points);
+                    }
+                }
+            }
+            if verbose {
+                progress =
+                    (100.0_f64 * node as f64 / (line_segments.len() * 2 - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Tracing polygons: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+
+        /*
         let mut geometries =
             vec![ShapefileGeometry::new(ShapeType::Polygon); clump_val as usize - 1];
         let mut segment_live = vec![true; line_segments.len()];
@@ -390,7 +545,7 @@ impl WhiteboxTool for RasterToVectorPolygons {
                         } else {
                             current_node - 1
                         };
-                        points.push(line_segments[line_segment_n].half_point());
+                        // points.push(line_segments[line_segment_n].half_point());
                     } else {
                         // We've now added both ends of this segment. Find the next connecting segment.
                         let ret = tree
@@ -404,6 +559,17 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             zn = line_segments[line_segment_n].value;
                             if zn == z && segment_live[line_segment_n] {
                                 connected_nodes.push(node);
+                            } else if node == line_start {
+                                // println!("End found {}", geometries.len()+1);
+                                line_segment_n = line_start / 2;
+                                p1 = if line_start % 2 == 0 {
+                                    line_segments[line_segment_n].first_vertex()
+                                } else {
+                                    line_segments[line_segment_n].last_vertex()
+                                };
+                                points.push(p1);
+                                flag = false;
+                                break;
                             }
                         }
 
@@ -413,20 +579,23 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             current_node = connected_nodes[0]; // only one connected segment; move there.
                         } else if connected_nodes.len() >= 2 {
                             // there are two or more connected segments; choose the node the represents the greatest deflection in path
-                            line_segment_n = current_node / 2;
-                            p1 = if current_node % 2 == 0 {
-                                line_segments[line_segment_n].last_vertex()
-                            } else {
-                                line_segments[line_segment_n].first_vertex()
-                            };
+                            // line_segment_n = current_node / 2;
+                            // p1 = if current_node % 2 == 0 {
+                            //     line_segments[line_segment_n].last_vertex()
+                            // } else {
+                            //     line_segments[line_segment_n].first_vertex()
+                            // };
 
-                            p2 = if current_node % 2 == 0 {
-                                line_segments[line_segment_n].first_vertex()
-                            } else {
-                                line_segments[line_segment_n].last_vertex()
-                            };
+                            // p2 = if current_node % 2 == 0 {
+                            //     line_segments[line_segment_n].first_vertex()
+                            // } else {
+                            //     line_segments[line_segment_n].last_vertex()
+                            // };
 
-                            max_heading = 0f64;
+                            // current point is already in p1.
+                            p2 = points[points.len() - 2]; // previous point
+
+                            max_heading = -10f64;
                             node_of_max_deflection = num_nodes;
                             for n in 0..connected_nodes.len() {
                                 line_segment_n = connected_nodes[n] / 2;
@@ -436,8 +605,8 @@ impl WhiteboxTool for RasterToVectorPolygons {
                                 } else {
                                     line_segments[line_segment_n].first_vertex()
                                 };
-                                heading = Point2D::change_in_heading(p1, p2, p3).abs();
-                                if heading > max_heading {
+                                heading = Point2D::change_in_heading(p2, p1, p3); //.abs(); // go left if you can.
+                                if heading > max_heading && heading != 0f64 { // never go straight if you have the option not to.
                                     max_heading = heading;
                                     node_of_max_deflection = n;
                                 }
@@ -464,16 +633,21 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             points.remove(a);
                         }
                     }
-                    if !points[0].nearly_equals(&points[points.len() - 1]) {
-                        points.push(points[0].clone());
-                    }
-                    if geometries[z as usize - 1].num_parts > 0 {
-                        // It's a hole.
-                        if is_clockwise_order(&points) {
-                            points.reverse();
+                    if points.len() > 2 {
+                        if !points[0].nearly_equals(&points[points.len() - 1]) {
+                            points.push(points[0].clone());
                         }
+
+                        // println!("{:?}", points);
+
+                        if geometries[z as usize - 1].num_parts > 0 {
+                            // It's a hole.
+                            if is_clockwise_order(&points) {
+                                points.reverse();
+                            }
+                        }
+                        geometries[z as usize - 1].add_part(&points);
                     }
-                    geometries[z as usize - 1].add_part(&points);
                 }
             }
             if verbose {
@@ -485,6 +659,10 @@ impl WhiteboxTool for RasterToVectorPolygons {
                 }
             }
         }
+        */
+
+
+
 
         for fid in 0..geometries.len() {
             output.add_record(geometries[fid].clone());
@@ -553,10 +731,10 @@ impl LineSegment {
         self.p2
     }
 
-    pub fn half_point(&self) -> Point2D {
-        Point2D::new(
-            (self.p1.x + self.p2.x) / 2f64,
-            (self.p1.y + self.p2.y) / 2f64,
-        )
-    }
+    // pub fn half_point(&self) -> Point2D {
+    //     Point2D::new(
+    //         (self.p1.x + self.p2.x) / 2f64,
+    //         (self.p1.y + self.p2.y) / 2f64,
+    //     )
+    // }
 }

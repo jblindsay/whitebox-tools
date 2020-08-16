@@ -288,6 +288,7 @@ impl ToolManager {
         tool_names.push("LidarClassifySubset".to_string());
         tool_names.push("LidarColourize".to_string());
         // tool_names.push("LidarConstructVectorTIN".to_string());
+        tool_names.push("LidarDigitalSurfaceModel".to_string());
         tool_names.push("LidarElevationSlice".to_string());
         tool_names.push("LidarGroundPointFilter".to_string());
         tool_names.push("LidarHexBinning".to_string());
@@ -865,6 +866,7 @@ impl ToolManager {
             // "lidarconstructvectortin" => {
             //     Some(Box::new(lidar_analysis::LidarConstructVectorTIN::new()))
             // }
+            "lidardigitalsurfacemodel" => Some(Box::new(lidar_analysis::LidarDigitalSurfaceModel::new())),
             "lidarelevationslice" => Some(Box::new(lidar_analysis::LidarElevationSlice::new())),
             "lidargroundpointfilter" => {
                 Some(Box::new(lidar_analysis::LidarGroundPointFilter::new()))

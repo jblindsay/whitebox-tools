@@ -218,7 +218,7 @@ impl WhiteboxTool for CleanVector {
                                 for i in part_start..=part_end {
                                     points.push(record.points[i].clone());
                                 }
-                                if record.points[part_start] != record.points[part_end] {
+                                if !record.points[part_start].nearly_equals(&record.points[part_end]) {
                                     points.push(record.points[part_start].clone());
                                 }
 
