@@ -12,7 +12,7 @@ edition = "2018"
 
 [dependencies]
 byteorder = "^1.3.1"
-chrono = "0.4.6"
+chrono = "0.4.15"
 kdtree = "0.6.0"
 late-static = "0.3.0"
 lzw = "0.10.0"

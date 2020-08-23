@@ -628,6 +628,9 @@ impl WhiteboxTool for LidarDigitalSurfaceModel {
                                 }
                             }
                         }
+
+                        drop(points2);
+                        drop(z_values2);
                         
                         let elapsed_time_run = get_formatted_elapsed_time(start_run);
                         output.add_metadata_entry(format!(
