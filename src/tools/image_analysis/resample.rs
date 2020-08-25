@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/01/2018
-Last Modified: 13/10/2018
+Last Modified: 25/08/2020
 License: MIT
 */
 
@@ -17,17 +17,25 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Resample is very similar in operation to the Mosaic tool. The Resample tool should
-/// be used when there is an existing image into which you would like to dump information
-/// from one or more source images. If the source images are more extensive than the
-/// destination image, i.e. there are areas that extend beyond the destination image
-/// boundaries, these areas will not be represented in the updated image. Grid cells in the
-/// destination image that are not overlapping with any of the input source images will not
-/// be updated, i.e. they will possess the same value as before the resampling operation. The
-/// Mosaic tool is used when there is no existing destination image. In this case, a new
-/// image is created that represents the bounding rectangle of each of the two or more input
-/// images. Grid cells in the output image that do not overlap with any of the input images
-/// will be assigned the NoData value.
+/// This tool can be used to modify the grid resolution of one or more rasters. The user 
+/// specifies the names of one or more input rasters (`--inputs`) and the output raster
+/// (`--output`). The resolution of the output raster is determined either using a 
+/// specified `--cell_size` parameter, in which case the output extent is determined by the
+/// combined extent of the inputs, or by an optional base raster (`--base`), in which case
+/// the output raster spatial extent matches that of the base file. This operation is similar 
+/// to the `Mosaic` tool, except that `Resample` modifies the output resolution. The `Resample` 
+/// tool may also be used with a single input raster (when the user wants to modify its 
+/// spatial resolution, whereas, `Mosaic` always includes multiple inputs. 
+///
+/// If the input source images are more extensive than the base image (if optionally specified),
+/// these areas will not be represented in the output image. Grid cells in the
+/// output image that are not overlapping with any of the input source images will not be
+/// assigned the NoData value, which will be the same as the first input image. Grid cells in
+/// the output image that overlap with multiple input raster cells will be assigned the last
+/// input value in the stack. Thus, the order of input images is important.
+/// 
+/// # See Also
+/// `Mosaic`
 pub struct Resample {
     name: String,
     description: String,
@@ -55,12 +63,30 @@ impl Resample {
         });
 
         parameters.push(ToolParameter {
-            name: "Destination File".to_owned(),
-            flags: vec!["--destination".to_owned()],
-            description: "Destination raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            name: "Output File".to_owned(),
+            flags: vec!["-o".to_owned(), "--output".to_owned()],
+            description: "Output raster file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter{
+            name: "Cell Size (optional)".to_owned(), 
+            flags: vec!["--cell_size".to_owned()], 
+            description: "Optionally specified cell size of output raster. Not used when base raster is specified.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Base Raster File (optional)".to_owned(), 
+            flags: vec!["--base".to_owned()], 
+            description: "Optionally specified input base raster file. Not used when a cell size is specified.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true
         });
 
         parameters.push(ToolParameter{
@@ -130,7 +156,11 @@ impl WhiteboxTool for Resample {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_files = String::new();
-        let mut destination_file = String::new();
+        let mut output_file = String::new();
+        let mut base_file = String::new();
+        let mut cell_size = 0f64;
+        let mut cell_size_specified = false;
+        let mut base_file_specified = false;
         let mut method = String::from("cc");
 
         if args.len() == 0 {
@@ -155,12 +185,36 @@ impl WhiteboxTool for Resample {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-destination" {
-                destination_file = if keyval {
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-cell_size" {
+                cell_size = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+                if cell_size > 0f64 {
+                    cell_size_specified = true;
+                } else {
+                    panic!("Error, when specified, the cell_size parameter must be larger than 0.0.");
+                }
+            } else if flag_val == "-base" {
+                base_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+                base_file_specified = true;
             } else if flag_val == "-method" {
                 method = if keyval {
                     vec[1].to_string()
@@ -193,14 +247,19 @@ impl WhiteboxTool for Resample {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        if !destination_file.contains(&sep) && !destination_file.contains("/") {
-            destination_file = format!("{}{}", working_directory, destination_file);
+        if !output_file.contains(&sep) && !output_file.contains("/") {
+            output_file = format!("{}{}", working_directory, output_file);
         }
 
         // see if the destination file exists.
-        if !path::Path::new(&destination_file).exists() {
+        if base_file_specified && !path::Path::new(&base_file).exists() {
             return Err(Error::new(ErrorKind::InvalidInput,
-                "The destination raster file does not exist. If you want to create a new file, try the Mosaic tool rather than Resample."));
+                "The base raster file (--base) does not exist."));
+        }
+
+        if !base_file_specified && !cell_size_specified {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "Either an existing base raster (--base) or an output raster cell size (--cell_size) must be specified."));
         }
 
         let mut cmd = input_files.split(";");
@@ -217,18 +276,17 @@ impl WhiteboxTool for Resample {
 
         let start = Instant::now();
 
-        // Open the destination raster.
-        let mut destination = Raster::new(&destination_file, "rw")?;
-        let rows = destination.configs.rows as isize;
-        let columns = destination.configs.columns as isize;
-        let nodata = destination.configs.nodata;
-
         // read the input files
         if verbose {
             println!("Reading data...")
         };
         let mut inputs: Vec<Raster> = Vec::with_capacity(num_files);
         let mut nodata_vals: Vec<f64> = Vec::with_capacity(num_files);
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+        let mut num_images = 0usize;
         for i in 0..num_files {
             let value = input_vec[i];
             if !value.trim().is_empty() {
@@ -236,23 +294,72 @@ impl WhiteboxTool for Resample {
                 if !input_file.contains(&sep) && !input_file.contains("/") {
                     input_file = format!("{}{}", working_directory, input_file);
                 }
-                inputs.push(Raster::new(&input_file, "r")?);
+                inputs.push(Raster::new(&input_file, "r")
+                    .expect(&format!("Error reading image file {}", input_file)));
+                num_images += 1;
                 nodata_vals.push(inputs[i].configs.nodata);
+                if inputs[num_images-1].configs.west < min_x { min_x = inputs[num_images-1].configs.west; }
+                if inputs[num_images-1].configs.south < min_y { min_y = inputs[num_images-1].configs.south; }
+                if inputs[num_images-1].configs.east > max_x { max_x = inputs[num_images-1].configs.east; }
+                if inputs[num_images-1].configs.north > max_y { max_y = inputs[num_images-1].configs.north; }
             } else {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "There is a problem with the list of input files. At least one specified input is empty."));
             }
         }
 
+        // Create the output raster. The process of doing this will
+        // depend on whether a cell size or a base raster were specified.
+        // If both are specified, the base raster takes priority.
+
+        let mut output = if base_file_specified || cell_size <= 0f64 {
+            if !base_file.contains(&sep) && !base_file.contains("/") {
+                base_file = format!("{}{}", working_directory, base_file);
+            }
+            let base = Raster::new(&base_file, "r")?;
+            Raster::initialize_using_file(&output_file, &base)
+        } else {
+            // base the output raster on the cell_size and the
+            // extent of the input vector.
+            let west: f64 = min_x;
+            let north: f64 = max_y;
+            let rows: isize = (((north - min_y) / cell_size).ceil()) as isize;
+            let columns: isize = (((max_x - west) / cell_size).ceil()) as isize;
+            let south: f64 = north - rows as f64 * cell_size;
+            let east = west + columns as f64 * cell_size;
+
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
+            configs.rows = rows as usize;
+            configs.columns = columns as usize;
+            configs.north = north;
+            configs.south = south;
+            configs.east = east;
+            configs.west = west;
+            configs.resolution_x = cell_size;
+            configs.resolution_y = cell_size;
+            configs.nodata = nodata_vals[0];
+            configs.data_type = inputs[0].configs.data_type;
+            configs.photometric_interp = PhotometricInterpretation::Continuous;
+            configs.projection = inputs[0].configs.projection.clone();
+
+            Raster::initialize_using_config(&output_file, &configs)
+        };
+
+        let rows = output.configs.rows as isize;
+        let columns = output.configs.columns as isize;
+        let nodata = output.configs.nodata;
+
         // create the x and y arrays
         let mut x: Vec<f64> = Vec::with_capacity(columns as usize);
         for col in 0..columns {
-            x.push(destination.get_x_from_column(col));
+            x.push(output.get_x_from_column(col));
         }
 
         let mut y: Vec<f64> = Vec::with_capacity(rows as usize);
         for row in 0..rows {
-            y.push(destination.get_y_from_row(row));
+            y.push(output.get_y_from_row(row));
         }
 
         let x = Arc::new(x);
@@ -294,7 +401,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns {
                     if data[col as usize] != nodata {
-                        destination.set_value(row, col, data[col as usize]);
+                        output.set_value(row, col, data[col as usize]);
                     }
                 }
                 if verbose {
@@ -306,8 +413,8 @@ impl WhiteboxTool for Resample {
                 }
             }
         } else if method == "cc" {
-            destination.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            destination.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            output.configs.data_type = DataType::F32;
 
             for tid in 0..num_procs {
                 let inputs = inputs.clone();
@@ -379,7 +486,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns as usize {
                     if data[col] != nodata {
-                        destination.set_value(row, col as isize, data[col]);
+                        output.set_value(row, col as isize, data[col]);
                     }
                 }
                 if verbose {
@@ -392,8 +499,8 @@ impl WhiteboxTool for Resample {
             }
         } else {
             // bilinear
-            destination.configs.photometric_interp = PhotometricInterpretation::Continuous;
-            destination.configs.data_type = DataType::F32;
+            output.configs.photometric_interp = PhotometricInterpretation::Continuous;
+            output.configs.data_type = DataType::F32;
             for tid in 0..num_procs {
                 let inputs = inputs.clone();
                 let nodata_vals = nodata_vals.clone();
@@ -462,7 +569,7 @@ impl WhiteboxTool for Resample {
                 let (row, data) = rx.recv().expect("Error receiving data from thread.");
                 for col in 0..columns as usize {
                     if data[col] != nodata {
-                        destination.set_value(row, col as isize, data[col]);
+                        output.set_value(row, col as isize, data[col]);
                     }
                 }
                 if verbose {
@@ -476,7 +583,7 @@ impl WhiteboxTool for Resample {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        destination.add_metadata_entry(format!(
+        output.add_metadata_entry(format!(
             "Modified by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
@@ -484,10 +591,10 @@ impl WhiteboxTool for Resample {
         if verbose {
             println!("Saving data...")
         };
-        let _ = match destination.write() {
+        let _ = match output.write() {
             Ok(_) => {
                 if verbose {
-                    println!("Destination file written")
+                    println!("Output file written")
                 }
             }
             Err(e) => return Err(e),

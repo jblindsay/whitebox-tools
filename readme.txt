@@ -65,6 +65,9 @@ Version 1.X.X (XX-XX-2020)
 - The Isobasins tool now optionally outputs an upstream/downstream connections table.
 - The HorizonAngle tool has had significant performance improvements.
 - Improvements to the RemoveOffTerrainObjects tool's performance.
+- The Resample tool has been modified so that it does not require a 'destination' raster. Instead,
+  it will create a new output raster either based on a user-specified target cell resolution or
+  an optional base raster, much like the vector-to-raster conversion tools.
 
 Version 1.3.1 (23-07-2020)
 - Added the HypsometricallyTintedHillshade tool to create hypsometric tinted hillshades.

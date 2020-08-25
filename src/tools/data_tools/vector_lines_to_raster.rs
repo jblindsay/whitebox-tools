@@ -16,7 +16,7 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool can be used to convert a vector lines or polygon file into a raster grid of lines. If a vector of one
-/// of the polygon shapetypes is selected, the resulting raster will outline the polygons without filling these
+/// of the polygon ShapeTypes is selected, the resulting raster will outline the polygons without filling these
 /// features. Use the `VectorPolygonToRaster` tool if you need to fill the polygon features.
 ///
 /// The user must specify the name of the input vector (`--input`) and the output raster file (`--output`). The Field
