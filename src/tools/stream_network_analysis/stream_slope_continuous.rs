@@ -288,8 +288,8 @@ impl WhiteboxTool for StreamSlopeContinuous {
             let mut mid_lat = (streams.configs.north - streams.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                cell_size_x = cell_size_x * (113200.0 * mid_lat.cos());
-                cell_size_y = cell_size_y * (113200.0 * mid_lat.cos());
+                cell_size_x = cell_size_x * (111320.0 * mid_lat.cos());
+                cell_size_y = cell_size_y * (111320.0 * mid_lat.cos());
                 diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
             }
         }

@@ -308,7 +308,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = 1.0 / (111320.0 * mid_lat.cos());
             }
         }
 

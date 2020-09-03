@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 29/07/2020
-Last Modified: 21/08/2020
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -22,8 +22,8 @@ use rayon::prelude::*;
 use chrono::prelude::*;
 use chrono::{Date, FixedOffset, NaiveTime, TimeZone};
 
-/// This tool calculates the proportion of time a location is within an area of shadow.
-pub struct ShadowTime {
+/// This tool calculates the proportion of time a location is within daylight (i.e. outside of an area of shadow cast by a local object).
+pub struct TimeInDaylight {
     name: String,
     description: String,
     toolbox: String,
@@ -31,10 +31,10 @@ pub struct ShadowTime {
     example_usage: String,
 }
 
-impl ShadowTime {
+impl TimeInDaylight {
     /// public constructor
-    pub fn new() -> ShadowTime {
-        let name = "ShadowTime".to_string();
+    pub fn new() -> TimeInDaylight {
+        let name = "TimeInDaylight".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
             "Calculates the proportion of time a location is within an area of shadow."
@@ -154,7 +154,7 @@ impl ShadowTime {
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i='input.tif' -o=output.tif --az_fraction=15.0 --max_dist=100.0 --lat=43.545 --long=-80.248", short_exe, name).replace("*", &sep);
 
-        ShadowTime {
+        TimeInDaylight {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -164,7 +164,7 @@ impl ShadowTime {
     }
 }
 
-impl WhiteboxTool for ShadowTime {
+impl WhiteboxTool for TimeInDaylight {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -469,8 +469,8 @@ impl WhiteboxTool for ShadowTime {
             let mut mid_lat = ((configs.north - configs.south) / 2.0) as f32;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                cell_size_x = cell_size_x * (113200.0 * mid_lat.cos());
-                cell_size_y = cell_size_y * (113200.0 * mid_lat.cos());
+                cell_size_x = cell_size_x * (111320.0 * mid_lat.cos());
+                cell_size_y = cell_size_y * (111320.0 * mid_lat.cos());
             }
         }
 

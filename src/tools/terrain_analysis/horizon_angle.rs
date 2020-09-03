@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 07/07/2017
-Last Modified: 27/07/2020
+Last Modified: 03/09/2020
 License: MIT
 
 NOTES: The tool should have the option to output a distance raster as well.
@@ -250,9 +250,9 @@ impl WhiteboxTool for HorizonAngle {
             let mut mid_lat = ((configs.north - configs.south) / 2.0) as f32;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                // cell_size = cell_size * (113200.0 * mid_lat.cos());
-                cell_size_x = cell_size_x * (113200.0 * mid_lat.cos());
-                cell_size_y = cell_size_y * (113200.0 * mid_lat.cos());
+                // cell_size = cell_size * (111320.0 * mid_lat.cos());
+                cell_size_x = cell_size_x * (111320.0 * mid_lat.cos());
+                cell_size_y = cell_size_y * (111320.0 * mid_lat.cos());
             }
         }
 

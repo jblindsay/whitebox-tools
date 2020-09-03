@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/07/2017
-Last Modified: 30/01/2020
+Last Modified: 03/09/2020
 License: MIT
 
 Notes: Some degree of DEM smoothing is likely required to get reasonable results.
@@ -135,7 +135,7 @@ impl PennockLandformClass {
                 "Optional multiplier for when the vertical and horizontal units are not the same."
                     .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
+            default_value: None,
             optional: true,
         });
 
@@ -205,7 +205,7 @@ impl WhiteboxTool for PennockLandformClass {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut z_factor = 1f64;
+        let mut z_factor = -1f64;
         let mut slope_threshold = 3f64;
         let mut prof_threshold = 0.1_f64;
         let mut plan_threshold = 0f64;
@@ -321,13 +321,15 @@ impl WhiteboxTool for PennockLandformClass {
         let four_times_cell_size_sqrd = cell_size_sqrd * 4.0f64;
         let eight_grid_res = cell_size * 8.0;
 
-        if input.is_in_geographic_coordinates() {
+        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
             // calculate a new z-conversion factor
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = 1.0 / (111320.0 * mid_lat.cos());
             }
+        } else if z_factor < 0.0 {
+            z_factor = 1.0;
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);

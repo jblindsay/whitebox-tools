@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 07/07/2017
-Last Modified: 30/01/2020
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -278,7 +278,7 @@ impl WhiteboxTool for FetchAnalysis {
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                cell_size = cell_size * (113200.0 * mid_lat.cos());
+                cell_size = cell_size * (111320.0 * mid_lat.cos());
             }
         }
 

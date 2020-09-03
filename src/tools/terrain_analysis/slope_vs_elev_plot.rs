@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/02/2018
-Last Modified: 12/10/2018
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -277,7 +277,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                     let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
                     if mid_lat <= 90.0 && mid_lat >= -90.0 {
                         mid_lat = mid_lat.to_radians();
-                        z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                        z_factor = 1.0 / (111320.0 * mid_lat.cos());
                     }
                 }
 
@@ -424,7 +424,7 @@ impl WhiteboxTool for SlopeVsElevationPlot {
                     let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
                     if mid_lat <= 90.0 && mid_lat >= -90.0 {
                         mid_lat = mid_lat.to_radians();
-                        z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                        z_factor = 1.0 / (111320.0 * mid_lat.cos());
                     }
                 }
 

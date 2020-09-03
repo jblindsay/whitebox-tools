@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 27/01/2019
-Last Modified: 22/10/2019
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -95,7 +95,7 @@ impl EdgeDensity {
                 "Optional multiplier for when the vertical and horizontal units are not the same."
                     .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
+            default_value: None,
             optional: true,
         });
 
@@ -170,7 +170,7 @@ impl WhiteboxTool for EdgeDensity {
         let mut output_file = String::new();
         let mut filter_size = 11usize;
         let mut max_norm_diff = 5f64;
-        let mut z_factor = 1f64;
+        let mut z_factor = -1f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -281,14 +281,16 @@ impl WhiteboxTool for EdgeDensity {
 
         let start = Instant::now();
 
-        if input.is_in_geographic_coordinates() {
+        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
             // calculate a new z-conversion factor
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = 1.0 / (111320.0 * mid_lat.cos());
                 println!("It appears that the DEM is in geographic coordinates. The z-factor has been updated: {}.", z_factor);
             }
+        } else if z_factor < 0.0 {
+            z_factor = 1.0;
         }
 
         let rows = input.configs.rows as isize;

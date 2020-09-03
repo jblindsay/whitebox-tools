@@ -481,7 +481,7 @@ impl ToolManager {
         tool_names.push("RelativeTopographicPosition".to_string());
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
-        tool_names.push("ShadowTime".to_string());
+        tool_names.push("TimeInDaylight".to_string());
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
@@ -1150,7 +1150,7 @@ impl ToolManager {
             }
             "ruggednessindex" => Some(Box::new(terrain_analysis::RuggednessIndex::new())),
             // "segmentterrain" => Some(Box::new(terrain_analysis::SegmentTerrain::new())),
-            "shadowtime" => Some(Box::new(terrain_analysis::ShadowTime::new())),
+            "timeindaylight" => Some(Box::new(terrain_analysis::TimeInDaylight::new())),
             "sedimenttransportindex" => {
                 Some(Box::new(terrain_analysis::SedimentTransportIndex::new()))
             }

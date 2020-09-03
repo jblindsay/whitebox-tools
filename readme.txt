@@ -56,8 +56,8 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.X.X (XX-XX-2020)
-- Added the ShadowTime model tool for modelling the proportion of daytime that a location is in shadow.
+Version 1.4.0 (03-09-2020)
+- Added the TimeInDaylight model tool for modelling the proportion of daytime that a location is not in shadow.
 - Added the MapOffTerrainObjects tool.
 - Added the FilterRasterFeaturesByArea tool.
 - Added the LidarDigitalSurfaceModel tool.

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/06/2019
-Last Modified: 13/06/2019
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -352,7 +352,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             let mut mid_lat = (configs.north - configs.south) as f32 / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = 1.0 / (111320.0 * mid_lat.cos());
             }
         }
 

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 17/06/2017
-Last Modified: 30/01/2020
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -84,7 +84,7 @@ impl RelativeAspect {
                 "Optional multiplier for when the vertical and horizontal units are not the same."
                     .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
+            default_value: None,
             optional: true,
         });
 
@@ -159,7 +159,7 @@ impl WhiteboxTool for RelativeAspect {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0f64;
-        let mut z_factor = 1f64;
+        let mut z_factor = -1f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -244,13 +244,15 @@ impl WhiteboxTool for RelativeAspect {
 
         let eight_grid_res = input.configs.resolution_x * 8.0;
 
-        if input.configs.xy_units.contains("deg") {
+        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
             // calculate a new z-conversion factor
             let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (113200.0 * mid_lat.cos());
+                z_factor = 1.0 / (111320.0 * mid_lat.cos());
             }
+        } else if z_factor < 0.0 {
+            z_factor = 1.0;
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);

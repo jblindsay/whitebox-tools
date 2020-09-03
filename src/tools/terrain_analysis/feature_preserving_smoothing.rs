@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 23/11/2017
-Last Modified: 22/10/2019
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -143,7 +143,7 @@ impl FeaturePreservingSmoothing {
                 "Optional multiplier for when the vertical and horizontal units are not the same."
                     .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
+            default_value: None,
             optional: true,
         });
 
@@ -219,7 +219,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         let mut filter_size = 11usize;
         let mut max_norm_diff = 8f32;
         let mut num_iter = 3;
-        let mut z_factor = 1f32;
+        let mut z_factor = -1f32;
         let mut max_z_diff = f32::INFINITY;
 
         if args.len() == 0 {
@@ -350,14 +350,16 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
 
         let start = Instant::now();
 
-        if input_dem.is_in_geographic_coordinates() {
+        if input_dem.is_in_geographic_coordinates() && z_factor < 0.0 {
             // calculate a new z-conversion factor
             let mut mid_lat = (input_dem.configs.north - input_dem.configs.south) / 2.0;
             if mid_lat <= 90.0 && mid_lat >= -90.0 {
                 mid_lat = mid_lat.to_radians();
-                z_factor = (1.0 / (113200.0 * mid_lat.cos())) as f32;
+                z_factor = (1.0 / (111320.0 * mid_lat.cos())) as f32;
                 println!("It appears that the DEM is in geographic coordinates. The z-factor has been updated to {}.", z_factor);
             }
+        } else if z_factor < 0.0 {
+            z_factor = 1.0;
         }
 
         let input = Arc::new(input_dem.get_data_as_f32_array2d());
