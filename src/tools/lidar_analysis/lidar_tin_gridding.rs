@@ -21,6 +21,42 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::{env, f64, fs, path, thread};
 
+/// This tool creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
+/// The output grid can be based on any of the stored LiDAR point parameters (`--parameter`), including elevation
+/// (in which case the output grid is a digital elevation model, DEM), intensity, class, return number, number of 
+/// returns, scan angle, RGB (colour) values, and user data values. Similarly, the user may specify which point
+/// return values (`--returns`) to include in the interpolation, including all points, last returns (including single
+/// return points), and first returns (including single return points).
+/// 
+/// The user must specify the grid resolution of the output raster (`--resolution`), and optionally, the name of the
+/// input LiDAR file (`--input`) and output raster (`--output`). Note that if an input LiDAR file (`--input`) is not 
+/// specified by the user, the tool will search for all valid LiDAR (*.las, *.zlidar) contained within the current 
+/// working directory. This feature can be very useful when you need to interpolate a DEM for a large number of LiDAR 
+/// files. Not only does this batch processing mode enable the tool to run in a more optimized parallel manner, but it 
+/// will also allow the tool to include a small buffer of points extending into adjacent tiles when interpolating an 
+/// individual file. This can significantly reduce edge-effects when the output tiles are later mosaicked together. 
+/// When run in this batch mode, the output file (`--output`) also need not be specified; the tool will instead create 
+/// an output file with the same name as each input LiDAR file, but with the .tif extension. This can provide a very 
+/// efficient means for processing extremely large LiDAR data sets.
+///
+/// Users may excluded points from the interpolation based on point classification values, which follow the LAS 
+/// classification scheme. Excluded classes are specified using the `--exclude_cls` parameter. For example, 
+/// to exclude all vegetation and building classified points from the interpolation, use --exclude_cls='3,4,5,6'.
+/// Users may also exclude points from the interpolation if they fall below or above the minimum (`--minz`) or 
+/// maximum (`--maxz`) thresholds respectively. This can be a useful means of excluding anomalously high or low
+/// points. Note that points that are classified as low points (LAS class 7) or high noise (LAS class 18) are 
+/// automatically excluded from the interpolation operation.
+///
+/// Triangulation will generally completely fill the convex hull containing the input point data. This can sometimes
+/// result in very long and narrow triangles at the edges of the data or connecting vertices on either side of void
+/// areas. In LiDAR data, these void areas are often associated with larger waterbodies, and triangulation can result
+/// in very unnatural interpolated patterns within these areas. To avoid this problem, the user may specify a the
+/// maximum allowable triangle edge length (`max_triangle_edge_length`) and all grid cells within triangular facets
+/// with edges larger than this threshold are simply assigned the NoData values in the output DSM. These NoData areas
+/// can later be better dealt with using the `FillMissingData` tool after interpolation. 
+///
+/// # See Also
+/// `LidarIdwInterpolation`, `LidarNearestNeighbourGridding`, `LidarTINGridding`, `FilterLidarClasses`, `FillMissingData`
 pub struct LidarTINGridding {
     name: String,
     description: String,

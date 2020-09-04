@@ -22,7 +22,41 @@ use rayon::prelude::*;
 use chrono::prelude::*;
 use chrono::{Date, FixedOffset, NaiveTime, TimeZone};
 
-/// This tool calculates the proportion of time a location is within daylight (i.e. outside of an area of shadow cast by a local object).
+/// This tool calculates the proportion of time a location is within daylight. That is, it calculates the 
+/// proportion of time, during a user-defined time frame, that a grid cell in an input digital elevation 
+/// model (`--dem`) is outside of an area of shadow cast by a local object. The input DEM should truly be 
+/// a digital surface model (DSM) that contains significant off-terrain objects. Such a model, for example,
+/// could be created using the first-return points of a LiDAR data set, or using the `LidarDigitalSurfaceModel`
+/// tool.
+///
+/// The tool operates by calculating a solar almanac, which estimates the sun's position for the location, in 
+/// latitude and longitude coordinate (`--lat`, `--long`), of the input DSM. The algorithm then calculates 
+/// horizon angle (see `HorizonAngle`) rasters from the DSM based on the user-specified azimuth fraction (`--az_fraction`).
+/// For example, if an azimuth fraction of 15-degrees is specified, horizon angle rasters could be calculated for
+/// the solar azimuths 0, 15, 30, 45... In reality, horizon angle rasters are only calculated for azimuths for which
+/// the sun is above the horizon for some time during the tested time period. A horizon angle raster evaluates 
+/// the vertical angle between each grid cell in a DSM and a distant obstacle (e.g. a mountain ridge, building, tree, etc.) that 
+/// blocks the view along a specified direction. In calculating horizon angle, the user must specify the maximum search
+/// distance (`--max_dist`) beyond which the query for higher, more distant objects will cease. This parameter strongly
+/// impacts the performance of the tool, with larger values resulting in significantly longer run-times. Users are advised
+/// to set the `--max_dist` based on the maximum shadow length expected in an area. For example, in a relatively flat 
+/// urban landscape, the tallest building will likely determine the longest shadow lengths. All grid cells for which the
+/// calculated solar positions throughout the time frame are higher than the cell's horizon angle are deemed to be 
+/// illuminated during the time the sun is in the corresponding azimuth fraction.
+///
+/// By default, the tool calculates time-in-daylight for a time-frame spanning an entire year. That is, the solar almanac
+/// is calculated for each hour, at 10-second intervals, and for each day of the year. Users may alternatively restrict the
+/// time of year over which time-in-daylight is calculated by specifying a starting day (1-365; `--start_day`) and ending day 
+/// (1-365; `--end_day`). Similarly, by specifying start time (`--start_time`) and end time (`--end_time`) parameters,
+/// the user is able to measure time-in-daylight for specific ranges of the day (e.g. for the morning or afternoon hours).
+/// These time parameters must be specified in 24-hour time (HH:MM:SS), e.g. 15:30:00. `sunrise` and `sunset` are also 
+/// acceptable inputs for the start time and end time respectively. The timing of sunrise and sunset on each day in the
+/// tested time-frame will be determined using the solar almanac.
+/// 
+/// ![](../../doc_img/TimeInDaylight.png)
+///
+/// # See Also
+/// `LidarDigitalSurfaceModel`, `HorizonAngle`
 pub struct TimeInDaylight {
     name: String,
     description: String,
@@ -37,7 +71,7 @@ impl TimeInDaylight {
         let name = "TimeInDaylight".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
         let description =
-            "Calculates the proportion of time a location is within an area of shadow."
+            "Calculates the proportion of time a location is not within an area of shadow."
                 .to_string();
 
         let mut parameters = vec![];

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 02/01/2018
-Last Modified: 02/01/2018
+Last Modified: 03/09/2020
 License: MIT
 */
 
@@ -535,22 +535,20 @@ impl WhiteboxTool for Mosaic {
                             let ret = tree
                                 .locate_all_at_point(&[x[col as usize], y[row as usize]])
                                 .collect::<Vec<_>>();
+
+                            let mut flag = true;
                             for a in 0..ret.len() {
                                 i = ret[a].data;
-                                // row_src = inputs[i].get_row_from_y(y[row as usize]);
-                                // col_src = inputs[i].get_column_from_x(x[col as usize]);
+                                if !flag {
+                                    break;
+                                }
+
                                 row_src = (inputs[i].configs.north - y[row as usize])
                                     / inputs[i].configs.resolution_y;
                                 col_src = (x[col as usize] - inputs[i].configs.west)
                                     / inputs[i].configs.resolution_x;
-
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
-
-                                // z = inputs[i].get_value(origin_row, origin_col);
-
-                                // if origin_row < 0 || origin_col < 0 { break; }
-                                // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
@@ -566,8 +564,7 @@ impl WhiteboxTool for Mosaic {
                                         neighbour[n][1] = 0f64;
                                     } else {
                                         data[col as usize] = neighbour[n][0];
-                                        // flag = false;
-                                        break;
+                                        flag = false;
                                     }
                                 }
 
@@ -577,9 +574,7 @@ impl WhiteboxTool for Mosaic {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-
-                                    // flag = false;
-                                    break;
+                                    flag = false;
                                 }
                             }
                         }
@@ -633,19 +628,18 @@ impl WhiteboxTool for Mosaic {
                             let ret = tree
                                 .locate_all_at_point(&[x[col as usize], y[row as usize]])
                                 .collect::<Vec<_>>();
+                            let mut flag = true;
                             for a in 0..ret.len() {
                                 i = ret[a].data;
-                                // if !flag {
-                                //     break;
-                                // }
+                                if !flag {
+                                    break;
+                                }
                                 row_src = (inputs[i].configs.north - y[row as usize])
                                     / inputs[i].configs.resolution_y;
                                 col_src = (x[col as usize] - inputs[i].configs.west)
                                     / inputs[i].configs.resolution_x;
                                 origin_row = row_src.floor() as isize;
                                 origin_col = col_src.floor() as isize;
-                                // if origin_row < 0 || origin_col < 0 { break; }
-                                // if origin_row > inputs[i].configs.rows as isize || origin_col > inputs[i].configs.columns as isize { break; }
                                 sum_dist = 0f64;
                                 for n in 0..num_neighbours {
                                     row_n = origin_row + shift_y[n];
@@ -661,8 +655,7 @@ impl WhiteboxTool for Mosaic {
                                         neighbour[n][1] = 0f64;
                                     } else {
                                         data[col as usize] = neighbour[n][0];
-                                        break;
-                                        // flag = false;
+                                        flag = false;
                                     }
                                 }
 
@@ -672,8 +665,7 @@ impl WhiteboxTool for Mosaic {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
                                     }
                                     data[col as usize] = z;
-                                    break;
-                                    // flag = false;
+                                    flag = false;
                                 }
                             }
                         }

@@ -65,6 +65,8 @@ use std::thread;
 /// Planes that have slopes greater than this threshold are rejected by the algorithm. This has the side-effect
 /// of removing building walls however.
 ///
+/// ![](../../doc_img/LidarSegmentation.png)
+///
 /// # References
 /// Fischler MA and Bolles RC. 1981. Random sample consensus: a paradigm for model fitting with applications
 /// to image analysis and automated cartography. Commun. ACM, 24(6):381–395.

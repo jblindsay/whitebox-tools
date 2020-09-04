@@ -14,10 +14,17 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::{f32, f64};
 
-/// This tool can be used to map off-terrain objects in a digital elevation model (DEM) based on cell-to-cell differences
-/// in elevations.
+/// This tool can be used to map off-terrain objects in a digital surface model (DSM) based on cell-to-cell differences
+/// in elevations and local slopes. The algorithm works by using a region-growing operation to connect neighbouring grid 
+/// cells outwards from seed cells. Two neighbouring cells are considered connected if the slope between the two cells
+/// is less than the user-specified maximum slope value (`--max_slope`). Mapped segments that are less than the minimum
+/// feature size (`--min_size`), in grid cells, are assigned a common background value. Note that this method of mapping
+/// off-terrain objects, and thereby separating ground cells from non-ground objects in DSMs, works best with fine-resolution
+/// DSMs that have been interpolated using a non-smoothing method, such as triangulation (TINing) or nearest-neighbour 
+/// interpolation.
 ///
 /// # See Also
+/// `RemoveOffTerrainObjects`
 pub struct MapOffTerrainObjects {
     name: String,
     description: String,

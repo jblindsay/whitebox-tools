@@ -423,6 +423,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1102,6 +1103,24 @@ class WhiteboxTools(object):
         args.append("--points='{}'".format(points))
         if out_text: args.append("--out_text")
         return self.run_tool('extract_raster_values_at_points', args, callback) # returns 1 if error
+
+    def filter_raster_features_by_area(self, i, output, threshold, background="zero", callback=None):
+        """Removes small-area features from a raster.
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        threshold -- Remove features with fewer grid cells than this threshold value. 
+        background -- Background value. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--threshold='{}'".format(threshold))
+        args.append("--background={}".format(background))
+        return self.run_tool('filter_raster_features_by_area', args, callback) # returns 1 if error
 
     def find_lowest_or_highest_points(self, i, output, out_type="lowest", callback=None):
         """Locates the lowest and/or highest valued cells in a raster.
@@ -2297,7 +2316,7 @@ class WhiteboxTools(object):
     # Geomorphometric Analysis #
     ############################
 
-    def aspect(self, dem, output, zfactor=1.0, callback=None):
+    def aspect(self, dem, output, zfactor=None, callback=None):
         """Calculates an aspect raster from an input DEM.
 
         Keyword arguments:
@@ -2310,7 +2329,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('aspect', args, callback) # returns 1 if error
 
     def average_normal_vector_angular_deviation(self, dem, output, filter=11, callback=None):
@@ -2465,7 +2484,7 @@ class WhiteboxTools(object):
         args.append("--out_type={}".format(out_type))
         return self.run_tool('downslope_index', args, callback) # returns 1 if error
 
-    def edge_density(self, dem, output, filter=11, norm_diff=5.0, zfactor=1.0, callback=None):
+    def edge_density(self, dem, output, filter=11, norm_diff=5.0, zfactor=None, callback=None):
         """Calculates the density of edges, or breaks-in-slope within DEMs.
 
         Keyword arguments:
@@ -2482,7 +2501,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         args.append("--filter={}".format(filter))
         args.append("--norm_diff={}".format(norm_diff))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('edge_density', args, callback) # returns 1 if error
 
     def elev_above_pit(self, dem, output, callback=None):
@@ -2549,7 +2568,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('elev_relative_to_watershed_min_max', args, callback) # returns 1 if error
 
-    def feature_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, zfactor=1.0, callback=None):
+    def feature_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, zfactor=None, callback=None):
         """Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
         Keyword arguments:
@@ -2570,7 +2589,7 @@ class WhiteboxTools(object):
         args.append("--norm_diff={}".format(norm_diff))
         args.append("--num_iter={}".format(num_iter))
         args.append("--max_diff={}".format(max_diff))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('feature_preserving_smoothing', args, callback) # returns 1 if error
 
     def fetch_analysis(self, dem, output, azimuth=0.0, hgt_inc=0.05, callback=None):
@@ -2627,7 +2646,7 @@ class WhiteboxTools(object):
         if line_thin: args.append("--line_thin")
         return self.run_tool('find_ridges', args, callback) # returns 1 if error
 
-    def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=1.0, callback=None):
+    def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=None, callback=None):
         """Calculates a hillshade raster from an input DEM.
 
         Keyword arguments:
@@ -2644,25 +2663,25 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         args.append("--azimuth={}".format(azimuth))
         args.append("--altitude={}".format(altitude))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('hillshade', args, callback) # returns 1 if error
 
-    def horizon_angle(self, dem, output, azimuth=0.0, max_dist=None, callback=None):
+    def horizon_angle(self, dem, output, azimuth=0.0, max_dist=100.0, callback=None):
         """Calculates horizon angle (maximum upwind slope) for each grid cell in an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        azimuth -- Wind azimuth in degrees. 
-        max_dist -- Optional maximum search distance (unspecified if none; in xy units). 
+        azimuth -- Azimuth, in degrees. 
+        max_dist -- Optional maximum search distance (unspecified if none; in xy units). Minimum value is 5 x cell size. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         args.append("--azimuth={}".format(azimuth))
-        if max_dist is not None: args.append("--max_dist='{}'".format(max_dist))
+        args.append("--max_dist={}".format(max_dist))
         return self.run_tool('horizon_angle', args, callback) # returns 1 if error
 
     def hypsometric_analysis(self, inputs, output, watershed=None, callback=None):
@@ -2681,7 +2700,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('hypsometric_analysis', args, callback) # returns 1 if error
 
-    def hypsometrically_tinted_hillshade(self, dem, output, altitude=45.0, hs_weight=0.5, brightness=0.5, atmospheric=0.0, palette="atlas", reverse=False, zfactor=1.0, full_mode=False, callback=None):
+    def hypsometrically_tinted_hillshade(self, dem, output, altitude=45.0, hs_weight=0.5, brightness=0.5, atmospheric=0.0, palette="atlas", reverse=False, zfactor=None, full_mode=False, callback=None):
         """Creates an colour shaded relief image from an input DEM.
 
         Keyword arguments:
@@ -2692,7 +2711,7 @@ class WhiteboxTools(object):
         hs_weight -- Weight given to hillshade relative to relief (0.0-1.0). 
         brightness -- Brightness factor (0.0-1.0). 
         atmospheric -- Atmospheric effects weight (0.0-1.0). 
-        palette -- Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep. 
+        palette -- Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'. 
         reverse -- Optional flag indicating whether to use reverse the palette. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         full_mode -- Optional flag indicating whether to use full 360-degrees of illumination sources. 
@@ -2707,9 +2726,27 @@ class WhiteboxTools(object):
         args.append("--atmospheric={}".format(atmospheric))
         args.append("--palette={}".format(palette))
         if reverse: args.append("--reverse")
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         if full_mode: args.append("--full_mode")
         return self.run_tool('hypsometrically_tinted_hillshade', args, callback) # returns 1 if error
+
+    def map_off_terrain_objects(self, dem, output, max_slope=40.0, min_size=1, callback=None):
+        """Maps off-terrain objects in a digital elevation model (DEM).
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        max_slope -- Maximum inter-cell absolute slope. 
+        min_size -- Minimum feature size, in grid cells. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--max_slope={}".format(max_slope))
+        args.append("--min_size={}".format(min_size))
+        return self.run_tool('map_off_terrain_objects', args, callback) # returns 1 if error
 
     def max_anisotropy_dev(self, dem, out_mag, out_scale, max_scale, min_scale=3, step=2, callback=None):
         """Calculates the maximum anisotropy (directionality) in elevation deviation over a range of spatial scales.
@@ -2865,7 +2902,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('min_downslope_elev_change', args, callback) # returns 1 if error
 
-    def multidirectional_hillshade(self, dem, output, altitude=45.0, zfactor=1.0, full_mode=False, callback=None):
+    def multidirectional_hillshade(self, dem, output, altitude=45.0, zfactor=None, full_mode=False, callback=None):
         """Calculates a multi-direction hillshade raster from an input DEM.
 
         Keyword arguments:
@@ -2881,7 +2918,7 @@ class WhiteboxTools(object):
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         args.append("--altitude={}".format(altitude))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         if full_mode: args.append("--full_mode")
         return self.run_tool('multidirectional_hillshade', args, callback) # returns 1 if error
 
@@ -3051,7 +3088,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('num_upslope_neighbours', args, callback) # returns 1 if error
 
-    def pennock_landform_class(self, dem, output, slope=3.0, prof=0.1, plan=0.0, zfactor=1.0, callback=None):
+    def pennock_landform_class(self, dem, output, slope=3.0, prof=0.1, plan=0.0, zfactor=None, callback=None):
         """Classifies hillslope zones based on slope, profile curvature, and plan curvature.
 
         Keyword arguments:
@@ -3070,7 +3107,7 @@ class WhiteboxTools(object):
         args.append("--slope={}".format(slope))
         args.append("--prof={}".format(prof))
         args.append("--plan={}".format(plan))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('pennock_landform_class', args, callback) # returns 1 if error
 
     def percent_elev_range(self, dem, output, filterx=3, filtery=3, callback=None):
@@ -3091,7 +3128,7 @@ class WhiteboxTools(object):
         args.append("--filtery={}".format(filtery))
         return self.run_tool('percent_elev_range', args, callback) # returns 1 if error
 
-    def plan_curvature(self, dem, output, zfactor=1.0, callback=None):
+    def plan_curvature(self, dem, output, zfactor=None, callback=None):
         """Calculates a plan (contour) curvature raster from an input DEM.
 
         Keyword arguments:
@@ -3104,7 +3141,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('plan_curvature', args, callback) # returns 1 if error
 
     def profile(self, lines, surface, output, callback=None):
@@ -3123,7 +3160,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('profile', args, callback) # returns 1 if error
 
-    def profile_curvature(self, dem, output, zfactor=1.0, callback=None):
+    def profile_curvature(self, dem, output, zfactor=None, callback=None):
         """Calculates a profile curvature raster from an input DEM.
 
         Keyword arguments:
@@ -3136,10 +3173,10 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('profile_curvature', args, callback) # returns 1 if error
 
-    def relative_aspect(self, dem, output, azimuth=0.0, zfactor=1.0, callback=None):
+    def relative_aspect(self, dem, output, azimuth=0.0, zfactor=None, callback=None):
         """Calculates relative aspect (relative to a user-specified direction) from an input DEM.
 
         Keyword arguments:
@@ -3154,7 +3191,7 @@ class WhiteboxTools(object):
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         args.append("--azimuth={}".format(azimuth))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('relative_aspect', args, callback) # returns 1 if error
 
     def relative_topographic_position(self, dem, output, filterx=11, filtery=11, callback=None):
@@ -3193,7 +3230,7 @@ class WhiteboxTools(object):
         args.append("--slope={}".format(slope))
         return self.run_tool('remove_off_terrain_objects', args, callback) # returns 1 if error
 
-    def ruggedness_index(self, dem, output, zfactor=1.0, callback=None):
+    def ruggedness_index(self, dem, output, zfactor=None, callback=None):
         """Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 
         Keyword arguments:
@@ -3206,7 +3243,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('ruggedness_index', args, callback) # returns 1 if error
 
     def sediment_transport_index(self, sca, slope, output, sca_exponent=0.4, slope_exponent=1.3, callback=None):
@@ -3229,7 +3266,7 @@ class WhiteboxTools(object):
         args.append("--slope_exponent={}".format(slope_exponent))
         return self.run_tool('sediment_transport_index', args, callback) # returns 1 if error
 
-    def slope(self, dem, output, zfactor=1.0, units="degrees", callback=None):
+    def slope(self, dem, output, zfactor=None, units="degrees", callback=None):
         """Calculates a slope raster from an input DEM.
 
         Keyword arguments:
@@ -3243,7 +3280,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         args.append("--units={}".format(units))
         return self.run_tool('slope', args, callback) # returns 1 if error
 
@@ -3279,7 +3316,7 @@ class WhiteboxTools(object):
         args.append("--filter={}".format(filter))
         return self.run_tool('spherical_std_dev_of_normals', args, callback) # returns 1 if error
 
-    def standard_deviation_of_slope(self, i, output, zfactor=1.0, filterx=11, filtery=11, callback=None):
+    def standard_deviation_of_slope(self, i, output, zfactor=None, filterx=11, filtery=11, callback=None):
         """Calculates the standard deviation of slope from an input DEM.
 
         Keyword arguments:
@@ -3294,7 +3331,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('standard_deviation_of_slope', args, callback) # returns 1 if error
@@ -3331,7 +3368,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('surface_area_ratio', args, callback) # returns 1 if error
 
-    def tangential_curvature(self, dem, output, zfactor=1.0, callback=None):
+    def tangential_curvature(self, dem, output, zfactor=None, callback=None):
         """Calculates a tangential curvature raster from an input DEM.
 
         Keyword arguments:
@@ -3344,10 +3381,42 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('tangential_curvature', args, callback) # returns 1 if error
 
-    def total_curvature(self, dem, output, zfactor=1.0, callback=None):
+    def time_in_daylight(self, dem, output, lat, long, az_fraction=10.0, max_dist=100.0, utc_offset="00:00", start_day=1, end_day=365, start_time="00:00:00", end_time="23:59:59", callback=None):
+        """Calculates the proportion of time a location is within an area of shadow.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        az_fraction -- Azimuth fraction in degrees. 
+        max_dist -- Optional maximum search distance. Minimum value is 5 x cell size. 
+        lat -- Centre point latitude. 
+        long -- Centre point longitude. 
+        utc_offset -- UTC time offset, in hours (e.g. -04:00, +06:00). 
+        start_day -- Start day of the year (1-365). 
+        end_day -- End day of the year (1-365). 
+        start_time -- Starting hour to track shadows (e.g. 5, 5:00, 05:00:00). Assumes 24-hour time: HH:MM:SS. 'sunrise' is also a valid time. 
+        end_time -- Starting hour to track shadows (e.g. 21, 21:00, 21:00:00). Assumes 24-hour time: HH:MM:SS. 'sunset' is also a valid time. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--az_fraction={}".format(az_fraction))
+        args.append("--max_dist={}".format(max_dist))
+        args.append("--lat='{}'".format(lat))
+        args.append("--long='{}'".format(long))
+        args.append("--utc_offset={}".format(utc_offset))
+        args.append("--start_day={}".format(start_day))
+        args.append("--end_day={}".format(end_day))
+        args.append("--start_time={}".format(start_time))
+        args.append("--end_time={}".format(end_time))
+        return self.run_tool('time_in_daylight', args, callback) # returns 1 if error
+
+    def total_curvature(self, dem, output, zfactor=None, callback=None):
         """Calculates a total curvature raster from an input DEM.
 
         Keyword arguments:
@@ -3360,7 +3429,7 @@ class WhiteboxTools(object):
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        args.append("--zfactor={}".format(zfactor))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('total_curvature', args, callback) # returns 1 if error
 
     def viewshed(self, dem, stations, output, height=2.0, callback=None):
@@ -4025,7 +4094,7 @@ class WhiteboxTools(object):
         args.append("--damlength='{}'".format(damlength))
         return self.run_tool('insert_dams', args, callback) # returns 1 if error
 
-    def isobasins(self, dem, output, size, callback=None):
+    def isobasins(self, dem, output, size, connections=False, callback=None):
         """Divides a landscape into nearly equal sized drainage basins (i.e. watersheds).
 
         Keyword arguments:
@@ -4033,12 +4102,14 @@ class WhiteboxTools(object):
         dem -- Input raster DEM file. 
         output -- Output raster file. 
         size -- Target basin size, in grid cells. 
+        connections -- Output upstream-downstream flow connections among basins?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         args.append("--size='{}'".format(size))
+        if connections: args.append("--connections")
         return self.run_tool('isobasins', args, callback) # returns 1 if error
 
     def jenson_snap_pour_points(self, pour_pts, streams, output, snap_dist, callback=None):
@@ -4611,19 +4682,23 @@ class WhiteboxTools(object):
         args.append("--iterations={}".format(iterations))
         return self.run_tool('remove_spurs', args, callback) # returns 1 if error
 
-    def resample(self, inputs, destination, method="cc", callback=None):
+    def resample(self, inputs, output, cell_size=None, base=None, method="cc", callback=None):
         """Resamples one or more input images into a destination image.
 
         Keyword arguments:
 
         inputs -- Input raster files. 
-        destination -- Destination raster file. 
+        output -- Output raster file. 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
         method -- Resampling method; options include 'nn' (nearest neighbour), 'bilinear', and 'cc' (cubic convolution). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--inputs='{}'".format(inputs))
-        args.append("--destination='{}'".format(destination))
+        args.append("--output='{}'".format(output))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
         args.append("--method={}".format(method))
         return self.run_tool('resample', args, callback) # returns 1 if error
 
@@ -5845,6 +5920,30 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_colourize', args, callback) # returns 1 if error
 
+    def lidar_digital_surface_model(self, i=None, output=None, resolution=1.0, radius=0.5, minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
+        """Creates a top-surface digital surface model (DSM) from a LiDAR point cloud.
+
+        Keyword arguments:
+
+        i -- Input LiDAR file (including extension). 
+        output -- Output raster file (including extension). 
+        resolution -- Output raster's grid resolution. 
+        radius -- Search Radius. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        max_triangle_edge_length -- Optional maximum triangle edge length; triangles larger than this size will not be gridded. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--resolution={}".format(resolution))
+        args.append("--radius={}".format(radius))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))
+        return self.run_tool('lidar_digital_surface_model', args, callback) # returns 1 if error
+
     def lidar_elevation_slice(self, i, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=None):
         """Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -6115,7 +6214,7 @@ class WhiteboxTools(object):
         if predom_class: args.append("--predom_class")
         return self.run_tool('lidar_point_stats', args, callback) # returns 1 if error
 
-    def lidar_ransac_planes(self, i, output, radius=2.0, num_iter=50, num_samples=5, threshold=0.35, model_size=8, max_slope=80.0, classify=False, callback=None):
+    def lidar_ransac_planes(self, i, output, radius=2.0, num_iter=50, num_samples=5, threshold=0.35, model_size=8, max_slope=80.0, classify=False, last_returns=False, callback=None):
         """Performs a RANSAC analysis to identify points within a LiDAR point cloud that belong to linear planes.
 
         Keyword arguments:
@@ -6129,6 +6228,7 @@ class WhiteboxTools(object):
         model_size -- Acceptable model size. 
         max_slope -- Maximum planar slope. 
         classify -- Classify points as ground (2) or off-ground (1). 
+        last_returns -- Only include last- and only-return points. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -6141,6 +6241,7 @@ class WhiteboxTools(object):
         args.append("--model_size={}".format(model_size))
         args.append("--max_slope={}".format(max_slope))
         if classify: args.append("--classify")
+        if last_returns: args.append("--last_returns")
         return self.run_tool('lidar_ransac_planes', args, callback) # returns 1 if error
 
     def lidar_rbf_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, num_points=20, exclude_cls=None, minz=None, maxz=None, func_type="ThinPlateSpline", poly_order="none", weight=5, callback=None):
@@ -6226,11 +6327,11 @@ class WhiteboxTools(object):
         radius -- Search Radius. 
         num_iter -- Number of iterations. 
         num_samples -- Number of sample points on which to build the model. 
-        threshold -- Threshold used to determine inlier points. 
-        model_size -- Acceptable model size. 
-        max_slope -- Maximum planar slope. 
+        threshold -- Threshold used to determine inlier points (in elevation units). 
+        model_size -- Acceptable model size, in points. 
+        max_slope -- Maximum planar slope, in degrees. 
         norm_diff -- Maximum difference in normal vectors, in degrees. 
-        azimuth -- Illumination source azimuth in degrees. 
+        azimuth -- Illumination source azimuth, in degrees. 
         altitude -- Illumination source altitude in degrees. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -6383,7 +6484,7 @@ class WhiteboxTools(object):
         if hull: args.append("--hull")
         return self.run_tool('lidar_tile_footprint', args, callback) # returns 1 if error
 
-    def lidar_tin_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
+    def lidar_tin_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls="7,18", minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
         """Creates a raster grid based on a Delaunay triangular irregular network (TIN) fitted to LiDAR points.
 
         Keyword arguments:
@@ -6405,7 +6506,7 @@ class WhiteboxTools(object):
         args.append("--parameter={}".format(parameter))
         args.append("--returns={}".format(returns))
         args.append("--resolution={}".format(resolution))
-        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        args.append("--exclude_cls={}".format(exclude_cls))
         if minz is not None: args.append("--minz='{}'".format(minz))
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))

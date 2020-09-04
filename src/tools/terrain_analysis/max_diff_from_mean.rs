@@ -307,7 +307,7 @@ impl WhiteboxTool for MaxDifferenceFromMean {
 
         let num_loops = (max_scale - min_scale) / step;
         let mut loop_num = 0;
-        for midpoint in (min_scale..max_scale).filter(|s| (s - min_scale) % step == 0) {
+        for midpoint in (min_scale..=max_scale).filter(|s| (s - min_scale) % step == 0) {
             // .step_by(step) { once step_by is stabilized
             loop_num += 1;
             let (tx, rx) = mpsc::channel();

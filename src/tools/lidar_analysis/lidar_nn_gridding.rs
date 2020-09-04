@@ -8,7 +8,7 @@ License: MIT
 NOTES:
 1. This tool is designed to work either by specifying a single input and output file or
    a working directory containing multiple input LAS files.
-2. Need to add the ability to exclude points based on max scan angle divation.
+2. Need to add the ability to exclude points based on max scan angle devation.
 */
 
 use crate::lidar::*;
@@ -25,6 +25,52 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
+/// This tool grids LiDAR files using nearest-neighbour (NN) scheme, that is, each grid cell in the output image will
+/// be assigned the parameter value of the point nearest the grid cell centre. This method should not be confused 
+/// for the similarly named [natural-neighbour interpolation](https://en.wikipedia.org/wiki/Natural_neighbor_interpolation) 
+/// (a.k.a Sibson's method). Nearest neighbour gridding is generally regarded as a poor way of interpolating surfaces 
+/// from low-density point sets and results in the creation of a [Voronoi 
+/// diagram](https://en.wikipedia.org/wiki/Voronoi_diagram). However, this method has several advantages when 
+/// applied to LiDAR data. NN gridding is one of the fastest methods for generating raster surfaces from large
+/// LiDAR data sets. NN gridding is one of the few interpolation methods, along with triangulation, that will preserve
+/// vertical breaks-in-slope, such as occur at the edges of building. This characteristic can be important when using
+/// some post-processing methods, such as the `RemoveOffTerrainObjects` tool. Furthermore, because most LiDAR data
+/// sets have remarkably high point densities compared with other types of geographic data, this approach does often
+/// produce a satisfactory result; this is particularly true when the point density is high enough that there are multiple
+/// points in the majority of grid cells.
+///
+/// The output grid can be based on any of the stored LiDAR point parameters (`--parameter`), including elevation
+/// (in which case the output grid is a digital elevation model, DEM), intensity, class, return number, number of 
+/// returns, scan angle, RGB (colour) values, and user data values. Similarly, the user may specify which point
+/// return values (`--returns`) to include in the interpolation, including all points, last returns (including single
+/// return points), and first returns (including single return points).
+/// 
+/// The user must specify the grid resolution of the output raster (`--resolution`), and optionally, the name of the
+/// input LiDAR file (`--input`) and output raster (`--output`). Note that if an input LiDAR file (`--input`) is not 
+/// specified by the user, the tool will search for all valid LiDAR (*.las, *.zlidar) contained within the current 
+/// working directory. This feature can be very useful when you need to interpolate a DEM for a large number of LiDAR 
+/// files. Not only does this batch processing mode enable the tool to run in a more optimized parallel manner, but it 
+/// will also allow the tool to include a small buffer of points extending into adjacent tiles when interpolating an 
+/// individual file. This can significantly reduce edge-effects when the output tiles are later mosaicked together. 
+/// When run in this batch mode, the output file (`--output`) also need not be specified; the tool will instead create 
+/// an output file with the same name as each input LiDAR file, but with the .tif extension. This can provide a very 
+/// efficient means for processing extremely large LiDAR data sets.
+///
+/// Users may excluded points from the interpolation based on point classification values, which follow the LAS 
+/// classification scheme. Excluded classes are specified using the `--exclude_cls` parameter. For example, 
+/// to exclude all vegetation and building classified points from the interpolation, use --exclude_cls='3,4,5,6'.
+/// Users may also exclude points from the interpolation if they fall below or above the minimum (`--minz`) or 
+/// maximum (`--maxz`) thresholds respectively. This can be a useful means of excluding anomalously high or low
+/// points. Note that points that are classified as low points (LAS class 7) or high noise (LAS class 18) are 
+/// automatically excluded from the interpolation operation.
+///
+/// The tool will search for the nearest input LiDAR point to each grid cell centre, up to a maximum search distance 
+/// (`--radius`). If a grid cell does not have a LiDAR point within this search distance, it will be assigned the 
+/// NoData value in the output raster. In LiDAR data, these void areas are often associated with larger waterbodies. 
+/// These NoData areas can later be better dealt with using the `FillMissingData` tool after interpolation. 
+///
+/// # See Also
+/// `LidarTINGridding`, `LidarIdwInterpolation`, `LidarTINGridding`, `RemoveOffTerrainObjects`, `FillMissingData`
 pub struct LidarNearestNeighbourGridding {
     name: String,
     description: String,
@@ -38,7 +84,7 @@ impl LidarNearestNeighbourGridding {
         // public constructor
         let name = "LidarNearestNeighbourGridding".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.".to_string();
+        let description = "Grids LiDAR files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

@@ -39,7 +39,7 @@ use std::thread;
 /// models. Available online, DOI: [10.13140/RG.2.2.21226.62401](https://www.researchgate.net/publication/323003064_A_new_method_for_the_removal_of_off-terrain_objects_from_LiDAR-derived_raster_surface_models)
 ///
 /// # See Also
-/// `TophatTransform`, `LidarGroundPointFilter`
+/// `MapOffTerrainObjects`, `TophatTransform`, `LidarGroundPointFilter`
 pub struct RemoveOffTerrainObjects {
     name: String,
     description: String,

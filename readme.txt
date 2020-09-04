@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.4.0 (03-09-2020)
+Version 1.4.0 (04-09-2020)
 - Added the TimeInDaylight model tool for modelling the proportion of daytime that a location is not in shadow.
 - Added the MapOffTerrainObjects tool.
 - Added the FilterRasterFeaturesByArea tool.
@@ -68,6 +68,11 @@ Version 1.4.0 (03-09-2020)
 - The Resample tool has been modified so that it does not require a 'destination' raster. Instead,
   it will create a new output raster either based on a user-specified target cell resolution or
   an optional base raster, much like the vector-to-raster conversion tools.
+- Tools that input a z_factor conversion no longer override user input with geographic coordinates
+  (see issue #113).
+- The StreamLinkIdentifier tool now outputs a 32-bit integer format, increasing the maximum allowable 
+  number of streams (see issue #110).
+- Fixed a bug with cubic-convolution and bilinear resampling in the Mosaic tool (see issue #109).
 
 Version 1.3.1 (23-07-2020)
 - Added the HypsometricallyTintedHillshade tool to create hypsometric tinted hillshades.

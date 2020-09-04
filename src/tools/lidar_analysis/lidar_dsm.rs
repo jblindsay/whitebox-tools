@@ -21,6 +21,58 @@ use std::sync::Arc;
 use std::{env, f64, fs, path, thread};
 // use rayon::prelude::*;
 
+/// This tool creates a digital surface model (DSM) from a LiDAR point cloud. A DSM reflects the elevation of the tops
+/// of all off-terrain objects (i.e. non-ground features) contained within the data set. For example, a DSM will model
+/// the canopy top as well as building roofs. This is in stark contrast to a bare-earth digital elevation model (DEM),
+/// which models the ground surface without off-terrain objects present. Bare-earth DEMs can be derived from LiDAR data
+/// by interpolating last-return points using one of the other LiDAR interpolators (e.g. `LidarTINGridding`). The algorithm
+/// used for interpolation in this tool is based on gridding a triangulation (TIN) fit to top-level points in the 
+/// input LiDAR point cloud. All points in the input LiDAR data set that are below other neighbouring points, within
+/// a specified search radius (`--radius`), and that have a large inter-point slope, are filtered out. Thus, this tool
+/// will remove the ground surface beneath as well as any intermediate points within a forest canopy, leaving only the
+/// canopy top surface to be interpolated. Similarly, building wall points and any ground points beneath roof overhangs
+/// will also be remove prior to interpolation. Note that because the ground points beneath overhead wires and utility
+/// lines are filtered out by this operation, these features tend to be appear as 'walls' in the output DSM. If these
+/// points are classified in the input LiDAR file, you may wish to filter them out before using this tool (`FilterLidarClasses`).
+///
+/// The following images show the differences between creating a DSM using the `LidarDigitalSurfaceModel` 
+/// and by interpolating first-return points only using the `LidarTINGridding` tool respectively. Note, the images show 
+/// `TimeInDaylight`, which is a more effective way of hillshading DSMs than the traditional `Hillshade` method. Compare
+/// how the DSM created `LidarDigitalSurfaceModel` tool (above) has far less variability in areas of tree-cover, more
+/// effectively capturing the canopy top. As well, notice how building rooftops are more extensive and straighter in
+/// the `LidarDigitalSurfaceModel` DSM image. This is because this method eliminates ground returns beneath roof overhangs
+/// before the triangulation operation.
+///
+/// ![](../../doc_img/DSM.png)
+///
+/// ![](../../doc_img/FirstReturnTIN.png)
+///
+/// The user must specify the grid resolution of the output raster (`--resolution`), and optionally, the name of the
+/// input LiDAR file (`--input`) and output raster (`--output`). Note that if an input LiDAR file (`--input`) is not 
+/// specified by the user, the tool will search for all valid LiDAR (*.las, *.zlidar) contained within the current 
+/// working directory. This feature can be very useful when you need to interpolate a DSM for a large number of LiDAR 
+/// files. Not only does this batch processing mode enable the tool to run in a more optimized parallel manner, but it 
+/// will also allow the tool to include a small buffer of points extending into adjacent tiles when interpolating an 
+/// individual file. This can significantly reduce edge-effects when the output tiles are later mosaicked together. 
+/// When run in this batch mode, the output file (`--output`) also need not be specified; the tool will instead create 
+/// an output file with the same name as each input LiDAR file, but with the .tif extension. This can provide a very 
+/// efficient means for processing extremely large LiDAR data sets.
+///
+/// Users may also exclude points from the interpolation if they fall below or above the minimum (`--minz`) or 
+/// maximum (`--maxz`) thresholds respectively. This can be a useful means of excluding anomalously high or low
+/// points. Note that points that are classified as low points (LAS class 7) or high noise (LAS class 18) are 
+/// automatically excluded from the interpolation operation.
+///
+/// Triangulation will generally completely fill the convex hull containing the input point data. This can sometimes
+/// result in very long and narrow triangles at the edges of the data or connecting vertices on either side of void
+/// areas. In LiDAR data, these void areas are often associated with larger waterbodies, and triangulation can result
+/// in very unnatural interpolated patterns within these areas. To avoid this problem, the user may specify a the
+/// maximum allowable triangle edge length (`max_triangle_edge_length`) and all grid cells within triangular facets
+/// with edges larger than this threshold are simply assigned the NoData values in the output DSM. These NoData areas
+/// can later be better dealt with using the `FillMissingData` tool after interpolation. 
+///
+/// # See Also
+/// `LidarTINGridding`, `FilterLidarClasses`, `FillMissingData`, `TimeInDaylight`
 pub struct LidarDigitalSurfaceModel {
     name: String,
     description: String,

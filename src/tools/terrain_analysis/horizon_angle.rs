@@ -41,6 +41,14 @@ use std::thread;
 ///
 /// Ray-tracing is a highly computationally intensive task and therefore this tool may take considerable time to operate for
 /// larger sized DEMs. Maximum upwind slope is best displayed using a Grey scale palette that is inverted.
+///
+/// Horizon angle is best visualized using a white-to-black palette and rescaled from approximately -10 to 70 (see below for
+/// an example of horizon angle calculated at a 150-degree azimuth).
+///
+/// ![](../../doc_img/HorizonAngle.png)
+///
+/// # See Also
+/// `TimeInDaylight`
 pub struct HorizonAngle {
     name: String,
     description: String,
