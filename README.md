@@ -1,4 +1,4 @@
-![](./img/WhiteboxToolsLogo.svg)
+![](./img/WhiteboxToolsLogoBlue.png)
 
 *Bringing the power of Whitebox GAT to the world at large*
 
