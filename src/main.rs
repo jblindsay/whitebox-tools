@@ -297,7 +297,7 @@ fn help() {
         ext = ".exe";
     }
 
-    let exe_name = &format!("whitebox-tools{}", ext);
+    let exe_name = &format!("whitebox_tools{}", ext);
     let sep: String = path::MAIN_SEPARATOR.to_string();
     let s = "WhiteboxTools Help
 

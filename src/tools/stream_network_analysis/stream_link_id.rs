@@ -392,7 +392,12 @@ impl WhiteboxTool for StreamLinkIdentifier {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.data_type = DataType::I32;
+        if current_id < 32767f64 {
+            output.configs.data_type = DataType::I16;
+        } else {
+            output.configs.data_type = DataType::I32;
+        }
+        
         output.configs.palette = "qual.plt".to_string();
         output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         output.add_metadata_entry(format!(

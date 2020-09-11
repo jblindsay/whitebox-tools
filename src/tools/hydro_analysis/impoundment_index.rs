@@ -558,30 +558,6 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         }
 
 
-
-
-        // let mut output = Raster::initialize_using_file(&output_file, &input);
-        // for row in 0..rows {
-        //     for col in 0..columns {
-        //         z = input.get_value(row, col);
-        //         if z != nodata {
-        //             output.set_value(row, col, filled_dem.get_value(row, col) - crest_elev.get_value(row, col));
-        //         }
-        //     }
-        //     if verbose {
-        //         progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-        //         if progress != old_progress {
-        //             println!("Progress: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
-
-
-
-
-
-
         /*
         Perform the index calculation. This is essentially a downstream-directed flow-path
         tracing and accumulation operation that begins at the divides and ends at outlets.
@@ -669,23 +645,6 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 progress = (100.0_f64 * num_solved_cells as f64 / (num_cells - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Calculating index: {}%", progress);
-                    old_progress = progress;
-                }
-            }
-        }
-
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        for row in 0..rows {
-            for col in 0..columns {
-                z = input.get_value(row, col);
-                if z != nodata {
-                    output.set_value(row, col, filled_dem.get_value(row, col)); // - crest_elev.get_value(row, col));
-                }
-            }
-            if verbose {
-                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
