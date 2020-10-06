@@ -56,6 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.5.0 (XX-XX-2020)
+- Added the EmbankmentMapping tool for mapping transportation embankments (road, rail) in LiDAR DEMs.
+
 Version 1.4.0 (04-09-2020)
 - Added the TimeInDaylight model tool for modelling the proportion of daytime that a location is not in shadow.
 - Added the MapOffTerrainObjects tool.

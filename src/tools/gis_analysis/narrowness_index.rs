@@ -208,8 +208,8 @@ impl WhiteboxTool for NarrownessIndex {
         output.configs.data_type = DataType::F32;
         output.configs.palette = String::from("spectrum_black_background.pal");
 
-        let mut r_x: Array2D<f64> = Array2D::new(rows, columns, 0f64, out_nodata)?;
-        let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, out_nodata)?;
+        let mut r_x: Array2D<f64> = Array2D::new(rows, columns, 0f64, out_nodata).expect("Error creating Array2D.");
+        let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, out_nodata).expect("Error creating Array2D.");
 
         let mut area_data = vec![0usize; num_bins];
         let mut max_width = vec![0f64; num_bins];

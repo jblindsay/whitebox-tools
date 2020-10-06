@@ -262,7 +262,7 @@ impl WhiteboxTool for VectorLinesToRaster {
         if verbose {
             println!("Reading data...")
         };
-        let vector_data = Shapefile::read(&input_file)?;
+        let vector_data = Shapefile::read(&input_file).expect("Error reading input Shapefile.");
 
         let start = Instant::now();
 

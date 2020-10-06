@@ -490,10 +490,12 @@ impl WhiteboxTool for TophatTransform {
                 Err(e) => return Err(e),
             };
 
-            println!(
-                "{}",
-                &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
-            );
+            if verbose {
+                println!(
+                    "{}",
+                    &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
+                );
+            }
         } else {
             // black top-hat transform
             // first perform the dilation

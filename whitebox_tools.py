@@ -424,6 +424,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2568,6 +2569,38 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('elev_relative_to_watershed_min_max', args, callback) # returns 1 if error
 
+    def embankment_mapping(self, dem, road_vec, output, search_dist=2.5, min_road_width=6.0, typical_width=30.0, max_height=2.0, max_width=60.0, max_increment=0.05, spillout_slope=4.0, remove_embankments=False, callback=None):
+        """Maps and/or removes road embankments from an input fine-resolution DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        road_vec -- Input vector polygons file. 
+        output -- Output raster file. 
+        search_dist -- Search distance used to reposition transportation vectors onto road embankments (in map units). 
+        min_road_width -- Minimum road width; this is the width of the paved road surface (in map units). 
+        typical_width -- Typical embankment width; this is the maximum width of an embankment with roadside ditches (in map units). 
+        max_height -- Typical embankment maximum height; this is the height a typical embankment with roadside ditches (in map units). 
+        max_width -- Maximum embankment width, typically where embankments traverse steep-sided valleys (in map units). 
+        max_increment -- Maximum upwards increment between neighbouring cells on an embankment (in elevation units). 
+        spillout_slope -- Spillout slope (in degrees). 
+        remove_embankments -- Optional flag indicating whether to output a DEM with embankments removed (true) or an embankment raster map (false). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--road_vec='{}'".format(road_vec))
+        args.append("--output='{}'".format(output))
+        args.append("--search_dist={}".format(search_dist))
+        args.append("--min_road_width={}".format(min_road_width))
+        args.append("--typical_width={}".format(typical_width))
+        args.append("--max_height={}".format(max_height))
+        args.append("--max_width={}".format(max_width))
+        args.append("--max_increment={}".format(max_increment))
+        args.append("--spillout_slope={}".format(spillout_slope))
+        if remove_embankments: args.append("--remove_embankments")
+        return self.run_tool('embankment_mapping', args, callback) # returns 1 if error
+
     def feature_preserving_smoothing(self, dem, output, filter=11, norm_diff=15.0, num_iter=3, max_diff=0.5, zfactor=None, callback=None):
         """Reduces short-scale variation in an input DEM using a modified Sun et al. (2007) algorithm.
 
@@ -3385,7 +3418,7 @@ class WhiteboxTools(object):
         return self.run_tool('tangential_curvature', args, callback) # returns 1 if error
 
     def time_in_daylight(self, dem, output, lat, long, az_fraction=10.0, max_dist=100.0, utc_offset="00:00", start_day=1, end_day=365, start_time="00:00:00", end_time="23:59:59", callback=None):
-        """Calculates the proportion of time a location is within an area of shadow.
+        """Calculates the proportion of time a location is not within an area of shadow.
 
         Keyword arguments:
 
@@ -6135,7 +6168,7 @@ class WhiteboxTools(object):
         return self.run_tool('lidar_kappa_index', args, callback) # returns 1 if error
 
     def lidar_nearest_neighbour_gridding(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, radius=2.5, exclude_cls=None, minz=None, maxz=None, callback=None):
-        """Grids LAS files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
+        """Grids LiDAR files using nearest-neighbour scheme. When the input/output parameters are not specified, the tool grids all LAS files contained within the working directory.
 
         Keyword arguments:
 

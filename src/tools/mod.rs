@@ -444,6 +444,7 @@ impl ToolManager {
         tool_names.push("ElevPercentile".to_string());
         tool_names.push("ElevRelativeToMinMax".to_string());
         tool_names.push("ElevRelativeToWatershedMinMax".to_string());
+        tool_names.push("EmbankmentMapping".to_string());
         tool_names.push("FeaturePreservingSmoothing".to_string());
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
@@ -1080,6 +1081,7 @@ impl ToolManager {
             "elevrelativetowatershedminmax" => Some(Box::new(
                 terrain_analysis::ElevRelativeToWatershedMinMax::new(),
             )),
+            "embankmentmapping" => Some(Box::new(terrain_analysis::EmbankmentMapping::new())),
             "featurepreservingsmoothing" => {
                 Some(Box::new(terrain_analysis::FeaturePreservingSmoothing::new()))
             }
