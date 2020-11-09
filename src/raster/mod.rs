@@ -551,7 +551,7 @@ impl Raster {
     }
 
     pub fn get_data_as_f32_array2d(&self) -> Array2D<f32> {
-        let out_nodata = -32768f32;
+        let out_nodata = self.configs.nodata as f32; // -32768f32;
         let mut data: Array2D<f32> = Array2D::new(
             self.configs.rows as isize,
             self.configs.columns as isize,

@@ -25,7 +25,7 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to create a slope versus average elevation plot for one or more digital elevation models (DEMs).
-/// Similary to a hypsometric analysis (`HypsometricAnalysis`), the slope-elevation relation can reveal the basic
+/// Similar to a hypsometric analysis (`HypsometricAnalysis`), the slope-elevation relation can reveal the basic
 /// topographic character of a site. The output of this analysis is an HTML document (`--output`) that contains the
 /// slope-elevation chart. The tool can plot multiple slope-elevation analyses on the same chart by specifying multiple
 /// input DEM files (`--inputs`). Each input DEM can have an optional watershed in which the slope-elevation analysis is
