@@ -8,15 +8,11 @@ License: MIT
 
 use crate::raster::*;
 use crate::tools::*;
-// use num_cpus;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use crate::vector::{ShapeType, Shapefile};
 use std::path;
-// use std::sync::mpsc;
-// use std::sync::Arc;
-// use std::thread;
 use crate::structures::{Array2D, BoundingBox, DistanceMetric, FixedRadiusSearch2D};
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
@@ -728,7 +724,7 @@ impl WhiteboxTool for EmbankmentMapping {
                     if dist >= 0.0 {
                         if dist <= min_road_width {
                             // If we're within this narrow distance of a seed cell, it's road regardless of other factors.
-                            output.set_value(r+dy[n], c+dx[n], 2.0);
+                            output.set_value(r+dy[n], c+dx[n], 1.0); // 2.0);
                             pqueue.push(CellInfo{ row: r+dy[n], col: c+dx[n], distance: dist });
                         } else if dist <= max_width {
                             seed_z = seed_elev.get_value(r+dy[n], c+dx[n]);
@@ -736,15 +732,15 @@ impl WhiteboxTool for EmbankmentMapping {
                             embankment_slope = (embankment_height / dist).atan().to_degrees();
                             if dist <= typical_width && z - zn > -max_increment && embankment_height <= max_height {
                                 if zn <= z {
-                                    output.set_value(r+dy[n], c+dx[n], 3.0);
+                                    output.set_value(r+dy[n], c+dx[n], 1.0); // 3.0);
                                     pqueue.push(CellInfo{ row: r+dy[n], col: c+dx[n], distance: dist });
                                 } else if zn > z && max_abs_slope.get_value(r+dy[n], c+dx[n]) < spillout_slope {
-                                    output.set_value(r+dy[n], c+dx[n], 4.0);
+                                    output.set_value(r+dy[n], c+dx[n], 1.0); // 4.0);
                                     pqueue.push(CellInfo{ row: r+dy[n], col: c+dx[n], distance: dist });
                                 }
                             } else if max_abs_slope.get_value(r+dy[n], c+dx[n]) - embankment_slope.abs() <= 1.0 && embankment_slope >= 0.0 {
                                 // there isn't a major break-in-slope between the cell and the source cell and it's downward.
-                                output.set_value(r+dy[n], c+dx[n], 5.0);
+                                output.set_value(r+dy[n], c+dx[n], 1.0); // 5.0);
                                 pqueue.push(CellInfo{ row: r+dy[n], col: c+dx[n], distance: dist });
                             }
                         }

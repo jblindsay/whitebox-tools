@@ -246,11 +246,11 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         if verbose {
             println!("Smoothing the input DEM...");
         }
-        let mut sigma = (midpoint as f64 - 0.5) / 3f64;
+        let mut sigma = (midpoint as f64 + 0.5) / 3f64;
         if sigma < 1.0 {
             sigma = 1.0;
         }
-        if sigma < 1.8 && filter_size > 3 {
+        if sigma < 1.8 { //&& filter_size > 3 {
             let recip_root_2_pi_times_sigma_d = 1.0 / ((2.0 * f64::consts::PI).sqrt() * sigma);
             let two_sigma_sqr_d = 2.0 * sigma * sigma;
 
@@ -461,7 +461,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
                                 smoothed_dem.set_value(row, col, sum / num_cells as f64);
                             } else {
                                 // should never hit here since input(row, col) != nodata above, therefore, num_cells >= 1
-                                smoothed_dem.set_value(row, col, 0f64);
+                                smoothed_dem.set_value(row, col, input.get_value(row, col));
                             }
                         }
                     }
@@ -547,7 +547,7 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
         for row in 0..rows {
             let data = rx.recv().expect("Error receiving data from thread.");
             angular_diff.set_row_data(data.0, data.1);
-            // output.set_row_data(data.0, data.1);
+            // output.set_row_data(data.0, angular_diff.get_row_data(data.0));
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
@@ -679,6 +679,10 @@ impl WhiteboxTool for AverageNormalVectorAngularDeviation {
             match rx2.recv() {
                 Ok(data) => {
                     output.set_row_data(data.0, data.1);
+                    // output.set_row_data(data.0, smoothed_dem.get_row_data(data.0));
+                    // for col in 0..columns {
+                    //     output.set_value(data.0, col, angular_diff.get_value(data.0, col) as f64);
+                    // }
                 }
                 Err(_) => {
                     return Err(Error::new(

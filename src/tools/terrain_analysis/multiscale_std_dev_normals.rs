@@ -343,7 +343,8 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
 
         let rows = configs.rows as isize;
         let columns = configs.columns as isize;
-        let nodata = configs.nodata as f32;
+        // let nodata = configs.nodata as f32;
+        let nodata = input.nodata;
         let min_val = configs.minimum as f32;
 
         let mut z_factor = 1f32;

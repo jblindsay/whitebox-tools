@@ -21,7 +21,12 @@ use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 use std::thread;
 
-/// This tool copies LiDAR tiles overlapping with a polygon into an output directory.
+/// This tool copies LiDAR tiles overlapping with a polygon into an output directory. In actuality, the tool performs 
+/// point-in-polygon operations, using the four corner points, the center point, and the four mid-edge points of each 
+/// LiDAR tile bounding box and the polygons. This representation of overlapping geometry aids with performance. This
+/// approach generally works well when the polygon size is large relative to the LiDAR tiles. If, however, the input
+/// polygon is small relative to the tile size, this approach may miss some copying some tiles. It is advisable to 
+/// buffer the polygon if this occurs.
 ///
 /// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
 /// LiDAR format `LAZ`, it is able to read `LAZ` file headers. Because this tool only requires information contained
@@ -283,6 +288,8 @@ impl WhiteboxTool for SelectTilesByPolygon {
                     let east = header.max_x;
                     let north = header.max_y;
                     let south = header.min_y;
+                    let mid_point_x = (header.max_x - header.min_x) / 2.0;
+                    let mid_point_y = (header.max_y - header.min_y) / 2.0;
 
                     // let input = match LasFile::new(&input_file, "rh") {
                     //     Ok(lf) => lf,
@@ -339,6 +346,46 @@ impl WhiteboxTool for SelectTilesByPolygon {
 
                                     if algorithms::point_in_poly(
                                         &Point2D { x: west, y: south },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: mid_point_x, y: mid_point_y },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: mid_point_x, y: south },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: mid_point_x, y: north },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: east, y: mid_point_y },
+                                        &record.points[start_point_in_part..end_point_in_part + 1],
+                                    ) {
+                                        point_in_poly = true;
+                                        break;
+                                    }
+
+                                    if algorithms::point_in_poly(
+                                        &Point2D { x: west, y: mid_point_y },
                                         &record.points[start_point_in_part..end_point_in_part + 1],
                                     ) {
                                         point_in_poly = true;

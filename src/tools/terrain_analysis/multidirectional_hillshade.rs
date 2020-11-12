@@ -57,7 +57,7 @@ use std::thread;
 /// ![](../../doc_img/MultidirectionalHillshade_fig3.png)
 ///
 /// # See Also
-/// `Hillshade`, HypsometricallyTintedHillshade, `Aspect`, `Slope`
+/// `Hillshade`, `HypsometricallyTintedHillshade`, `Aspect`, `Slope`
 pub struct MultidirectionalHillshade {
     name: String,
     description: String,
