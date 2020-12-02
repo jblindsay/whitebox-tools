@@ -215,10 +215,10 @@ impl fmt::Display for PointData {
 }
 
 impl PointData {
-    /// This function provides a lossy mechanism for transfering a 64-bit LiDAR point payload into
-    /// a 32-bit payload. The returns include a 32-bit formated point_bit_field and class_bit_field.
+    /// This function provides a lossy mechanism for transferring a 64-bit LiDAR point payload into
+    /// a 32-bit payload. The returns include a 32-bit formatted point_bit_field and class_bit_field.
     /// If the point data utilizes higher return numbers information
-    /// will be lost in the translationt to the 32-bit format.
+    /// will be lost in the translation to the 32-bit format.
     pub fn get_32bit_from_64bit(&self) -> (u8, u8) {
         // create a 32-bit point_bit_field including 3-bits return number, 3-bits num returns,
         // 1-bit scan direction, and 1-bit edge of flight.
