@@ -425,6 +425,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3779,7 +3780,7 @@ class WhiteboxTools(object):
         if zero_background: args.append("--zero_background")
         return self.run_tool('depth_in_sink', args, callback) # returns 1 if error
 
-    def downslope_distance_to_stream(self, dem, streams, output, callback=None):
+    def downslope_distance_to_stream(self, dem, streams, output, dinf=False, callback=None):
         """Measures distance to the nearest downslope stream cell.
 
         Keyword arguments:
@@ -3787,12 +3788,14 @@ class WhiteboxTools(object):
         dem -- Input raster DEM file. 
         streams -- Input raster streams file. 
         output -- Output raster file. 
+        dinf -- Use the D-infinity flow algoirthm instead of D8?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--streams='{}'".format(streams))
         args.append("--output='{}'".format(output))
+        if dinf: args.append("--dinf")
         return self.run_tool('downslope_distance_to_stream', args, callback) # returns 1 if error
 
     def downslope_flowpath_length(self, d8_pntr, output, watersheds=None, weights=None, esri_pntr=False, callback=None):
