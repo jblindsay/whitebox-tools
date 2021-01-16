@@ -454,6 +454,7 @@ impl WhiteboxTool for D8FlowAccumulation {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
+        output.configs.data_type = DataType::F64;
         output.reinitialize_values(1.0);
         drop(input);
 
