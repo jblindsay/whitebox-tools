@@ -80,6 +80,15 @@ impl D8FlowAccumulation {
         });
 
         parameters.push(ToolParameter {
+            name: "Input Weight File".to_owned(),
+            flags: vec!["-w".to_owned(), "--weights".to_owned()],
+            description: "Optional input weights raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
             description: "Output raster file.".to_owned(),
@@ -194,6 +203,7 @@ impl WhiteboxTool for D8FlowAccumulation {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
+        let mut weights_file = String::new();
         let mut output_file = String::new();
         let mut out_type = String::from("sca");
         let mut log_transform = false;
@@ -222,6 +232,12 @@ impl WhiteboxTool for D8FlowAccumulation {
                     input_file = vec[1].to_string();
                 } else {
                     input_file = args[i + 1].to_string();
+                }
+            } else if flag_val == "-w" || flag_val == "-weights" {
+                if keyval {
+                    weights_file = vec[1].to_string();
+                } else {
+                    weights_file = args[i + 1].to_string();
                 }
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
@@ -283,6 +299,10 @@ impl WhiteboxTool for D8FlowAccumulation {
         }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
+        }
+        let use_weights = !weights_file.is_empty();
+        if use_weights && !weights_file.contains(&sep) && !weights_file.contains("/") {
+            weights_file = format!("{}{}", working_directory, weights_file);
         }
 
         if verbose {
@@ -474,7 +494,12 @@ impl WhiteboxTool for D8FlowAccumulation {
         output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
         output.configs.data_type = DataType::F32;
-        output.reinitialize_values(1.0);
+        if use_weights {
+            let weights = Raster::new(&weights_file, "r")?;
+            output.set_data_from_raster(&weights)?;
+        } else {
+            output.reinitialize_values(1.0);
+        }
         drop(input);
 
         // calculate the number of inflowing cells
@@ -674,6 +699,9 @@ impl WhiteboxTool for D8FlowAccumulation {
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
+        if use_weights {
+            output.add_metadata_entry(format!("Input weights file: {}", weights_file));
+        }
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {

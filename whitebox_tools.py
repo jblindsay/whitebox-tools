@@ -4579,13 +4579,14 @@ Okay, that's it for now.
         if width is not None: args.append("--width='{}'".format(width))
         return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
 
-    def d8_flow_accumulation(self, i, output, out_type="cells", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
+    def d8_flow_accumulation(self, i, output, weights=None, out_type="cells", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
         """Calculates a D8 flow accumulation raster from an input DEM or flow pointer.
 
         Keyword arguments:
 
         i -- Input raster DEM or D8 pointer file. 
         output -- Output raster file. 
+        weights -- Optional input weights raster file.
         out_type -- Output type; one of 'cells' (default), 'catchment area', and 'specific contributing area'. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
@@ -4596,6 +4597,7 @@ Okay, that's it for now.
         args = []
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
+        if weights is not None: args.append("--weights='{}'".format(weights))
         args.append("--out_type={}".format(out_type))
         if log: args.append("--log")
         if clip: args.append("--clip")
