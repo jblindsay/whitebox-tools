@@ -598,6 +598,21 @@ pub fn read_geotiff<'a>(
         }
         _ => {}
     }
+    match ifd_map.get(&34264) {
+        Some(ifd) => {
+            let vals = ifd.interpret_as_f64();
+            if vals.len() != 16 {
+                return Err(Error::new(
+                    ErrorKind::InvalidData,
+                    "Error: the ModelTransformationTag (34264) is not specified correctly in the GeoTIFF file.",
+                ));
+            }
+            for i in 0..16 {
+                configs.model_transformation[i] = vals[i];
+            }
+        }
+        _ => {}
+    }
 
     if configs.model_tiepoint.len() == 6 {
         // see if the model_pixel_scale tag was actually specified
