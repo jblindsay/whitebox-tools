@@ -33,7 +33,7 @@ use std::thread;
 /// through the surrounding topography.
 ///
 /// The user must specify the name of the input DEM file (`--dem`), the output breached DEM
-/// file (`--output`), the maximum search window radius (`--radius`), the optional maximum breach
+/// file (`--output`), the maximum search distance (`--dist`), the optional maximum breach
 /// cost (`--max_cost`), and an optional flat height increment value (`--flat_increment`). Notice that **if the
 /// `--flat_increment` parameter is not specified, the small number used to ensure flow across flats will be
 /// calculated automatically, which should be preferred in most applications** of the tool.
