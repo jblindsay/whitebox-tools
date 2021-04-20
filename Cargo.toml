@@ -1,41 +1,5 @@
+[workspace]
+members = ["whitebox-common", "whitebox-lidar", "whitebox-raster", "whitebox-tools-app", "whitebox-vector"]
 
-[package]
-name = "whitebox_tools"
-version = "1.5.0"
-authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
-description = "A library for analyzing geospatial data."
-keywords = ["geospatial", "GIS", "remote sensing", "geomatics", "image processing", "lidar", "spatial analysis"]
-readme = "README.md"
-repository = "https://github.com/jblindsay/whitebox-tools/"
-license = "MIT"
-edition = "2018"
-
-[dependencies]
-byteorder = "^1.3.1"
-chrono = "0.4.15"
-kdtree = "0.6.0"
-late-static = "0.3.0"
-lzw = "0.10.0"
-miniz_oxide = "0.3.6"
-nalgebra = "0.18.0"
-num_cpus = "1.6.2"
-rand = { version = "0.7", features = ["small_rng"] }
-rand_distr = "0.2.1"
-rayon = "1.3.1"
-rstar = "0.7.1"
-serde = "1.0.94"
-serde_derive = "1.0.94"
-serde_json = "1.0.40"
-statrs = "0.9.0"
-zip = "0.3.0"
-
-# [profile.release]
-# opt-level = 3
-# debug = false
-# rpath = false
-# lto = false
-# debug-assertions = false
-# codegen-units = 16
-# panic = 'unwind'
-# incremental = true
-# overflow-checks = false
+[profile.release]
+incremental = true

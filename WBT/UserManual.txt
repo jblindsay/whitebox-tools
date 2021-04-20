@@ -1,0 +1,6 @@
+The WhiteboxTools User Manual is now available online at:
+
+https://jblindsay.github.io/wbt_book/index.html
+
+Please see the manual for details on usage and for descriptions of available tools. 
+The PDF version of the User Manual is no longer distributed along with the software.

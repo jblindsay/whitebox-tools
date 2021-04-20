@@ -1,0 +1,25 @@
+{
+    "tool_name": "LidarSortByTime",
+    "exe": "lidar_sort_by_time",
+    "short_description": "This sorts the points in a LiDAR file by the GPS time.",
+    "help": "This sorts the points in a LiDAR file by the GPS time. This can significantly help with LiDAR compression rates in the zLidar data format.",
+    "toolbox": "LiDAR Tools/Advanced LiDAR Plugins",
+    "parameters": [
+        {
+            "name": "Input LiDAR Points",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input LiDAR points.",
+            "parameter_type": {"ExistingFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output LiDAR Points",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output LiDAR points.",
+            "parameter_type": {"NewFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

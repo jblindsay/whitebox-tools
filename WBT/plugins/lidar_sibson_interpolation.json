@@ -1,0 +1,74 @@
+{
+    "tool_name": "LidarSibsonInterpolation",
+    "exe": "lidar_sibson_interpolation",
+    "short_description": "This interpolates one or more LiDAR tiles using Sibson's natural neighbour method.",
+    "help": "This interpolates one or more LiDAR tiles using Sibson's natural neighbour method.",
+    "toolbox": "LiDAR Tools/Advanced LiDAR Plugins",
+    "parameters": [
+        {
+            "name": "Input LiDAR Points",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input LiDAR points (leave blank to use all files in WorkingDirectory.",
+            "parameter_type": {"ExistingFile":"Lidar"},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Raster",
+            "flags": ["-o", "--output"],
+            "description": "Output raster file (including extension).",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Interpolation Parameter",
+            "flags": ["-p", "--parameter"],
+            "description": "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'user_data'.",
+            "parameter_type": {"OptionList": ["elevation", "intensity", "class", "return_number", "number_of_returns", "scan_angle", "user_data"]},
+            "default_value": "elevation",
+            "optional": true
+        },
+        {
+            "name": "Point Returns Included",
+            "flags": ["--returns"],
+            "description": "Point return types to include; options are 'all' (default), 'last', 'first'.",
+            "parameter_type": {"OptionList": ["all", "last", "first"]},
+            "default_value": "all",
+            "optional": true
+        },
+        {
+            "name": "Output Grid Resolution",
+            "flags": ["--resolution"],
+            "description": "Output raster's grid resolution.",
+            "parameter_type": "Float",
+            "default_value": "1.0",
+            "optional": true
+        },
+        {
+            "name": "Exclusion Classes (0-18, based on LAS spec; e.g. 3,4,5,6,7)",
+            "flags": ["-e", "--exclude_cls"],
+            "description": "Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'.",
+            "parameter_type": "String",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Minimum Elevation Value (optional)",
+            "flags": ["--minz"],
+            "description": "Optional minimum elevation for inclusion in interpolation.",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Maximum Elevation Value (optional)",
+            "flags": ["--maxz"],
+            "description": "Optional maximum elevation for inclusion in interpolation.",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        }
+        
+    ]
+}

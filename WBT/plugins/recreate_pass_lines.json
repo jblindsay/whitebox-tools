@@ -1,0 +1,49 @@
+{
+    "tool_name": "RecreatePassLines",
+    "exe": "recreate_pass_lines",
+    "short_description": "This tool can be used to approximate the harvester pass lines from yield points.",
+    "help": "This tool can be used to approximate the harvester pass lines from yield points.",
+    "toolbox": "Precision Agriculture",
+    "parameters": [
+        {
+            "name": "Input Points",
+            "flags": ["-i", "--inputFile"],
+            "description": "Name of the input points shapefile.",
+            "parameter_type": {"ExistingFile":{"Vector":"Points"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Yield Field Name",
+            "flags": ["-y", "--yieldFieldName"],
+            "description": "Name of the attribute containing yield data.",
+            "parameter_type": "String",
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Pass Line",
+            "flags": ["-o", "--outputFile"],
+            "description": "Name of the output pass lines shapefile.",
+            "parameter_type": {"NewFile":{"Vector":"Lines"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Points",
+            "flags": ["--outputPointsFile"],
+            "description": "Name of the output points shapefile.",
+            "parameter_type": {"NewFile":{"Vector":"Points"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Max Change In Heading (degrees)",
+            "flags": ["-m", "--maxChangeInHeading"],
+            "description": "Max change in heading.",
+            "parameter_type": "Float",
+            "default_value": "25.0",
+            "optional": true
+        }
+    ]
+}

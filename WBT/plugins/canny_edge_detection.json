@@ -1,0 +1,57 @@
+{
+    "tool_name": "CannyEdgeDetection",
+    "exe": "canny_edge_detection",
+    "short_description": "This tool performs a Canny edge-detection filter on an input image.",
+    "help": "This tool performs a Canny edge-detection filter on an input image.",
+    "toolbox": "Image Processing Tools/Filters",
+    "parameters": [
+        {
+            "name": "Input Raster Image",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input raster image file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster Image",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output raster image file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Sigma Value",
+            "flags": ["-s", "--sigma"],
+            "description": "Sigma value used in Gaussian filtering, default = 0.5",
+            "parameter_type": "Float",
+            "default_value": "0.5",
+            "optional": true
+        },
+        {
+            "name": "Low Threshold",
+            "flags": ["-l", "--low"],
+            "description": "Low threshold, default = 0.05",
+            "parameter_type": "Float",
+            "default_value": "0.05",
+            "optional": true
+        },
+        {
+            "name": "High Threshold",
+            "flags": ["-h", "--high"],
+            "description": "High threshold, default = 0.15",
+            "parameter_type": "Float",
+            "default_value": "0.15",
+            "optional": true
+        },
+        {
+            "name": "Add edge back to the image?",
+            "flags": ["-a", "--add_back"],
+            "description": "Add the edge cells back to the input image",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}

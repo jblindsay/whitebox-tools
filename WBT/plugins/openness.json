@@ -1,0 +1,41 @@
+{
+    "tool_name": "Openness",
+    "exe": "openness",
+    "short_description": "This tool calculates the topographic openness index from an input DEM.",
+    "help": "This tool calculates the Yokoyama et al. (2002) topographic openness index from an input DEM.",
+    "toolbox": "Geomorphometric Analysis",
+    "parameters": [
+        {
+            "name": "Input Raster Image",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input raster image file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Positive Openness Output Raster",
+            "flags": ["--pos_output"],
+            "description": "Name of the positive openenness output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Negative Openness Output Raster",
+            "flags": ["--neg_output"],
+            "description": "Name of the negative openenness output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Search Distance (grid cells)",
+            "flags": ["--dist"],
+            "description": "Search distance, in grid cells.",
+            "parameter_type": "Integer",
+            "default_value": "20",
+            "optional": true
+        }
+    ]
+}

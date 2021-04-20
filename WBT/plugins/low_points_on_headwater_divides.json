@@ -1,0 +1,33 @@
+{
+    "tool_name": "LowPointsOnHeadwaterDivides",
+    "exe": "low_points_on_headwater_divides",
+    "short_description": "This tool locates saddle points along ridges within a digital elevation model (DEM)",
+    "help": "This tool locates saddle points along ridges within a digital elevation model (DEM)",
+    "toolbox": "Geomorphometric Analysis",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Input Streams Raster",
+            "flags": ["--streams"],
+            "description": "Name of the input stream channel raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Vector File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output vector file.",
+            "parameter_type": {"NewFile":"Vector"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

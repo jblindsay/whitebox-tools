@@ -1,0 +1,25 @@
+{
+    "tool_name": "InversePrincipalComponentAnalysis",
+    "exe": "inverse_pca",
+    "short_description": "This tool performs an inverse principal component analysis on a series of input component images.",
+    "help": "This tool performs an inverse principal component analysis on a series of input component images.",
+    "toolbox": "Math and Stats Tools",
+    "parameters": [
+        {
+            "name": "Input PCA Component Images",
+            "flags": ["-i", "--inputs"],
+            "description": "Name of the input PCA component images.",
+            "parameter_type": {"FileList":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Input PCA Report File",
+            "flags": ["-r", "--report"],
+            "description": "Name of the PCA report file (*.html).",
+            "parameter_type": {"ExistingFile":"Html"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}
