@@ -1,0 +1,10 @@
+[package]
+name = "whitebox_vector"
+version = "1.5.0"
+authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
+edition = "2018"
+
+[dependencies]
+byteorder = "^1.3.1"
+chrono = "0.4.15"
+whitebox_common = { path = "../whitebox-common" }
