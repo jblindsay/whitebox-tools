@@ -863,6 +863,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "whitebox_plugins"
+version = "1.5.0"
+dependencies = [
+ "whitebox_common",
+ "whitebox_vector",
+]
+
+[[package]]
 name = "whitebox_raster"
 version = "1.5.0"
 dependencies = [

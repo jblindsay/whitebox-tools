@@ -58,7 +58,7 @@ use std::thread;
 /// These NoData areas can later be better dealt with using the `FillMissingData` tool after interpolation.
 ///
 /// # See Also
-/// `LidarTINGridding`, `LidarNearestNeighbourGridding`, `LidarTINGridding`
+/// `LidarTINGridding`, `LidarNearestNeighbourGridding`, `LidarSibsonInterpolation`
 pub struct LidarIdwInterpolation {
     name: String,
     description: String,
@@ -195,7 +195,7 @@ impl LidarIdwInterpolation {
             short_exe += ".exe";
         }
         let usage = format!(">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=2.0 --radius=5.0\"
-.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18' --palette=light_quant.plt", short_exe, name).replace("*", &sep);
+.*{0} -r={1} --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif --resolution=5.0 --weight=2.0 --radius=2.0 --exclude_cls='3,4,5,6,7,18'", short_exe, name).replace("*", &sep);
 
         LidarIdwInterpolation {
             name: name,

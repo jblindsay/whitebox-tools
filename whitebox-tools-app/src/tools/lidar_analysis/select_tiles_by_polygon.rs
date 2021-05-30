@@ -316,7 +316,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
                             // it's in the bounding box and worth seeing if it's in the enclosed polygon
                             let record = polygons.get_record(record_num);
                             for part in 0..record.num_parts as usize {
-                                if !record.is_hole(part as i32) {
+                                if part == 0 || !record.is_hole(part as i32) {
                                     // not holes
                                     start_point_in_part = record.parts[part] as usize;
                                     end_point_in_part = if part < record.num_parts as usize - 1 {

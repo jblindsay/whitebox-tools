@@ -17,10 +17,31 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to map and/or remove road embankments from an input fine-resolution digital elevation model (`--dem`).
+/// This tool can be used to map and/or remove road embankments from an input fine-resolution digital elevation 
+/// model (`--dem`). Fine-resolution LiDAR DEMs can represent surface features such as road and railway 
+/// embankments with high fidelity. However, transportation embankments are problematic for several 
+/// environmental modelling applications, including soil an vegetation distribution mapping, where the pre-embankment
+/// topography is the contolling factor. The algorithm utilizes repositioned (`--search_dist`) transportation 
+/// network cells, derived from rasterizing a transportation vector (`--road_vec`), as seed points in a 
+/// region-growing operation. The embankment region grows based on derived morphometric parameters, including 
+/// road surface width (`--min_road_width`), embankment width (`--typical_width` and `--max_width`), embankment 
+/// height (`--max_height`), and absolute slope (`--spillout_slope`). The tool can be run in two modes. By default
+/// the tool will simply map embankment cells, with a Boolean output raster. If, however, the `--remove_embankments`
+/// flag is specified, the tool will instead output a DEM for which the mapped embankment grid cells have been
+/// excluded and new surfaces have been interpolated based on the surrounding elevation values (see below).
 ///
-/// # See Also
-/// ``
+/// Hillshade from original DEM:
+/// ![](../../doc_img/EmbankmentMapping1.png)
+/// 
+/// Hillshade from embankment-removed DEM:
+/// ![](../../doc_img/EmbankmentMapping2.png)
+///
+/// # References
+/// Van Nieuwenhuizen, N, Lindsay, JB, DeVries, B. 2021. [Automated mapping of transportation embankments in 
+/// fine-resolution LiDAR DEMs](https://www.mdpi.com/2072-4292/13/7/1308/htm). Remote Sensing. 13(7), 1308; https://doi.org/10.3390/rs13071308
+/// 
+/// # See Also:
+/// `RemoveOffTerrainObjects`, `SmoothVegetationResidual`
 pub struct EmbankmentMapping {
     name: String,
     description: String,
@@ -161,7 +182,7 @@ impl EmbankmentMapping {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --altitude=30.0",
+            ">>.*{} -r={} -v --wd=\"*path*to*data*\" -i=DEM.tif -o=output.tif --search_dist=1.0 --min_road_width=6.0 --typical_width=30.0 --max_height=2.0 --max_width=60.0 --max_increment=0.05 --spillout_slope=4.0 --remove_embankments=true",
             short_exe, name
         )
         .replace("*", &sep);

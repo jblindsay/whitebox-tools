@@ -1233,7 +1233,7 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
                             // Scale the colour by again by elevation, with lower elevations having a light-blue (153, 204, 255) tinge.
                             // This calculates the atm portion and then re-scale the relief and hs portions accordingly
 
-                            // Full shadow is (0f32, 50f32, 100f32), not black, which is too dark.
+                            // Full shadow is (0f32, 25f32, 50f32), not black, which is too dark.
                             hs_proportion = relief_alpha + hs_alpha * hs_proportion;
                             proportion_r =
                                 1f32 * (1f32 - hs_proportion) + red_relief as f32 * hs_proportion;

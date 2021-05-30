@@ -623,7 +623,7 @@ impl WhiteboxTool for TimeInDaylight {
 
                         let x_step: isize;
                         let y_step: isize;
-                        if azimuth > 0f32 && azimuth <= 90f32 {
+                        if azimuth >= 0f32 && azimuth <= 90f32 {
                             x_step = 1;
                             y_step = 1;
                         } else if azimuth <= 180f32 {

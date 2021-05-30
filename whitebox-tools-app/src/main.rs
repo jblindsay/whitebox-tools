@@ -19,7 +19,7 @@ by the WhiteboxTools library:
 | ----------------- | ------------------------------------------------------------------------------------------------- |
 | --cd, --wd        | Changes the working directory; used in conjunction with --run flag.                               |
 | -h, --help        | Prints help information.                                                                          |
-| -l, --license     | Prints the whitebox-tools license.                                                                |
+| -l, --license     | Prints the whitebox-tools license. Tool names may also be used, --license=\"Slope\"               |
 | --listtools       | Lists all available tools, with tool descriptions. Keywords may also be used, --listtools slope.  |
 | -r, --run         | Runs a tool; used in conjunction with --cd flag; -r="LidarInfo".                                  |
 | --toolbox         | Prints the toolbox associated with a tool; --toolbox=Slope.                                       |
@@ -237,7 +237,22 @@ fn run() -> Result<(), Error> {
             || arg.starts_with("--licence")
             || arg.starts_with("-l")
         {
-            license();
+            tool_name = arg
+                .replace("--license", "")
+                .replace("-license", "")
+                .replace("--licence", "")
+                .replace("-licence", "")
+                .replace("\"", "")
+                .replace("\'", "");
+            if tool_name.starts_with("=") {
+                tool_name = tool_name[1..tool_name.len()].to_string();
+                if !tool_name.is_empty() {
+                    let tm = ToolManager::new(&configs.working_directory, &configs.verbose_mode)?;
+                    return tm.tool_license(tool_name);
+                }
+            } else {
+                license();
+            }
             return Ok(());
         } else if arg.starts_with("-compress_rasters") || arg.starts_with("--compress_rasters") {
             let mut v = arg
@@ -392,7 +407,7 @@ fn help() {
 The following commands are recognized:
 --cd, --wd       Changes the working directory; used in conjunction with --run flag.
 -h, --help       Prints help information.
--l, --license    Prints the whitebox-tools license.
+-l, --license    Prints the whitebox-tools license. Tool names may also be used, --license=\"Slope\"
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
 -r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
 --toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.

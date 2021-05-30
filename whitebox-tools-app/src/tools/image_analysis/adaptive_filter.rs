@@ -454,7 +454,7 @@ impl WhiteboxTool for AdaptiveFilter {
                                 if v > 0f64 {
                                     s = v.sqrt();
                                     mean = sum / n as f64 + min_val;
-                                    if (z - mean) / s > threshold {
+                                    if ((z - mean) / s).abs() > threshold {
                                         data[col as usize] = output_fn(row, col, mean);
                                     } else {
                                         data[col as usize] = output_fn(row, col, z);

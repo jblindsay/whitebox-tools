@@ -204,7 +204,7 @@ class WhiteboxTools(object):
         except (OSError, ValueError, CalledProcessError) as err:
             return err
 
-    def license(self):
+    def license(self, tool_name=None):
         ''' 
         Retrieves the license information for WhiteboxTools.
         '''
@@ -212,7 +212,10 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            args.append("--license")
+            if tool_name is None:
+                args.append("--license")
+            else:
+                args.append(f"--license={tool_name}")
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -389,6 +392,7 @@ class WhiteboxTools(object):
     # restrict the ability for text editors and IDEs to use autocomplete.
     ########################################################################
 
+    
     
     
     
@@ -1520,6 +1524,22 @@ class WhiteboxTools(object):
         args.append("--filter={}".format(filter))
         return self.run_tool('smooth_vectors', args, callback) # returns 1 if error
 
+    def split_vector_lines(self, i, output, length=None, callback=None):
+        """This tool can be used to approximate the harvester pass lines from yield points.
+
+        Keyword arguments:
+
+        i -- Name of the input lines shapefile. 
+        output -- Name of the output lines shapefile. 
+        length -- Maximum segment length (m). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if length is not None: args.append("--length='{}'".format(length))
+        return self.run_tool('split_vector_lines', args, callback) # returns 1 if error
+
     def tin_gridding(self, i, output, field=None, use_z=False, resolution=None, base=None, max_triangle_edge_length=None, callback=None):
         """Creates a raster grid based on a triangular irregular network (TIN) fitted to vector points.
 
@@ -2334,6 +2354,26 @@ class WhiteboxTools(object):
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('aspect', args, callback) # returns 1 if error
 
+    def assess_route(self, routes, dem, output, length="", dist=20, callback=None):
+        """This tool assesses a route for slope, elevation, and visibility variation.
+
+        Keyword arguments:
+
+        routes -- Name of the input routes vector file. 
+        dem -- Name of the input DEM raster file. 
+        output -- Name of the output lines shapefile. 
+        length -- Maximum segment length (m). 
+        dist -- Search distance, in grid cells, used in visibility analysis. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--routes='{}'".format(routes))
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--length={}".format(length))
+        args.append("--dist={}".format(dist))
+        return self.run_tool('assess_route', args, callback) # returns 1 if error
+
     def average_normal_vector_angular_deviation(self, dem, output, filter=11, callback=None):
         """Calculates the circular variance of aspect at a scale for a DEM.
 
@@ -3122,6 +3162,24 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('num_upslope_neighbours', args, callback) # returns 1 if error
 
+    def openness(self, i, pos_output, neg_output, dist=20, callback=None):
+        """This tool calculates the topographic openness index from an input DEM.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        pos_output -- Name of the positive openenness output raster file. 
+        neg_output -- Name of the negative openenness output raster file. 
+        dist -- Search distance, in grid cells. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--pos_output='{}'".format(pos_output))
+        args.append("--neg_output='{}'".format(neg_output))
+        args.append("--dist={}".format(dist))
+        return self.run_tool('openness', args, callback) # returns 1 if error
+
     def pennock_landform_class(self, dem, output, slope=3.0, prof=0.1, plan=0.0, zfactor=None, callback=None):
         """Classifies hillslope zones based on slope, profile curvature, and plan curvature.
 
@@ -3300,6 +3358,36 @@ class WhiteboxTools(object):
         args.append("--slope_exponent={}".format(slope_exponent))
         return self.run_tool('sediment_transport_index', args, callback) # returns 1 if error
 
+    def shadow_animation(self, i, output, palette="atlas", max_dist="", date="21/06/2021", interval=15, location="43.5448/-80.2482/-4", height=600, delay=250, label="", callback=None):
+        """This tool creates an animated GIF of shadows based on an input DEM.
+
+        Keyword arguments:
+
+        i -- Name of the input digital surface model (DSM) raster file. 
+        palette -- DSM image palette; options are 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'light_quant', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', 'deep', and 'none'. 
+        output -- Name of the output HTML file (*.html). 
+        max_dist -- Optional maximum search distance. Minimum value is 5 x cell size. 
+        date -- Date in format DD/MM/YYYY. 
+        interval -- Time interval, in minutes (1-60). 
+        location -- Location, defined as Lat/Long/UTC-offset (e.g. 43.5448/-80.2482/-4). 
+        height -- Image height, in pixels. 
+        delay -- GIF time delay in milliseconds. 
+        label -- Label text (leave blank for none). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--palette={}".format(palette))
+        args.append("--output='{}'".format(output))
+        args.append("--max_dist={}".format(max_dist))
+        args.append("--date={}".format(date))
+        args.append("--interval={}".format(interval))
+        args.append("--location={}".format(location))
+        args.append("--height={}".format(height))
+        args.append("--delay={}".format(delay))
+        args.append("--label={}".format(label))
+        return self.run_tool('shadow_animation', args, callback) # returns 1 if error
+
     def slope(self, dem, output, zfactor=None, units="degrees", callback=None):
         """Calculates a slope raster from an input DEM.
 
@@ -3333,6 +3421,26 @@ class WhiteboxTools(object):
         if watershed is not None: args.append("--watershed='{}'".format(watershed))
         args.append("--output='{}'".format(output))
         return self.run_tool('slope_vs_elevation_plot', args, callback) # returns 1 if error
+
+    def smooth_vegetation_residual(self, i, output, max_scale=30, dev_threshold=1.0, scale_threshold=5, callback=None):
+        """This tool can smooth the residual roughness due to vegetation cover in LiDAR DEMs.
+
+        Keyword arguments:
+
+        i -- Name of the input digital elevation model (DEM) raster file. 
+        output -- Name of the output raster file. 
+        max_scale -- Maximum search neighbourhood radius in grid cells. 
+        dev_threshold -- DEVmax Threshold. 
+        scale_threshold -- DEVmax scale threshold. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--max_scale={}".format(max_scale))
+        args.append("--dev_threshold={}".format(dev_threshold))
+        args.append("--scale_threshold={}".format(scale_threshold))
+        return self.run_tool('smooth_vegetation_residual', args, callback) # returns 1 if error
 
     def spherical_std_dev_of_normals(self, dem, output, filter=11, callback=None):
         """Calculates the spherical standard deviation of surface normals for a DEM.
@@ -3449,6 +3557,36 @@ class WhiteboxTools(object):
         args.append("--start_time={}".format(start_time))
         args.append("--end_time={}".format(end_time))
         return self.run_tool('time_in_daylight', args, callback) # returns 1 if error
+
+    def topographic_position_animation(self, i, output, palette="bl_yl_rd", min_scale=1, num_steps=100, step_nonlinearity=1.5, height=600, delay=250, label="", dev_max=False, callback=None):
+        """This tool creates an animated GIF of multi-scale local topographic position (elevation deviation).
+
+        Keyword arguments:
+
+        i -- Name of the input digital elevation model (DEM) raster file. 
+        palette -- Image palette; options are 'bl_yl_rd', 'bl_w_rd', 'purple', 'gn_yl', 'pi_y_g', and 'viridi'. 
+        output -- Name of the output HTML file (*.html). 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        num_steps -- Number of steps. 
+        step_nonlinearity -- Step nonlinearity factor (1.0-2.0 is typical). 
+        height -- Image height, in pixels. 
+        delay -- GIF time delay in milliseconds. 
+        label -- Label text (leave blank for none). 
+        dev_max -- Do you want to use DEVmax instead of DEV for measuring local topographic position?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--palette={}".format(palette))
+        args.append("--output='{}'".format(output))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--num_steps={}".format(num_steps))
+        args.append("--step_nonlinearity={}".format(step_nonlinearity))
+        args.append("--height={}".format(height))
+        args.append("--delay={}".format(delay))
+        args.append("--label={}".format(label))
+        if dev_max: args.append("--dev_max")
+        return self.run_tool('topographic_position_animation', args, callback) # returns 1 if error
 
     def total_curvature(self, dem, output, zfactor=None, callback=None):
         """Calculates a total curvature raster from an input DEM.
@@ -4182,6 +4320,22 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('longest_flowpath', args, callback) # returns 1 if error
 
+    def low_points_on_headwater_divides(self, dem, streams, output, callback=None):
+        """This tool locates saddle points along ridges within a digital elevation model (DEM).
+
+        Keyword arguments:
+
+        dem -- Name of the input DEM raster file. 
+        streams -- Name of the input stream channel raster file. 
+        output -- Name of the output vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--streams='{}'".format(streams))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('low_points_on_headwater_divides', args, callback) # returns 1 if error
+
     def max_upslope_flowpath_length(self, dem, output, callback=None):
         """Measures the maximum length of all upslope flowpaths draining each grid cell.
 
@@ -4534,6 +4688,36 @@ class WhiteboxTools(object):
         if output is not None: args.append("--output='{}'".format(output))
         return self.run_tool('ihs_to_rgb', args, callback) # returns 1 if error
 
+    def image_slider(self, input1, input2, output, palette1="grey", reverse1=False, label1="", palette2="grey", reverse2=False, label2="", height=600, callback=None):
+        """This tool creates an image slider from two input images.
+
+        Keyword arguments:
+
+        input1 -- Name of the left input image file. 
+        palette1 -- Left image palette; options are 'grey', 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', 'deep', and 'rgb'. 
+        reverse1 -- Reverse left image palette?. 
+        label1 -- Left image label (leave blank for none). 
+        input2 -- Name of the right input image file. 
+        palette2 -- Right image palette; options are 'grey', 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', 'deep', and 'rgb'. 
+        reverse2 -- Reverse right image palette?. 
+        label2 -- Right image label (leave blank for none). 
+        output -- Name of the output HTML file (*.html). 
+        height -- Image height, in pixels. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--palette1={}".format(palette1))
+        if reverse1: args.append("--reverse1")
+        args.append("--label1={}".format(label1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--palette2={}".format(palette2))
+        if reverse2: args.append("--reverse2")
+        args.append("--label2={}".format(label2))
+        args.append("--output='{}'".format(output))
+        args.append("--height={}".format(height))
+        return self.run_tool('image_slider', args, callback) # returns 1 if error
+
     def image_stack_profile(self, inputs, points, output, callback=None):
         """Plots an image stack profile (i.e. signature) for a set of points and multispectral images.
 
@@ -4564,32 +4748,6 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('integral_image', args, callback) # returns 1 if error
 
-    def k_means_clustering(self, inputs, output, classes, out_html=None, max_iterations=10, class_change=2.0, initialize="diagonal", min_class_size=10, callback=None):
-        """Performs a k-means clustering operation on a multi-spectral dataset.
-
-        Keyword arguments:
-
-        inputs -- Input raster files. 
-        output -- Output raster file. 
-        out_html -- Output HTML report file. 
-        classes -- Number of classes. 
-        max_iterations -- Maximum number of iterations. 
-        class_change -- Minimum percent of cells changed between iterations before completion. 
-        initialize -- How to initialize cluster centres?. 
-        min_class_size -- Minimum class size, in pixels. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--inputs='{}'".format(inputs))
-        args.append("--output='{}'".format(output))
-        if out_html is not None: args.append("--out_html='{}'".format(out_html))
-        args.append("--classes='{}'".format(classes))
-        args.append("--max_iterations={}".format(max_iterations))
-        args.append("--class_change={}".format(class_change))
-        args.append("--initialize={}".format(initialize))
-        args.append("--min_class_size={}".format(min_class_size))
-        return self.run_tool('k_means_clustering', args, callback) # returns 1 if error
-
     def line_thinning(self, i, output, callback=None):
         """Performs line thinning a on Boolean raster image; intended to be used with the RemoveSpurs tool.
 
@@ -4603,30 +4761,6 @@ class WhiteboxTools(object):
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('line_thinning', args, callback) # returns 1 if error
-
-    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
-        """Performs a modified k-means clustering operation on a multi-spectral dataset.
-
-        Keyword arguments:
-
-        inputs -- Input raster files. 
-        output -- Output raster file. 
-        out_html -- Output HTML report file. 
-        start_clusters -- Initial number of clusters. 
-        merge_dist -- Cluster merger distance. 
-        max_iterations -- Maximum number of iterations. 
-        class_change -- Minimum percent of cells changed between iterations before completion. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--inputs='{}'".format(inputs))
-        args.append("--output='{}'".format(output))
-        if out_html is not None: args.append("--out_html='{}'".format(out_html))
-        args.append("--start_clusters={}".format(start_clusters))
-        if merge_dist is not None: args.append("--merge_dist='{}'".format(merge_dist))
-        args.append("--max_iterations={}".format(max_iterations))
-        args.append("--class_change={}".format(class_change))
-        return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
 
     def mosaic(self, output, inputs=None, method="nn", callback=None):
         """Mosaics two or more images together.
@@ -4832,6 +4966,136 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('write_function_memory_insertion', args, callback) # returns 1 if error
 
+    #########################################
+    # Image Processing Tools/Classification #
+    #########################################
+
+    def evaluate_training_sites(self, inputs, polys, field, output, callback=None):
+        """This tool can be used to inspect the overlap in spectral signatures of training sites for various classes.
+
+        Keyword arguments:
+
+        inputs -- Name of the input band images. 
+        polys -- Name of the input training site polygons shapefile. 
+        field -- Name of the attribute containing class name data. 
+        output -- Name of the output report file (*.html). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--polys='{}'".format(polys))
+        args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('evaluate_training_sites', args, callback) # returns 1 if error
+
+    def image_segmentation(self, inputs, output, threshold=0.5, steps=10, min_area=4, callback=None):
+        """Performs a region-growing based segmentation on a set of multi-spectral images.
+
+        Keyword arguments:
+
+        inputs -- Names of the input band images. 
+        output -- Name of the output raster file. 
+        threshold -- Distance threshold, in z-scores. 
+        steps -- Number of steps. 
+        min_area -- Minimum object area, in grid cells (1-8). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        args.append("--threshold={}".format(threshold))
+        args.append("--steps={}".format(steps))
+        args.append("--min_area={}".format(min_area))
+        return self.run_tool('image_segmentation', args, callback) # returns 1 if error
+
+    def k_means_clustering(self, inputs, output, classes, out_html=None, max_iterations=10, class_change=2.0, initialize="diagonal", min_class_size=10, callback=None):
+        """Performs a k-means clustering operation on a multi-spectral dataset.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        out_html -- Output HTML report file. 
+        classes -- Number of classes. 
+        max_iterations -- Maximum number of iterations. 
+        class_change -- Minimum percent of cells changed between iterations before completion. 
+        initialize -- How to initialize cluster centres?. 
+        min_class_size -- Minimum class size, in pixels. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        if out_html is not None: args.append("--out_html='{}'".format(out_html))
+        args.append("--classes='{}'".format(classes))
+        args.append("--max_iterations={}".format(max_iterations))
+        args.append("--class_change={}".format(class_change))
+        args.append("--initialize={}".format(initialize))
+        args.append("--min_class_size={}".format(min_class_size))
+        return self.run_tool('k_means_clustering', args, callback) # returns 1 if error
+
+    def min_dist_classification(self, inputs, polys, field, output, threshold=None, callback=None):
+        """Performs a supervised minimum-distance classification using training site polygons and multi-spectral images.
+
+        Keyword arguments:
+
+        inputs -- Names of the input band images. 
+        polys -- Name of the input training site polygons shapefile. 
+        field -- Name of the attribute containing class name data. 
+        output -- Name of the output raster file. 
+        threshold -- Distance threshold, in z-scores; blank for none. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--polys='{}'".format(polys))
+        args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        if threshold is not None: args.append("--threshold='{}'".format(threshold))
+        return self.run_tool('min_dist_classification', args, callback) # returns 1 if error
+
+    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
+        """Performs a modified k-means clustering operation on a multi-spectral dataset.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        out_html -- Output HTML report file. 
+        start_clusters -- Initial number of clusters. 
+        merge_dist -- Cluster merger distance. 
+        max_iterations -- Maximum number of iterations. 
+        class_change -- Minimum percent of cells changed between iterations before completion. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        if out_html is not None: args.append("--out_html='{}'".format(out_html))
+        args.append("--start_clusters={}".format(start_clusters))
+        if merge_dist is not None: args.append("--merge_dist='{}'".format(merge_dist))
+        args.append("--max_iterations={}".format(max_iterations))
+        args.append("--class_change={}".format(class_change))
+        return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
+
+    def parallelepiped_classification(self, inputs, polys, field, output, callback=None):
+        """Performs a supervised parallelepiped classification using training site polygons and multi-spectral images.
+
+        Keyword arguments:
+
+        inputs -- Name of the input band images. 
+        polys -- Name of the input training site polygons shapefile. 
+        field -- Name of the attribute containing class name data. 
+        output -- Name of the output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--polys='{}'".format(polys))
+        args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('parallelepiped_classification', args, callback) # returns 1 if error
+
     ##################################
     # Image Processing Tools/Filters #
     ##################################
@@ -4873,6 +5137,28 @@ class WhiteboxTools(object):
         args.append("--sigma_dist={}".format(sigma_dist))
         args.append("--sigma_int={}".format(sigma_int))
         return self.run_tool('bilateral_filter', args, callback) # returns 1 if error
+
+    def canny_edge_detection(self, i, output, sigma=0.5, low=0.05, high=0.15, add_back=False, callback=None):
+        """This tool performs a Canny edge-detection filter on an input image.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output raster image file. 
+        sigma -- Sigma value used in Gaussian filtering, default = 0.5. 
+        low -- Low threshold, default = 0.05. 
+        high -- High threshold, default = 0.15. 
+        add_back -- Add the edge cells back to the input image. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--sigma={}".format(sigma))
+        args.append("--low={}".format(low))
+        args.append("--high={}".format(high))
+        if add_back: args.append("--add_back")
+        return self.run_tool('canny_edge_detection', args, callback) # returns 1 if error
 
     def conservative_smoothing_filter(self, i, output, filterx=3, filtery=3, callback=None):
         """Performs a conservative-smoothing filter on an image.
@@ -5874,18 +6160,22 @@ class WhiteboxTools(object):
         if i is not None: args.append("--input='{}'".format(i))
         return self.run_tool('las_to_shapefile', args, callback) # returns 1 if error
 
-    def las_to_zlidar(self, inputs=None, outdir=None, callback=None):
+    def las_to_zlidar(self, inputs=None, outdir=None, compress="brotli", level=5, callback=None):
         """Converts one or more LAS files into the zlidar compressed LiDAR data format.
 
         Keyword arguments:
 
         inputs -- Input LAS files. 
         outdir -- Output directory into which zlidar files are created. If unspecified, it is assumed to be the same as the inputs. 
+        compress -- Compression method, including 'brotli' and 'deflate'. 
+        level -- Compression level (1-9). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         if inputs is not None: args.append("--inputs='{}'".format(inputs))
         if outdir is not None: args.append("--outdir='{}'".format(outdir))
+        args.append("--compress={}".format(compress))
+        args.append("--level={}".format(level))
         return self.run_tool('las_to_zlidar', args, callback) # returns 1 if error
 
     def lidar_block_maximum(self, i=None, output=None, resolution=1.0, callback=None):
@@ -6441,6 +6731,46 @@ class WhiteboxTools(object):
         args.append("--maxzdiff={}".format(maxzdiff))
         if classify: args.append("--classify")
         return self.run_tool('lidar_segmentation_based_filter', args, callback) # returns 1 if error
+
+    def lidar_sibson_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, callback=None):
+        """This interpolates one or more LiDAR tiles using Sibson's natural neighbour method.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points (leave blank to use all files in WorkingDirectory. 
+        output -- Output raster file (including extension). 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'user_data'. 
+        returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
+        resolution -- Output raster's grid resolution. 
+        exclude_cls -- Optional exclude classes from interpolation; Valid class values range from 0 to 18, based on LAS specifications. Example, --exclude_cls='3,4,5,6,7,18'. 
+        minz -- Optional minimum elevation for inclusion in interpolation. 
+        maxz -- Optional maximum elevation for inclusion in interpolation. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--parameter={}".format(parameter))
+        args.append("--returns={}".format(returns))
+        args.append("--resolution={}".format(resolution))
+        if exclude_cls is not None: args.append("--exclude_cls='{}'".format(exclude_cls))
+        if minz is not None: args.append("--minz='{}'".format(minz))
+        if maxz is not None: args.append("--maxz='{}'".format(maxz))
+        return self.run_tool('lidar_sibson_interpolation', args, callback) # returns 1 if error
+
+    def lidar_sort_by_time(self, i, output, callback=None):
+        """This sorts the points in a LiDAR file by the GPS time.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('lidar_sort_by_time', args, callback) # returns 1 if error
 
     def lidar_thin(self, i, output, resolution=2.0, method="lowest", save_filtered=False, callback=None):
         """Thins a LiDAR point cloud, reducing point density.
@@ -7234,6 +7564,20 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('integer_division', args, callback) # returns 1 if error
 
+    def inverse_principal_component_analysis(self, inputs, report, callback=None):
+        """This tool performs an inverse principal component analysis on a series of input component images.
+
+        Keyword arguments:
+
+        inputs -- Name of the input PCA component images. 
+        report -- Name of the PCA report file (*.html). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--report='{}'".format(report))
+        return self.run_tool('inverse_principal_component_analysis', args, callback) # returns 1 if error
+
     def is_no_data(self, i, output, callback=None):
         """Identifies NoData valued pixels in an image.
 
@@ -7467,6 +7811,22 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if num_samples is not None: args.append("--num_samples='{}'".format(num_samples))
         return self.run_tool('paired_sample_t_test', args, callback) # returns 1 if error
+
+    def phi_coefficient(self, input1, input2, output, callback=None):
+        """This tool performs a binary classification accuracy assessment.
+
+        Keyword arguments:
+
+        input1 -- Name of the first input raster image file. 
+        input2 -- Name of the second input raster image file. 
+        output -- Name of the output HTML file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input1='{}'".format(input1))
+        args.append("--input2='{}'".format(input2))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('phi_coefficient', args, callback) # returns 1 if error
 
     def power(self, input1, input2, output, callback=None):
         """Raises the values in grid cells of one rasters, or a constant value, by values in another raster or constant value.
@@ -7921,6 +8281,76 @@ class WhiteboxTools(object):
         args.append("--stat={}".format(stat))
         if out_table is not None: args.append("--out_table='{}'".format(out_table))
         return self.run_tool('zonal_statistics', args, callback) # returns 1 if error
+
+    #########################
+    # Precision Agriculture #
+    #########################
+
+    def recreate_pass_lines(self, i, yield_field_name, output_lines, output_points, max_change_in_heading=25.0, callback=None):
+        """This tool can be used to approximate the harvester pass lines from yield points.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        yield_field_name -- Name of the attribute containing yield data. 
+        output_lines -- Name of the output pass lines shapefile. 
+        output_points -- Name of the output points shapefile. 
+        max_change_in_heading -- Max change in heading. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--yield_field_name='{}'".format(yield_field_name))
+        args.append("--output_lines='{}'".format(output_lines))
+        args.append("--output_points='{}'".format(output_points))
+        args.append("--max_change_in_heading={}".format(max_change_in_heading))
+        return self.run_tool('recreate_pass_lines', args, callback) # returns 1 if error
+
+    def yield_filter(self, i, yield_field_name, pass_field_name, output, width=6.096, z_score_threshold=2.5, min_yield=0.0, max_yield=99999.9, callback=None):
+        """This tool can be used to approximate the harvester pass lines from yield points.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        yield_field_name -- Name of the attribute containing yield data. 
+        pass_field_name -- Name of the attribute containing pass line ID. 
+        output -- Name of the output points shapefile. 
+        width -- Pass swath width (m). 
+        z_score_threshold -- Z-score threshold value (default=2.5). 
+        min_yield -- Minimum yield value in output. 
+        max_yield -- Maximum yield value in output. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--yield_field_name='{}'".format(yield_field_name))
+        args.append("--pass_field_name='{}'".format(pass_field_name))
+        args.append("--output='{}'".format(output))
+        args.append("--width={}".format(width))
+        args.append("--z_score_threshold={}".format(z_score_threshold))
+        args.append("--min_yield={}".format(min_yield))
+        args.append("--max_yield={}".format(max_yield))
+        return self.run_tool('yield_filter', args, callback) # returns 1 if error
+
+    def yield_map(self, i, pass_field_name, output, width=6.096, max_change_in_heading=25.0, callback=None):
+        """This tool can be used to create a segmented-vector polygon yield map from a set of harvester points.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        pass_field_name -- Name of the attribute containing pass line ID. 
+        output -- Name of the output polygon shapefile. 
+        width -- Pass swath width (m). 
+        max_change_in_heading -- Max change in heading. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--pass_field_name='{}'".format(pass_field_name))
+        args.append("--output='{}'".format(output))
+        args.append("--width={}".format(width))
+        args.append("--max_change_in_heading={}".format(max_change_in_heading))
+        return self.run_tool('yield_map', args, callback) # returns 1 if error
 
     ###########################
     # Stream Network Analysis #

@@ -1046,6 +1046,11 @@ class WbRunner(tk.Frame):
         k = wbt.tool_help(self.tool_name)
         self.print_to_output(k)
 
+        if wbt.lincense(self.tool_name) == "Proprietary":
+            self.view_code_button["state"] = "disabled"
+        else:
+            self.view_code_button["state"] = "enabled"
+
         j = json.loads(wbt.tool_parameters(self.tool_name))
         param_num = 0
         for p in j['parameters']:

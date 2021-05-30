@@ -25,9 +25,11 @@ use std::path;
 /// stream traversal is identified and then elevations that are higher than this value are lowered to the minimum
 /// elevation during a second stream traversal.
 ///
+/// ![](../../doc_img/BreachStreamsAtRoads.png)
+///
 /// # Reference
-/// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes and Landforms,
-/// 41(5): 658–668. DOI: 10.1002/esp.3888
+/// Lindsay JB. 2016. [The practice of DEM stream burning revisited](https://onlinelibrary.wiley.com/doi/abs/10.1002/esp.3888). 
+/// Earth Surface Processes and Landforms, 41(5): 658–668. DOI: 10.1002/esp.3888
 ///
 /// # See Also
 /// `RasterStreamsToVector`, `RasterizeStreams`

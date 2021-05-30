@@ -1,0 +1,13 @@
+[package]
+name = "whitebox_plugins"
+version = "1.5.0"
+authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
+edition = "2018"
+
+[[bin]]
+name = "split_vector_lines"
+path = "src/split_vector_lines/main.rs"
+
+[dependencies]
+whitebox_common = { path = "../whitebox-common" }
+whitebox_vector = { path = "../whitebox-vector" }

@@ -58,6 +58,8 @@ for more details.
 
 Version 1.5.0 (XX-XX-2020)
 - Added the EmbankmentMapping tool for mapping transportation embankments (road, rail) in LiDAR DEMs.
+- Added the SplitVectorLines tool. This tool will parse an input line vector into a series of segments
+  of a specified length. It is also an example of a WBT plugin.
 
 Version 1.4.0 (04-09-2020)
 - Added the TimeInDaylight model tool for modelling the proportion of daytime that a location is not in shadow.

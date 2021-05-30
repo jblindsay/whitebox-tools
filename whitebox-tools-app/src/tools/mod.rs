@@ -1296,7 +1296,22 @@ impl ToolManager {
                                 width = 18
                             ));
                         }
-                        let example = "".to_string();
+                        let tmp_example = plugin_data["example"].as_str().unwrap_or("Example not located.");
+
+                        let sep: String = std::path::MAIN_SEPARATOR.to_string();
+                        let p = format!("{}", std::env::current_dir().unwrap().display());
+                        let e = format!("{}", std::env::current_exe().unwrap().display());
+                        let mut short_exe = e
+                            .replace(&p, "")
+                            .replace(".exe", "")
+                            .replace(".", "")
+                            .replace(&sep, "");
+                        if e.contains(".exe") {
+                            short_exe += ".exe";
+                        }
+
+                        let example = &tmp_example.replace("*", &sep).replace("EXE_NAME", &short_exe);
+
                         let s: String;
                         if example.len() <= 1 {
                             s = format!(
@@ -1344,6 +1359,25 @@ Example usage:
         Ok(())
     }
 
+    pub fn tool_license(&self, tool_name: String) -> Result<(), Error> {
+        match self.get_tool(tool_name.as_ref()) {
+            Some(_tool) => println!("MIT"),
+            None => {
+                let plugin_list = self.get_plugin_list()?;
+                if plugin_list.contains_key(&tool_name.to_lowercase()) {
+                    let plugin_data = plugin_list.get(&tool_name.to_lowercase()).expect(&format!("Unrecognized plugin name {}.", tool_name));
+                    println!("{}", plugin_data["license"].as_str().expect("Cannot locate plugin tool license."));
+                } else {
+                    return Err(Error::new(
+                        ErrorKind::NotFound,
+                        format!("Unrecognized tool name {}.", tool_name),
+                    ))
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn tool_parameters(&self, tool_name: String) -> Result<(), Error> {
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => println!("{}", tool.get_tool_parameters()),
@@ -1370,15 +1404,24 @@ Example usage:
             match self.get_tool(tool_name.as_ref()) {
                 Some(tool) => println!("{}", tool.get_toolbox()),
                 None => {
-
                     let plugin_list = self.get_plugin_list()?;
-                    for (_key, plugin_data) in &plugin_list {
-                        let tool = plugin_data["tool_name"].as_str().unwrap_or("Tool name not found.");
-                        if tool == tool_name {
-                            let toolbox = plugin_data["toolbox"].as_str().unwrap_or("Toolbox name not found.");
-                            println!("{}", toolbox);
-                        }
+                    if plugin_list.contains_key(&tool_name.to_lowercase()) {
+                        let plugin_data = plugin_list.get(&tool_name.to_lowercase()).expect(&format!("Unrecognized plugin name {}.", tool_name));
+                        let toolbox = plugin_data["toolbox"].as_str().unwrap_or("Toolbox name not found.");
+                        println!("{}", toolbox);
+                    } else {
+                        return Err(Error::new(
+                            ErrorKind::NotFound,
+                            format!("Unrecognized tool name {}.", tool_name),
+                        ))
                     }
+                    // for (_key, plugin_data) in &plugin_list {
+                    //     let tool = plugin_data["tool_name"].as_str().unwrap_or("Tool name not found.");
+                    //     if tool == tool_name {
+                    //         let toolbox = plugin_data["toolbox"].as_str().unwrap_or("Toolbox name not found.");
+                    //         println!("{}", toolbox);
+                    //     }
+                    // }
                     // return Err(Error::new(
                     //     ErrorKind::NotFound,
                     //     format!("Unrecognized tool name {}.", tool_name),
@@ -1485,6 +1528,23 @@ Example usage:
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => println!("{}{}", repo, tool.get_source_file()),
             None => {
+                let plugin_list = self.get_plugin_list()?;
+                let license: String;
+                if plugin_list.contains_key(&tool_name.to_lowercase()) {
+                    let plugin_data = plugin_list.get(&tool_name.to_lowercase()).expect(&format!("Unrecognized plugin name {}.", tool_name));
+                    license = plugin_data["license"].as_str().expect("Cannot locate plugin tool license.").to_lowercase();
+                } else {
+                    return Err(Error::new(
+                        ErrorKind::NotFound,
+                        format!("Unrecognized tool name {}.", tool_name),
+                    ))
+                }
+                // let license = self.tool_license(tool_name.clone()).to_lowercase();
+                if !license.contains("proprietary") {
+                    println!("https://github.com/jblindsay/whitebox-tools/blob/master/{}", tool_name);
+                } else {
+                    println!("Source code is unavailable due to proprietary license.");
+                }
                 return Err(Error::new(
                     ErrorKind::NotFound,
                     format!("Unrecognized tool name {}.", tool_name),
