@@ -56,10 +56,66 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.5.0 (XX-XX-2020)
+Version 1.5.0 (31-05-2021)
+- This release does not include very many new tools. Despite this, this is probably one of the largest 
+  releases yet. We have made extensive changes to the codebase, improving functionality in many 
+  significant ways. Therefore, we're very excited to announce the release of v1.5.
+- Probably the most exciting change is the introduction of plugin tools. Up until now, WBT has had a 
+  monolithic architecture, where all of the tools live within a single binary. This architecture has 
+  provided a number of benefits up until now. However, as the number of tools in WBT grows, it becomes
+  increasingly difficult to maintain this program structure - in particular, compile times have grown
+  significantly since the projects start. A plugin architecture provides much greater flexibility in 
+  this regard. Single tool plugins can be created, placed within the new 'plugins' folder within the 
+  WBT directory, and the whitebox_tools.exe binary will treat these plugins like any other tool within
+  the monolith. This also means that WBT users can develop their own custom tools, without the required 
+  know-how of figuring out how to integrate their tool into the large WBT code-base. The user manual
+  will be updated shortly to describe how this process works. For now, there is only one plugin tool 
+  example in the open-core (SplitVectorLines) although several other plugins have been developed (more 
+  on this below). The one downside of the new plugin architecture is that the size of the WBT download
+  will inevitably grow, as individual tool executables will be larger than the single monolith. We 
+  believe that this is an acceptable compromise. 
+- In order to accommodate plugin tools, we have significantly changed the codebase. Most significantly 
+  We have pulled the code associated with low-level functions, the so-called 'plumbing' code, (e.g. 
+  code for reading and writing various data files) into separate sub-repositories. In this way, the 
+  tools in the monolith and the plugin tools can both use this code without duplication.
+- WBT now has persistent environment variables contained within a 'settings.json' file within the WBT 
+  folder. Currently, these settings including 'verbose_mode', 'working_directory', 'compress_rasters', 
+  and 'max_procs'. More environment variables may be added in later releases. The fact that verbose mode
+  the working directory, and the compress_rasters flag are now persistent does have implications for the
+  Python and R front-ends and for the way these settings are used. The user manual will be updated 
+  shortly to reflect these changes.
+- We introduced the 'max_procs' setting. Now, all tools that run in parallel, or partially parallelize,
+  can be restricted to a maximum number of processes. Before, WBT would simply use all of the available
+  cores in the machine it was running on. While this is still the default (`max_procs: -1`), there are
+  certain conditions where this behaviour is undesirable. For example, when WBT is run on large servers 
+  or cloud-computing environments where a great many cores are shared among many users, it can be 
+  problematic when a single user/program consumes all of the available cores. This setting limits 
+  the maximum number of procs.
 - Added the EmbankmentMapping tool for mapping transportation embankments (road, rail) in LiDAR DEMs.
 - Added the SplitVectorLines tool. This tool will parse an input line vector into a series of segments
   of a specified length. It is also an example of a WBT plugin.
+- The code has been updated to reflect the new zLidar v1.1 specification, which has significantly improved 
+  compression rates (testing shows it is between 91% and 109% of LAZ), greater flexibility (users may
+  specify the degree of compression versus speed of reading/writing), and numerous bug fixes. The zLidar 
+  specification webpage will soon be updated to reflect the new version. Further news on this front, 
+  it has come to our attention recently that there is now a Rust-based LAZ encoder/decoder, which provides 
+  an opportunity for us to add LAZ support in a future version of WBT. We are currently evaluating this
+  as an option.
+- We are trying to be more engaging with the WBT user community. In this regard, we have set up a new
+  Google Groups forum for user to ask questions (https://groups.google.com/g/whiteboxtools), and have a 
+  new Twitter account (@whiteboxgeo) and newsletter to make announcements. Feel free to sign up for 
+  either if you're interested in staying in touch. 
+- Lastly, we are very pleased to announce the creation of WhiteboxTools Geospatial Inc., a new company 
+  based on providing extension services around the open-source WBT platform. It is our vision that this
+  company will provide a way of making the ongoing development of the WBT open-core more sustainable in 
+  the future, by enabling developers to work full-time on the project. Please read my 'open letter to the 
+  WBT community' (https://www.whiteboxgeo.com/open-letter-whiteboxtools-community/) for more details 
+  about this exciting development. Our plan is to maintain, and continue development of, the open-core of 
+  WBT, while providing plugin extensions that enhance the core capabilities. To begin with, we are launching
+  the Whitebox General Toolset Extension, a set of (currently) 19 tools to help GIS professionals with their
+  everyday workflows. Please see the newly redesigned WBT webpage at www.whiteboxgeo.com for more details.
+  If you have been interested in supporting the WBT project in the past and haven't known how, buying a 
+  license for the General Toolset Extension is a wonderful way of doing so.
 
 Version 1.4.0 (04-09-2020)
 - Added the TimeInDaylight model tool for modelling the proportion of daytime that a location is not in shadow.

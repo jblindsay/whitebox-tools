@@ -1,18 +1,18 @@
 import platform, subprocess
 from shutil import copyfile
 
-result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
+result = subprocess.run(['cargo', '+nightly', 'build', '--release', '--out-dir=\"../WBT/{exe_name}\"', '-Z unstable-options'], stdout=subprocess.PIPE)
 print(result.stdout)
 
-ext = ""
-if platform.system() == 'Windows':
-    ext = '.exe'
+# ext = ""
+# if platform.system() == 'Windows':
+#     ext = '.exe'
 
-exe_name = f"whitebox_tools{ext}"
+# exe_name = f"whitebox_tools{ext}"
 
-src = f"./target/release/{exe_name}"
-dst = f"./WBT/{exe_name}"
-copyfile(src, dst)
+# src = f"./target/release/{exe_name}"
+# dst = f"../WBT/{exe_name}"
+# copyfile(src, dst)
 
 # result = subprocess.run(["pwd"], stdout=subprocess.PIPE)
 # print("pwd: ", result.stdout)
