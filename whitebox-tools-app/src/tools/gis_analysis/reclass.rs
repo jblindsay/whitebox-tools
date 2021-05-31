@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 09/09/2017
-Last Modified: 13/02/2020
+Last Modified: 31/05/2021
 License: MIT
 */
 
@@ -77,7 +77,7 @@ impl Reclass {
         });
 
         parameters.push(ToolParameter{
-            name: "Class Interval Size".to_owned(), 
+            name: "Reclass Values (new value; from value; to less than)".to_owned(), 
             flags: vec!["--reclass_vals".to_owned()], 
             description: "Reclassification triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'".to_owned(),
             parameter_type: ParameterType::String,
@@ -173,25 +173,25 @@ impl WhiteboxTool for Reclass {
                 keyval = true;
             }
             if vec[0].to_lowercase() == "-i" || vec[0].to_lowercase() == "--input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if vec[0].to_lowercase() == "-reclass_vals"
                 || vec[0].to_lowercase() == "--reclass_vals"
             {
-                if keyval {
-                    reclass_str = vec[1].to_string();
+                reclass_str = if keyval {
+                    vec[1].to_string()
                 } else {
-                    reclass_str = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if vec[0].to_lowercase() == "-assign_mode"
                 || vec[0].to_lowercase() == "--assign_mode"
             {
@@ -250,7 +250,7 @@ impl WhiteboxTool for Reclass {
                 } else if s.to_lowercase().contains("max") {
                     max_val
                 } else {
-                    s.parse().unwrap()
+                    s.trim().parse().unwrap()
                 }
             })
             .collect();
