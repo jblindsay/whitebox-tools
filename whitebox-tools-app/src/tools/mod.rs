@@ -1196,7 +1196,7 @@ impl ToolManager {
                     .to_str()
                     .expect("Error reading path string")
                     .to_string();
-                if s.to_lowercase().ends_with(".json") {
+                if s.to_lowercase().ends_with(".json") && !s.to_lowercase().contains("._") { // no hidden files!
                     let contents = fs::read_to_string(s).expect("Something went wrong reading the file");
                     let mut v: serde_json::Value = serde_json::from_str(&contents)?;
                     v["plugin_directory"] = serde_json::json!(plugin_directory);
