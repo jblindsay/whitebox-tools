@@ -467,7 +467,7 @@ impl WhiteboxTool for Isobasins {
             }
         }
 
-        let num_outlets = outlet_id as usize - 1;
+        let num_outlets = outlet_id as usize;
 
         //////////////////////////////////////////
         // Trace flowpaths to their pour points //
