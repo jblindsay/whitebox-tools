@@ -54,7 +54,7 @@ impl ExportTableToCsv {
         parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file.".to_owned(),
+            description: "Output csv file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Csv),
             default_value: None,
             optional: false,
