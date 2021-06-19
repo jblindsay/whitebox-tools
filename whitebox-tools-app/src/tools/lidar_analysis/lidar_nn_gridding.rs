@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 05/07/2017
-Last Modified: 19/05/2020
+Last Modified: 15/06/2021
 License: MIT
 
 NOTES:
@@ -490,7 +490,12 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
         let inputs = Arc::new(inputs);
         let outputs = Arc::new(outputs);
         let bounding_boxes = Arc::new(bounding_boxes);
-        let num_procs2 = num_cpus::get() as isize;
+        let mut num_procs2 = num_cpus::get() as isize;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
+        if max_procs > 0 && max_procs < num_procs2 {
+            num_procs2 = max_procs;
+        }
         let (tx2, rx2) = mpsc::channel();
         for _ in 0..num_procs2 {
             let inputs = inputs.clone();

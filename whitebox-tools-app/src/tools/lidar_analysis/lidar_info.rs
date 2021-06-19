@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/06/2017
-Last Modified: 18/10/2019
+Last Modified: 13/06/2021
 License: MIT
 */
 
@@ -440,11 +440,11 @@ impl WhiteboxTool for LidarInfo {
                 let class_string = convert_class_val_to_class_string(i as u8);
                 let s1 = &format!(
                     "<tr>
-                    <td>{}</td>
+                    <td>{} - {}</td>
                     <td class=\"numberCell\">{}</td>
                     <td class=\"numberCell\">{}%</td>
                 </tr>\n",
-                    class_string, class_array[i], percent_str
+                    i, class_string, class_array[i], percent_str
                 );
                 writer.write_all(s1.as_bytes())?;
             }

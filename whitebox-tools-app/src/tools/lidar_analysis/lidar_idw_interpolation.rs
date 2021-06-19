@@ -522,7 +522,12 @@ impl WhiteboxTool for LidarIdwInterpolation {
         let inputs = Arc::new(inputs);
         let outputs = Arc::new(outputs);
         let bounding_boxes = Arc::new(bounding_boxes);
-        let num_procs2 = num_cpus::get() as isize;
+        let mut num_procs2 = num_cpus::get() as isize;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
+        if max_procs > 0 && max_procs < num_procs2 {
+            num_procs2 = max_procs;
+        }
         let (tx2, rx2) = mpsc::channel();
         for _ in 0..num_procs2 {
             let inputs = inputs.clone();

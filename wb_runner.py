@@ -110,7 +110,7 @@ class FileSelector(tk.Frame):
                                                 '*.sdat', '*.rdc',
                                                 '*.asc'))]
                 elif 'Lidar' in self.file_type:
-                    ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
+                    ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.laz', '*.zip'))]
                 elif 'Vector' in self.file_type:
                     ftypes = [("Shapefiles", "*.shp")]
                 elif 'Text' in self.file_type:
@@ -264,7 +264,7 @@ class FileOrFloat(tk.Frame):
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:
-                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.laz', '*.zip'))]
             elif 'Vector' in self.file_type:
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
@@ -419,7 +419,7 @@ class MultifileSelector(tk.Frame):
                                             '*.sdat', '*.rdc',
                                             '*.asc'))]
             elif 'Lidar' in self.file_type:
-                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.zip'))]
+                ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.laz', '*.zip'))]
             elif 'Vector' in self.file_type:
                 ftypes = [("Shapefiles", "*.shp")]
             elif 'Text' in self.file_type:
@@ -1045,8 +1045,8 @@ class WbRunner(tk.Frame):
 
         k = wbt.tool_help(self.tool_name)
         self.print_to_output(k)
-
-        if wbt.lincense(self.tool_name) == "Proprietary":
+        # print(wbt.license(self.tool_name).lower())
+        if "proprietary" in wbt.license(self.tool_name).lower():
             self.view_code_button["state"] = "disabled"
         else:
             self.view_code_button["state"] = "enabled"

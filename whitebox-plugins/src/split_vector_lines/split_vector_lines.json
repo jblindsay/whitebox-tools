@@ -10,7 +10,7 @@
             "name": "Input Lines",
             "flags": ["-i", "--input"],
             "description": "Name of the input lines shapefile.",
-            "parameter_type": {"ExistingFile":{"Vector":"Lines"}},
+            "parameter_type": {"ExistingFile":{"Vector":"Line"}},
             "default_value": null,
             "optional": false
         },
@@ -18,7 +18,7 @@
             "name": "Output Lines",
             "flags": ["-o", "--output"],
             "description": "Name of the output lines shapefile.",
-            "parameter_type": {"NewFile":{"Vector":"Lines"}},
+            "parameter_type": {"NewFile":{"Vector":"Line"}},
             "default_value": null,
             "optional": false
         },

@@ -15,6 +15,9 @@ use std::path;
 use std::fs;
 use std::collections::HashMap;
 use std::process::Command;
+use std::env;
+// use std::io;
+// use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct ToolManager {
@@ -1183,8 +1186,12 @@ impl ToolManager {
     }
 
     fn get_plugin_list(&self) -> Result<HashMap<String, serde_json::Value>, Error> {
-        let exe_path = std::env::current_dir()?.to_str().unwrap_or("No exe path found.").to_string();
-        let plugin_directory = exe_path + &path::MAIN_SEPARATOR.to_string() + "plugins";
+        // let exe_path = std::env::current_dir()?.to_str().unwrap_or("No exe path found.").to_string();
+        let mut dir = env::current_exe()?;
+        dir.pop();
+        dir.push("plugins");
+        let plugin_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
+        // let plugin_directory = exe_path + &path::MAIN_SEPARATOR.to_string() + "plugins";
         // println!("{}", plugin_directory);
         // let mut plugin_names = vec![];
         let mut plugins = HashMap::new();
@@ -1299,10 +1306,13 @@ impl ToolManager {
                         let tmp_example = plugin_data["example"].as_str().unwrap_or("Example not located.");
 
                         let sep: String = std::path::MAIN_SEPARATOR.to_string();
-                        let p = format!("{}", std::env::current_dir().unwrap().display());
+                        // let k = format!("{}", std::env::current_dir().unwrap().display());
+                        let mut dir = env::current_exe()?;
+                        dir.pop();
+                        let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
                         let e = format!("{}", std::env::current_exe().unwrap().display());
                         let mut short_exe = e
-                            .replace(&p, "")
+                            .replace(&exe_directory, "")
                             .replace(".exe", "")
                             .replace(".", "")
                             .replace(&sep, "");

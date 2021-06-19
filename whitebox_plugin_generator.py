@@ -23,8 +23,9 @@ def camel_to_snake(s):
 wbt = WhiteboxTools()
 
 # Set the directory containing the whitebox_tools.exe file
-wbt.exe_path = path.dirname(path.abspath(__file__)) + r'/WBT/'
+# wbt.exe_path = path.dirname(path.abspath(__file__)) + r'/WBT/'
 # wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/target/release/'
+wbt.exe_path = r'/Users/johnlindsay/Documents/programming/Rust/WBT/'
 
 toolboxes = wbt.toolbox('')
 tb_set = set()

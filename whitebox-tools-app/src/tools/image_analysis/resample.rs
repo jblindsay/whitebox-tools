@@ -487,7 +487,7 @@ impl WhiteboxTool for Resample {
                                     }
                                 }
 
-                                if sum_dist > 0f64 {
+                                if sum_dist > 0f64 && flag {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;
@@ -570,7 +570,7 @@ impl WhiteboxTool for Resample {
                                     }
                                 }
 
-                                if sum_dist > 0f64 {
+                                if sum_dist > 0f64 && flag {
                                     z = 0f64;
                                     for n in 0..num_neighbours {
                                         z += (neighbour[n][0] * neighbour[n][1]) / sum_dist;

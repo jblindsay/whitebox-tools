@@ -72,13 +72,14 @@ impl LidarHistogram {
             name: "Parameter".to_owned(),
             flags: vec!["--parameter".to_owned()],
             description:
-                "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class'."
+                "Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class', 'time'."
                     .to_owned(),
             parameter_type: ParameterType::OptionList(vec![
                 "elevation".to_owned(),
                 "intensity".to_owned(),
                 "scan angle".to_owned(),
                 "class".to_owned(),
+                "time".to_owned(),
             ]),
             default_value: Some("elevation".to_owned()),
             optional: true,
@@ -180,35 +181,35 @@ impl WhiteboxTool for LidarHistogram {
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
             if flag_val == "-i" || flag_val == "-input" {
-                if keyval {
-                    input_file = vec[1].to_string();
+                input_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    input_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-o" || flag_val == "-output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
+                    args[i + 1].to_string()
+                };
             } else if flag_val == "-parameter" {
-                if keyval {
-                    parameter = vec[1].to_string().to_lowercase();
+                parameter = if keyval {
+                    vec[1].to_string().to_lowercase()
                 } else {
-                    parameter = args[i + 1].to_string().to_lowercase();
-                }
+                    args[i + 1].to_string().to_lowercase()
+                };
             } else if flag_val == "-clip" {
-                if keyval {
-                    clip_percent = vec[1]
+                clip_percent = if keyval {
+                    vec[1]
                         .to_string()
                         .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    clip_percent = args[i + 1]
+                    args[i + 1]
                         .to_string()
                         .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                }
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 
@@ -249,11 +250,16 @@ impl WhiteboxTool for LidarHistogram {
             "intensity" => 1,
             "scan angle" => 2,
             "class" => 3,
+            "time" => 4,
             _ => {
                 println!("Warning: unrecognized parameter; elevation will be used");
                 0 // elevation
             }
         };
+
+        if parameter_mode == 4 {
+            clip_percent = 0f64;
+        }
 
         let mut z: f64;
         let mut pd: PointData;
@@ -267,7 +273,8 @@ impl WhiteboxTool for LidarHistogram {
                 0 => val.z,
                 1 => pd.intensity as f64,
                 2 => pd.scan_angle as f64,
-                _ => pd.classification() as f64,
+                3 => pd.classification() as f64,
+                _ => input.get_gps_time(i).unwrap_or(0f64),
             };
             if z < min {
                 min = z;
@@ -297,7 +304,9 @@ impl WhiteboxTool for LidarHistogram {
                 z = match parameter_mode {
                     0 => val.z,
                     1 => pd.intensity as f64,
-                    _ => pd.scan_angle as f64,
+                    2 => pd.scan_angle as f64,
+                    3 => pd.classification() as f64,
+                    _ => input.get_gps_time(i).unwrap_or(0f64),
                 };
                 bin = ((z - min) / bin_width).floor() as isize;
                 freq_data[bin as usize] += 1;
@@ -359,7 +368,9 @@ impl WhiteboxTool for LidarHistogram {
                 z = match parameter_mode {
                     0 => val.z,
                     1 => pd.intensity as f64,
-                    _ => pd.scan_angle as f64,
+                    2 => pd.scan_angle as f64,
+                    3 => pd.classification() as f64,
+                    _ => input.get_gps_time(i).unwrap_or(0f64),
                 };
                 bin = ((z - min) / bin_width).floor() as isize;
                 if bin >= 0 && bin < num_bins as isize {

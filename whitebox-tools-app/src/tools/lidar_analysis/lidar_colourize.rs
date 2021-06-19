@@ -212,7 +212,12 @@ impl WhiteboxTool for LidarColourize {
 
         let mut progress: i32;
         let mut old_progress: i32 = -1;
-        let num_procs = num_cpus::get();
+        let mut num_procs = num_cpus::get() as isize;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
+        if max_procs > 0 && max_procs < num_procs {
+            num_procs = max_procs;
+        }
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let in_lidar = in_lidar.clone();
@@ -222,7 +227,7 @@ impl WhiteboxTool for LidarColourize {
                 let (mut row, mut col): (isize, isize);
                 let mut value: f64;
                 let nodata = in_image.configs.nodata;
-                for i in (0..n_points).filter(|point_num| point_num % num_procs == tid) {
+                for i in (0..n_points).filter(|point_num| point_num % num_procs as usize == tid as usize) {
                     // let p: PointData = in_lidar.get_point_info(i);
                     let p = in_lidar.get_transformed_coords(i);
                     row = in_image.get_row_from_y(p.y);
@@ -293,7 +298,7 @@ impl WhiteboxTool for LidarColourize {
                     colour_data: rgb,
                 });
             } else {
-                gps = in_lidar.get_gps_time(i)?;
+                gps = in_lidar.get_gps_time(i).unwrap_or(0f64);
                 output.add_point_record(LidarPointRecord::PointRecord3 {
                     point_data: p,
                     gps_data: gps,

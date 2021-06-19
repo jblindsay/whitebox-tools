@@ -56,6 +56,14 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 1.6.0 (XX-XX-2021)
+- Fixed a bug with the Resample tool that created an artifact when reampling to resolutions less than 
+  one meter.
+- LidarHistogram now allows for a GPS time parameter, which can be useful for determining the number of
+  flightlines in a LiDAR tile.
+- Fixed a bug that prevented plugin tools from being discovered by the open-core when run from the command
+  line on PATH when the working directory was something other than WBT.
+
 Version 1.5.0 (31-05-2021)
 - This release does not include very many new tools. Despite this, this is probably one of the largest 
   releases yet. We have made extensive changes to the codebase, improving functionality in many 

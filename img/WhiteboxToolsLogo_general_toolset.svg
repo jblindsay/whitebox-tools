@@ -29,7 +29,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.5843481"
-     inkscape:cx="427.93627"
+     inkscape:cx="267.61796"
      inkscape:cy="400.79577"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -678,6 +678,240 @@
            y="1249.8859"
            style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';fill:#ffffff"
            id="tspan39448">General Toolset Extension</tspan></text>
+    </g>
+    <g
+       id="g39643"
+       inkscape:export-filename="/Users/johnlindsay/Desktop/GTE_logo1_1200.png"
+       inkscape:export-xdpi="719.99994"
+       inkscape:export-ydpi="719.99994"
+       transform="translate(0,5.003221)">
+      <g
+         id="g39627"
+         transform="matrix(0.55000004,0,0,0.55000004,284.35368,645.02462)"
+         inkscape:export-filename="/Users/johnlindsay/Desktop/GTE_logo1_1200px.png"
+         inkscape:export-xdpi="719.3999"
+         inkscape:export-ydpi="719.3999">
+        <path
+           sodipodi:type="star"
+           style="fill:#ffffff;fill-opacity:1;stroke:#00ffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0"
+           id="path39611"
+           sodipodi:sides="6"
+           sodipodi:cx="130.15173"
+           sodipodi:cy="947.29675"
+           sodipodi:r1="56.790958"
+           sodipodi:r2="49.182411"
+           sodipodi:arg1="0.52327832"
+           sodipodi:arg2="1.0468771"
+           inkscape:flatsided="true"
+           inkscape:rounded="0"
+           inkscape:randomized="0"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120"
+           transform="translate(-50.15176,23.328477)"
+           d="m 179.34324,975.67647 -49.17331,28.41123 -49.191507,-28.37971 -0.0182,-56.79095 49.173306,-28.41124 49.19151,28.37971 z" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="M 94.87139,1019.5127 130,999.35302 v -57.46124 l -0.6656,-0.034 -1.84785,17.63703 -0.59828,38.06532 -21.60728,13.21387 -10.70366,8.2338 z"
+           id="path39613"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="M 65.1777,1019.6923 30.04909,999.53255 v -57.46124 l 0.6656,-0.034 1.84785,17.63702 0.59828,38.06533 21.60728,13.21384 10.70366,8.2338 z"
+           id="path39615"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 114.85788,950.56106 -35.12861,20.15972 0.10401,56.52512 0.6656,0.1381 1.74384,-16.805 0.59828,-38.06531 21.60729,-13.21388 10.70366,-8.23382 z"
+           id="path39617"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 45.15769,933.37691 35.02314,-20.34241 49.76289,28.73062 -0.30334,0.59343 -16.19805,-7.21823 -33.26467,-18.51453 -22.24719,12.10551 -12.48253,5.15273 z"
+           id="path39619"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 30.2964,941.75218 35.12861,20.15972 -0.66422,0.54881 -10.68532,-4.22798 -16.49868,-9.76799 -7.57445,-6.20764 c -1.5e-4,-0.21972 -0.0477,-0.46427 0.29406,-0.50492 z"
+           id="path39621"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 60.39287,1016.4358 19.84881,11.07 18.55497,-10.9047"
+           id="path39623"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="M 49.43593,931.5786 30.37145,942.079"
+           id="path39625"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="cc"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+           inkscape:export-xdpi="120"
+           inkscape:export-ydpi="120" />
+      </g>
+      <g
+         id="g39637"
+         transform="translate(-0.74359372,-2)"
+         inkscape:export-filename="/Users/johnlindsay/Desktop/GTE_logo1_1200px.png"
+         inkscape:export-xdpi="719.3999"
+         inkscape:export-ydpi="719.3999">
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;line-height:0%;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="259.86832"
+           y="1234.8677"
+           id="text39631"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
+           inkscape:export-xdpi="119.92161"
+           inkscape:export-ydpi="119.92161"><tspan
+             sodipodi:role="line"
+             id="tspan39629"
+             x="259.86832"
+             y="1234.8677"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:18.6667px;line-height:125%;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';text-align:start;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1">WhiteboxTools</tspan></text>
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:6.66667px;line-height:0%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           x="389.0274"
+           y="1222.0652"
+           id="text39635"
+           inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/whitebox_tools/img/WhiteboxToolsLogoBlue.png"
+           inkscape:export-xdpi="119.92161"
+           inkscape:export-ydpi="119.92161"><tspan
+             sodipodi:role="line"
+             id="tspan39633"
+             x="389.0274"
+             y="1222.0652"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.66667px;line-height:1.25;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';fill:#ffffff;fill-opacity:1">TM</tspan></text>
+      </g>
+      <text
+         xml:space="preserve"
+         style="font-style:normal;font-weight:normal;font-size:12px;line-height:1.25;font-family:sans-serif;fill:#ffffff;fill-opacity:1;stroke:none"
+         x="255.507"
+         y="1249.8859"
+         id="text39641"
+         inkscape:export-filename="/Users/johnlindsay/Desktop/GTE_logo1_1200px.png"
+         inkscape:export-xdpi="719.3999"
+         inkscape:export-ydpi="719.3999"><tspan
+           sodipodi:role="line"
+           x="255.507"
+           y="1249.8859"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12px;font-family:'Open Sans';-inkscape-font-specification:'Open Sans';fill:#ffffff"
+           id="tspan39639">General Toolset Extension</tspan></text>
+    </g>
+    <g
+       id="g39661"
+       transform="matrix(0.55000004,0,0,0.55000004,122.29271,737.04471)"
+       inkscape:export-filename="/Users/johnlindsay/Desktop/WBT_1200px.png"
+       inkscape:export-xdpi="2095.199"
+       inkscape:export-ydpi="2095.199">
+      <path
+         sodipodi:type="star"
+         style="fill:#ffffff;fill-opacity:1;stroke:#00ffff;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0"
+         id="path39645"
+         sodipodi:sides="6"
+         sodipodi:cx="130.15173"
+         sodipodi:cy="947.29675"
+         sodipodi:r1="56.790958"
+         sodipodi:r2="49.182411"
+         sodipodi:arg1="0.52327832"
+         sodipodi:arg2="1.0468771"
+         inkscape:flatsided="true"
+         inkscape:rounded="0"
+         inkscape:randomized="0"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120"
+         transform="translate(-50.15176,23.328477)"
+         d="m 179.34324,975.67647 -49.17331,28.41123 -49.191507,-28.37971 -0.0182,-56.79095 49.173306,-28.41124 49.19151,28.37971 z" />
+      <path
+         style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 94.87139,1019.5127 130,999.35302 v -57.46124 l -0.6656,-0.034 -1.84785,17.63703 -0.59828,38.06532 -21.60728,13.21387 -10.70366,8.2338 z"
+         id="path39647"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 65.1777,1019.6923 30.04909,999.53255 v -57.46124 l 0.6656,-0.034 1.84785,17.63702 0.59828,38.06533 21.60728,13.21384 10.70366,8.2338 z"
+         id="path39649"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 114.85788,950.56106 -35.12861,20.15972 0.10401,56.52512 0.6656,0.1381 1.74384,-16.805 0.59828,-38.06531 21.60729,-13.21388 10.70366,-8.23382 z"
+         id="path39651"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 45.15769,933.37691 35.02314,-20.34241 49.76289,28.73062 -0.30334,0.59343 -16.19805,-7.21823 -33.26467,-18.51453 -22.24719,12.10551 -12.48253,5.15273 z"
+         id="path39653"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:0;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 30.2964,941.75218 35.12861,20.15972 -0.66422,0.54881 -10.68532,-4.22798 -16.49868,-9.76799 -7.57445,-6.20764 c -1.5e-4,-0.21972 -0.0477,-0.46427 0.29406,-0.50492 z"
+         id="path39655"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccccccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 60.39287,1016.4358 19.84881,11.07 18.55497,-10.9047"
+         id="path39657"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="ccc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
+      <path
+         style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 49.43593,931.5786 30.37145,942.079"
+         id="path39659"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc"
+         inkscape:export-filename="/Users/johnlindsay/Documents/programming/Whitebox/trunk/WhiteboxGIS/resources/Images/WhiteboxLogo6.png"
+         inkscape:export-xdpi="120"
+         inkscape:export-ydpi="120" />
     </g>
   </g>
 </svg>

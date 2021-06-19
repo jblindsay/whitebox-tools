@@ -467,12 +467,13 @@ impl LasFile {
         self.colour_data.len() > 0
     }
 
-    pub fn get_gps_time(&self, index: usize) -> Result<f64, Error> {
+    pub fn get_gps_time(&self, index: usize) -> Option<f64> { // Result<f64, Error> {
         if self.gps_data.len() >= index {
-            return Ok(self.gps_data[index]);
-        } else {
-            return Err(Error::new(ErrorKind::NotFound, "GPS time value not found, possibly because the file point format does not include GPS data."));
+            return Some(self.gps_data[index]); // Ok(self.gps_data[index]);
+        // } else {
+        //     return Err(Error::new(ErrorKind::NotFound, "GPS time value not found, possibly because the file point format does not include GPS data."));
         }
+        None
     }
 
     pub fn has_gps_time(&self) -> bool {

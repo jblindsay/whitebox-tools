@@ -96,6 +96,52 @@ class WhiteboxTools(object):
         '''
         self.verbose = val
 
+        try:
+            callback = self.default_callback
+
+            os.chdir(self.exe_path)
+            args2 = []
+            args2.append("." + path.sep + self.exe_name)
+            
+            if self.verbose:
+                args2.append("-v")
+            else:
+                args2.append("-v=false")
+
+            print(args2)
+
+            proc = None
+
+            if running_windows and self.start_minimized == True:
+                si = STARTUPINFO()
+                si.dwFlags = STARTF_USESHOWWINDOW
+                si.wShowWindow = 6 #Set window minimized
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True,
+                            startupinfo=si)
+            else:
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True)
+
+            while proc is not None:
+                line = proc.stdout.readline()
+                sys.stdout.flush()
+                if line != '':
+                    if not self.cancel_op:
+                        callback(line.strip())
+                    else:
+                        self.cancel_op = False
+                        proc.terminate()
+                        return 2
+
+                else:
+                    break
+
+            return 0
+        except (OSError, ValueError, CalledProcessError) as err:
+            callback(str(err))
+            return 1
+
     def set_default_callback(self, callback_func):
         '''
         Sets the default callback used for handling tool text outputs.
@@ -136,8 +182,10 @@ class WhiteboxTools(object):
             # args_str = args_str[:-1]
             # a.append("--args=\"{}\"".format(args_str))
 
-            if self.verbose:
-                args2.append("-v")
+            # if self.verbose:
+            #     args2.append("-v")
+            # else:
+            #     args2.append("-v=false")
 
             if self.__compress_rasters:
                 args2.append("--compress_rasters")
@@ -204,7 +252,7 @@ class WhiteboxTools(object):
         except (OSError, ValueError, CalledProcessError) as err:
             return err
 
-    def license(self, tool_name=None):
+    def license(self, toolname=None):
         ''' 
         Retrieves the license information for WhiteboxTools.
         '''
@@ -212,10 +260,9 @@ class WhiteboxTools(object):
             os.chdir(self.exe_path)
             args = []
             args.append("." + os.path.sep + self.exe_name)
-            if tool_name is None:
-                args.append("--license")
-            else:
-                args.append(f"--license={tool_name}")
+            args.append("--license")
+            if toolname is not None:
+                args.append(f"={toolname}")
 
             proc = Popen(args, shell=False, stdout=PIPE,
                          stderr=STDOUT, bufsize=1, universal_newlines=True)
@@ -392,9 +439,6 @@ class WhiteboxTools(object):
     # restrict the ability for text editors and IDEs to use autocomplete.
     ########################################################################
 
-    
-    
-    
     
     
     
@@ -3388,6 +3432,30 @@ class WhiteboxTools(object):
         args.append("--label={}".format(label))
         return self.run_tool('shadow_animation', args, callback) # returns 1 if error
 
+    def shadow_image(self, i, output, palette="soft", max_dist="", date="21/06/2021", time="13:00", location="43.5448/-80.2482/-4", callback=None):
+        """This tool creates a raster of shadow areas based on an input DEM.
+
+        Keyword arguments:
+
+        i -- Name of the input digital surface model (DSM) raster file. 
+        palette -- DSM image palette; options are 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'light_quant', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', 'deep', and 'none'. 
+        output -- Name of the output raster file. 
+        max_dist -- Optional maximum search distance. Minimum value is 5 x cell size. 
+        date -- Date in format DD/MM/YYYY. 
+        time -- Time in format HH::MM, e.g. 03:15AM or 14:30. 
+        location -- Location, defined as Lat/Long/UTC-offset (e.g. 43.5448/-80.2482/-4). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--palette={}".format(palette))
+        args.append("--output='{}'".format(output))
+        args.append("--max_dist={}".format(max_dist))
+        args.append("--date={}".format(date))
+        args.append("--time={}".format(time))
+        args.append("--location={}".format(location))
+        return self.run_tool('shadow_image', args, callback) # returns 1 if error
+
     def slope(self, dem, output, zfactor=None, units="degrees", callback=None):
         """Calculates a slope raster from an input DEM.
 
@@ -6367,7 +6435,7 @@ class WhiteboxTools(object):
 
         i -- Input LiDAR file. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
-        parameter -- Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class'. 
+        parameter -- Parameter; options are 'elevation' (default), 'intensity', 'scan angle', 'class', 'time'. 
         clip -- Amount to clip distribution tails (in percent). 
         callback -- Custom function for handling tool text outputs.
         """
@@ -6513,6 +6581,20 @@ class WhiteboxTools(object):
         if minz is not None: args.append("--minz='{}'".format(minz))
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_point_density', args, callback) # returns 1 if error
+
+    def lidar_point_return_analysis(self, i, output=None, callback=None):
+        """This performs a quality control check on the return values of points in a LiDAR file.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        return self.run_tool('lidar_point_return_analysis', args, callback) # returns 1 if error
 
     def lidar_point_stats(self, i=None, resolution=1.0, num_points=True, num_pulses=False, avg_points_per_pulse=True, z_range=False, intensity_range=False, predom_class=False, callback=None):
         """Creates several rasters summarizing the distribution of LAS point data. When the input/output parameters are not specified, the tool works on all LAS files contained within the working directory.
