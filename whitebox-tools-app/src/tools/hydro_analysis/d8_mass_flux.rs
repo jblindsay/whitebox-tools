@@ -215,9 +215,14 @@ impl WhiteboxTool for D8MassFlux {
         }
 
         if verbose {
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
-            println!("* Welcome to {} *", self.get_tool_name());
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
+            let tool_name = self.get_tool_name();
+            let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28); 
+            // 28 = length of the 'Powered by' by statement.
+            println!("{}", "*".repeat(welcome_len));
+            println!("* Welcome to {} {}*", tool_name, " ".repeat(welcome_len - 15 - tool_name.len()));
+            println!("* Powered by WhiteboxTools {}*", " ".repeat(welcome_len - 28));
+            println!("* www.whiteboxgeo.com {}*", " ".repeat(welcome_len - 23));
+            println!("{}", "*".repeat(welcome_len));
         }
 
         let sep: String = path::MAIN_SEPARATOR.to_string();

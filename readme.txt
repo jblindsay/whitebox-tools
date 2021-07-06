@@ -63,6 +63,7 @@ Version 1.6.0 (XX-XX-2021)
   flightlines in a LiDAR tile.
 - Fixed a bug that prevented plugin tools from being discovered by the open-core when run from the command
   line on PATH when the working directory was something other than WBT.
+- Fixed several bugs in the ContoursFromPoints tool.
 
 Version 1.5.0 (31-05-2021)
 - This release does not include very many new tools. Despite this, this is probably one of the largest 

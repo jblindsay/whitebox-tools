@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/04/2020
-Last Modified: 26/04/2020
+Last Modified: 24/06/2021
 License: MIT
 */
 
@@ -313,9 +313,14 @@ impl WhiteboxTool for ContoursFromPoints {
         let start = Instant::now();
 
         if verbose {
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
-            println!("* Welcome to {} *", self.get_tool_name());
-            println!("***************{}", "*".repeat(self.get_tool_name().len()));
+            let tool_name = self.get_tool_name();
+            let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28); 
+            // 28 = length of the 'Powered by' by statement.
+            println!("{}", "*".repeat(welcome_len));
+            println!("* Welcome to {} {}*", tool_name, " ".repeat(welcome_len - 15 - tool_name.len()));
+            println!("* Powered by WhiteboxTools {}*", " ".repeat(welcome_len - 28));
+            println!("* www.whiteboxgeo.com {}*", " ".repeat(welcome_len - 23));
+            println!("{}", "*".repeat(welcome_len));
         }
 
         if !input_file.contains(path::MAIN_SEPARATOR) && !input_file.contains("/") {
@@ -561,39 +566,100 @@ impl WhiteboxTool for ContoursFromPoints {
             if verbose {
                 progress = (100.0_f64 * i as f64 / (result.triangles.len() - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress (Loop 1 of 3): {}%", progress);
+                    println!("Progress (Loop 1 of 4): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
         let num_points = contour_points.len();
+        let mut neighbours = vec![0; num_points];
         let mut unvisited = vec![true; num_points];
         let mut num_neighbours: usize;
         let mut flag: bool;
         let mut found_node: bool;
         let mut other_node: usize;
+
+        // Deal with duplicate lines. This happens when the contour coincides with a triangle edge.
+        for i in 0..num_points {
+            contour_z = contour_points[i].1;
+
+            let ret = tree
+                .within(
+                    &[contour_points[i].0.x, contour_points[i].0.y],
+                    precision,
+                    &squared_euclidean,
+                )
+                .unwrap();
+            
+            num_neighbours = 0;
+            for a in 0..ret.len() {
+                node = *ret[a].1;
+                if contour_points[node].1 == contour_z && unvisited[node] {
+                    num_neighbours += 1;
+                }
+            }
+
+            neighbours[i] = num_neighbours;
+
+            if num_neighbours >= 3 {
+                other_node = if i % 2 == 0 { i + 1 } else { i - 1 };
+                if neighbours[other_node] >= 3 {
+                    unvisited[i] = false;
+                    unvisited[other_node] = false;
+                }
+            }
+                
+            if verbose {
+                progress = (100.0_f64 * i as f64 / (num_points - 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Progress (Loop 2 of 4): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+
+        // Deal with spurs. This occurs where you have a line with no neighbours on one 
+        // side and an intersection with a contour line on the other. I'm not sure why they
+        // occur.
+        for i in 0..num_points {
+            if neighbours[i] >= 3 {
+                other_node = if i % 2 == 0 { i + 1 } else { i - 1 };
+                if neighbours[other_node] == 1 {
+                    unvisited[i] = false;
+                    unvisited[other_node] = false;
+                }
+            }
+        }
+
         for i in 0..num_points {
             if unvisited[i] {
                 contour_z = contour_points[i].1;
 
-                // is it an endnode?
-                let ret = tree
-                    .within(
-                        &[contour_points[i].0.x, contour_points[i].0.y],
-                        precision,
-                        &squared_euclidean,
-                    )
-                    .unwrap();
+                // if neighbours[i] >= 4 {
+                //     other_node = if i % 2 == 0 { i + 1 } else { i - 1 };
+                //     println!("1 {} {} {} {}", i, i / 2, neighbours[i], neighbours[other_node]);
+                // }
 
-                num_neighbours = 0;
-                for a in 0..ret.len() {
-                    node = *ret[a].1;
-                    if contour_points[node].1 == contour_z {
-                        num_neighbours += 1;
-                    }
-                }
-                if num_neighbours == 1 {
+                // is it an endnode?
+                // let ret = tree
+                //     .within(
+                //         &[contour_points[i].0.x, contour_points[i].0.y],
+                //         precision,
+                //         &squared_euclidean,
+                //     )
+                //     .unwrap();
+
+                // num_neighbours = 0;
+                // for a in 0..ret.len() {
+                //     node = *ret[a].1;
+                //     if contour_points[node].1 == contour_z {
+                //         num_neighbours += 1;
+                //     }
+                // }
+
+                // num_neighbours = neighbours[i];
+                if neighbours[i] == 1 {
                     let mut line_points = vec![];
                     node = i;
                     line_points.push(contour_points[node].0);
@@ -623,6 +689,7 @@ impl WhiteboxTool for ContoursFromPoints {
                                     &squared_euclidean,
                                 )
                                 .unwrap();
+
                             for a in 0..ret.len() {
                                 other_node = *ret[a].1;
                                 if other_node != node
@@ -636,6 +703,31 @@ impl WhiteboxTool for ContoursFromPoints {
                                     break;
                                 }
                             }
+                            
+                            // let mut found_nodes = Vec::with_capacity(ret.len());
+                            // for a in 0..ret.len() {
+                            //     other_node = *ret[a].1;
+                            //     if other_node != node
+                            //         && contour_points[other_node].1 == contour_z
+                            //         && unvisited[other_node]
+                            //     {
+                            //         found_nodes.push(other_node);
+                            //     }
+                            // }
+
+                            // for a in 0..found_nodes.len() {
+                            //     if a == 0 {
+                            //         node = found_nodes[a];
+                            //         line_points.push(contour_points[node].0);
+                            //         unvisited[node] = false;
+                            //         found_node = true;
+                            //     } else {
+                            //         // more than one edge has been found
+                            //         unvisited[found_nodes[a]] = false;
+                            //         other_node = if found_nodes[a] % 2 == 0 { found_nodes[a] + 1 } else { found_nodes[a] - 1 };
+                            //         unvisited[other_node] = false;
+                            //     }
+                            // }
 
                             if !found_node {
                                 // we've located the other end of the line.
@@ -709,12 +801,13 @@ impl WhiteboxTool for ContoursFromPoints {
             if verbose {
                 progress = (100.0_f64 * i as f64 / (num_points - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress (Loop 2 of 3): {}%", progress);
+                    println!("Progress (Loop 3 of 4): {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
+        // /*
         // Closed contours
         let mut num_line_points: usize;
         for i in 0..num_points {
@@ -757,6 +850,7 @@ impl WhiteboxTool for ContoursFromPoints {
                                 line_points.push(contour_points[node].0);
                                 unvisited[node] = false;
                                 found_node = true;
+                                break;
                             }
                         }
                         if !found_node {
@@ -776,16 +870,24 @@ impl WhiteboxTool for ContoursFromPoints {
                 num_line_points = line_points.len();
                 if num_line_points > 1 {
                     if num_line_points > filter_size && filter_size > 0 {
+                        let closed = line_points[0].distance(&line_points[num_line_points - 1]) <= 1000.0 * precision;
                         for a in 0..num_line_points {
                             x = 0f64;
                             y = 0f64;
+                            // let mut n = filter_size;
                             for p in -filter_radius..=filter_radius {
                                 let mut point_id: isize = a as isize + p;
-                                if point_id < 0 {
+                                if closed && point_id < 0 {
+                                    // wrap around
                                     point_id += num_line_points as isize - 1;
+                                } else if point_id < 0 {
+                                    point_id = 0;
                                 }
-                                if point_id >= num_line_points as isize {
+                                if closed && point_id >= num_line_points as isize {
+                                    // wrap around
                                     point_id -= num_line_points as isize - 1;
+                                } else if point_id >= num_line_points as isize{
+                                    point_id = num_line_points as isize - 1;
                                 }
                                 x += line_points[point_id as usize].x;
                                 y += line_points[point_id as usize].y;
@@ -796,20 +898,29 @@ impl WhiteboxTool for ContoursFromPoints {
                             line_points[a].y = y;
                         }
 
-                        // set the final point position to the same as the first to close the loop
-                        line_points[num_line_points - 1].x = line_points[0].x;
-                        line_points[num_line_points - 1].y = line_points[0].y;
+                        if closed {
+                            // Set the final point position to the same as the first to close the loop.
+                            // But only do this is the gap is small.
+                            line_points[num_line_points - 1].x = line_points[0].x;
+                            line_points[num_line_points - 1].y = line_points[0].y;
+                        }
 
                         for a in (0..num_line_points).rev() {
                             x = 0f64;
                             y = 0f64;
                             for p in -filter_radius..=filter_radius {
                                 let mut point_id: isize = a as isize + p;
-                                if point_id < 0 {
+                                if closed && point_id < 0 {
+                                    // wrap around
                                     point_id += num_line_points as isize - 1;
+                                } else if point_id < 0 {
+                                    point_id = 0;
                                 }
-                                if point_id >= num_line_points as isize {
+                                if closed && point_id >= num_line_points as isize {
+                                    // wrap around
                                     point_id -= num_line_points as isize - 1;
+                                } else if point_id >= num_line_points as isize {
+                                    point_id = num_line_points as isize - 1;
                                 }
                                 x += line_points[point_id as usize].x;
                                 y += line_points[point_id as usize].y;
@@ -820,9 +931,12 @@ impl WhiteboxTool for ContoursFromPoints {
                             line_points[a].y = y;
                         }
 
-                        // set the final point position to the same as the first to close the loop
-                        line_points[num_line_points - 1].x = line_points[0].x;
-                        line_points[num_line_points - 1].y = line_points[0].y;
+                        if closed {
+                            // Set the final point position to the same as the first to close the loop.
+                            // But only do this is the gap is small.
+                            line_points[num_line_points - 1].x = line_points[0].x;
+                            line_points[num_line_points - 1].y = line_points[0].y;
+                        }
                     }
 
                     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
@@ -838,7 +952,7 @@ impl WhiteboxTool for ContoursFromPoints {
             if verbose {
                 progress = (100.0_f64 * i as f64 / (num_points - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Progress (Loop 3 of 3): {}%", progress);
+                    println!("Progress (Loop 4 of 4): {}%", progress);
                     old_progress = progress;
                 }
             }

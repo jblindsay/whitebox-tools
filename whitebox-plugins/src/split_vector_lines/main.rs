@@ -74,7 +74,7 @@ fn help() {
     >> .*EXE_NAME run -i=input.tif -o=new.tif --sigma=0.25 --low=0.1 --high=0.2
 
     Note: Use of this tool requires a valid license. To obtain a license,
-    contact Whitebox Geospatial Inc. (whiteboxgeo@gmail.com).
+    contact Whitebox Geospatial Inc. (support@whiteboxgeo.com).
     "#
     .replace("*", &sep)
     .replace("EXE_NAME", exe_name);
@@ -157,9 +157,13 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     }
 
     if configurations.verbose_mode {
-        println!("***************{}", "*".repeat(tool_name.len()));
-        println!("* Welcome to {} *", tool_name);
-        println!("***************{}", "*".repeat(tool_name.len()));
+        let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28); 
+        // 28 = length of the 'Powered by' by statement.
+        println!("{}", "*".repeat(welcome_len));
+        println!("* Welcome to {} {}*", tool_name, " ".repeat(welcome_len - 15 - tool_name.len()));
+        println!("* Powered by WhiteboxTools {}*", " ".repeat(welcome_len - 28));
+        println!("* www.whiteboxgeo.com {}*", " ".repeat(welcome_len - 23));
+        println!("{}", "*".repeat(welcome_len));
     }
 
     let mut progress: usize;
