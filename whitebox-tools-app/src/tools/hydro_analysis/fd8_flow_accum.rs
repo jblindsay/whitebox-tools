@@ -19,16 +19,16 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the FD8 algorithm (Freeman,
-/// 1991). This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering each
+/// 1991), sometimes referred to as FMFD. This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering each
 /// grid cell is routed to each downslope neighbour, i.e. flow divergence is permitted. The user must specify the
 /// name (`--dem`) of the input digital elevation model (DEM). The DEM must have been hydrologically
 /// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using
-/// either the `BreachDepressions` or `FillDepressions` tool. A value must also be specified for the exponent parameter
+/// either the `BreachDepressions` (also `BreachDepressionsLeastCost`) or `FillDepressions` tool. A value must also be specified for the exponent parameter
 /// (`--exponent`), a number that controls the degree of dispersion in the resulting flow-accumulation grid. A lower
 /// value yields greater apparent flow dispersion across divergent hillslopes. Some experimentation suggests that a
 /// value of 1.1 is appropriate (Freeman, 1991), although this is almost certainly landscape-dependent.
 ///
-/// In addition to the input DEM, the user must specify the output type. The output flow-accumulation
+/// In addition to the input DEM, the user must specify the output type (`--out_type`). The output flow-accumulation
 /// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
 /// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
 /// is `cells`. The user must also specify whether the output flow-accumulation grid should be
@@ -42,21 +42,18 @@ use std::thread;
 /// indices, such as the wetness index, or relative stream power index.
 ///
 /// The non-dispersive threshold (`--threshold`) is a flow-accumulation value (measured in upslope grid cells,
-/// which is directly proportional to area) above which flow dispersion is not longer permited. Grid cells with
+/// which is directly proportional to area) above which flow dispersion is no longer permited. Grid cells with
 /// flow-accumulation values above this threshold will have their flow routed in a manner that is similar to
 /// the D8 single-flow-direction algorithm, directing all flow towards the steepest downslope neighbour. This
 /// is usually done under the assumption that flow dispersion, whilst appropriate on hillslope areas, is not
 /// realistic once flow becomes channelized.
-///
-/// Grid cells possessing the NoData value in the input flow-pointer grid are assigned the NoData value in the
-/// output flow-accumulation image.
 ///
 /// # Reference
 /// Freeman, T. G. (1991). Calculating catchment area with divergent flow based on a regular grid. Computers and
 /// Geosciences, 17(3), 413-422.
 ///
 /// # See Also
-/// `D8FlowAccumulation`, `DInfFlowAccumulation`
+/// `D8FlowAccumulation`, `QuinnFlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`
 pub struct FD8FlowAccumulation {
     name: String,
     description: String,
@@ -430,7 +427,8 @@ impl WhiteboxTool for FD8FlowAccumulation {
                     col_n = col + d_x[i];
                     z_n = input[(row_n, col_n)];
                     if z_n < z && z_n != nodata {
-                        weights[i] = (z - z_n).powf(exponent);
+                        slope = (z - z_n) / grid_lengths[i];
+                        weights[i] = slope.powf(exponent);
                         total_weights += weights[i];
                         downslope[i] = true;
                     }

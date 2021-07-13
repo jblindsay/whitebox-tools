@@ -1,0 +1,66 @@
+{
+    "tool_name": "QuinnFlowAccumulation",
+    "exe": "quinn_flow_accumulation",
+    "short_description": "This tool calculates Quinn et al. (1995) flow accumulation.",
+    "toolbox": "Hydrological Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=QuinnFlowAccumulation --dem=DEM.tif --output=QMFD.tif --out_type='specific contributing area' --exponent=1.1 --threshold=10000",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file; must be depressionless.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Upslope Saturated Area File",
+            "flags": ["--output"],
+            "description": "Name of the output upslope saturated area file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Type",
+            "flags": ["--out_type"],
+            "description": "Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.",
+            "parameter_type": {"OptionList": ["cells", "specific contributing area", "catchment area"]},
+            "default_value": "specific contributing area",
+            "optional": true
+        },
+        {
+            "name": "Exponent Parameter",
+            "flags": ["--exponent"],
+            "description": "Optional exponent parameter; default is 1.0.",
+            "parameter_type": "Float",
+            "default_value": "1.0",
+            "optional": true
+        },
+        {
+            "name": "Convergence Threshold (grid cells; blank for none)",
+            "flags": ["--threshold"],
+            "description": "Optional convergence threshold parameter, in grid cells; default is inifinity.",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Log-transform the output?",
+            "flags": ["--log"],
+            "description": "Log-transform the output values?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        },
+        {
+            "name": "Clip the upper tail by 1%?",
+            "flags": ["--clip"],
+            "description": "Optional flag to request clipping the display max by 1%.",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}

@@ -8,6 +8,12 @@ edition = "2018"
 name = "split_vector_lines"
 path = "src/split_vector_lines/main.rs"
 
+[[bin]]
+name = "quinn_flow_accumulation"
+path = "src/quinn_flow_accumulation/main.rs"
+
 [dependencies]
+num_cpus = "1.13.0"
 whitebox_common = { path = "../whitebox-common" }
+whitebox_raster = { path = "../whitebox-raster" }
 whitebox_vector = { path = "../whitebox-vector" }
