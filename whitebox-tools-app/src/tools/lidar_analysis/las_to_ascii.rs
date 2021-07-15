@@ -20,7 +20,7 @@ use std::path;
 /// specify the name(s) of the input LAS file(s) (`--inputs`). Each input file will have a correspondingly named
 /// output file with a `.csv` file extension. CSV files are comma separated value files and contain tabular data
 /// with each column corresponding to a field in the table and each row a point value. Fields are separated by
-/// commas in the ASCII formated file. The output point data, each on a separate line, will take the format:
+/// commas in the ASCII formatted file. The output point data, each on a separate line, will take the format:
 ///
 /// ```
 /// X,Y,Z,INTENSITY,CLASS,RETURN,NUM_RETURN,SCAN_ANGLE

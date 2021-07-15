@@ -20,9 +20,9 @@ use std::path;
 
 /// This tool can be used to remove the depressions in a digital elevation model (DEM), a
 /// common requirement of spatial hydrological operations such as flow accumulation
-/// and watershed modelling. The tool based on on the efficient hybrid depression
+/// and watershed modelling. The tool based on the efficient hybrid depression
 /// breaching algorithm described by Lindsay (2016). It uses a breach-first, fill-second
-/// approach to resolving continous flowpaths through depressions.
+/// approach to resolving continuous flowpaths through depressions.
 ///
 /// Notice that when the input DEM (`--dem`) contains deep, single-cell pits, it can be useful
 /// to raise the pits elevation to that of the lowest neighbour (`--fill_pits`), to avoid the

@@ -24,7 +24,7 @@ use std::path;
 /// although in practice the circle defined by the radius of the maximum distance-to-edge will often fall
 /// outside the patch boundaries.
 ///
-/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values must
+/// Objects in the input raster (`--input`) are designated by their unique identifiers. Identifier values must
 /// be positive, non-zero whole numbers.
 ///
 /// # See Also
@@ -201,7 +201,7 @@ impl WhiteboxTool for NarrownessIndex {
         let num_bins = range.ceil() as usize;
         let mut bin: usize;
 
-        // calcuate the distance from an edge
+        // calculate the distance from an edge
         if verbose {
             println!("Calculating maximum distance from edge for each patch...");
         }

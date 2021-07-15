@@ -22,7 +22,7 @@ use std::{f64, i32};
 /// fields, it will also determine the appropriate length and precision. The user must specify the
 /// x-coordinate (`--xfield`) and y-coordiante (`--yfield`) fields. All fields are imported as
 /// attributes in the output (`--output`) vector file. The tool assumes that the first line of the file is a header line from which field
-/// names are retreived.
+/// names are retrieved.
 ///
 /// # See Also
 /// `MergeTableWithCsv`, `ExportTableToCsv`

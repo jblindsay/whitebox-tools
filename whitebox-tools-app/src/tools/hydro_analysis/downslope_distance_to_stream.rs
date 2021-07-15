@@ -79,7 +79,7 @@ impl DownslopeDistanceToStream {
         parameters.push(ToolParameter {
             name: "Use the D-infinity flow algorithm instead of D8?".to_owned(),
             flags: vec!["--dinf".to_owned()],
-            description: "Use the D-infinity flow algoirthm instead of D8?".to_owned(),
+            description: "Use the D-infinity flow algorithm instead of D8?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
             optional: true,

@@ -34,7 +34,7 @@ use std::thread;
 /// decomposed into intensity-hue-saturation (IHS) and the filter is applied to the intensity
 /// channel. NoData values in the input image are ignored during processing.
 ///
-/// Like many low-pass filters, Gaussian filtering can signficantly blur well-defined edges in
+/// Like many low-pass filters, Gaussian filtering can significantly blur well-defined edges in
 /// the input image. The `EdgePreservingMeanFilter` and `BilateralFilter` offer more robust
 /// feature preservation during image smoothing. `GaussianFilter` is relatively slow compared to
 /// the `FastAlmostGaussianFilter` tool, which offers a fast-running approximatation to a

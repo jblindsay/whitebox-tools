@@ -62,7 +62,7 @@ impl HistogramEqualization {
         let name = "HistogramEqualization".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
         let description =
-            "Performs a histogram equalization contrast enhancment on an image.".to_string();
+            "Performs a histogram equalization contrast enhancement on an image.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

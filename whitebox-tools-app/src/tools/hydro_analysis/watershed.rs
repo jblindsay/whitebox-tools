@@ -27,7 +27,7 @@ use std::path;
 /// Because pour points are usually, although not always, situated on a stream network, it is recommended that you
 /// use Jenson's method (`JensonSnapPourPoints`) to snap pour points on the stream network. This will ensure that
 /// the digitized outlets are coincident with the digital stream contained within the DEM flowpaths. If this is not
-/// done prior to inputting a pour-point set to the `Watershed` tool, anomalously small watersheds may be ouput, as
+/// done prior to inputting a pour-point set to the `Watershed` tool, anomalously small watersheds may be output, as
 /// pour points that fall off of the main flow path (even by one cell) in the D8 pointer will yield very different
 /// catchment areas.
 ///

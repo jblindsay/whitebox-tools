@@ -80,7 +80,7 @@ impl Index<usize> for LasFile {
 impl LasFile {
     /// Constructs a new `LasFile` based on a file.
     /// The function takes the name of an existing raster file (`file_name`)
-    /// and the `file_mode`, wich can be 'r' (read), 'rh' (read header), and
+    /// and the `file_mode`, which can be 'r' (read), 'rh' (read header), and
     /// 'w' (write).
     pub fn new<'a>(file_name: &'a str, file_mode: &'a str) -> Result<LasFile, Error> {
         //LasFile {
@@ -6316,7 +6316,7 @@ impl GlobalEncodingField {
         (self.value & 0b0000_1000u16) == 0b0000_1000u16
     }
 
-    /// Returns the co-ordinate reference system method used within the file.
+    /// Returns the coordinate reference system method used within the file.
     pub fn coordinate_reference_system_method(&self) -> CoordinateReferenceSystem {
         if (self.value & 0b0001_0000u16) == 0b0001_0000u16 {
             CoordinateReferenceSystem::WellKnownText

@@ -19,7 +19,7 @@ use std::path;
 /// The flow pointer raster is used to traverse the stream network and should only be created using the `D8Pointer` algorithm.
 /// Stream cells are designated in the stream link ID raster as all non-zero, positive values. Background cells will be
 /// assigned the NoData value in the output image, unless the `--zero_background` parameter is used, in which case non-stream
-/// cells will be assinged zero values in the output.
+/// cells will be assigned zero values in the output.
 ///
 /// # See Also
 /// `D8Pointer`, `StreamLinkSlope`

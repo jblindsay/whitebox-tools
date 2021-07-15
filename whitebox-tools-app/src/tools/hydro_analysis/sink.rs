@@ -26,7 +26,7 @@ use std::thread;
 
 /// This tool identifies each sink (i.e. topographic depression) in a raster digital elevation model (DEM). A
 /// sink, or depression, is a bowl-like landscape feature, which is characterized by interior drainage. Each
-/// identified sink in the input DEM is assigned a unique, non-zero, positive value in the ouput raster. The
+/// identified sink in the input DEM is assigned a unique, non-zero, positive value in the output raster. The
 /// `Sink` tool essentially runs the `FillDepressions` tool followed by the `Clump` tool on all modified grid
 /// cells.
 ///

@@ -22,7 +22,7 @@ use std::thread;
 /// 1991), sometimes referred to as FMFD. This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering each
 /// grid cell is routed to each downslope neighbour, i.e. flow divergence is permitted. The user must specify the
 /// name (`--dem`) of the input digital elevation model (DEM). The DEM must have been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using
 /// either the `BreachDepressions` (also `BreachDepressionsLeastCost`) or `FillDepressions` tool. A value must also be specified for the exponent parameter
 /// (`--exponent`), a number that controls the degree of dispersion in the resulting flow-accumulation grid. A lower
 /// value yields greater apparent flow dispersion across divergent hillslopes. Some experimentation suggests that a
@@ -42,7 +42,7 @@ use std::thread;
 /// indices, such as the wetness index, or relative stream power index.
 ///
 /// The non-dispersive threshold (`--threshold`) is a flow-accumulation value (measured in upslope grid cells,
-/// which is directly proportional to area) above which flow dispersion is no longer permited. Grid cells with
+/// which is directly proportional to area) above which flow dispersion is no longer permitted. Grid cells with
 /// flow-accumulation values above this threshold will have their flow routed in a manner that is similar to
 /// the D8 single-flow-direction algorithm, directing all flow towards the steepest downslope neighbour. This
 /// is usually done under the assumption that flow dispersion, whilst appropriate on hillslope areas, is not

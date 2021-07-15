@@ -19,7 +19,7 @@ use std::thread;
 
 /// This tool is used to generate a flow pointer grid using the simple D8 (O'Callaghan and Mark, 1984) algorithm. The
 /// user must specify the name (`--dem`) of a digital elevation model (DEM) that has been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using
 /// either the `BreachDepressions` or `FillDepressions` tool. The local drainage direction raster output (`--output`)
 /// by this tool serves as a necessary input for several other spatial hydrology and stream network analysis tools
 /// in the toolset. Some tools will calculate this flow pointer raster directly from the input DEM.

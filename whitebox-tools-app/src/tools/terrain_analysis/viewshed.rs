@@ -628,7 +628,7 @@ impl WhiteboxTool for Viewshed {
                 }
             }
 
-            // solve the eigth triangular facet
+            // solve the eighth triangular facet
             vert_count = 1f32;
             for col in (0..stn_col - 1).rev() {
                 vert_count += 1f32;

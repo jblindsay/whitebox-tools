@@ -12,7 +12,7 @@ The following commands are recognized:
 -h, --help       Prints help information.
 -l, --license    Prints the whitebox-tools license.
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
--r, --run        Runs a tool; used in conjuction with --wd flag; -r="LidarInfo".
+-r, --run        Runs a tool; used in conjunction with --wd flag; -r="LidarInfo".
 --toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.
 --toolhelp       Prints the help associated with a tool; --toolhelp="LidarInfo".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters="LidarInfo".
@@ -43,7 +43,7 @@ specifying tool parameters. To run this interface, simply type:
 
 python3 wb_runner.py
 
-Or, if Python 3 is the default Python intepreter:
+Or, if Python 3 is the default Python interpreter:
 
 python wb_runner.py
 
@@ -366,7 +366,7 @@ Version 0.14.0 (27-01-2019)
 
 
 Version 0.13.0 (08-01-2019)
-- The release largely focusses on bug-fixes rather than adding new features. The
+- The release largely focuses on bug-fixes rather than adding new features. The
  following tools were added to the project:
     MosaicWithFeathering
 - Support was added for GeoTIFF MODELTRANSFORMATIONTAG (Tag 33920).
@@ -390,7 +390,7 @@ Version 0.13.0 (08-01-2019)
   of the overall accuracy per grid cell (i.e. percent agreement).
 - Fixed a bug with the RasterStreamsToVector tool that resulted in overlapping
   traced streams.
-- The D8FlowAccumulation tool has been modifed to use a fixed flow-width to 
+- The D8FlowAccumulation tool has been modified to use a fixed flow-width to 
   calculate specific contributing area, equal to the average grid cell resolution. 
   The tool previously used a variable flow-width for SCA calculations, however,
   1. this differs from the constant value used in Whitebox GAT, and 2. a 
@@ -430,7 +430,7 @@ Version 0.12.0 (22-11-2018)
 - Modified the algorithm used by the CostDistance tool from an iterative method of
   finding the minimum cost surface to one that uses a priority-flood approach. This
   is far more efficient. Also, there was a bug in the original code that was the 
-  result of a mis-match between the neighbouring cell distances and the back-link 
+  result of a mismatch between the neighbouring cell distances and the back-link 
   direction. In some cases this resulted in an infinite loop, which is now resolved.
 - Improvements have been made to the WhiteboxTools GeoTIFF reader. A bug has been
   fixed that prevented tile-oriented (in contrast to the more common strip-oriented)
@@ -443,7 +443,7 @@ Version 0.12.0 (22-11-2018)
 Version 0.11.0 (01-10-2018)
 - This release is marked by the addition of several vector data processing capabilities. 
   Most notably, this includes support for TINing and TIN based gridding (vector and 
-  LiDAR), as well as several vector patch shape indicies. The following tools were 
+  LiDAR), as well as several vector patch shape indices. The following tools were 
   added to the project:
     AddPointCoordinatesToTable
     CentroidVector
@@ -673,7 +673,7 @@ Version 0.3.1 (15-02-2018)
 - No new tools have been added to this release. Instead the focus was on improving and enhancing
   LAS file support and fixing a numbe of bugs. These include the following:
 - Support has been added in the LAS file reader for handling Point Record Formats 4-11 in the 
-  LAS 1.4 specificiations. This includes enhanced support for 64-bit LAS files. This change 
+  LAS 1.4 specifications. This includes enhanced support for 64-bit LAS files. This change 
   resulted in cascading changes throughout the LiDAR infrastructure and LiDAR tools. Future 
   work will focus on writing LAS files in 1.4 format, instead of the current 1.3 format that is
   saved.

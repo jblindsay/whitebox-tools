@@ -20,7 +20,7 @@ use std::sync::mpsc;
 use std::thread;
 
 /// This tool can be used to a raster image filled with random values drawn from a standard normal distribution.
-/// The values range from appoximately -4.0 to 4.0, with a mean of 0 and a standard deviation of 1.0. The
+/// The values range from approximately -4.0 to 4.0, with a mean of 0 and a standard deviation of 1.0. The
 /// dimensions and georeferencing of the output random field (`--output`) are based on an existing, user-specified
 /// raster grid (`--base`). Note that the output field will not possess any spatial autocorrelation. If spatially
 /// autocorrelated random fields are desired, the `TurningBandsSimulation` tool is more appropriate, or alternatively,

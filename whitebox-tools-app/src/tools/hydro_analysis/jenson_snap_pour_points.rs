@@ -26,7 +26,7 @@ use std::path;
 ///
 /// Lindsay et al. (2008) provide a detailed discussion of the `JensonSnapPourPoints` technique, and other less sophisticated
 /// but commonly used techniques (`SnapPourPoints`) for adjusting pour point locations used in watershedding operations. In
-/// most cases, the `JensonSnapPourPoints` tool should be prefered over `SnapPourPoints` for applications of
+/// most cases, the `JensonSnapPourPoints` tool should be preferred over `SnapPourPoints` for applications of
 /// repositioning outlet points used in watershedding operations onto the digital stream lines contained in local drainage
 /// direction rasters. Jenson's method relocates outlet points to the *nearest* stream cell while `SnapPourPoints` relocated
 /// outlets to the *largest* stream (designated by the largest flow accumulation value). In the common situation where outlet

@@ -45,7 +45,7 @@ use std::thread;
 /// **Notes**:
 /// 1. The num_pulses output is actually the number of pulses with at lease one return; specifically it is
 ///    the sum of the early returns (first and only) in a grid cell. In areas of low reflectance, such as
-///    over water surfaces, the system may have emited a significantly higher pulse rate but far fewer
+///    over water surfaces, the system may have emitted a significantly higher pulse rate but far fewer
 ///    returns are observed.
 /// 2. The memory requirement of this tool is high, particulalry if the grid resolution is fine and
 ///    the spatial extent is large.

@@ -21,7 +21,7 @@ use std::thread;
 /// FD8 is a multiple-flow-direction (MFD) method because the flow entering each grid cell is routed one or more
 /// downslope neighbours, i.e. flow divergence is permitted. The user must specify the name of a digital elevation model
 /// (DEM; `--dem`) that has been hydrologically corrected to remove all spurious depressions and flat areas.
-/// DEM pre-processing is usually achived using the `BreachDepressions` or `FillDepressions` tools.
+/// DEM pre-processing is usually achieved using the `BreachDepressions` or `FillDepressions` tools.
 ///
 /// By default, D8 flow pointers use the following clockwise, base-2 numeric index convention:
 ///

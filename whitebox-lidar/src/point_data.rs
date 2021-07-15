@@ -75,7 +75,7 @@ use std::fmt;
 //         }
 //     }
 
-//     /// Returns a string represenation of the classiciation type.
+//     /// Returns a string representation of the classiciation type.
 //     pub fn classification_string(&self) -> String {
 //         match self.classification() {
 //             0 => return String::from("Created, never classified"),
@@ -152,7 +152,7 @@ use std::fmt;
 //     }
 // }
 
-/// Returns a string represenation of a classiciation numeric value.
+/// Returns a string representation of a classiciation numeric value.
 pub fn convert_class_val_to_class_string(value: u8) -> String {
     match value {
         0 => return String::from("Created, never classified"),
@@ -337,7 +337,7 @@ impl PointData {
         (self.return_number() == self.number_of_returns()) & self.is_multiple_return()
     }
 
-    /// Returns 'true' if the the point is a first return (i.e. 1 of multple returns).
+    /// Returns 'true' if the the point is a first return (i.e. 1 of multiple returns).
     pub fn is_first_return(&self) -> bool {
         (self.return_number() == 1) & self.is_multiple_return()
     }
@@ -422,7 +422,7 @@ impl PointData {
         }
     }
 
-    /// Returns a string represenation of the classiciation type.
+    /// Returns a string representation of the classiciation type.
     pub fn classification_string(&self) -> String {
         match self.classification() {
             0 => return String::from("Created, never classified"),

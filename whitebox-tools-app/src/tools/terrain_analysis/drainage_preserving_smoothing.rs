@@ -28,7 +28,7 @@ use std::thread;
 
 /// This tool implements a modified form of the algorithm described by
 /// Sun, Rosin, Martin, and Langbein (2007) '*Fast and effective feature-preserving
-/// mesh denoising*'. This implimentation varies the threshold angle between
+/// mesh denoising*'. This implementation varies the threshold angle between
 /// neighbouring grid cell normal vectors, used during the smoothing operation. The
 /// threshold is varied as a function of how low-lying a site is. This varying
 /// smoothing level better preserves small drainage features, such as ditches,

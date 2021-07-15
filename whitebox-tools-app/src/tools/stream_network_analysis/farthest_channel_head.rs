@@ -21,7 +21,7 @@ use std::path;
 /// Stream cells are designated in the streams image as all values
 /// greater than zero. Thus, all non-stream or background grid cells are commonly assigned either zeros or NoData
 /// values. Background cells will be assigned the NoData value in the output image, unless the `--zero_background`
-/// parameter is used, in which case non-stream cells will be assinged zero values in the output.
+/// parameter is used, in which case non-stream cells will be assigned zero values in the output.
 ///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.

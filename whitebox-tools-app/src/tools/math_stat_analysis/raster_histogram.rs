@@ -20,7 +20,7 @@ use std::path;
 use std::process::Command;
 
 /// This tool produces a histogram (i.e. a frequency distribution graph) for the values contained within
-/// an input raster file (`--input`). The histogram will be embeded within an output (`--output`)
+/// an input raster file (`--input`). The histogram will be embedded within an output (`--output`)
 /// HTML file, which should be automatically displayed after the tool has completed.
 ///
 /// # See Also

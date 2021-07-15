@@ -27,7 +27,7 @@ use std::thread;
 /// polygons of complex shaped boundaries will have a higher percentage of their skeleton networks consisting
 /// of exterior links. It is expected that simple convex hulls should have relatively low BSC index values.
 ///
-/// Objects in the input raster (`--input`) are designated by their unique identifers. Identifer values should be
+/// Objects in the input raster (`--input`) are designated by their unique identifiers. Identifier values should be
 /// positive, non-zero whole numbers.
 ///
 /// # See Also

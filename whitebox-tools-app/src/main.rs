@@ -409,7 +409,7 @@ The following commands are recognized:
 -h, --help       Prints help information.
 -l, --license    Prints the whitebox-tools license. Tool names may also be used, --license=\"Slope\"
 --listtools      Lists all available tools. Keywords may also be used, --listtools slope.
--r, --run        Runs a tool; used in conjuction with --wd flag; -r=\"LidarInfo\".
+-r, --run        Runs a tool; used in conjunction with --wd flag; -r=\"LidarInfo\".
 --toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.
 --toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
 --toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".

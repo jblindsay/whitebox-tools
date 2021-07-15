@@ -16,7 +16,7 @@ use std::path;
 
 /// This tool can be used to convert a vector file containing multi-part features into a vector
 /// containing only single-part features. Any multi-part polygons or lines within the input
-/// vector file will be split into seperate features in the output file, each possessing their
+/// vector file will be split into separate features in the output file, each possessing their
 /// own entry in the associated attribute file. For polygon-type vectors, the user may optionally
 /// choose to exclude hole-parts from being separated from their containing polygons. That is,
 /// with the `--exclude_holes` flag, hole parts in the input vector will continue to belong to

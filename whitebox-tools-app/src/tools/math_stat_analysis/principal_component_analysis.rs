@@ -41,7 +41,7 @@ use std::process::Command;
 /// the case if they contained values that were recorded in different units (e.g. feet and meters) or on different scales (e.g.
 /// 8-bit vs. 16 bit).
 ///
-/// Several outputs will be generated when the tool has completed. The PCA report will be embeded within an output (`--output`)
+/// Several outputs will be generated when the tool has completed. The PCA report will be embedded within an output (`--output`)
 /// HTML file, which should be automatically displayed after the tool has completed. This report contains useful data summarizing
 /// the results of the PCA, including the explained variances of each factor, the Eigenvalues and Eigenvectors associated with
 /// factors, the factor loadings, and a scree plot. The first table that is in the PCA report lists the amount of explained
@@ -262,7 +262,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
         }
 
         let wd = if working_directory.is_empty() {
-            // set thw working directory to that of the first input file.
+            // set the working directory to that of the first input file.
             let p = path::Path::new(input_files[0].trim());
             // let wd = p.parent().unwrap().to_str().unwrap().to_owned();
             format!(

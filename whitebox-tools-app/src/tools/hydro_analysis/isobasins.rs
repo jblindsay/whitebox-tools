@@ -23,7 +23,7 @@ use std::thread;
 /// This tool can be used to divide a landscape into a group of nearly equal-sized watersheds, known as *isobasins*.
 /// The user must specify the name (`--dem`) of a digital elevation model (DEM), the output raster name (`--output`),
 /// and the isobasin target area (`--size`) specified in units of grid cells. The DEM must have been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using either
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using either
 /// the `BreachDepressions` or `FillDepressions` tool. Several temporary rasters are created during the execution
 /// and stored in memory of this tool.
 ///

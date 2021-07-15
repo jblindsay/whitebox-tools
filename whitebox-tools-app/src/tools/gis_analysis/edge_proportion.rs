@@ -23,7 +23,7 @@ use std::thread;
 /// containing the input features assigned the edge proportion. The user may also optionally choose to output text data
 /// for easy input to a spreadsheet or database.
 ///
-/// Objects in the input raster are designated by their unique identifers. Identifer values must
+/// Objects in the input raster are designated by their unique identifiers. Identifier values must
 /// be positive, non-zero whole numbers.
 ///
 /// # See Also

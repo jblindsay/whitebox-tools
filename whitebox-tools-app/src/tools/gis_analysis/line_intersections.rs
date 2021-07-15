@@ -398,7 +398,7 @@ impl WhiteboxTool for LineIntersections {
             output.attributes.add_field(&input2_attributes[a].clone());
         }
 
-        // recieve the points
+        // receive the points
         let mut print_warning = false;
         let mut record_num1: usize;
         let mut record_num2: usize;

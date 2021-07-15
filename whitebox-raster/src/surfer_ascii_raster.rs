@@ -36,14 +36,14 @@ pub fn read_surfer_ascii_raster(
             if !vec[0].to_lowercase().contains("dsaa") {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The Surfer file appears to be improperly formated.",
+                    "The Surfer file appears to be improperly formatted.",
                 ));
             }
         } else if line_num == 1 {
             if vec.len() != 2 {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The Surfer file appears to be improperly formated.",
+                    "The Surfer file appears to be improperly formatted.",
                 ));
             }
             configs.columns = vec[0].trim().parse::<f32>().unwrap() as usize;
@@ -59,7 +59,7 @@ pub fn read_surfer_ascii_raster(
             if vec.len() != 2 {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The Surfer file appears to be improperly formated.",
+                    "The Surfer file appears to be improperly formatted.",
                 ));
             }
             configs.west = vec[0].trim().to_string().parse::<f64>().unwrap();
@@ -68,7 +68,7 @@ pub fn read_surfer_ascii_raster(
             if vec.len() != 2 {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The Surfer file appears to be improperly formated.",
+                    "The Surfer file appears to be improperly formatted.",
                 ));
             }
             configs.south = vec[0].trim().to_string().parse::<f64>().unwrap();
@@ -77,7 +77,7 @@ pub fn read_surfer_ascii_raster(
             if vec.len() != 2 {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "The Surfer file appears to be improperly formated.",
+                    "The Surfer file appears to be improperly formatted.",
                 ));
             }
             configs.minimum = vec[0].trim().to_string().parse::<f64>().unwrap();

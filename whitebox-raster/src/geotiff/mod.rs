@@ -837,7 +837,7 @@ pub fn read_geotiff<'a>(
     } else if photomet_str == "Paletted" {
         configs.photometric_interp = PhotometricInterpretation::Categorical;
         mode = IM_PALETTED; //ImageMode::Paletted;
-                            // retreive the palette colour data
+                            // retrieve the palette colour data
         let color_map = match ifd_map.get(&320) {
             Some(ifd) => ifd.interpret_as_u16(),
             _ => {
@@ -1676,7 +1676,7 @@ pub fn read_geotiff<'a>(
 }
 
 pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
-    // We'll need to look at the configuations to see if compression should be used
+    // We'll need to look at the configurations to see if compression should be used
     let configs = whitebox_common::configs::get_configs()?;
     let use_compression = configs.compress_rasters;
 
@@ -4716,7 +4716,7 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
 */
 
-// An implimentation of a PackBits reader
+// An implementation of a PackBits reader
 pub fn packbits_decoder(input_data: Vec<u8>) -> Vec<u8> {
     let mut output_data = vec![];
     let mut i: usize = 0;

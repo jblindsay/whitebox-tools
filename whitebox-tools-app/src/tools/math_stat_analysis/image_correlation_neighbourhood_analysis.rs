@@ -870,7 +870,7 @@ impl WhiteboxTool for ImageCorrelationNeighbourhoodAnalysis {
         // println!("Number of total cells: {}", valid);
         // println!("Numbed of significant cells: {}", sig);
         // println!("Numbed of significant negative cells: {}", sig_neg);
-        // println!("Numbed of significant postive cells: {}", sig_pos);
+        // println!("Numbed of significant positive cells: {}", sig_pos);
 
         Ok(())
     }

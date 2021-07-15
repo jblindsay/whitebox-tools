@@ -631,7 +631,7 @@ impl WhiteboxTool for MosaicWithFeathering {
                                     data[col as usize] = z2;
                                 }
                             } else {
-                                // it's an rgb image and each component will need to be handled seperately.
+                                // it's an rgb image and each component will need to be handled separately.
                                 sum_dist = 0f64;
                                 image1_valid = false;
                                 for n in 0..num_neighbours {

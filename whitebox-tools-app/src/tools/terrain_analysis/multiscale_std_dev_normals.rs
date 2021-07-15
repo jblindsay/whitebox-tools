@@ -375,7 +375,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         let mut output_mag = Array2D::<f32>::new(rows, columns, -1f32, nodata)?; // Memory requirements: 2.0X
         let mut output_scale = Array2D::<i16>::new(rows, columns, -32768i16, -32768i16)?; // Memory requirements: 2.5X
 
-        // calculate the 'n' itegral image
+        // calculate the 'n' integral image
         let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?; // Memory requirements: 3.5X
         let mut sum: u32;
         let mut val: u32;
@@ -968,7 +968,7 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             );
         }
 
-        // Memory requirements: 0.0X (wehn output_scale_raster is freed automatically at end of scope)
+        // Memory requirements: 0.0X (when output_scale_raster is freed automatically at end of scope)
 
         // Output the scale signature of average spherical standard deviation of normals
         let signature_file = Path::new(&output_mag_file)

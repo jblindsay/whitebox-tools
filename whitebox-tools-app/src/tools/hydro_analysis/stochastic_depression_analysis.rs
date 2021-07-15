@@ -24,7 +24,7 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool performs a stochastic analysis of depressions within a DEM, calculating the
-/// probability of each cell belonging to a depression. This land-surface prameter
+/// probability of each cell belonging to a depression. This land-surface parameter
 /// (p<sub>dep</sub>) has been widely applied in wetland and bottom-land mapping applications.
 ///
 /// This tool differs from the original Whitebox GAT tool in a few significant ways:
@@ -83,7 +83,7 @@ impl StochasticDepressionAnalysis {
         // public constructor
         let name = "StochasticDepressionAnalysis".to_string();
         let toolbox = "Hydrological Analysis".to_string();
-        let description = "Preforms a stochastic analysis of depressions within a DEM.".to_string();
+        let description = "Performs a stochastic analysis of depressions within a DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

@@ -534,9 +534,9 @@ impl WhiteboxTool for MultiscaleRoughness {
                 }
             }
 
-            ///////////////////////////////////////////////////////////////////////////
-            // Calcuate the average deviation within the local kernels and output it //
-            ///////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////
+            // Calculate the average deviation within the local kernels and output it //
+            ////////////////////////////////////////////////////////////////////////////
             let i_diff_nv = Arc::new(i_diff_nv);
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {

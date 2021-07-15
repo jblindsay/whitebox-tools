@@ -28,7 +28,7 @@ use std::thread;
 /// images (`--inputs`), typically several bands of multi-spectral satellite imagery. The
 /// tool creates two outputs, including the classified image (`--output` and a classification
 /// HTML report (`--out_html`). The user must specify the number of class (`--classes`), which should be
-/// known *a priori*, and the strategy for initializing class clusters (`--initialize`). The initilization
+/// known *a priori*, and the strategy for initializing class clusters (`--initialize`). The initialization
 /// strategies include "diagonal" (clusters are initially located randomly along the multi-dimensional diagonal
 /// of spectral space) and "random" (clusters are initially located randomly throughout spectral space).
 /// The algorithm will continue updating cluster center locations with each iteration of the process until

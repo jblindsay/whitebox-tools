@@ -34,7 +34,7 @@ use std::thread;
 /// and bedrock resistance are two factors related to drainage density, i.e. the extent to which a landscape is
 /// dissected by drainage channels.
 ///
-/// The background value of the ouput raster (`--output`) will be the NoData value unless the `--zero_background`
+/// The background value of the output raster (`--output`) will be the NoData value unless the `--zero_background`
 /// flag is specified.
 ///
 /// # See Also

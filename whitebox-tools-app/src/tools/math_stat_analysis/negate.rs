@@ -6,7 +6,7 @@ Last Modified: 13/10/2018
 License: MIT
 
 NOTE: This tool differs from the Whitebox GAT equivalent in that in additional to changing the sign
-of continous data, it also handles Boolean data by reversing values (i.e. 0-1 to 1-0).
+of continuous data, it also handles Boolean data by reversing values (i.e. 0-1 to 1-0).
 */
 
 use whitebox_raster::*;

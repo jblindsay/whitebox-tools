@@ -20,7 +20,7 @@ use std::path;
 use std::process::Command;
 
 /// This tool can be used to list each of the unique values contained within a categorical field
-/// of an input vector file's attribute table. The tool outputs an HTML formated report (`--output`)
+/// of an input vector file's attribute table. The tool outputs an HTML formatted report (`--output`)
 /// containing a table of the unique values and their frequency of occurrence within the data. The user must
 /// specify the name of an input shapefile (`--input`) and the name of one of the fields (`--field`)
 /// contained in the associated attribute table. The specified field *should not contained floating-point
@@ -44,7 +44,7 @@ impl ListUniqueValues {
         let name = "ListUniqueValues".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Lists the unique values contained in a field witin a vector's attribute table."
+            "Lists the unique values contained in a field within a vector's attribute table."
                 .to_string();
 
         let mut parameters = vec![];

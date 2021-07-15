@@ -71,9 +71,9 @@ impl LidarThinHighDensity {
         });
 
         parameters.push(ToolParameter {
-            name: "Save filtered points to seperate file?".to_owned(),
+            name: "Save filtered points to separate file?".to_owned(),
             flags: vec!["--save_filtered".to_owned()],
-            description: "Save filtered points to seperate file?".to_owned(),
+            description: "Save filtered points to separate file?".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_string()),
             optional: true,
