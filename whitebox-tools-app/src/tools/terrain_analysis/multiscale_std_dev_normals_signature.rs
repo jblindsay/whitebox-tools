@@ -407,8 +407,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
         // Perform the main analysis //
         ///////////////////////////////
         let mut num_procs = num_cpus::get() as isize;
-        let configuations = whitebox_common::configs::get_configs()?;
-        let max_procs = configuations.max_procs;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }
