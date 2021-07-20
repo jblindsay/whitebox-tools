@@ -191,9 +191,7 @@ class WhiteboxTools(object):
                 args2.append("--compress_rasters")
 
             if self.verbose:
-                cl = ""
-                for v in args2:
-                    cl += v + " "
+                cl = " ".join(args2)
                 callback(cl.strip() + "\n")
 
             proc = None
@@ -214,12 +212,12 @@ class WhiteboxTools(object):
                 sys.stdout.flush()
                 if line != '':
                     if not self.cancel_op:
-                        callback(line.strip())
+                        if self.verbose:
+                            callback(line.strip())
                     else:
                         self.cancel_op = False
                         proc.terminate()
                         return 2
-
                 else:
                     break
 
