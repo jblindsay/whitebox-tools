@@ -8,6 +8,7 @@ License: MIT
 
 #![allow(dead_code, unused_assignments)]
 extern crate brotli;
+extern crate las;
 use super::header::LasHeader;
 use super::point_data::{ ColourData, PointData, WaveformPacket };
 use super::vlr::Vlr;
@@ -39,6 +40,15 @@ use zip::write::{FileOptions, ZipWriter};
 use zip::CompressionMethod;
 // use compression::prelude::*;
 // use lz4_compression::prelude::compress;
+use las::Reader;
+use las::Read as OtherRead;
+// use las::raw::point::Flags::{ThreeByte, TwoByte};
+// use las::{Builder, Write, Writer};
+use las::Builder;
+use las::Write as OtherWrite;
+use las::Writer as OtherWriter;
+use las::raw::point::ScanAngle;
+use las::raw::vlr::RecordLength;
 
 #[derive(Default, Clone)]
 pub struct LasFile {
@@ -511,6 +521,9 @@ impl LasFile {
     pub fn read(&mut self) -> Result<(), Error> {
         if self.file_name.to_lowercase().ends_with(".zlidar") {
             return self.read_zlidar_data();
+        }
+        if self.file_name.to_lowercase().ends_with(".laz") {
+            return self.read_laz_data();
         }
         let buffer = match self.file_name.to_lowercase().ends_with(".zip") {
             false => {
@@ -1154,11 +1167,242 @@ impl LasFile {
             }
         }
 
-        // for i in 100_000..100_200 {
-        //     println!("{}, {}, {}, {}, {}, {}", i, self.point_data[i].x, self.point_data[i].y, self.point_data[i].z, self.point_data[i].return_number(), self.point_data[i].number_of_returns());
-        // }
+        Ok(())
+    }
+
+    pub fn read_laz_data(&mut self) -> Result<(), Error> {
+        // At present, this uses the laz crate via the las-rs crate to convert into a WBT LasFile.
+        // This doesn't seem like the most efficient way of doing this, and in the future I might
+        // like to go via the crates directly.
+        let mut reader = Reader::from_path(&self.file_name).expect("Error reading LAZ file.");
+        let header = reader.header();
+        let raw = header.clone().into_raw().unwrap();
+
+        self.header.project_id_used = true;
+        self.header.version_major = header.version().major;
+        self.header.version_minor = header.version().minor;
+ 
+        if self.header.version_major < 1
+            || self.header.version_major > 2
+            || self.header.version_minor > 5
+        {
+                // There's something very wrong. Throw an error.
+                return Err(Error::new(ErrorKind::Other, format!("Error reading: {}\nIncorrect file version {}.{}\nEither the file is formatted incorrectly or it is an unsupported LAS version.", self.file_name, self.header.version_major, self.header.version_minor)));
+        }
+
+        self.header.file_signature = str::from_utf8(&raw.file_signature).unwrap().to_owned();
+        self.header.file_source_id = header.file_source_id();
+        self.header.global_encoding = GlobalEncodingField { value: raw.global_encoding };
+
+
+        let guid = header.guid(); //.to_fields_le() -> (u32, u16, u16, &[u8; 8]);
+        let fields = guid.to_fields_le();
+        self.header.project_id1 = fields.0;
+        self.header.project_id2 = fields.1; 
+        self.header.project_id3 = fields.2;
+        self.header.project_id4 = fields.3.clone();
+
+        self.header.system_id = str::from_utf8(&raw.system_identifier.to_owned()).unwrap().to_owned();
+        self.header.generating_software = header.generating_software().to_owned();
+        self.header.file_creation_day = raw.file_creation_day_of_year;
+        self.header.file_creation_year = raw.file_creation_year;
+        self.header.header_size = raw.header_size;
+        self.header.offset_to_points = raw.offset_to_point_data;
+        self.header.number_of_vlrs = raw.number_of_variable_length_records;
+        self.header.point_format = header.point_format().to_u8().unwrap(); // raw.point_data_record_format;
+        self.header.point_record_length = raw.point_data_record_length;
+        self.header.number_of_points_old = raw.number_of_point_records;
+        self.header.number_of_points = raw.number_of_point_records as u64;
+        self.header.number_of_points_by_return_old = raw.number_of_points_by_return.clone();
+
+        let transforms = header.transforms().clone();
+        self.header.x_scale_factor = transforms.x.scale;
+        self.header.y_scale_factor = transforms.y.scale;
+        self.header.z_scale_factor = transforms.z.scale;
+        self.header.x_offset = transforms.x.offset;
+        self.header.y_offset = transforms.y.offset;
+        self.header.z_offset = transforms.z.offset;
+        
+        let bounds = header.bounds();
+        self.header.max_x = bounds.max.x;
+        self.header.min_x = bounds.min.x;
+        self.header.max_y = bounds.max.y;
+        self.header.min_y = bounds.min.y;
+        self.header.max_z = bounds.max.z;
+        self.header.min_z = bounds.min.z;
+
+        /*
+        if self.header.version_major == 1 && self.header.version_minor >= 3 {
+            self.header.waveform_data_start = raw.start_of_waveform_data_packet_record;
+            if self.header.version_major == 1 && self.header.version_minor > 3 {
+                self.header.offset_to_ex_vlrs = bor.read_u64()?;
+                self.header.number_of_extended_vlrs = bor.read_u32()?;
+                self.header.number_of_points = bor.read_u64()?;
+                for i in 0..15 {
+                    self.header.number_of_points_by_return[i] = bor.read_u64()?;
+                }
+            }
+        }
+
+        if self.header.number_of_points_old != 0 {
+            self.header.number_of_points = self.header.number_of_points_old as u64;
+            for i in 0..5 {
+                if self.header.number_of_points_by_return_old[i] as u64
+                    > self.header.number_of_points_by_return[i]
+                {
+                    self.header.number_of_points_by_return[i] =
+                        self.header.number_of_points_by_return_old[i] as u64;
+                }
+            }
+        } else if self.header.number_of_points_old == 0 && self.header.version_minor <= 3 {
+            println!("Error reading the LAS file: The file does not appear to contain any points");
+            self.header.number_of_points = 0;
+        }
+
+         */
+
+         ///////////////////////
+        // Read the VLR data //
+        ///////////////////////
+        // builder.vlrs = in_header.vlrs().clone();
+        for v in header.vlrs() {
+            let raw_vlr = v.clone().into_raw(false).unwrap();
+
+            let mut vlr: Vlr = Default::default();
+            vlr.reserved = raw_vlr.reserved;
+            vlr.user_id = str::from_utf8(&raw_vlr.user_id.clone()).unwrap().to_owned();
+            vlr.record_id = raw_vlr.record_id;
+            vlr.record_length_after_header = match raw_vlr.record_length_after_header {
+                RecordLength::Vlr(v) => v,
+                RecordLength::Evlr(v) => v as u16,
+            }; 
+            raw_vlr.record_length_after_header;
+            vlr.description = str::from_utf8(&raw_vlr.description.clone()).unwrap().to_owned();
+            // get the byte data
+            for j in 0..vlr.record_length_after_header {
+                vlr.binary_data.push(raw_vlr.data[j as usize]);
+            }
+
+            if vlr.record_id == 34_735 {
+                self.geokeys
+                    .add_key_directory(&vlr.binary_data, Endianness::LittleEndian);
+            } else if vlr.record_id == 34_736 {
+                self.geokeys
+                    .add_double_params(&vlr.binary_data, Endianness::LittleEndian);
+            } else if vlr.record_id == 34_737 {
+                self.geokeys.add_ascii_params(&vlr.binary_data);
+            } else if vlr.record_id == 2112 {
+                let skip = if vlr.binary_data[vlr.binary_data.len() - 1] == 0u8 {
+                    1
+                } else {
+                    0
+                };
+                self.wkt =
+                    String::from_utf8_lossy(&vlr.binary_data[0..vlr.binary_data.len() - skip])
+                        .trim()
+                        .to_string();
+            }
+            self.vlr_data.push(vlr);
+        }
+
+
+        if self.file_mode != "rh" {
+            // Read the points into memory
+            self.point_data = Vec::with_capacity(self.header.number_of_points as usize);
+            self.gps_data = Vec::with_capacity(self.header.number_of_points as usize);
+            self.colour_data = Vec::with_capacity(self.header.number_of_points as usize);
+            self.waveform_data = Vec::with_capacity(self.header.number_of_points as usize);
+            let mut rgb: ColourData;
+            let mut wfp: WaveformPacket;
+                    
+
+            for wrapped_point in reader.points() {
+                let point = wrapped_point.unwrap();
+                let raw_point = point.into_raw(&transforms).unwrap();
+
+                let mut p: PointData = Default::default();
+                p.x = raw_point.x;
+                p.y = raw_point.y;
+                p.z = raw_point.z;
+
+                // if self.use_point_intensity {
+                    p.intensity = raw_point.intensity;
+                // }
+                let flags = raw_point.flags;
+                p.set_return_number(flags.return_number());
+                p.set_number_of_returns(flags.number_of_returns());
+                p.set_classification(u8::from(flags.to_classification().unwrap()));
+                p.set_scan_direction_flag(flags.scan_direction() == las::point::ScanDirection::LeftToRight);
+                p.set_synthetic(flags.is_synthetic());
+                p.set_keypoint(flags.is_key_point());
+                p.set_withheld(flags.is_withheld());
+                p.set_overlap(flags.is_overlap());
+                p.set_scanner_channel(flags.scanner_channel());
+                p.set_edge_of_flightline_flag(flags.is_edge_of_flight_line());
+
+
+                // match flags {
+                //     TwoByte(b1, b2) => {
+                //         p.point_bit_field = b1;
+                //         p.class_bit_field = b2;
+                //     },
+                //     ThreeByte(b1, b2, b3) => {
+                //         p.point_bit_field = b1;
+                //         p.class_bit_field = b2;
+                //         p.classification = b3;
+                //     },
+                // }
+                
+                // if self.use_point_userdata {
+                    p.user_data = raw_point.user_data;
+                // }
+                p.scan_angle = match raw_point.scan_angle {
+                    ScanAngle::Rank(value) => value as i16,
+                    ScanAngle::Scaled(value) => value,
+                };
+                p.point_source_id = raw_point.point_source_id;
+                self.point_data.push(p);
+
+                if raw_point.gps_time.is_some() {
+                    self.gps_data.push(raw_point.gps_time.unwrap());
+                }
+                
+
+                // read the RGB/NIR data
+                if raw_point.color.is_some() {
+                    let colour = raw_point.color.unwrap();
+
+                    rgb = Default::default();
+                    rgb.red = colour.red;
+                    rgb.green = colour.green;
+                    rgb.blue = colour.blue;
+
+                    if raw_point.nir.is_some() {
+                        rgb.nir = raw_point.nir.unwrap();
+                    }
+
+                    self.colour_data.push(rgb);
+                }
+                
+                // read the waveform data
+                if raw_point.waveform.is_some() {
+                    let waveform = raw_point.waveform.unwrap();
+                    wfp = Default::default();
+                    wfp.packet_descriptor_index = waveform.wave_packet_descriptor_index;
+                    wfp.offset_to_waveform_data = waveform.byte_offset_to_waveform_data;
+                    wfp.waveform_packet_size = waveform.waveform_packet_size_in_bytes;
+                    wfp.ret_point_waveform_loc = waveform.return_point_waveform_location;
+                    wfp.xt = waveform.x_t;
+                    wfp.yt = waveform.y_t;
+                    wfp.zt = waveform.z_t;
+                    self.waveform_data.push(wfp);
+                }
+            }
+
+        }
 
         Ok(())
+
     }
 
     pub fn read_zlidar_data(&mut self) -> Result<(), Error> {
@@ -2634,6 +2878,8 @@ impl LasFile {
             let mut writer = BufWriter::new(f);
 
             self.write_data(&mut writer)?;
+        } else if self.file_name.to_lowercase().ends_with(".laz") {
+            self.write_laz_data()?;
         } else if self.file_name.to_lowercase().ends_with(".zlidar") {
             let f = File::create(&self.file_name)?;
             let mut writer = BufWriter::new(f);
@@ -3143,6 +3389,123 @@ impl LasFile {
             }
         }
 
+        Ok(())
+    }
+
+    fn write_laz_data(&mut self) -> Result<(), Error> {
+
+        // let mut reader = Reader::from_path(&input_file).expect("Error reading LAS file.");
+        // let in_header = reader.header();
+        let mut builder = Builder::from((1, 3));
+        // let mut format = in_header.point_format().clone();
+
+        let mut format = las::point::Format::new(self.header.point_format).unwrap();
+        format.is_compressed = true;
+        builder.point_format = format;
+        builder.generating_software = "WhiteboxTools".to_string();
+        let transforms: las::Vector<las::Transform> = las::Vector{ 
+            x: las::Transform {scale: self.header.x_scale_factor, offset: self.header.x_offset }, 
+            y: las::Transform {scale: self.header.y_scale_factor, offset: self.header.y_offset }, 
+            z: las::Transform {scale: self.header.z_scale_factor, offset: self.header.z_offset }
+        };
+        builder.transforms = transforms.clone();
+        
+        for vlr in &self.vlr_data {
+            let mut vlr2 = las::Vlr::default();
+            vlr2.user_id = vlr.user_id.clone();
+            vlr2.record_id = vlr.record_id;
+            vlr2.description = vlr2.description.clone();
+            vlr2.data = vlr.binary_data.clone();
+        //     while vlr2.description.len() > 32 {
+        //         vlr2.description.pop();
+        //     }
+            builder.vlrs.push(vlr2.clone());
+        }
+
+        let out_header = builder.into_header().unwrap();
+        let f = File::create(&self.file_name).expect("Unable to create file");
+        let f = BufWriter::new(f);
+        let mut writer = OtherWriter::new(f, out_header).unwrap();
+        let mut point: las::point::Point;
+        let mut raw_point: las::raw::Point;
+        // let mut p: Point3D;
+        let mut pd: PointData;
+        for point_num in 0..self.header.number_of_points as usize {
+            pd = self[point_num];
+            raw_point = las::raw::Point::default();
+
+            // Coordinates and intensity information
+            raw_point.x = pd.x;
+            raw_point.y = pd.y;
+            raw_point.z = pd.z;
+            raw_point.intensity = pd.intensity;
+
+            // Flags
+            let flags = if self.header.point_format < 6 {
+                las::raw::point::Flags::TwoByte(pd.point_bit_field, pd.class_bit_field)
+            } else {
+                las::raw::point::Flags::ThreeByte(pd.point_bit_field, pd.class_bit_field, pd.classification)
+            };
+            raw_point.flags = flags;
+
+            raw_point.user_data = pd.user_data;
+
+            if self.header.point_format < 6 {
+                raw_point.scan_angle = las::raw::point::ScanAngle::Rank(pd.scan_angle as i8);
+            } else {
+                raw_point.scan_angle = las::raw::point::ScanAngle::Scaled(pd.scan_angle);
+            }
+            
+            raw_point.point_source_id = pd.point_source_id;
+
+            // GPS time information
+            if self.has_gps_time() {
+                raw_point.gps_time = Some(self.gps_data[point_num]);
+            } else {
+                raw_point.gps_time = None;
+            }
+
+            // Colour information
+            if self.has_rgb() {
+                let colour = las::Color { 
+                    red: self.colour_data[point_num].red,
+                    green: self.colour_data[point_num].green,
+                    blue: self.colour_data[point_num].blue
+                };
+                raw_point.color = Some(colour);
+
+                if self.header.point_format == 8 || self.header.point_format == 10 {
+                    raw_point.nir = Some(self.colour_data[point_num].nir);
+                } else {
+                    raw_point.nir = None;
+                }
+            } else {
+                raw_point.color = None;
+            }
+
+            // Waveform information
+            if self.header.point_format == 4 || self.header.point_format == 5 ||
+            self.header.point_format == 9 || self.header.point_format == 10 {
+                let wf = las::raw::point::Waveform {
+                    wave_packet_descriptor_index: self.waveform_data[point_num].packet_descriptor_index,
+                    byte_offset_to_waveform_data: self.waveform_data[point_num].offset_to_waveform_data,
+                    waveform_packet_size_in_bytes: self.waveform_data[point_num].waveform_packet_size,
+                    return_point_waveform_location: self.waveform_data[point_num].ret_point_waveform_loc,
+                    x_t: self.waveform_data[point_num].xt,
+                    y_t: self.waveform_data[point_num].yt,
+                    z_t: self.waveform_data[point_num].zt,
+                };
+                raw_point.waveform = Some(wf);
+            } else {
+                raw_point.waveform = None;
+            }
+
+            point = las::point::Point::new(raw_point, &transforms);
+            writer.write(point.clone()).expect("Error writing point data");
+        }
+
+        writer.close().unwrap();
+        
         Ok(())
     }
 
