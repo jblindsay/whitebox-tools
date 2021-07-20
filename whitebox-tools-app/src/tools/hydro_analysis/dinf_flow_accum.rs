@@ -48,7 +48,7 @@ use std::thread;
 /// elevation models. Water resources research, 33(2), 309-319.
 ///
 /// # See Also
-/// `DInfPointer`, `MDInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`,`
+/// `DInfPointer`, D8FlowAccumulation`, `QuinnFlowAccumulation`, `QinFlowAccumulation`, `FD8FlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`, `BreachDepressionsLeastCost`, `FillDepressions`
 pub struct DInfFlowAccumulation {
     name: String,
     description: String,

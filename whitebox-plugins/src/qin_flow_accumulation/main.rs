@@ -1,6 +1,6 @@
 /* 
 Authors:  Dr. John Lindsay
-Created: 09/07/2021
+Created: 15/07/2021
 Last Modified: 15/07/2021
 License: MIT
 */
@@ -16,32 +16,45 @@ use std::sync::Arc;
 use std::thread;
 use num_cpus;
 use whitebox_common::structures::{Array2D};
-use whitebox_common::utils::get_formatted_elapsed_time;
+use whitebox_common::utils::{ get_formatted_elapsed_time, wrapped_print };
 use whitebox_raster::*;
 
-/// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the Quinn et al. (1995) 
-/// flow algorithm, sometimes called QMFD or QMFD2, and not to be confused with the similarly named `QinFlowAccumulation` tool. This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering each
-/// grid cell is routed to more than one downslope neighbour, i.e. flow *divergence* is permitted. The user must specify the
-/// name (`--dem`) of the input digital elevation model (DEM). The DEM must have been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using
-/// either the `BreachDepressions` (also `BreachDepressionsLeastCost`) or `FillDepressions` tool. A value must also be specified for the exponent parameter
-/// (`--exponent`), a number that controls the degree of dispersion in the resulting flow-accumulation grid. A lower
-/// value yields greater apparent flow dispersion across divergent hillslopes. The exponent value (*h*) should probably be
-/// less than 50.0, as higher values may cause numerical instability, and values between 1 and 2 are most common. 
-/// The following equations are used to calculate the portion flow (*F<sub>i</sub>*) given to each neighbour, *i*:
+/// This tool is used to generate a flow accumulation grid (i.e. contributing area) using the Qin et al. (2007) 
+/// flow algorithm, not to be confused with the similarly named `QuinnFlowAccumulation` tool. This algorithm is an 
+/// examples of a multiple-flow-direction (MFD) method because the flow entering each grid cell is routed to more 
+/// than one downslope neighbour, i.e. flow *divergence* is permitted. It is based on a modification of the Freeman
+/// (1991; `FD8FlowAccumulation`) and Quinn et al. (1995; `QuinnFlowAccumulation`) methods. The Qin method relates 
+/// the degree of flow dispersion from a grid cell to the local maximum downslope gradient. Specifically, steeper 
+/// terrain experiences more convergent flow while flatter slopes experience more flow divergence. 
 ///
-/// > *F<sub>i</sub>* = *L<sub>i</sub>*(tan&beta;)<sup>*p*</sup> / &Sigma;<sub>*i*=1</sub><sup>*n*</sup>[*L<sub>i</sub>*(tan&beta;)<sup>*p*</sup>]
+/// The following equations are used to calculate the portion flow (*F<sub>i</sub>*)
+/// given to each neighbour, *i*:
+///
+/// > *F<sub>i</sub>* = *L<sub>i</sub>*(tan&beta;)<sup>*f(e)*</sup> / &Sigma;<sub>*i*=1</sub><sup>*n*</sup>[*L<sub>i</sub>*(tan&beta;)<sup>*f(e)*</sup>]
 /// >
-/// > *p* = (*A* / *threshold* + 1)<sup>*h*</sup>
+/// > *f(e)* = min(*e*, *e<sub>U</sub>*) / *e<sub>U</sub>* &times; (*p<sub>U</sub>* - 1.1) + 1.1
 ///
 /// Where *L<sub>i</sub>* is the contour length, and is 0.5&times;cell size for cardinal directions and 0.354&times;cell size for
-/// diagonal directions, *n* = 8, and represents each of the eight neighbouring grid cells, and, *A* is the flow accumultation value assigned to the current grid cell, that is being 
-/// apportioned downslope. The non-dispersive, channel initiation *threshold* (`--threshold`) is a flow-accumulation 
+/// diagonal directions, *n* = 8, and represents each of the eight neighbouring grid cells. The exponent *f(e)* controls
+/// the proportion of flow allocated to each downslope neighbour of a grid cell, based on the local maximum downslope
+/// gradient (*e*), and the user-specified upper boundary of *e* (*e<sub>U</sub>*; `--max_slope`), and the upper 
+/// boundary of the exponent (*p<sub>U</sub>*; `--exponent`), *f(e)*. Note that the original Qin (2007)
+/// implementation allowed for user-specified lower boundaries on the slope (*e<sub>L</sub>*) and exponent (*p<sub>L</sub>*) 
+/// parameters as well. In this implementation, these parameters are assumed to be 0.0 and 1.1 respectively, and are
+/// not user adjustable. Also note, the `--exponent` parameter should be less than 50.0, as higher values may cause
+/// numerical instability.
+///
+/// The user must specify the  name (`--dem`) of the input digital elevation model (DEM) and the output file (`--output`). 
+/// The DEM must have been hydrologically corrected to remove all spurious depressions and flat areas. DEM 
+/// pre-processing is usually achieved using either the `BreachDepressions` (also `BreachDepressionsLeastCost`) or 
+/// `FillDepressions` tool. 
+/// 
+/// The user-specified non-dispersive, channel initiation *threshold* (`--threshold`) is a flow-accumulation 
 /// value (measured in upslope grid cells, which is directly proportional to area) above which flow dispersion is 
-/// no longer permited. Grid cells with flow-accumulation values above this threshold will have their flow routed 
-/// in a manner that is similar to the D8 single-flow-direction algorithm, directing all flow towards the steepest 
-/// downslope neighbour. This is usually done under the assumption that flow dispersion, whilst appropriate on 
-/// hillslope areas, is not realistic once flow becomes channelized. Importantly, the `--threshold` parameter sets 
+/// no longer permited. Grid cells with flow-accumulation values above this area threshold will have their flow
+/// routed in a manner that is similar to the D8 single-flow-direction algorithm, directing all flow towards the
+/// steepest downslope neighbour. This is usually done under the assumption that flow dispersion, whilst appropriate
+/// on hillslope areas, is not realistic once flow becomes channelized. Importantly, the `--threshold` parameter sets 
 /// the spatial extent of the stream network, with lower values resulting in more extensive networks. 
 /// 
 /// In addition to the input DEM, output file (`--output`), and exponent, the user must also specify the output type (`--out_type`). The output flow-accumulation
@@ -55,15 +68,21 @@ use whitebox_raster::*;
 /// values on hillslopes tends to be 'washed out' because the palette is stretched out to represent the
 /// highest values. Log-transformation provides a means of compensating for this phenomenon. Importantly,
 /// however, log-transformed flow-accumulation grids must not be used to estimate other secondary terrain
-/// indices, such as the wetness index (`WetnessIndex`), or relative stream power index (`StreamPowerIndex`). The
-/// Quinn et al. (1995) algorithm is commonly used to calculate wetness index.
+/// indices, such as the wetness index (`WetnessIndex`), or relative stream power index (`StreamPowerIndex`).
 ///
 /// # Reference
+/// Freeman, T. G. (1991). Calculating catchment area with divergent flow based on a regular grid. Computers and
+/// Geosciences, 17(3), 413-422.
+///
+/// Qin, C., Zhu, A. X., Pei, T., Li, B., Zhou, C., & Yang, L. 2007. An adaptive approach to selecting a 
+/// flow‐partition exponent for a multiple‐flow‐direction algorithm. *International Journal of Geographical 
+/// Information Science*, 21(4), 443-458.
+///
 /// Quinn, P. F., K. J. Beven, Lamb, R. 1995. The in (a/tanβ) index: How to calculate it and how to use it within 
 /// the topmodel framework. *Hydrological Processes* 9(2): 161-182.
-///
+/// 
 /// # See Also
-/// `D8FlowAccumulation`, `QinFlowAccumulation`, `FD8FlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`, `WetnessIndex`
+/// `D8FlowAccumulation`, `QuinnFlowAccumulation`, `FD8FlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`, `WetnessIndex`
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -91,10 +110,10 @@ fn help() {
         ext = ".exe";
     }
 
-    let exe_name = &format!("quinn_flow_accumulation{}", ext);
+    let exe_name = &format!("qin_flow_accumulation{}", ext);
     let sep: String = path::MAIN_SEPARATOR.to_string();
     let s = r#"
-    quinn_flow_accumulation Help
+    qin_flow_accumulation Help
 
     This tool 
 
@@ -125,13 +144,13 @@ fn help() {
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "quinn_flow_accumulation v{} by Dr. John B. Lindsay (c) 2021.",
+        "qin_flow_accumulation v{} by Dr. John B. Lindsay (c) 2021.",
         VERSION.unwrap_or("Unknown version")
     );
 }
 
 fn get_tool_name() -> String {
-    String::from("QuinnFlowAccumulation") // This should be camel case and is a reference to the tool name.
+    String::from("QinFlowAccumulation") // This should be camel case and is a reference to the tool name.
 }
 
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
@@ -151,7 +170,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut output_file: String = String::new();
     let mut out_type = String::from("sca");
     let mut convergence_threshold = 0f64;
-    let mut exponent = 1.1f64;
+    let mut upper_bound_exponent = 10f64;
+    let lower_bound_exponent = 1.1f64;
+    let mut upper_slope = 45f64; // Input in degrees, but gets converted to tan-slope later
+    // let lower_slope = 0f64;
     let mut z_factor = 1f64;
     let mut log_transform = false;
     let mut clip_max = false;
@@ -198,7 +220,19 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 String::from("ca")
             };
         } else if flag_val == "-exponent" {
-            exponent = if keyval {
+            upper_bound_exponent = if keyval {
+                vec[1]
+                    .to_string()
+                    .parse::<f64>()
+                    .expect(&format!("Error parsing {}", flag_val))
+            } else {
+                args[i + 1]
+                    .to_string()
+                    .parse::<f64>()
+                    .expect(&format!("Error parsing {}", flag_val))
+            };
+        } else if flag_val == "-max_slope" {
+            upper_slope = if keyval {
                 vec[1]
                     .to_string()
                     .parse::<f64>()
@@ -258,6 +292,23 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut old_progress: usize = 1;
 
     let start = Instant::now();
+
+    if upper_slope > 90.0 { upper_slope = 90.0; }
+    upper_slope = upper_slope.to_radians().tan();
+
+    if upper_bound_exponent < lower_bound_exponent {
+        if configurations.verbose_mode {
+            wrapped_print("Warning: The upper-bound exponent parameter (--exponent) must be greater than 1.1.", 50);
+        }
+        upper_bound_exponent = lower_bound_exponent; 
+    }
+
+    if upper_bound_exponent >= 50.0 {
+        if configurations.verbose_mode {
+            wrapped_print("Warning: The upper-bound exponent parameter (--exponent) must be less than 50.0.", 50);
+        }
+        upper_bound_exponent = 50.0; 
+    }
 
     if !dem_file.contains(&sep) && !dem_file.contains("/") {
         dem_file = format!("{}{}", working_directory, dem_file);
@@ -398,6 +449,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut total_weights: f64;
     let mut f: f64;
     let mut is_converged: bool;
+    let mut downslope: [bool; 8];
+    let mut weights: [f64; 8];
     while !stack.is_empty() {
         let cell = stack.pop().expect("Error during pop operation.");
         row = cell.0;
@@ -406,47 +459,48 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         fa = output.get_value(row, col);
         num_inflowing.set_value(row, col, -1i8);
 
-        total_weights = 0.0;
-        let mut weights: [f64; 8] = [0.0; 8];
-        let mut downslope: [bool; 8] = [false; 8];
-        is_converged = fa >= convergence_threshold;
-        if !is_converged {
-            for i in 0..8 {
-                row_n = row + dy[i];
-                col_n = col + dx[i];
-                zn = dem.get_value(row_n, col_n);
-                if zn < z && zn != dem_nodata {
-                    zn *= z_factor;
-                    slope = (z - zn) / grid_lengths[i];
-                    f = (fa / convergence_threshold + 1f64).powf(exponent);
-                    if f > 50.0 { 
-                        is_converged = true; 
-                        break;
-                    }
-                    weights[i] = contour_lengths[i] * slope.powf(f);
-                    // weights[i] = contour_lengths[i] * slope.powf(exponent);
-                    total_weights += weights[i];
-                    downslope[i] = true;
+        max_slope = -1f64;
+        downslope = [false; 8];
+        dir = 0i8;
+        for i in 0..8 {
+            row_n = row + dy[i];
+            col_n = col + dx[i];
+            zn = dem.get_value(row_n, col_n);
+            if zn < z && zn != dem_nodata {
+                zn *= z_factor;
+                slope = (z - zn) / grid_lengths[i];
+                if slope > max_slope {
+                    max_slope = slope;
+                    dir = i as i8;
                 }
+                downslope[i] = true;
             }
         }
-        if is_converged {
-            // Find the steepest downslope neighbour and give it all to it
-            dir = 0i8;
-            max_slope = f64::MIN;
-            for i in 0..8 {
-                zn = dem.get_value(row + dy[i], col + dx[i]);
-                if zn != dem_nodata {
-                    slope = (z - zn) / grid_lengths[i];
-                    if slope > 0f64 {
+
+        weights = [0.0; 8];
+        total_weights = 0.0;
+        is_converged = fa >= convergence_threshold;
+        if !is_converged {
+            if max_slope > 0f64 {
+                f = if upper_slope > 0f64 {
+                    max_slope.min(upper_slope) / upper_slope * (upper_bound_exponent - lower_bound_exponent) + lower_bound_exponent
+                } else {
+                    upper_bound_exponent
+                };
+                for i in 0..8 {
+                    row_n = row + dy[i];
+                    col_n = col + dx[i];
+                    zn = dem.get_value(row_n, col_n);
+                    if zn < z && zn != dem_nodata {
+                        zn *= z_factor;
+                        slope = (z - zn) / grid_lengths[i];
+                        weights[i] = contour_lengths[i] * slope.powf(f);
+                        total_weights += weights[i];
                         downslope[i] = true;
-                        if slope > max_slope {
-                            max_slope = slope;
-                            dir = i as i8;
-                        }
                     }
                 }
             }
+        } else {
             if max_slope >= 0f64 {
                 weights[dir as usize] = 1.0;
                 total_weights = 1.0;

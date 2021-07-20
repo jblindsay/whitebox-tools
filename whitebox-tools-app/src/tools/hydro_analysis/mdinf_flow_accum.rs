@@ -52,7 +52,7 @@ use std::thread;
 /// gridded digital elevation models. Water resources research, 43(4).
 ///
 /// # See Also
-/// `D8FlowAccumulation`, `DInfFlowAccumulation`, `FD8FlowAccumulation`, `BreachDepressions`
+/// `D8FlowAccumulation`, `FD8FlowAccumulation`, `QuinnFlowAccumulation`, `QinFlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`, `BreachDepressionsLeastCost`
 pub struct MDInfFlowAccumulation {
     name: String,
     description: String,

@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/06/2017
-Last Modified: 21/02/2020
+Last Modified: 15/07/2021
 License: MIT
 */
 
@@ -22,7 +22,7 @@ use std::thread;
 /// 1991), sometimes referred to as FMFD. This algorithm is an examples of a multiple-flow-direction (MFD) method because the flow entering each
 /// grid cell is routed to each downslope neighbour, i.e. flow divergence is permitted. The user must specify the
 /// name (`--dem`) of the input digital elevation model (DEM). The DEM must have been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achived using
+/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using
 /// either the `BreachDepressions` (also `BreachDepressionsLeastCost`) or `FillDepressions` tool. A value must also be specified for the exponent parameter
 /// (`--exponent`), a number that controls the degree of dispersion in the resulting flow-accumulation grid. A lower
 /// value yields greater apparent flow dispersion across divergent hillslopes. Some experimentation suggests that a
@@ -53,7 +53,7 @@ use std::thread;
 /// Geosciences, 17(3), 413-422.
 ///
 /// # See Also
-/// `D8FlowAccumulation`, `QuinnFlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`
+/// `D8FlowAccumulation`, `QuinnFlowAccumulation`, `QinFlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`
 pub struct FD8FlowAccumulation {
     name: String,
     description: String,
@@ -320,6 +320,7 @@ impl WhiteboxTool for FD8FlowAccumulation {
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
         output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;

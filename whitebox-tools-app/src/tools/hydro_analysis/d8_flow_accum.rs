@@ -46,8 +46,12 @@ use std::thread;
 /// Grid cells possessing the **NoData** value in the input DEM/pointer raster are assigned the **NoData**
 /// value in the output flow-accumulation image.
 ///
+/// # Reference
+/// O'Callaghan, J. F., & Mark, D. M. 1984. The extraction of drainage networks from digital elevation data. 
+/// *Computer Vision, Graphics, and Image Processing*, 28(3), 323-344.
+///
 /// # See Also:
-/// `Rho8Pointer`, `D8Pointer`, `DInfPointer`, `DInfFlowAccumulation`, `BreachDepressionsLeastCost`, `FillDepressions`
+/// `FD8FlowAccumulation`, `QuinnFlowAccumulation`, `QinFlowAccumulation`, `DInfFlowAccumulation`, `MDInfFlowAccumulation`, `Rho8Pointer`, `D8Pointer`, `BreachDepressionsLeastCost`, `FillDepressions`
 pub struct D8FlowAccumulation {
     name: String,
     description: String,

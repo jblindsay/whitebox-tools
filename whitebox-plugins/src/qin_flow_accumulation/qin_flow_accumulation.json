@@ -1,10 +1,10 @@
 {
-    "tool_name": "QuinnFlowAccumulation",
-    "exe": "quinn_flow_accumulation",
-    "short_description": "This tool calculates Quinn et al. (1995) flow accumulation.",
+    "tool_name": "QinFlowAccumulation",
+    "exe": "qin_flow_accumulation",
+    "short_description": "This tool calculates Qin et al. (2007) flow accumulation.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
-    "example": ".*EXE_NAME -r=QuinnFlowAccumulation --dem=DEM.tif --output=QMFD.tif --out_type='specific contributing area' --exponent=1.1 --threshold=10000",
+    "example": ".*EXE_NAME -r=QinFlowAccumulation --dem=DEM.tif --output=QinMFD.tif --out_type='specific contributing area' --exponent=15.0 --max_slope=30.0 --threshold=10000",
     "parameters": [
         {
             "name": "Input DEM Raster",
@@ -31,11 +31,19 @@
             "optional": true
         },
         {
-            "name": "Exponent Parameter",
+            "name": "Upper-bound Exponent Parameter",
             "flags": ["--exponent"],
-            "description": "Optional exponent parameter; default is 1.0.",
+            "description": "Optional upper-bound exponent parameter; default is 10.0.",
             "parameter_type": "Float",
-            "default_value": "1.0",
+            "default_value": "10.0",
+            "optional": true
+        },
+        {
+            "name": "Upper-bound Slope Parameter (in degrees)",
+            "flags": ["--max_slope"],
+            "description": "Optional upper-bound slope parameter, in degrees (0-90); default is 45.0.",
+            "parameter_type": "Float",
+            "default_value": "45.0",
             "optional": true
         },
         {

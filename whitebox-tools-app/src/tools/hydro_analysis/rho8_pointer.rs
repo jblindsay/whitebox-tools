@@ -40,8 +40,8 @@ use std::thread;
 /// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output image.
 ///
 /// # References
-/// Fairfield, J., & Leymarie, P. (1991). Drainage networks from grid digital elevation models. Water
-/// Resources Research, 27(5), 709-717.
+/// Fairfield, J., and Leymarie, P. 1991. Drainage networks from grid digital elevation models. *Water
+/// Resources Research*, 27(5), 709-717.
 ///
 /// # See Also
 /// `D8Pointer`, `FD8Pointer`, `DInfPointer`, `BreachDepressions`, `FillDepressions`

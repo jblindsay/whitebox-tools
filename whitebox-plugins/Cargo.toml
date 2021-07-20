@@ -12,6 +12,10 @@ path = "src/split_vector_lines/main.rs"
 name = "quinn_flow_accumulation"
 path = "src/quinn_flow_accumulation/main.rs"
 
+[[bin]]
+name = "qin_flow_accumulation"
+path = "src/qin_flow_accumulation/main.rs"
+
 [dependencies]
 num_cpus = "1.13.0"
 whitebox_common = { path = "../whitebox-common" }
