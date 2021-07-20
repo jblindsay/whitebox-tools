@@ -115,7 +115,7 @@ class WhiteboxTools(object):
             if running_windows and self.start_minimized == True:
                 si = STARTUPINFO()
                 si.dwFlags = STARTF_USESHOWWINDOW
-                si.wShowWindow = 6 #Set window minimized
+                si.wShowWindow = 7 #Set window minimized and not activated
                 proc = Popen(args2, shell=False, stdout=PIPE,
                             stderr=STDOUT, bufsize=1, universal_newlines=True,
                             startupinfo=si)
@@ -199,7 +199,7 @@ class WhiteboxTools(object):
             if running_windows and self.start_minimized == True:
                 si = STARTUPINFO()
                 si.dwFlags = STARTF_USESHOWWINDOW
-                si.wShowWindow = 6 #Set window minimized
+                si.wShowWindow = 7 #Set window minimized and not activated
                 proc = Popen(args2, shell=False, stdout=PIPE,
                             stderr=STDOUT, bufsize=1, universal_newlines=True,
                             startupinfo=si)
