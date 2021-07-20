@@ -29,7 +29,7 @@ use std::path;
 /// to the entire interior region of lake polygons, excluding island geometries. Note, this tool will not
 /// provide satisfactory results if the input vector polygons contain wide river features rather than true
 /// lakes. When this is the case, the tool will lower the entire river to the elevation of its mouth, leading
-/// to the creation of an artifical gorge.
+/// to the creation of an artificial gorge.
 ///
 /// # See Also
 /// `FillDepressions`

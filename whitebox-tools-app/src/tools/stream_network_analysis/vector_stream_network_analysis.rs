@@ -326,7 +326,7 @@ impl WhiteboxTool for VectorStreamNetworkAnalysis {
         are not associated with bifurcations as well as nodes where only
         one of the ajoining links overlaps with the DEM. 
     
-        To do this, first read in the shapefile, retreiving each starting
+        To do this, first read in the shapefile, retrieving each starting
         and ending nodes (called end-nodes) of the contained lines. Place 
         the end points into a k-d tree. Visit each site and count the 
         number of end points at each node. Those with more than one are

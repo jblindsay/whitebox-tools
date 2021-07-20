@@ -40,7 +40,7 @@ impl PercentGreaterThan {
         // public constructor
         let name = "PercentGreaterThan".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
-        let description = "Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.".to_string();
+        let description = "Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

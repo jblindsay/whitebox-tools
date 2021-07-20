@@ -362,9 +362,9 @@ impl WhiteboxTool for MaxAnisotropyDevSignature {
             }
             middle_pane_radius = (midpoint * 2 + 1) / 6;
 
-            //////////////////////////////////////////
-            // Calcuate the anisotropy in deviation //
-            //////////////////////////////////////////
+            ////////////////////////////////////////.//
+            // Calculate the anisotropy in deviation //
+            ///////////////////////////////////////////
             let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
             let (mut x3, mut x4, mut y3, mut y4): (isize, isize, isize, isize);
             let mut n: i32;

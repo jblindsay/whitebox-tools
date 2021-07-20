@@ -148,7 +148,7 @@ impl Polyline {
         self.split_points.clear();
     }
 
-    /// returns the number of verticies
+    /// returns the number of vertices
     pub fn len(&self) -> usize {
         self.vertices.len()
     }
@@ -212,7 +212,7 @@ impl Polyline {
     }
 
     /// Inserts a split point into the polyline, which can be used to eventually break
-    /// the orignal polyline into two new lines. The `position` is a floating point (f64)
+    /// the original polyline into two new lines. The `position` is a floating point (f64)
     /// value representing the position along the polyline for the new end-point insertion.
     /// For example, a position of 3.5 means that an end point will be inserted halfway
     /// along the line segment connecting vertex 3 and vertex 4. Notice that integer values

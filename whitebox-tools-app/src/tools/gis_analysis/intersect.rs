@@ -38,9 +38,9 @@ const EPSILON: f64 = std::f64::EPSILON;
 /// The attributes of the two input vectors will be merged in the output attribute table.
 /// Note, duplicate fields should not exist between the inputs layers, as they will share a
 /// single attribute in the output (assigned from the first layer). Multipoint ShapeTypes will
-/// simply contain a single  ouptut feature indentifier (`FID`) attribute. Also, note that depending
+/// simply contain a single output feature identifier (`FID`) attribute. Also, note that depending
 /// on the ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
-/// be transfered to the output geometries. If the input attribute table contains fields
+/// be transferred to the output geometries. If the input attribute table contains fields
 /// that measure the geometric properties of their associated features (e.g. length or area),
 /// these fields will not be updated to reflect changes in geometry shape and size
 /// resulting from the overlay operation.
@@ -486,7 +486,7 @@ impl WhiteboxTool for Intersect {
                         .attributes
                         .add_record(vec![FieldData::Int(1i32)], false);
                 } else {
-                    println!("WARNING: no features were ouput from the tool.");
+                    println!("WARNING: no features were output from the tool.");
                 }
             }
             ShapeType::PolyLine => {

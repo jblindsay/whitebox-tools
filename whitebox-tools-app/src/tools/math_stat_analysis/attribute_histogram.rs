@@ -23,7 +23,7 @@ use std::process::Command;
 /// distribution of data, for the values contained in a field of an input vector's attribute
 /// table. The user must specify the name of an input vector (`--input`) and the name of one
 /// of the fields (`--field`) contained in the associated attribute table. The tool output
-/// (`--output`) is an HTML formated histogram analysis report. If the specified field
+/// (`--output`) is an HTML formatted histogram analysis report. If the specified field
 /// is non-numerical, the tool will produce a bar-chart of class frequency, similar to the
 /// tabular output of the `ListUniqueValues` tool.
 ///

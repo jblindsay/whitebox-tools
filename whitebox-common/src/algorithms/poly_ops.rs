@@ -149,7 +149,7 @@ pub fn poly_is_convex(poly: &[Point2D]) -> bool {
 pub fn interior_point(poly: &[Point2D]) -> Point2D {
     if !poly[0].nearly_equals(&poly[poly.len() - 1]) {
         panic!(
-            "Error (from poly_ops::interior_point): point squence does not form a closed polygon."
+            "Error (from poly_ops::interior_point): point sequence does not form a closed polygon."
         );
     }
     let num_points = poly.len();
@@ -174,7 +174,7 @@ pub fn interior_point(poly: &[Point2D]) -> Point2D {
         return poly[0].clone();
     }
     // you need at least four points to create a polygon (including the duplicated first/last vertex)
-    panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point; with only {} verticies, the feature is possibly co-linear {:?}", num_points, poly);
+    panic!("Error (from poly_ops::interior_point): Could not locate polygon interior point; with only {} vertices, the feature is possibly co-linear {:?}", num_points, poly);
 }
 
 #[cfg(test)]

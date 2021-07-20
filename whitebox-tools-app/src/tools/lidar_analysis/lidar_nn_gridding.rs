@@ -8,7 +8,7 @@ License: MIT
 NOTES:
 1. This tool is designed to work either by specifying a single input and output file or
    a working directory containing multiple input LAS files.
-2. Need to add the ability to exclude points based on max scan angle devation.
+2. Need to add the ability to exclude points based on max scan angle deviation.
 */
 
 use whitebox_lidar::*;

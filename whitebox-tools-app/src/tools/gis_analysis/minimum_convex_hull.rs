@@ -16,7 +16,7 @@ use std::io::{Error, ErrorKind};
 use std::path;
 
 /// This tool creates a vector convex polygon around vector features. The convex hull
-/// is a convex closure of a set of points or polygon verticies and can be may be
+/// is a convex closure of a set of points or polygon vertices and can be may be
 /// conceptualized as the shape enclosed by a rubber band stretched around the point
 /// set. The convex hull has many applications and is most notably used in various
 /// shape indices. The Delaunay triangulation of a point set and its dual, the

@@ -36,7 +36,7 @@ pub fn read_surfer7(
     if header_id != 0x42525344 {
         return Err(Error::new(
             ErrorKind::InvalidData,
-            "The input  Surfer does not appear to be formated correctly.",
+            "The input  Surfer does not appear to be formatted correctly.",
         ));
     }
     offset += 4;
@@ -52,7 +52,7 @@ pub fn read_surfer7(
     if header_sz != 4 {
         return Err(Error::new(
             ErrorKind::InvalidData,
-            "The input  Surfer does not appear to be formated correctly.",
+            "The input  Surfer does not appear to be formatted correctly.",
         ));
     }
     offset += 4;
@@ -79,7 +79,7 @@ pub fn read_surfer7(
     if grid_id != 0x44495247 {
         return Err(Error::new(
             ErrorKind::InvalidData,
-            "The input  Surfer does not appear to be formated correctly.",
+            "The input  Surfer does not appear to be formatted correctly.",
         ));
     }
     offset += 4;
@@ -95,7 +95,7 @@ pub fn read_surfer7(
     if grid_sz != 72 {
         return Err(Error::new(
             ErrorKind::InvalidData,
-            "The input  Surfer does not appear to be formated correctly.",
+            "The input  Surfer does not appear to be formatted correctly.",
         ));
     }
     offset += 4;
@@ -209,7 +209,7 @@ pub fn read_surfer7(
     };
     offset += 8;
 
-    // Read the rotation value. This isn't actually used and should be set to zero. Notice that the offical
+    // Read the rotation value. This isn't actually used and should be set to zero. Notice that the official
     // documentation on the Golden Software site does not list a rotation value in the description of the
     // grid section and only in the example that they provide. This is ambiguous and could cause compatibility
     // issues.

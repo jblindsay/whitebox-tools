@@ -577,9 +577,9 @@ impl WhiteboxTool for MultiscaleRoughnessSignature {
                 }
             }
 
-            ///////////////////////////////////////////////////////////////////////////
-            // Calcuate the average deviation within the local kernels and output it //
-            ///////////////////////////////////////////////////////////////////////////
+            ////////////////////////////////////////////////////////////////////////////
+            // Calculate the average deviation within the local kernels and output it //
+            ////////////////////////////////////////////////////////////////////////////
             let (mut x1, mut x2, mut y1, mut y2): (isize, isize, isize, isize);
             let mut n: i32;
             let mut sum: f64;

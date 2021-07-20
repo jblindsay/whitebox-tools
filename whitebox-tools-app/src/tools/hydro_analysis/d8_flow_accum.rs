@@ -383,7 +383,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         } else {
             // The input raster is a D8 flow pointer
-            // map the pointer values into 0-7 style pointer vlaues
+            // map the pointer values into 0-7 style pointer values
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {
                 let input = input.clone();

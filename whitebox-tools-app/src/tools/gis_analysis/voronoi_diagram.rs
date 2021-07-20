@@ -33,7 +33,7 @@ use std::path;
 /// hull may be a better alternative.
 ///
 /// This tool works on vector input data only. If a Voronoi diagram is needed
-/// to tesselate regions associated with a set of raster points, use the
+/// to tessellate regions associated with a set of raster points, use the
 /// `EuclideanAllocation` tool instead. To use Voronoi diagrams for gridding
 /// data (i.e. raster interpolation), use the `NearestNeighbourGridding` tool.
 ///

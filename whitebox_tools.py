@@ -2009,7 +2009,7 @@ class WhiteboxTools(object):
         return self.run_tool('percent_equal_to', args, callback) # returns 1 if error
 
     def percent_greater_than(self, inputs, comparison, output, callback=None):
-        """Calculates the percentage of a raster stack that have cell values greather than an input on a cell-by-cell basis.
+        """Calculates the percentage of a raster stack that have cell values greater than an input on a cell-by-cell basis.
 
         Keyword arguments:
 
@@ -3994,7 +3994,7 @@ class WhiteboxTools(object):
         dem -- Input raster DEM file. 
         streams -- Input raster streams file. 
         output -- Output raster file. 
-        dinf -- Use the D-infinity flow algoirthm instead of D8?. 
+        dinf -- Use the D-infinity flow algorithm instead of D8?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -4527,7 +4527,7 @@ class WhiteboxTools(object):
         return self.run_tool('snap_pour_points', args, callback) # returns 1 if error
 
     def stochastic_depression_analysis(self, dem, output, rmse, range, iterations=100, callback=None):
-        """Preforms a stochastic analysis of depressions within a DEM.
+        """Performs a stochastic analysis of depressions within a DEM.
 
         Keyword arguments:
 
@@ -4965,7 +4965,7 @@ class WhiteboxTools(object):
         return self.run_tool('rgb_to_ihs', args, callback) # returns 1 if error
 
     def split_colour_composite(self, i, red=None, green=None, blue=None, callback=None):
-        """This tool splits an RGB colour composite image into seperate multispectral images.
+        """This tool splits an RGB colour composite image into separate multispectral images.
 
         Keyword arguments:
 
@@ -5465,7 +5465,7 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         filterx -- Size of the filter kernel in the x-direction. 
         filtery -- Size of the filter kernel in the y-direction. 
-        sigma -- Sigma value should be related to the standarad deviation of the distribution of image speckle noise. 
+        sigma -- Sigma value should be related to the standard deviation of the distribution of image speckle noise. 
         m -- M-threshold value the minimum allowable number of pixels within the intensity range. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -5881,7 +5881,7 @@ class WhiteboxTools(object):
         return self.run_tool('gaussian_contrast_stretch', args, callback) # returns 1 if error
 
     def histogram_equalization(self, i, output, num_tones=256, callback=None):
-        """Performs a histogram equalization contrast enhancment on an image.
+        """Performs a histogram equalization contrast enhancement on an image.
 
         Keyword arguments:
 
@@ -6863,7 +6863,7 @@ class WhiteboxTools(object):
         output -- Output LiDAR file. 
         resolution -- The size of the square area used to evaluate nearby points in the LiDAR data. 
         method -- Point selection method; options are 'first', 'last', 'lowest' (default), 'highest', 'nearest'. 
-        save_filtered -- Save filtered points to seperate file?. 
+        save_filtered -- Save filtered points to separate file?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -6883,7 +6883,7 @@ class WhiteboxTools(object):
         output -- Output LiDAR file. 
         resolution -- Output raster's grid resolution. 
         density -- Max. point density (points / m^3). 
-        save_filtered -- Save filtered points to seperate file?. 
+        save_filtered -- Save filtered points to separate file?. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -7725,7 +7725,7 @@ class WhiteboxTools(object):
         return self.run_tool('less_than', args, callback) # returns 1 if error
 
     def list_unique_values(self, i, field, output, callback=None):
-        """Lists the unique values contained in a field witin a vector's attribute table.
+        """Lists the unique values contained in a field within a vector's attribute table.
 
         Keyword arguments:
 

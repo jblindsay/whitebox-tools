@@ -405,7 +405,7 @@ impl WhiteboxTool for TrendSurface {
         ///////////////////////
         writer.write_all("<p><table>".as_bytes())?;
         writer.write_all("<caption>Regression Coefficients</caption>".as_bytes())?;
-        writer.write_all("<tr><th>Coefficent Num.</th><th>Value</th></tr>".as_bytes())?;
+        writer.write_all("<tr><th>Coefficient Num.</th><th>Value</th></tr>".as_bytes())?;
         for j in 0..num_coefficients {
             let s = format!(
                 "<td class=\"numberCell\">b<sub>{}</sub></td><td class=\"numberCell\">{:.*}</td>",

@@ -59,7 +59,7 @@ use std::thread;
 /// | 0 |  X  | 0 |
 /// | 1 |  0  | 1 |
 ///
-/// The tool outputs an HTML report (`--ouptut`) which, for each input image (`--input`), reports the Moran's *I*
+/// The tool outputs an HTML report (`--output`) which, for each input image (`--input`), reports the Moran's *I*
 /// value and the variance, z-score, and p-value (significance) under normal and randomization sampling assumptions.
 ///
 /// Use the `ImageCorrelation` tool instead when there is need to determine the correlation among multiple raster

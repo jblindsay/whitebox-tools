@@ -170,7 +170,7 @@ impl WhiteboxTool for FillDepressionsWangAndLiu {
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "Tool run with no paramters.",
+                "Tool run with no parameters.",
             ));
         }
         for i in 0..args.len() {
@@ -487,7 +487,7 @@ impl WhiteboxTool for FillDepressionsWangAndLiu {
         //     }
         // }
 
-        /* This was an experiement with an approach that reduced the reliance on the priority queue.
+        /* This was an experiment with an approach that reduced the reliance on the priority queue.
         It works well but is slightly less efficient that the traditional approach. */
 
         // let mut output = Raster::initialize_using_file(&output_file, &input);

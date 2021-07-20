@@ -23,7 +23,7 @@ use std::thread;
 /// topography of an input digital elevation model (DEM). The user must specify the name of
 /// the input DEM (`--dem`), the output file name (`--output`), the viewing height (`--height`),
 /// and a resolution factor (`--res_factor`).
-/// Viewsheds are calcuated for a subset of grid cells in the DEM based on the resolution
+/// Viewsheds are calculated for a subset of grid cells in the DEM based on the resolution
 /// factor. The visibility index value (0.0-1.0) indicates the proportion of tested stations
 /// (determined by the resolution factor) that each cell is visible from. The viewing height
 /// is in the same units as the elevations of the DEM and represent a height above the ground
@@ -585,7 +585,7 @@ impl WhiteboxTool for VisibilityIndex {
                             }
                         }
 
-                        // solve the eigth triangular facet
+                        // solve the eighth triangular facet
                         vert_count = 1f32;
                         for col in (0..stn_col - 1).rev() {
                             vert_count += 1f32;

@@ -23,7 +23,7 @@ use std::process::Command;
 /// two numerical fields (`--fieldx` and `--fieldy`) contained within an input vector's attribute
 /// table (`--input`). The user must specify the name of an input shapefile and the name of two of
 /// the fields contained it the associated attribute table. The tool output (`--output`) is an
-/// HTML formated report containing a graphical scattergram plot.
+/// HTML formatted report containing a graphical scattergram plot.
 ///
 /// # See Also
 /// `AttributeHistogram`, `AttributeCorrelation`

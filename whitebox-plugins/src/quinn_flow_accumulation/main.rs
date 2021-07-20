@@ -38,7 +38,7 @@ use whitebox_raster::*;
 /// diagonal directions, *n* = 8, and represents each of the eight neighbouring grid cells, and, *A* is the flow accumultation value assigned to the current grid cell, that is being 
 /// apportioned downslope. The non-dispersive, channel initiation *threshold* (`--threshold`) is a flow-accumulation 
 /// value (measured in upslope grid cells, which is directly proportional to area) above which flow dispersion is 
-/// no longer permited. Grid cells with flow-accumulation values above this threshold will have their flow routed 
+/// no longer permitted. Grid cells with flow-accumulation values above this threshold will have their flow routed 
 /// in a manner that is similar to the D8 single-flow-direction algorithm, directing all flow towards the steepest 
 /// downslope neighbour. This is usually done under the assumption that flow dispersion, whilst appropriate on 
 /// hillslope areas, is not realistic once flow becomes channelized. Importantly, the `--threshold` parameter sets 

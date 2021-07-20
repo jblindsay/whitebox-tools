@@ -35,9 +35,9 @@ const EPSILON: f64 = std::f64::EPSILON;
 /// Fields that are duplicated between the inputs will share a single attribute in the
 /// output. Fields that only exist in one of the two inputs will be populated by `null`
 /// in the output table. Multipoint ShapeTypes however will simply contain a single
-/// ouptut feature indentifier (`FID`) attribute. Also, note that depending on the
+/// output feature identifier (`FID`) attribute. Also, note that depending on the
 /// ShapeType (polylines and polygons), `Measure` and `Z` ShapeDimension data will not
-/// be transfered to the output geometries. If the input attribute table contains fields
+/// be transferred to the output geometries. If the input attribute table contains fields
 /// that measure the geometric properties of their associated features (e.g. length or area),
 /// these fields will not be updated to reflect changes in geometry shape and size
 /// resulting from the overlay operation.
@@ -560,7 +560,7 @@ impl WhiteboxTool for Union {
                         .attributes
                         .add_record(vec![FieldData::Int(1i32)], false);
                 } else {
-                    println!("WARNING: no features were ouput from the tool.");
+                    println!("WARNING: no features were output from the tool.");
                 }
             }
             ShapeType::PolyLine => {

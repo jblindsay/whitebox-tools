@@ -273,7 +273,7 @@ impl WhiteboxTool for LidarColourize {
             _ => {
                 return Err(Error::new(
                     ErrorKind::InvalidInput,
-                    "Unsupport input point record format.",
+                    "Unsupported input point record format.",
                 ))
             }
         };

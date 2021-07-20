@@ -23,7 +23,7 @@ use std::path;
 /// the full and subset clouds) and the class value (`--subset_class`) to assign the matching points. This class
 /// value will be assigned to points in the base cloud, overwriting their input class values in the
 /// output LAS file (`--output`). Class values
-/// should be numerical (integer valued) and shoud follow the LAS specifications below:
+/// should be numerical (integer valued) and should follow the LAS specifications below:
 ///
 /// | Classification Value  | Meaning                              |
 /// | :-------------------- | :------------------------------------|

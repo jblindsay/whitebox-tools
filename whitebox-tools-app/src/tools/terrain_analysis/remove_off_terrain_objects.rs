@@ -284,8 +284,8 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
         };
 
         let mut num_procs = num_cpus::get() as isize;
-        let configuations = whitebox_common::configs::get_configs()?;
-        let max_procs = configuations.max_procs;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }
@@ -602,7 +602,7 @@ impl WhiteboxTool for RemoveOffTerrainObjects {
             if verbose {
                 progress = (100.0_f32 * row as f32 / (rows - 1) as f32) as usize;
                 if progress != old_progress {
-                    println!("Outputing data: {}%", progress);
+                    println!("Outputting data: {}%", progress);
                     old_progress = progress;
                 }
             }

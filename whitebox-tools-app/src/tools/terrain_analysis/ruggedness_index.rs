@@ -24,7 +24,7 @@ use std::thread;
 /// for the number of cells in the local window (i.e. it is a root-square-deviation only). However,
 /// using the mean has the advantage of allowing for the varying number of neighbouring cells along
 /// the grid edges and in areas bordering NoData cells. This modification does however imply that the
-/// ouput of this tool cannot be directly compared with the index ranges of level to extremely rugged
+/// output of this tool cannot be directly compared with the index ranges of level to extremely rugged
 /// terrain provided in Riley et al. (1999)
 ///
 /// # Reference

@@ -83,7 +83,7 @@ impl LeeSigmaFilter {
         parameters.push(ToolParameter{
             name: "Sigma".to_owned(), 
             flags: vec!["--sigma".to_owned()], 
-            description: "Sigma value should be related to the standarad deviation of the distribution of image speckle noise.".to_owned(),
+            description: "Sigma value should be related to the standard deviation of the distribution of image speckle noise.".to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("10.0".to_owned()),
             optional: true

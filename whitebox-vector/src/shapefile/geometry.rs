@@ -321,7 +321,7 @@ impl ShapefileGeometry {
             return false;
         }
 
-        // Note: holes are polygons that have verticies in counter-clockwise order
+        // Note: holes are polygons that have vertices in counter-clockwise order
 
         // This approach is based on the method described by Paul Bourke, March 1998
         // http://paulbourke.net/geometry/clockwise/index.html
@@ -391,7 +391,7 @@ impl ShapefileGeometry {
                 return false;
             }
         } else {
-            // calculate the polygon area. If it is positive is is in clockwise order, else counter-clockwise.
+            // calculate the polygon area. If it's positive it's in clockwise order, else counter-clockwise.
             let mut area = 0f64;
             for j in 0..num_points_in_part {
                 n1 = st_point + j;

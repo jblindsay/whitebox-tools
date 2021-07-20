@@ -19,9 +19,9 @@ use std::thread;
 
 /// This tools calculates a type of shape complexity index for raster objects. The index is equal to the average
 /// number of intersections of the group of vertical and horizontal transects passing through an object. Simple
-/// objects will have a shape complexity index of 1.0 and more complex shapes, including those containing numberous
+/// objects will have a shape complexity index of 1.0 and more complex shapes, including those containing numerous
 /// holes or are winding in shape, will have higher index values. Objects in the input raster (`--input`) are
-/// designated by their unique identifers. Identifer values should be positive, non-zero whole numbers.
+/// designated by their unique identifiers. Identifier values should be positive, non-zero whole numbers.
 ///
 /// # See Also
 /// `ShapeComplexityIndex`, `BoundaryShapeComplexity`

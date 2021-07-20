@@ -64,7 +64,7 @@ pub fn is_clockwise_order(points: &[Point2D]) -> bool {
             return true;
         }
     } else {
-        // calculate the polygon area. If it is positive is is in clockwise order, else counter-clockwise.
+        // calculate the polygon area. If it's positive it's in clockwise order, else counter-clockwise.
         let mut area = 0f64;
         for j in 0..num_points_in_part {
             n1 = st_point + j;

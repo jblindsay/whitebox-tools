@@ -364,7 +364,7 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
             println!("Initializing grids...");
         }
 
-        // calculate the 'n' itegral image
+        // calculate the 'n' integral image
         let mut i_n: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?;
         let mut sum: u32;
         let mut val: u32;
@@ -407,8 +407,8 @@ impl WhiteboxTool for MultiscaleStdDevNormalsSignature {
         // Perform the main analysis //
         ///////////////////////////////
         let mut num_procs = num_cpus::get() as isize;
-        let configuations = whitebox_common::configs::get_configs()?;
-        let max_procs = configuations.max_procs;
+        let configurations = whitebox_common::configs::get_configs()?;
+        let max_procs = configurations.max_procs;
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }

@@ -42,7 +42,7 @@ use std::thread;
 /// indices, such as the wetness index, or relative stream power index.
 ///
 /// The non-dispersive threshold (`--threshold`) is a flow-accumulation value (measured in upslope grid cells,
-/// which is directly proportional to area) above which flow dispersion is no longer permited. Grid cells with
+/// which is directly proportional to area) above which flow dispersion is no longer permitted. Grid cells with
 /// flow-accumulation values above this threshold will have their flow routed in a manner that is similar to
 /// the D8 single-flow-direction algorithm, directing all flow towards the steepest downslope neighbour. This
 /// is usually done under the assumption that flow dispersion, whilst appropriate on hillslope areas, is not

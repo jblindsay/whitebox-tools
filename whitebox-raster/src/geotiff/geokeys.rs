@@ -901,11 +901,11 @@ pub fn get_keyword_map() -> HashMap<u16, HashMap<u16, &'static str>> {
     ];
     kw.insert(262u16, photometric_map);
 
-    let planar_configuation_map = hashmap![
+    let planar_configuration_map = hashmap![
         1u16=>"Contiguous",
         2u16=>"Separate"
     ];
-    kw.insert(284u16, planar_configuation_map);
+    kw.insert(284u16, planar_configuration_map);
 
     let resolution_unit_map = hashmap![
         1u16=>"None",
