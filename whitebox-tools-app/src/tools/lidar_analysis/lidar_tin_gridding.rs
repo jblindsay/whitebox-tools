@@ -433,6 +433,13 @@ impl WhiteboxTool for LidarTINGridding {
                                 .replace(".las", ".tif")
                                 .replace(".LAS", ".tif"),
                         )
+                    } else if s.to_lowercase().ends_with(".laz") {
+                        inputs.push(s);
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".laz", ".tif")
+                                .replace(".LAZ", ".tif"),
+                        )
                     } else if s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                         outputs.push(

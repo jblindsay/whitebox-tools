@@ -334,22 +334,29 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                         inputs.push(s);
                         outputs.push(
                             inputs[inputs.len() - 1]
-                                .replace(".las", ".tif")
-                                .replace(".LAS", ".tif"),
+                                .replace(".las", ".shp")
+                                .replace(".LAS", ".shp"),
+                        )
+                    } else if s.to_lowercase().ends_with(".laz") {
+                        inputs.push(s);
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".laz", ".shp")
+                                .replace(".LAZ", ".shp"),
                         )
                     } else if s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                         outputs.push(
                             inputs[inputs.len() - 1]
-                                .replace(".zlidar", ".tif")
-                                .replace(".ZLIDAR", ".tif"),
+                                .replace(".zlidar", ".shp")
+                                .replace(".ZLIDAR", ".shp"),
                         )
                     } else if s.to_lowercase().ends_with(".zip") {
                         inputs.push(s);
                         outputs.push(
                             inputs[inputs.len() - 1]
-                                .replace(".zip", ".tif")
-                                .replace(".ZIP", ".tif"),
+                                .replace(".zip", ".shp")
+                                .replace(".ZIP", ".shp"),
                         )
                     }
                 }
@@ -367,9 +374,9 @@ impl WhiteboxTool for LidarConstructVectorTIN {
             if output_file.is_empty() {
                 output_file = input_file
                     .clone()
-                    .replace(".las", ".tif")
-                    .replace(".LAS", ".tif")
-                    .replace(".zlidar", ".tif");
+                    .replace(".las", ".shp")
+                    .replace(".LAS", ".shp")
+                    .replace(".zlidar", ".shp");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
                 output_file = format!("{}{}", working_directory, output_file);

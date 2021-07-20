@@ -320,7 +320,8 @@ impl WhiteboxTool for LidarPointStats {
                         .to_str()
                         .expect("Error reading path string")
                         .to_string();
-                    if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".zlidar") {
+                    if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".zlidar") 
+                    || s.to_lowercase().ends_with(".laz") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zip") {
                         inputs.push(s);

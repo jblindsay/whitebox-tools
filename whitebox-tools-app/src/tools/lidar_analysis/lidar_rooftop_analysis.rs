@@ -493,6 +493,8 @@ impl WhiteboxTool for LidarRooftopAnalysis {
                         .to_string();
                     if s.to_lowercase().ends_with(".las") {
                         inputs.push(s);
+                    } else if s.to_lowercase().ends_with(".laz") {
+                        inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                     } else if s.to_lowercase().ends_with(".zip") {

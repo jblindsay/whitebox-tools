@@ -203,7 +203,6 @@ impl WhiteboxTool for LidarTileFootprint {
             output_file = format!("{}{}", working_directory, output_file);
         }
         let mut inputs = vec![];
-        let mut contains_laz = false;
         if input_file.is_empty() {
             if working_directory.is_empty() {
                 return Err(Error::new(ErrorKind::InvalidInput,
@@ -231,11 +230,9 @@ impl WhiteboxTool for LidarTileFootprint {
                         .to_str()
                         .expect("Error reading path string")
                         .to_string();
-                    if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".zlidar") {
+                    if s.to_lowercase().ends_with(".las") || s.to_lowercase().ends_with(".zlidar") ||
+                    s.to_lowercase().ends_with(".laz") {
                         inputs.push(s);
-                    } else if s.to_lowercase().ends_with(".laz") {
-                        inputs.push(s);
-                        contains_laz = true;
                     }
                 }
             } else {
@@ -260,14 +257,6 @@ impl WhiteboxTool for LidarTileFootprint {
             println!("* Powered by WhiteboxTools {}*", " ".repeat(welcome_len - 28));
             println!("* www.whiteboxgeo.com {}*", " ".repeat(welcome_len - 23));
             println!("{}", "*".repeat(welcome_len));
-        }
-
-        if contains_laz && is_convex_hull {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "Error: This tool only works with the compressed `LAZ` file format when
-                the footprint is a bounding box and not a convex hull (`--hull`).",
-            ));
         }
 
         let num_tiles = inputs.len();

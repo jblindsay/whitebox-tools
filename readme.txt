@@ -68,6 +68,11 @@ Version 1.6.0 (XX-XX-2021)
 - Fixed a bug that prevented plugin tools from being discovered by the open-core when run from the command
   line on PATH when the working directory was something other than WBT.
 - Fixed several bugs in the ContoursFromPoints tool.
+- Fixed the z_factor calculation for large-extent DEMs in geographic coordinates for the geomorphometric
+  shape metric tools, e.g. slope, aspect, hillshade, and curvatures. The new approach calculates a different
+  z_factor conversion value for each row in the raster, rather than using a single value based on the raster 
+  mid-point latitude. This should help improve the accuracy of these shape indices on large-extent rasters 
+  in geographic coordinate systems.
 
 Version 1.5.0 (31-05-2021)
 - This release does not include very many new tools. Despite this, this is probably one of the largest 

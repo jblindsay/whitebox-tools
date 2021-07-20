@@ -511,6 +511,13 @@ impl WhiteboxTool for LidarRbfInterpolation {
                                 .replace(".las", ".tif")
                                 .replace(".LAS", ".tif"),
                         )
+                    } else if s.to_lowercase().ends_with(".laz") {
+                        inputs.push(s);
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".laz", ".tif")
+                                .replace(".LAZ", ".tif"),
+                        )
                     } else if s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                         outputs.push(
@@ -543,6 +550,8 @@ impl WhiteboxTool for LidarRbfInterpolation {
                     .clone()
                     .replace(".las", ".tif")
                     .replace(".LAS", ".tif")
+                    .replace(".laz", ".tif")
+                    .replace(".LAZ", ".tif")
                     .replace(".zlidar", ".tif");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
