@@ -270,22 +270,11 @@ impl WhiteboxTool for Slope {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-
         let start = Instant::now();
 
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
         let eight_grid_res = input.configs.resolution_x * 8.0;
-
-        // let mut z_factor_array = vec![];
-        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
-            // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
-            if mid_lat <= 90.0 && mid_lat >= -90.0 {
-                mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (111320.0 * mid_lat.cos());
-            }
-        } else if z_factor < 0.0 {
-            z_factor = 1.0;
-        }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
@@ -293,8 +282,7 @@ impl WhiteboxTool for Slope {
         }
         let output_nodata = -9999.0;
         output.configs.nodata = output_nodata;
-        let rows = input.configs.rows as isize;
-
+        
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
         let max_procs = configs.max_procs;
@@ -307,12 +295,22 @@ impl WhiteboxTool for Slope {
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
                 let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
                 let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
                 let (mut fx, mut fy): (f64, f64);
+                let mut z_factor_array = Vec::with_capacity(rows as usize);
+                if input.is_in_geographic_coordinates() && z_factor < 0.0 {
+                    // calculate a new z-conversion factor
+                    for row in 0..rows {
+                        let lat = input.get_y_from_row(row);
+                        z_factor_array.push(1.0 / (111320.0 * lat.cos()));
+                    }
+                } else {
+                    z_factor_array = vec![z_factor; rows as usize];
+                }
+
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![output_nodata; columns as usize];
                     for col in 0..columns {
@@ -321,9 +319,9 @@ impl WhiteboxTool for Slope {
                             for c in 0..8 {
                                 n[c] = input[(row + d_y[c], col + d_x[c])];
                                 if n[c] != nodata {
-                                    n[c] = n[c] * z_factor;
+                                    n[c] = n[c] * z_factor_array[row as usize];
                                 } else {
-                                    n[c] = z * z_factor;
+                                    n[c] = z * z_factor_array[row as usize];
                                 }
                             }
                             // calculate slope

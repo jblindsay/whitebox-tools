@@ -57,7 +57,7 @@ for more details.
 ******************
 
 Version 1.6.0 (XX-XX-2021)
-- The most important feature in v1.6.0 is the addition of support for reading and writing the LAZ
+- The most important feature in this release is the addition of support for reading and writing the LAZ
   compressed LiDAR format for all of the LiDAR tools in WBT.
 - Added the QuinnFlowAccumulation tool to perform a Quinn et al. (1995) flow accumulation operation.
 - Added the QinFlowAccumulation tool to perform a Qin et al. (2007) flow accumulation operation.
