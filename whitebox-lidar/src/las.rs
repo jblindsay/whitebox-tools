@@ -1264,8 +1264,13 @@ impl LasFile {
          ///////////////////////
         // Read the VLR data //
         ///////////////////////
-        // builder.vlrs = in_header.vlrs().clone();
-        for v in header.vlrs() {
+        for v1 in header.vlrs() {
+            let mut v = v1.clone();
+            // The following is a bit of a hack. Either the las or laz crate has an error 
+            // where it is reading a VLR description in more than 32 characters.
+            while v.description.len() > 32 {
+                v.description.pop();
+            }
             let raw_vlr = v.clone().into_raw(false).unwrap();
 
             let mut vlr: Vlr = Default::default();
@@ -1276,8 +1281,12 @@ impl LasFile {
                 RecordLength::Vlr(v) => v,
                 RecordLength::Evlr(v) => v as u16,
             }; 
-            raw_vlr.record_length_after_header;
-            vlr.description = str::from_utf8(&raw_vlr.description.clone()).unwrap().to_owned();
+            
+            let mut description = str::from_utf8(&raw_vlr.description.clone()).unwrap().to_owned();
+            while description.len() > 32 {
+                description.pop();
+            }
+            vlr.description = description;
             // get the byte data
             for j in 0..vlr.record_length_after_header {
                 vlr.binary_data.push(raw_vlr.data[j as usize]);
@@ -1400,6 +1409,10 @@ impl LasFile {
             }
 
         }
+
+        drop(raw);
+        // drop(header);
+        drop(reader);
 
         Ok(())
 
