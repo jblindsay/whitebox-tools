@@ -115,7 +115,8 @@ fn help() {
     let s = r#"
     qin_flow_accumulation Help
 
-    This tool 
+    This tool is used to generate a flow accumulation grid (i.e. contributing area) using the Qin et al. (2007) 
+    flow algorithm.
 
     The following commands are recognized:
     help       Prints help information.
@@ -123,18 +124,21 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    -i, --dem      Name of the input DEM raster file.
-    -s, --streams  Name of the input streams raster file.
-    --output1      Name of the output raster image file.
+    -d, --dem      Name of the input DEM raster file; must be depressionless.
+    --output       Name of the output raster file.
+    --out_type     Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.
+    --exponent     Optional upper-bound exponent parameter; default is 10.0.
+    --max_slope    Optional upper-bound slope parameter, in degrees (0-90); default is 45.0.
+    --threshold    Optional convergence threshold parameter, in grid cells; default is inifinity.
+    --log          Log-transform the output values?
+    --clip         Optional flag to request clipping the display max by 1%.
     
     Input/output file names can be fully qualified, or can rely on the working directory contained in 
     the WhiteboxTools settings.json file.
 
     Example Usage:
-    >> .*EXE_NAME run -i=input.tif -s=streams.tif -o=new.tif
-
-    Note: Use of this tool requires a valid license. To obtain a license, contact Whitebox Geospatial Inc. 
-    (support@whiteboxgeo.com).
+    >> .*EXE_NAME run --dem=DEM.tif --output=QMFD.tif --out_type='specific contributing area' --exponent=15.0 --max_slope=30.0 --threshold=10000
+    
     "#
     .replace("*", &sep)
     .replace("EXE_NAME", exe_name);

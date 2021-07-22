@@ -61,20 +61,15 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    -i, --input    Name of the input raster image file.
-    -o, --output   Name of the output HTML file.
-    -s, --sigma    Sigma value used in Gaussian filtering, default = 1.0
-    -l, --low      Low threshold, ranges from 0.0-1.0, default = 0.05
-    -h, --high     High threshold, ranges from 0.0-1.0, default = 0.15
+    -i, --input    Name of the input lines shapefile.
+    -o, --output   Name of the output lines shapefile.
+    --length       Maximum segment length (m).
     
     Input/output file names can be fully qualified, or can rely on the
     working directory contained in the WhiteboxTools settings.json file.
 
     Example Usage:
-    >> .*EXE_NAME run -i=input.tif -o=new.tif --sigma=0.25 --low=0.1 --high=0.2
-
-    Note: Use of this tool requires a valid license. To obtain a license,
-    contact Whitebox Geospatial Inc. (support@whiteboxgeo.com).
+    >> .*EXE_NAME run -i=input.shp -o=line_segments.shp --length=100.0
     "#
     .replace("*", &sep)
     .replace("EXE_NAME", exe_name);

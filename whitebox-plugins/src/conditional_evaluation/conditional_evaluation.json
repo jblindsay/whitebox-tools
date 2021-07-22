@@ -1,0 +1,50 @@
+{
+    "tool_name": "ConditionalEvaluation",
+    "exe": "conditional_evaluation",
+    "short_description": "This tool performs a conditional evaluaton (if-then-else) operation on a raster.",
+    "toolbox": "Math and Stats Tools",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=ConditionalEvaluation -i=DEM.tif --statement='value > 2500.0' --true=2500.0 --false=DEM.tif --output=onlyLowPlaces.tif",
+    "parameters": [
+        {
+            "name": "Input Raster",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Conditional Statement e.g. value > 35.0:",
+            "flags": ["--statement"],
+            "description": "Conditional statement e.g. value > 35.0. This statement must be a valid Rust statement.",
+            "parameter_type": "String",
+            "default_value": "",
+            "optional": false
+        },
+        {
+            "name": "Value Where TRUE (Raster File Or Constant Value)",
+            "flags": ["--true"],
+            "description": "Value where condition evaluates TRUE (input raster or constant value).",
+            "parameter_type": {"ExistingFileOrFloat":"Raster"},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Value Where FALSE (Raster File Or Constant Value)",
+            "flags": ["--false"],
+            "description": "Value where condition evaluates FALSE (input raster or constant value).",
+            "parameter_type": {"ExistingFileOrFloat":"Raster"},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

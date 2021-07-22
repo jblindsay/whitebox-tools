@@ -5,19 +5,24 @@ authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 edition = "2018"
 
 [[bin]]
-name = "split_vector_lines"
-path = "src/split_vector_lines/main.rs"
+name = "conditional_evaluation"
+path = "src/conditional_evaluation/main.rs"
+
+[[bin]]
+name = "qin_flow_accumulation"
+path = "src/qin_flow_accumulation/main.rs"
 
 [[bin]]
 name = "quinn_flow_accumulation"
 path = "src/quinn_flow_accumulation/main.rs"
 
 [[bin]]
-name = "qin_flow_accumulation"
-path = "src/qin_flow_accumulation/main.rs"
+name = "split_vector_lines"
+path = "src/split_vector_lines/main.rs"
 
 [dependencies]
 num_cpus = "1.13.0"
+v_eval = "0.6.0"
 whitebox_common = { path = "../whitebox-common" }
 whitebox_raster = { path = "../whitebox-raster" }
 whitebox_vector = { path = "../whitebox-vector" }
