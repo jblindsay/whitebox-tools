@@ -1,0 +1,50 @@
+{
+    "tool_name": "ExposureTowardsWindFlux",
+    "exe": "exposure_towards_wind_flux",
+    "short_description": "This tool evaluates hydrologic connectivity within a DEM",
+    "toolbox": "Geomorphometric Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=ExposureTowardsWindFlux -i=input.tif -s=streams.tif -o=new.tif",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Wind Azimuth (in degrees)",
+            "flags": ["--azimuth"],
+            "description": "Wind azimuth, in degrees.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": false
+        },
+        {
+            "name": "Maximum Search Distance",
+            "flags": ["--max_dist"],
+            "description": "Optional maximum search distance. Minimum value is 5 x cell size.",
+            "parameter_type": "Integer",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "Z Conversion Factor",
+            "flags": ["--zfactor"],
+            "description": "Optional multiplier for when the vertical and horizontal units are not the same.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        }
+    ]
+}

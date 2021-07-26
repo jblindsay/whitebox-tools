@@ -1,0 +1,26 @@
+{
+    "tool_name": "RasterCalculator",
+    "exe": "raster_calculator",
+    "short_description": "This tool performs a conditional evaluaton (if-then-else) operation on a raster.",
+    "toolbox": "Math and Stats Tools",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=ConditionalEvaluation -i=DEM.tif --statement='value > 2500.0' --true=2500.0 --false=DEM.tif --output=onlyLowPlaces.tif",
+    "parameters": [
+        {
+            "name": "Statement:",
+            "flags": ["--statement"],
+            "description": "Statement e.g. cos(\"raster1\") * 35.0 + \"raster2\". This statement must be a valid Rust statement.",
+            "parameter_type": "String",
+            "default_value": "",
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

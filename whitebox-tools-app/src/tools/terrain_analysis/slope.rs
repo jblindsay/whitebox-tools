@@ -308,6 +308,9 @@ impl WhiteboxTool for Slope {
                         z_factor_array.push(1.0 / (111320.0 * lat.cos()));
                     }
                 } else {
+                    if z_factor < 0.0 {
+                        z_factor = 1.0;
+                    }
                     z_factor_array = vec![z_factor; rows as usize];
                 }
 

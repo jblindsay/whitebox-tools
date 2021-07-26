@@ -214,17 +214,17 @@ impl WhiteboxTool for HorizonAngle {
                         .expect(&format!("Error parsing {}", flag_val));
                 }
             } else if flag_val == "-max_dist" {
-                if keyval {
-                    max_dist = vec[1]
+                max_dist = if keyval {
+                    vec[1]
                         .to_string()
                         .parse::<f32>()
-                        .expect(&format!("Error parsing {}", flag_val));
+                        .expect(&format!("Error parsing {}", flag_val))
                 } else {
-                    max_dist = args[i + 1]
+                    args[i + 1]
                         .to_string()
                         .parse::<f32>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                }
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 

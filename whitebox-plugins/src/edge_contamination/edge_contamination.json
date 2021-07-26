@@ -1,0 +1,42 @@
+{
+    "tool_name": "EdgeContamination",
+    "exe": "edge_contamination",
+    "short_description": "This tool identifies grid cells within an input DEM that may be impacted by edge contamination for hydrological applications.",
+    "toolbox": "Hydrological Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=EdgeContamination --dem=DEM.tif --output=edge_cont.tif --flow_type='dinf'",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file; must be depressionless.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Flow Type",
+            "flags": ["--flow_type"],
+            "description": "Flow algorithm type, one of 'd8', 'mfd', or 'dinf'",
+            "parameter_type": {"OptionList": ["d8", "mfd", "dinf"]},
+            "default_value": "mfd",
+            "optional": true
+        },
+        {
+            "name": "Z Conversion Factor",
+            "flags": ["--zfactor"],
+            "description": "Optional multiplier for when the vertical and horizontal units are not the same.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        }
+    ]
+}

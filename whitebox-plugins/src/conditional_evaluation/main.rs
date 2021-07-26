@@ -5,6 +5,7 @@ Last Modified: 21/07/2021
 License: MIT
 */
 
+use std::collections::BTreeMap;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -17,9 +18,10 @@ use std::thread;
 use num_cpus;
 use whitebox_common::utils::get_formatted_elapsed_time;
 use whitebox_raster::*;
-use v_eval::{Value, Eval};
+// use v_eval::{Value, Eval};
+use fasteval;
 
-/// The Conditional Evaluation tool can be used to perform an if-then-else style conditional evaluation 
+/// The ConditionalEvaluation tool can be used to perform an if-then-else style conditional evaluation 
 /// on a raster image on a cell-to-cell basis. The user specifies the names of an input raster image (`--input`) 
 /// and an output raster (`--output`), along with a conditional statement (`--statement`). The grid cell values 
 /// in the output image will be determined by the TRUE and FALSE values and conditional statement. The conditional 
@@ -29,11 +31,40 @@ use v_eval::{Value, Eval};
 /// or a raster image (which may be the same image as the input). These are specified by the `--true` and `--false`
 /// parameters, which can be either a file name pointing to existing rasters, or numerical values.
 ///
-/// The conditional statement is a single-line logical condition, expressed using [Rust](https://en.wikipedia.org/wiki/Rust_(programming_language)) 
-/// language syntax. In additon to the common comparison and logical operators, i.e. < > <= >= == (EQUAL TO) != (NOT 
-/// EQUAL TO) || (OR) && (AND), conditional statements may contain a number of valid mathematical functions, e.g. 
-/// `value.ln()`, `value.sin()`. A number of global variables are also available to build conditional statements. These 
-/// include the following:
+/// The conditional statement is a single-line logical condition. In additon to the common comparison and logical  
+/// operators, i.e. < > <= >= == (EQUAL TO) != (NOT EQUAL TO) || (OR) && (AND), conditional statements may contain a  
+/// number of valid mathematical functions. For example:
+/// 
+/// ```
+///  * log(base=10, val) -- Logarithm with optional 'base' as first argument.
+///  If not provided, 'base' defaults to '10'.
+///  Example: log(100) + log(e(), 100)
+/// 
+///  * e()  -- Euler's number (2.718281828459045)
+///  * pi() -- π (3.141592653589793)
+/// 
+///  * int(val)
+///  * ceil(val)
+///  * floor(val)
+///  * round(modulus=1, val) -- Round with optional 'modulus' as first argument.
+///      Example: round(1.23456) == 1 && round(0.001, 1.23456) == 1.235
+/// 
+///  * abs(val)
+///  * sign(val)
+/// 
+///  * min(val, ...) -- Example: min(1, -2, 3, -4) == -4
+///  * max(val, ...) -- Example: max(1, -2, 3, -4) == 3
+/// 
+///  * sin(radians)    * asin(val)
+///  * cos(radians)    * acos(val)
+///  * tan(radians)    * atan(val)
+///  * sinh(val)       * asinh(val)
+///  * cosh(val)       * acosh(val)
+///  * tanh(val)       * atanh(val)
+/// ```
+///
+/// Notice that the constants Pi and e must be specified as functions, pi() and e(). A number of 
+/// global variables are also available to build conditional statements. These include the following:
 /// 
 /// **Special Variable Names For Use In Conditional Statements:**
 ///
@@ -63,17 +94,19 @@ use v_eval::{Value, Eval};
 ///
 /// The following are examples of valid conditional statements:
 /// 
-/// > `value != 300.0`
-/// >
-/// > `row > (rows / 2)`
-/// >
-/// > `value >= (minvalue + 35.0)`
-/// >
-/// > `(value >= 25.0) && (value <= 75.0)`
-/// >
-/// > `value.to_radians().tan() > 1.0`
-/// >
-/// > `value == nodata`
+/// ```
+/// value != 300.0
+/// 
+/// row > (rows / 2)
+/// 
+/// value >= (minvalue + 35.0)
+/// 
+/// (value >= 25.0) && (value <= 75.0)
+/// 
+/// tan(value * pi() / 180.0) > 1.0
+/// 
+/// value == nodata
+/// ```
 ///
 /// Any grid cell in the input raster containing the NoData value will be assigned NoData in the output raster, 
 /// unless a NoData grid cell value allows the conditional statement to evaluate to True (i.e. the conditional 
@@ -304,6 +337,12 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         .replace("ROW", "row")
         .replace("Row", "row");
 
+    let statement_contains_nodata = if con_statement.contains("nodata") {
+        true
+    } else {
+        false
+    };
+
     
     let mut output = Raster::initialize_using_config(&output_file, &header);
 
@@ -347,32 +386,50 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         let false_raster = false_raster.clone();
         thread::spawn(move || {
             let mut value: f64;
-            let mut ret_value: bool;
-            let mut ret: Option<Value>;
+            let mut ret_value: f64;
+            // let mut ret: Option<Value>;
             let mut true_val: f64;
             let mut false_val: f64;
-            let mut e = Eval::default()
-                .insert("nodata", &format!("{}", nodata)).unwrap()
-                .insert("rows", &format!("{}", rows)).unwrap()
-                .insert("columns", &format!("{}", columns)).unwrap()
-                .insert("minvalue", &format!("{}", input.configs.minimum)).unwrap()
-                .insert("maxvalue", &format!("{}", input.configs.maximum)).unwrap()
-                .insert("north", &format!("{}", input.configs.north)).unwrap()
-                .insert("south", &format!("{}", input.configs.south)).unwrap()
-                .insert("east", &format!("{}", input.configs.east)).unwrap()
-                .insert("west", &format!("{}", input.configs.west)).unwrap()
-                .insert("cellsizex", &format!("{}", input.configs.resolution_x)).unwrap()
-                .insert("cellsizey", &format!("{}", input.configs.resolution_y)).unwrap()
-                .insert("cellsize", &format!("{}", (input.configs.resolution_x + input.configs.resolution_y)/2.0)).unwrap();
+            let mut map : BTreeMap<String, f64> = BTreeMap::new();
+            map.insert("nodata".to_string(), nodata);
+            map.insert("rows".to_string(), rows as f64);
+            map.insert("columns".to_string(), columns as f64);
+            map.insert("north".to_string(), input.configs.north);
+            map.insert("south".to_string(), input.configs.south);
+            map.insert("east".to_string(), input.configs.east);
+            map.insert("west".to_string(), input.configs.west);
+            map.insert("cellsizex".to_string(), input.configs.resolution_x);
+            map.insert("cellsizey".to_string(), input.configs.resolution_y);
+            map.insert("cellsize".to_string(), (input.configs.resolution_x + input.configs.resolution_y)/2.0);
+            map.insert("minvalue".to_string(), input.configs.minimum);
+            map.insert("maxvalue".to_string(), input.configs.maximum);
+
+            // let mut e = Eval::default()
+            //     .insert("nodata", &format!("{}", nodata)).unwrap()
+            //     .insert("rows", &format!("{}", rows)).unwrap()
+            //     .insert("columns", &format!("{}", columns)).unwrap()
+            //     .insert("minvalue", &format!("{}", input.configs.minimum)).unwrap()
+            //     .insert("maxvalue", &format!("{}", input.configs.maximum)).unwrap()
+            //     .insert("north", &format!("{}", input.configs.north)).unwrap()
+            //     .insert("south", &format!("{}", input.configs.south)).unwrap()
+            //     .insert("east", &format!("{}", input.configs.east)).unwrap()
+            //     .insert("west", &format!("{}", input.configs.west)).unwrap()
+            //     .insert("cellsizex", &format!("{}", input.configs.resolution_x)).unwrap()
+            //     .insert("cellsizey", &format!("{}", input.configs.resolution_y)).unwrap()
+            //     .insert("cellsize", &format!("{}", (input.configs.resolution_x + input.configs.resolution_y)/2.0)).unwrap();
             for row in (0..rows).filter(|r| r % num_procs == tid) {
                 let mut data: Vec<f64> = vec![nodata; columns as usize];
-                e = e.insert("row", &format!("{}", row)).unwrap();
-                e = e.insert("rowy", &format!("{}", input.get_y_from_row(row))).unwrap();
+                map.insert("row".to_string(), row as f64);
+                map.insert("rowy".to_string(), input.get_y_from_row(row));
+                // e = e.insert("row", &format!("{}", row)).unwrap();
+                // e = e.insert("rowy", &format!("{}", input.get_y_from_row(row))).unwrap();
                 for col in 0..columns {
-                    e = e.insert("column", &format!("{}", col)).unwrap();
-                    e = e.insert("columnx", &format!("{}", input.get_x_from_column(col))).unwrap();
+                    map.insert("column".to_string(), col as f64);
+                    map.insert("columnx".to_string(), input.get_x_from_column(col));
+                    // e = e.insert("column", &format!("{}", col)).unwrap();
+                    // e = e.insert("columnx", &format!("{}", input.get_x_from_column(col))).unwrap();
                     value = input.get_value(row, col);
-                    if value != nodata {
+                    if value != nodata || statement_contains_nodata {
                         if let Some(ref tr) = *true_raster {
                             true_val = tr.get_value(row, col);
                             if true_val == tr.configs.nodata {
@@ -391,19 +448,31 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                             false_val = false_constant;
                         }
 
-                        e = e.insert("value", &format!("{}", value)).unwrap();
-                        ret = e.eval(&con_statement);
-                        if ret.is_some() {
-                            ret_value = match ret.unwrap() {
-                                Value::Bool(v) => v,
-                                _ => false,
-                            };
-                            if ret_value {
+                        map.insert("value".to_string(), value);
+
+                        let ret = fasteval::ez_eval(&con_statement, &mut map);
+                        if ret.is_ok() {
+                            ret_value = ret.unwrap();
+                            if ret_value == 1f64 {
                                 data[col as usize] = true_val;
                             } else {
                                 data[col as usize] = false_val;
                             }
                         }
+
+                        // e = e.insert("value", &format!("{}", value)).unwrap();
+                        // ret = e.eval(&con_statement);
+                        // if ret.is_some() {
+                        //     ret_value = match ret.unwrap() {
+                        //         Value::Bool(v) => v,
+                        //         _ => false,
+                        //     };
+                        //     if ret_value {
+                        //         data[col as usize] = true_val;
+                        //     } else {
+                        //         data[col as usize] = false_val;
+                        //     }
+                        // }
                     }
                 }
                 tx.send((row, data))

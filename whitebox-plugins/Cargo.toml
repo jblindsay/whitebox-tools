@@ -9,6 +9,14 @@ name = "conditional_evaluation"
 path = "src/conditional_evaluation/main.rs"
 
 [[bin]]
+name = "edge_contamination"
+path = "src/edge_contamination/main.rs"
+
+[[bin]]
+name = "exposure_towards_wind_flux"
+path = "src/exposure_towards_wind_flux/main.rs"
+
+[[bin]]
 name = "qin_flow_accumulation"
 path = "src/qin_flow_accumulation/main.rs"
 
@@ -17,12 +25,16 @@ name = "quinn_flow_accumulation"
 path = "src/quinn_flow_accumulation/main.rs"
 
 [[bin]]
+name = "raster_calculator"
+path = "src/raster_calculator/main.rs"
+
+[[bin]]
 name = "split_vector_lines"
 path = "src/split_vector_lines/main.rs"
 
 [dependencies]
+fasteval = "0.2.4"
 num_cpus = "1.13.0"
-v_eval = "0.6.0"
 whitebox_common = { path = "../whitebox-common" }
 whitebox_raster = { path = "../whitebox-raster" }
 whitebox_vector = { path = "../whitebox-vector" }
