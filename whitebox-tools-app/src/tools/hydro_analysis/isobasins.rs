@@ -407,13 +407,16 @@ impl WhiteboxTool for Isobasins {
         let mut fa: usize;
         let mut inla_index: usize;
         let mut inla_mag: usize;
+        let mut flag_target: bool;
         while !stack.is_empty() {
             let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             fa = accum.get_value(row, col);
+            flag_target = false;
             if fa >= target_fa {
                 // find the index of the inflowing neighbour with the largest accumulation
+                flag_target = true;
                 inla_mag = 0;
                 inla_index = 8;
                 for i in 0..8 {
@@ -434,6 +437,7 @@ impl WhiteboxTool for Isobasins {
                         fa -= inla_mag;
                         output.set_value(row_n, col_n, outlet_id);
                         outlet_id += 1f64;
+                        flag_target = false;
                     } else {
                         accum.set_value(row, col, 1);
                         fa = 1;
@@ -458,8 +462,10 @@ impl WhiteboxTool for Isobasins {
                     stack.push((row_n, col_n));
                 }
             } else {
-                output.set_value(row, col, outlet_id);
-                outlet_id += 1f64;
+                if !flag_target {
+                    output.set_value(row, col, outlet_id);
+                    outlet_id += 1f64;
+                }
             }
 
             if verbose {
@@ -472,7 +478,7 @@ impl WhiteboxTool for Isobasins {
             }
         }
 
-        let num_outlets = outlet_id as usize - 1;
+        let num_outlets = outlet_id as usize;
 
         //////////////////////////////////////////
         // Trace flowpaths to their pour points //
