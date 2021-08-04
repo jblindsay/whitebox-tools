@@ -427,22 +427,18 @@ impl WhiteboxTool for Isobasins {
                     }
                 }
                 if (target_fa - inla_mag) < (fa - target_fa) {
-                    if inla_index < 8 {
-                        row_n = row + dy[inla_index];
-                        col_n = col + dx[inla_index];
-                        accum.decrement(row, col, inla_mag);
-                        fa -= inla_mag;
-                        output.set_value(row_n, col_n, outlet_id);
-                        outlet_id += 1f64;
-                    } else {
-                        accum.set_value(row, col, 1);
-                        fa = 1;
-                        output.set_value(row, col, outlet_id);
-                        outlet_id += 1f64;
-                    }
+                    // create an independant basin for the inflowing neighbour
+                    // when its accumulation is contributing for a significant
+                    // amount of the accumulation of the cell currently evaluated
+                    row_n = row + dy[inla_index];
+                    col_n = col + dx[inla_index];
+                    accum.decrement(row, col, inla_mag);
+                    fa -= inla_mag;
+                    output.set_value(row_n, col_n, outlet_id);
+                    outlet_id += 1f64;
                 } else {
                     accum.set_value(row, col, 1);
-                    fa = 1;
+                    fa = 0;
                     output.set_value(row, col, outlet_id);
                     outlet_id += 1f64;
                 }
