@@ -28,9 +28,10 @@ use std::thread;
 /// loosely based on the algorithm described by Lindsay and Dhun (2015), furthering the earlier
 /// algorithm with efficiency optimizations and other significant enhancements. The approach uses a least-cost
 /// path analysis to identify the breach channel that connects pit cells (i.e. grid cells for
-/// which there is no lower neighbour) to some distant lower cell. Here, the cost of a breach
-/// path is determined by the amount of elevation lowering needed to cut the breach channel
-/// through the surrounding topography.
+/// which there is no lower neighbour) to some distant lower cell. Prior to breaching and in order
+/// to minimize the depth of breach channels, all pit cells are rised to the elevation of the lowest
+/// neighbour minus a small heigh value. Here, the cost of a breach path is determined by the amount
+/// of elevation lowering needed to cut the breach channel through the surrounding topography.
 ///
 /// The user must specify the name of the input DEM file (`--dem`), the output breached DEM
 /// file (`--output`), the maximum search window radius (`--dist`), the optional maximum breach
