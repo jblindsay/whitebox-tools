@@ -30,8 +30,8 @@ use std::thread;
 /// The tool can optionally (`--connections`) output a CSV table that contains the upstream/downstream connections
 /// among isobasins. That is, this table will identify the downstream basin of each isobasin, or will list N/A in
 /// the event that there is no downstream basin, i.e. if it drains to an edge. The table also contains the number of
-/// cells in each isobasins, the position of each outlet (in raster grid coordinates with indexing starting at zero)
-/// along with the D8 pointer expressed with the same clockwise, base-2 numeric index convention used in `D8Pointer`.
+/// cells in each isobasin, the position of each outlet (in raster grid coordinates with indexing starting at zero)
+/// along with the D8 pointer expressed with the same base-2 numeric index convention used in the `D8Pointer` tool.
 /// The output CSV file will have the same name as the output raster, but with a *.csv file extension.
 ///
 /// # See Also
