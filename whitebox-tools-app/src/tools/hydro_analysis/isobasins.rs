@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 03/12/2017
-Last Modified: 24/07/2020
+Last Modified: 05/08/2021
 License: MIT
 */
 
@@ -20,17 +20,19 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to divide a landscape into a group of nearly equal-sized watersheds, known as *isobasins*.
-/// The user must specify the name (`--dem`) of a digital elevation model (DEM), the output raster name (`--output`),
-/// and the isobasin target area (`--size`) specified in units of grid cells. The DEM must have been hydrologically
-/// corrected to remove all spurious depressions and flat areas. DEM pre-processing is usually achieved using either
-/// the `BreachDepressions` or `FillDepressions` tool. Several temporary rasters are created during the execution
-/// and stored in memory of this tool.
+/// This tool can be used to divide a landscape into a group of nearly equal-sized watersheds, known as *isobasins*
+/// using a D8 algorithm (`D8Pointer`). The user must specify the name (`--dem`) of a digital elevation model (DEM),
+/// the output raster name (`--output`), and the isobasin target area (`--size`) specified in units of grid cells.
+/// The DEM must have been hydrologically corrected to remove all spurious depressions and flat areas. DEM pre-processing
+/// is usually achieved using either the `BreachDepressions` or `FillDepressions` tool. Several temporary rasters are
+/// created during the execution and stored in memory of this tool.
 ///
 /// The tool can optionally (`--connections`) output a CSV table that contains the upstream/downstream connections
 /// among isobasins. That is, this table will identify the downstream basin of each isobasin, or will list N/A in
-/// the event that there is no downstream basin, i.e. if it drains to an edge. The output CSV file will have the
-/// same name as the output raster, but with a *.csv file extension.
+/// the event that there is no downstream basin, i.e. if it drains to an edge. The table also contains the number of
+/// cells in each isobasins, the position of each outlet (in raster grid coordinates with indexing starting at zero)
+/// along with the D8 pointer expressed with the same clockwise, base-2 numeric index convention used in `D8Pointer`.
+/// The output CSV file will have the same name as the output raster, but with a *.csv file extension.
 ///
 /// # See Also
 /// `Watershed`, `Basins`, `BreachDepressions`, `FillDepressions`
@@ -407,13 +409,20 @@ impl WhiteboxTool for Isobasins {
         let mut fa: usize;
         let mut inla_index: usize;
         let mut inla_mag: usize;
+        let mut flag_target: bool;
+        let mut outlet_fa_table = vec![0usize; 1usize];
+        let mut outlet_row_table = vec![-1isize; 1usize];
+        let mut outlet_col_table = vec![-1isize; 1usize];
+        let mut outlet_dir_table = vec![0i8; 1usize];
         while !stack.is_empty() {
             let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
             col = cell.1;
             fa = accum.get_value(row, col);
+            flag_target = false;
             if fa >= target_fa {
                 // find the index of the inflowing neighbour with the largest accumulation
+                flag_target = true;
                 inla_mag = 0;
                 inla_index = 8;
                 for i in 0..8 {
@@ -430,13 +439,25 @@ impl WhiteboxTool for Isobasins {
                     // create an independant basin for the inflowing neighbour
                     // when its accumulation is contributing for a significant
                     // amount of the accumulation of the cell currently evaluated
+                    flag_target = false;
                     row_n = row + dy[inla_index];
                     col_n = col + dx[inla_index];
+
+                    outlet_fa_table.push(inla_mag);
+                    outlet_dir_table.push(flow_dir.get_value(row_n, col_n));
+                    outlet_row_table.push(row_n);
+                    outlet_col_table.push(col_n);
+                    
                     accum.decrement(row, col, inla_mag);
                     fa -= inla_mag;
                     output.set_value(row_n, col_n, outlet_id);
                     outlet_id += 1f64;
                 } else {
+                    outlet_fa_table.push(fa);
+                    outlet_dir_table.push(flow_dir.get_value(row, col));
+                    outlet_row_table.push(row);
+                    outlet_col_table.push(col);
+
                     accum.set_value(row, col, 1);
                     fa = 0;
                     output.set_value(row, col, outlet_id);
@@ -454,8 +475,15 @@ impl WhiteboxTool for Isobasins {
                     stack.push((row_n, col_n));
                 }
             } else {
-                output.set_value(row, col, outlet_id);
-                outlet_id += 1f64;
+                if !flag_target {
+                    outlet_fa_table.push(fa);
+                    outlet_dir_table.push(dir);
+                    outlet_row_table.push(row);
+                    outlet_col_table.push(col);
+
+                    output.set_value(row, col, outlet_id);
+                    outlet_id += 1f64;
+                }
             }
 
             if verbose {
@@ -468,7 +496,7 @@ impl WhiteboxTool for Isobasins {
             }
         }
 
-        let num_outlets = outlet_id as usize - 1;
+        let num_outlets = outlet_id as usize;  // in truth, it's the number of outlets plus one
 
         //////////////////////////////////////////
         // Trace flowpaths to their pour points //
@@ -577,20 +605,16 @@ impl WhiteboxTool for Isobasins {
             let f = File::create(csv_file.clone()).expect("Error while creating CSV file.");
             let mut writer = BufWriter::new(f);
             writer
-                .write_all("UPSTREAM,DOWNSTREAM\n".as_bytes())
+                .write_all("UPSTREAM,DOWNSTREAM,NBCELLS,D8POINTER,ROW,COL\n".as_bytes())
                 .expect("Error while writing to CSV file.");
+            
             for i in 1..num_outlets {
-                if connections_table[i] != -1 {
-                    let s = format!("{},{}\n", i, connections_table[i]);
-                    writer
-                        .write_all(s.as_bytes())
-                        .expect("Error while writing to CSV file.");
-                } else {
-                    let s = format!("{},N/A\n", i);
-                    writer
-                        .write_all(s.as_bytes())
-                        .expect("Error while writing to CSV file.");
-                }
+                let downstream = if connections_table[i] != -1 {connections_table[i].to_string()} else {"N/A".to_string()};
+                let pntr = if outlet_dir_table[i] != -1 {isize::pow(2, outlet_dir_table[i] as u32)} else {0isize};
+                let s = format!("{},{},{},{},{},{}\n", i, downstream, outlet_fa_table[i], pntr, outlet_row_table[i], outlet_col_table[i]);
+                writer
+                    .write_all(s.as_bytes())
+                    .expect("Error while writing to CSV file.");
             }
 
             let _ = writer.flush();
