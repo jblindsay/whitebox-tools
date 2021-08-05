@@ -584,7 +584,7 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
-        // Find the minimum elevaton difference between the
+        // Find the minimum elevation difference between the
         // filled DEM and the original DEM along the
         // stream network and raise all stream cells by this
         // value less 1 m.
@@ -607,7 +607,7 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
-        min_diff += 1f64;
+        min_diff -= 1f64;
 
         for row in 0..rows {
             for col in 0..columns {
