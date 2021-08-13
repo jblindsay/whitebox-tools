@@ -424,7 +424,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                         pntr_matches[128] = 0i8;
                     }
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        let mut data: Vec<i8> = vec![-1i8; columns as usize];
+                        let mut data: Vec<i8> = vec![-2i8; columns as usize];
                         for col in 0..columns {
                             z = input.get_value(row, col);
                             if z != nodata {
