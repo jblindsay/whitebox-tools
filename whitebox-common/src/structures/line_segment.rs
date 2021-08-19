@@ -29,7 +29,7 @@ impl PartialEq for LineSegment {
 impl LineSegment {
     /// Creates a new LineSegment.
     pub fn new(p1: Point2D, p2: Point2D) -> LineSegment {
-        LineSegment { p1: p1, p2: p2 }
+        LineSegment { p1, p2 }
     }
 
     /// Finds intersections between two line segments. Notice that segments
@@ -160,6 +160,38 @@ impl LineSegment {
     fn is_point_on_line(&self, p: Point2D) -> bool {
         let r = (self.p2 - self.p1).cross(p - self.p1);
         r.abs() < EPSILON
+    }
+
+    pub fn is_point_on_line_segment(&self, p: Point2D) -> bool {
+        if self.is_point_on_line(p) {
+            if p.x >= self.p1.x.min(self.p2.x) {
+                if p.x <= self.p1.x.max(self.p2.x) {
+                    if p.y >= self.p1.y.min(self.p2.y) {
+                        if p.y <= self.p1.y.max(self.p2.y) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    pub fn dist_to_segment_squared(&self, p: Point2D) -> f64 {
+        let l2 = self.p1.distance_squared(&self.p2);
+        if l2 == 0.0 { return p.distance_squared(&self.p1) };
+        let mut t = ((p.x - self.p1.x) * (self.p2.x - self.p1.x) + (p.y - self.p1.y) * (self.p2.y - self.p1.y)) / l2;
+        t = 0f64.max(1f64.min(t));
+        p.distance_squared(
+            &Point2D::new(
+                self.p1.x + t * (self.p2.x - self.p1.x),
+                self.p1.y + t * (self.p2.y - self.p1.y)
+            )
+        )
+    }
+
+    pub fn dist_to_segment(&self, p: Point2D) -> f64 {
+        self.dist_to_segment_squared(p).sqrt()
     }
 
     // fn is_point_right_of_line(&self, p: Point2D) -> bool {

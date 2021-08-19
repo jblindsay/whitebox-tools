@@ -357,6 +357,7 @@ impl WhiteboxTool for VectorPointsToRaster {
         }
 
         if field_name == "FID" {
+            output.configs.data_type = DataType::I16;
             output.configs.photometric_interp = PhotometricInterpretation::Categorical;
         }
 

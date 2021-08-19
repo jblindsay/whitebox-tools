@@ -483,7 +483,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         if configurations.verbose_mode {
             progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Calculating index: {}%", progress);
+                println!("Progress: {}%", progress);
                 old_progress = progress;
             }
         }

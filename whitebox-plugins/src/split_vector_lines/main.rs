@@ -88,10 +88,6 @@ fn get_tool_name() -> String {
     String::from("SplitVectorLines") // This should be camel case and is a reference to the tool name.
 }
 
-// fn get_toolset() -> String {
-//     String::from("GeneralToolset") // This should be CamelCase.
-// }
-
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let tool_name = get_tool_name();
 

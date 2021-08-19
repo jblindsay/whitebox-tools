@@ -9,7 +9,7 @@ License: Whitebox Geospatial Inc. License Agreement
 use std::env;
 use std::f64;
 use std::f32::consts::PI;
-use std::fs;
+// use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::str;
@@ -132,24 +132,7 @@ fn get_tool_name() -> String {
     String::from("ExposureTowardsWindFlux")
 }
 
-fn get_toolset() -> String {
-    String::from("GeneralToolset") // This should be CamelCase.
-}
-
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
-    match validate_license() {
-        Ok(is_valid) => {
-            if !is_valid {
-                wrapped_print("There is an invalid or expired license for this tool. Please contact Whitebox Geospatial Inc. (support@whiteboxgeo.com) to obtain a valid license key.", 50);
-                return Ok(());
-            }
-        }
-        Err(_) => {
-            wrapped_print("Missing license for this tool. Please contact Whitebox Geospatial Inc. (support@whiteboxgeo.com) to obtain a valid license key.", 50);
-            return Ok(());
-        }
-    }
-
     let tool_name = get_tool_name();
 
     let sep: String = path::MAIN_SEPARATOR.to_string();
@@ -652,50 +635,4 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     }
 
     Ok(())
-}
-
-fn validate_license() -> Result<bool, std::io::Error> {
-    let mut exe_file = std::env::current_exe().unwrap().to_str().unwrap_or("No exe path found.").to_string();
-    exe_file = exe_file.replace(&convert_camel_to_snake(&get_tool_name()), "register_license");
-
-    if !fs::metadata(&exe_file).is_ok() {
-        return Ok(false);
-    }
-
-    let output = std::process::Command::new(exe_file)
-        .args(&["validate", &get_tool_name(), &get_toolset()])
-        .output()
-        .expect("failed to execute process");
-
-    let response = String::from_utf8_lossy(&output.stdout);
-    if response.to_lowercase().contains("invalid") {
-        // panic!("{}", response);
-        return Ok(false);
-    }
-
-    let err_response = String::from_utf8_lossy(&output.stderr);
-    if err_response.to_lowercase().contains("invalid") {
-        // panic!("{}", response);
-        return Ok(false);
-    }
-
-    Ok(true)
-}
-
-fn convert_camel_to_snake(text: &str) -> String {
-    let mut vals = vec![];
-    let bytes = text.as_bytes();
-    let mut c: u8;
-    for i in 0..bytes.len() {
-        c = bytes[i];
-        if c > 64 && c < 91 {
-            if i > 0 {
-                vals.push(95);
-            }
-            vals.push(c + 32);
-        } else {
-            vals.push(c);
-        }
-    }
-    str::from_utf8(&vals).unwrap().to_string()
 }

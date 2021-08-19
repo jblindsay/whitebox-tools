@@ -20,6 +20,7 @@ mod smallest_enclosing_circle;
 // exports identifiers from private sub-modules in the current module namespace
 pub use self::convex_hull::convex_hull;
 pub use self::delaunay_triangulation::{triangulate, Triangulation};
+pub use self::delaunay_triangulation::EMPTY;
 pub use self::is_clockwise_order::is_clockwise_order;
 pub use self::line_ops::{
     do_polylines_intersect, find_line_intersections, find_split_points_at_line_intersections,
