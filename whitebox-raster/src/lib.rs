@@ -1246,7 +1246,7 @@ impl Default for RasterConfigs {
             display_min: f64::INFINITY,
             display_max: f64::NEG_INFINITY,
             palette: "not specified".to_string(),
-            projection: "not specified".to_string(),
+            projection: "".to_string(),
             endian: Endianness::LittleEndian,
             photometric_interp: PhotometricInterpretation::Unknown,
             data_type: DataType::Unknown,
