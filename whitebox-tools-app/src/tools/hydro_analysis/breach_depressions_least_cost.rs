@@ -378,7 +378,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let mut output = Raster::initialize_using_file(&output_file, &input);
 
         let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
-            output.configs.data_type = input.configs.data_type; // Assume the user know what he's doing
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else {
             let elev_digits = (input.configs.maximum as i32).to_string().len();
