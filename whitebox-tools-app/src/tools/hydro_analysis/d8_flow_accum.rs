@@ -564,7 +564,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let mut cell_area = cell_size_x * cell_size_y;
+        
         // if flow width is allowed to vary by direction, the flow accumulation output will not
         // increase continuously downstream and any applications involving stream network
         // extraction will encounter issues with discontinuous streams. The Whitebox GAT tool
@@ -580,22 +580,20 @@ impl WhiteboxTool for D8FlowAccumulation {
         //     cell_size_x,
         // ];
 
-        let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
-        let mut flow_widths = [
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-        ];
+        let cell_area;
+        let flow_widths;
+        
         if out_type == "cells" {
             cell_area = 1.0;
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            flow_widths = vec![1.0; 8];
         } else if out_type == "ca" {
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            cell_area = cell_size_x * cell_size_y;
+            flow_widths = vec![1.0; 8];
+        } else {
+            // if specific catchment area
+            cell_area = cell_size_x * cell_size_y;
+            let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
+            flow_widths = vec![avg_cell_size; 8];
         }
 
         if log_transform {
