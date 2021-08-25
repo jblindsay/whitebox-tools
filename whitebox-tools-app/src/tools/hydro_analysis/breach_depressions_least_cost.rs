@@ -381,9 +381,9 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let elev_digits = (input.configs.maximum as i32).to_string().len();
             let elev_multiplier = 10.0_f64.powi((9 - elev_digits) as i32);
-            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         };
         

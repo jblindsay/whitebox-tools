@@ -311,9 +311,15 @@ impl WhiteboxTool for BreachDepressions {
         let resy = input.configs.resolution_y;
         let diagres = (resx * resx + resy * resy).sqrt();
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let background_val = (i32::min_value() + 1) as f64;
+        output.reinitialize_values(background_val);
+
         let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let elev_digits = (input.configs.maximum as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
@@ -359,14 +365,6 @@ impl WhiteboxTool for BreachDepressions {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        if !flat_increment.is_nan() || flat_increment == 0f64 {
-            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
-        } else {
-            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
-        }
-        let background_val = (i32::min_value() + 1) as f64;
-        output.reinitialize_values(background_val);
 
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
 
