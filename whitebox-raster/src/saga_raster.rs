@@ -24,8 +24,8 @@ pub fn read_saga(
     let mut data_file_offset = 0u64;
     let mut top_to_bottom = false;
     let mut z_factor = 1.0;
-    let mut position_xmin: f64 = f64::NEG_INFINITY;
-    let mut position_ymin: f64 = f64::NEG_INFINITY;
+    let position_xmin: f64;
+    let position_ymin: f64;
     for line in f.lines() {
         let line_unwrapped = line.unwrap();
         //let line_split = line_unwrapped.split("\t");
