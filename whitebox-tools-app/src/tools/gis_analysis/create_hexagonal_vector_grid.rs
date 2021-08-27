@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 15/09/2018
-Last Modified: 19/05/2020
+Last Modified: 27/08/2021
 License: MIT
 */
 
@@ -263,6 +263,7 @@ impl WhiteboxTool for CreateHexagonalVectorGrid {
             )
         } else if input_file.to_lowercase().ends_with(".las")
             || input_file.to_lowercase().ends_with(".zlidar")
+            || input_file.to_lowercase().ends_with(".laz")
         {
             let mut input = LasFile::new(&input_file, "r")?;
             (

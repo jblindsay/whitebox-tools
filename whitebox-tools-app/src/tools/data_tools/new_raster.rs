@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: July 11, 2017
-Last Modified: 12/10/2018
+Created: 11/07/2017
+Last Modified: 27/08/2021
 License: MIT
 */
 
@@ -12,13 +12,15 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
+use whitebox_vector::Shapefile;
 
 /// This tool can be used to create a new raster with the same coordinates and dimensions
-/// (i.e. rows and columns) as an existing base image. The user must specify the name of the
-/// base image (`--base`), the value that the new grid will be filled with (`--value` flag;
-/// default of NoData), and the data type (`--data_type` flag; options include 'double',
-/// 'float', and 'integer'). Notice that the functionality of this tool is the same as
-/// multiplying the base image by zero and adding the constant value.
+/// (i.e. rows and columns) as an existing base image, or the same spatial extent as an input
+/// vector file. The user must specify the name of the
+/// base file (`--base`), the value that the new grid will be filled with (`--value` flag;
+/// default of nodata), and the data type (`--data_type` flag; options include 'double',
+/// 'float', and 'integer'). If an input vector base file is used, then it is necessary to specify
+/// a value for the optional grid cell size (`--cell_size`) input parameter.
 ///
 /// # See Also
 /// `RasterCellAssignment`
@@ -42,7 +44,9 @@ impl NewRasterFromBase {
             name: "Input Base File".to_owned(),
             flags: vec!["-i".to_owned(), "--base".to_owned()],
             description: "Input base raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::RasterAndVector(
+                VectorGeometryType::Any,
+            )),
             default_value: None,
             optional: false,
         });
@@ -72,6 +76,15 @@ impl NewRasterFromBase {
             description: "Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float').".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["double".to_owned(), "float".to_owned(), "integer".to_owned()]),
             default_value: Some("float".to_owned()),
+            optional: true
+        });
+
+        parameters.push(ToolParameter{
+            name: "Cell Size (optional)".to_owned(), 
+            flags: vec!["--cell_size".to_owned()], 
+            description: "Optionally specified cell size of output raster. Not used when base raster is specified.".to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: None,
             optional: true
         });
 
@@ -139,6 +152,7 @@ impl WhiteboxTool for NewRasterFromBase {
         let mut output_file = String::new();
         let mut out_val_str = String::new();
         let mut data_type = String::new();
+        let mut cell_size = 0f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -180,6 +194,18 @@ impl WhiteboxTool for NewRasterFromBase {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-cell_size" {
+                cell_size = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 
@@ -203,8 +229,6 @@ impl WhiteboxTool for NewRasterFromBase {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        let base = Raster::new(&base_file, "r")?;
-
         let start = Instant::now();
 
         let nodata = -32768.0;
@@ -214,11 +238,55 @@ impl WhiteboxTool for NewRasterFromBase {
             out_val = out_val_str.parse::<f64>().unwrap();
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &base);
-        if base.configs.nodata != nodata || out_val != nodata {
+        // Get the spatial extent
+        let mut output = if base_file.to_lowercase().ends_with(".shp") {
+            // Note that this only works because at the moment, Shapefiles are the only supported vector.
+            // If additional vector formats are added in the future, this will need updating.
+
+            if cell_size <= 0f64 {
+                return Err(Error::new(
+                    ErrorKind::InvalidInput,
+                    "The cell_size parameter must be set to a non-zero positive value if a vector base file is specified.",
+                ));
+            }
+
+            let input = Shapefile::read(&base_file)?;
+            // base the output raster on the cell_size and the
+            // extent of the input vector.
+            let west: f64 = input.header.x_min;
+            let north: f64 = input.header.y_max;
+            let rows: isize = (((north - input.header.y_min) / cell_size).ceil()) as isize;
+            let columns: isize = (((input.header.x_max - west) / cell_size).ceil()) as isize;
+            let south: f64 = north - rows as f64 * cell_size;
+            let east = west + columns as f64 * cell_size;
+
+            let mut configs = RasterConfigs {
+                ..Default::default()
+            };
+            configs.rows = rows as usize;
+            configs.columns = columns as usize;
+            configs.north = north;
+            configs.south = south;
+            configs.east = east;
+            configs.west = west;
+            configs.resolution_x = cell_size;
+            configs.resolution_y = cell_size;
+            configs.nodata = nodata;
+            configs.photometric_interp = PhotometricInterpretation::Continuous;
+            configs.projection = input.projection.clone();
+
+            Raster::initialize_using_config(&output_file, &configs)
+        } else {
+            let base = Raster::new(&base_file, "r")?;
+
+            Raster::initialize_using_file(&output_file, &base)
+        };
+
+        if output.configs.nodata != nodata || out_val != nodata {
             output.configs.nodata = nodata;
             output.reinitialize_values(out_val);
         }
+
 
         if data_type.to_lowercase().contains("i") {
             output.configs.data_type = DataType::I16;
