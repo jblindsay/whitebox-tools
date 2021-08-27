@@ -127,7 +127,7 @@ impl D8FlowAccumulation {
         parameters.push(ToolParameter {
             name: "If a pointer is input, does it use the ESRI pointer scheme?".to_owned(),
             flags: vec!["--esri_pntr".to_owned()],
-            description: "Input  D8 pointer uses the ESRI style scheme.".to_owned(),
+            description: "Input D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
             optional: true,

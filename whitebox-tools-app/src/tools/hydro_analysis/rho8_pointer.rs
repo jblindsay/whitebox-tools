@@ -23,7 +23,8 @@ use std::thread;
 /// Rho8 is a single-flow-direction (SFD) method because the flow entering each grid cell is routed
 /// to only one downslope neighbour, i.e. flow divergence is not permitted. The user must specify the
 /// name of a digital elevation model (DEM) file (`--dem`) that has been hydrologically corrected to
-/// remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`).
+/// remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`). The 
+/// output of this tool (`--output`) is often used as the input to the `Rho8FlowAccumulation` tool.
 ///
 /// By default, the Rho8 flow pointers use the following clockwise, base-2 numeric index convention:
 ///
@@ -44,7 +45,7 @@ use std::thread;
 /// Resources Research*, 27(5), 709-717.
 ///
 /// # See Also
-/// `D8Pointer`, `FD8Pointer`, `DInfPointer`, `BreachDepressions`, `FillDepressions`
+/// `Rho8FlowAccumulation`, `D8Pointer`, `FD8Pointer`, `DInfPointer`, `BreachDepressions`, `FillDepressions`
 pub struct Rho8Pointer {
     name: String,
     description: String,

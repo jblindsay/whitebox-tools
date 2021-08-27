@@ -1,0 +1,66 @@
+{
+    "tool_name": "Rho8FlowAccumulation",
+    "exe": "rho8_flow_accumulation",
+    "short_description": "This tool calculates Fairfield and Leymarie (1991) flow accumulation.",
+    "toolbox": "Hydrological Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=Rho8FlowAccumulation --dem=DEM.tif --output=Rho8.tif --out_type='specific contributing area'",
+    "parameters": [
+        {
+            "name": "Input DEM or Rho8 Pointer File",
+            "flags": ["-i", "--input"],
+            "description": "Input DEM or Rho8 pointer file; if a DEM is used, it must be depressionless.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Type",
+            "flags": ["--out_type"],
+            "description": "Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.",
+            "parameter_type": {"OptionList": ["cells", "specific contributing area", "catchment area"]},
+            "default_value": "specific contributing area",
+            "optional": true
+        },
+        {
+            "name": "Log-transform the output?",
+            "flags": ["--log"],
+            "description": "Log-transform the output values?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        },
+        {
+            "name": "Clip the upper tail by 1%?",
+            "flags": ["--clip"],
+            "description": "Optional flag to request clipping the display max by 1%.",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        },
+        {
+            "name": "Is the input raster a Rho8 flow pointer?",
+            "flags": ["--pntr"],
+            "description": "Is the input raster a Rho8 flow pointer rather than a DEM?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        },
+        {
+            "name": "If a pointer is input, does it use the ESRI pointer scheme?",
+            "flags": ["--esri_pntr"],
+            "description": "Does the input Rho8 pointer use the ESRI style scheme?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}

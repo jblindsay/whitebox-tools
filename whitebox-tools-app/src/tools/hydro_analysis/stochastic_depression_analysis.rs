@@ -64,6 +64,9 @@ use std::thread;
 ///
 /// ![](../../doc_img/StochasticDepressionAnalysis_fig1.png)
 ///
+/// For a video demonstrating the application of the `StochasticDepressionAnalysis` tool, see 
+/// [this YouTube video](https://www.youtube.com/watch?v=pg8puYYbSzU).
+///
 /// # Reference
 /// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in
 /// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.

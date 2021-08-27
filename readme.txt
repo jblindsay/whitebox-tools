@@ -65,6 +65,7 @@ Version 1.6.0 (XX-XX-2021)
 - Added the ExposureTowardsWind tool.
 - Added the QuinnFlowAccumulation tool to perform a Quinn et al. (1995) flow accumulation operation.
 - Added the QinFlowAccumulation tool to perform a Qin et al. (2007) flow accumulation operation.
+- Added the Rho8FlowAccumulation tool to perform a Fairfield and Leymarie (1991) flow accumulation operation.
 - Added the RasterCalculator tool for performing complex mathematical operations on input rasters.
 - LidarHistogram now allows for a GPS time parameter, which can be useful for determining the number of
   flightlines in a LiDAR tile.
