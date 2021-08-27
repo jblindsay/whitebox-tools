@@ -687,7 +687,7 @@ pub fn read_geotiff<'a>(
         let upper_left_y = minyp + val.1;
 
         // upper-right corner coordinates
-        col = (configs.columns - 1) as f64;
+        col = configs.columns as f64;
         row = 0.0;
         val = pr2d.get_value(col, row);
         let upper_right_x = minxp + val.0;
@@ -695,14 +695,14 @@ pub fn read_geotiff<'a>(
 
         // lower-left corner coordinates
         col = 0.0;
-        row = (configs.rows - 1) as f64;
+        row = configs.rows as f64;
         val = pr2d.get_value(col, row);
         let lower_left_x = minxp + val.0;
         let lower_left_y = minyp + val.1;
 
         // lower-right corner coordinates
-        col = (configs.columns - 1) as f64;
-        row = (configs.rows - 1) as f64;
+        col = configs.columns as f64;
+        row = configs.rows as f64;
         val = pr2d.get_value(col, row);
         let lower_right_x = minxp + val.0;
         let lower_right_y = minyp + val.1;
@@ -732,7 +732,7 @@ pub fn read_geotiff<'a>(
             + configs.model_transformation[7];
 
         // upper-right corner coordinates
-        col = (configs.columns - 1) as f64;
+        col = configs.columns as f64;
         row = 0.0;
         let upper_right_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
@@ -743,7 +743,7 @@ pub fn read_geotiff<'a>(
 
         // lower-left corner coordinates
         col = 0.0;
-        row = (configs.rows - 1) as f64;
+        row = configs.rows as f64;
         let lower_left_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
             + configs.model_transformation[3];
@@ -752,8 +752,8 @@ pub fn read_geotiff<'a>(
             + configs.model_transformation[7];
 
         // lower-right corner coordinates
-        col = (configs.columns - 1) as f64;
-        row = (configs.rows - 1) as f64;
+        col = configs.columns as f64;
+        row = configs.rows as f64;
         let lower_right_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
             + configs.model_transformation[3];
