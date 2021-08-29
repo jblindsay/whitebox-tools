@@ -333,63 +333,6 @@ impl WhiteboxTool for Isobasins {
         /////////////////////////////////////////////
         // Calculate the number of inflowing cells //
         /////////////////////////////////////////////
-        // let flow_dir = Arc::new(flow_dir);
-        // let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        // let (tx, rx) = mpsc::channel();
-        // for tid in 0..num_procs {
-        //     let input = input.clone();
-        //     let flow_dir = flow_dir.clone();
-        //     let tx = tx.clone();
-        //     thread::spawn(move || {
-        //         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-        //         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        //         let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
-        //         let mut z: f64;
-        //         let mut count: i8;
-        //         for row in (0..rows).filter(|r| r % num_procs == tid) {
-        //             let mut data: Vec<i8> = vec![-1i8; columns as usize];
-        //             for col in 0..columns {
-        //                 z = input.get_value(row, col);
-        //                 if z != nodata {
-        //                     count = 0i8;
-        //                     for i in 0..8 {
-        //                         if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
-        //                         {
-        //                             count += 1;
-        //                         }
-        //                     }
-        //                     data[col as usize] = count;
-        //                 } else {
-        //                     data[col as usize] = -1i8;
-        //                 }
-        //             }
-        //             tx.send((row, data)).unwrap();
-        //         }
-        //     });
-        // }
-
-        // let mut stack = Vec::with_capacity((rows * columns) as usize);
-        // let mut num_solved_cells = 0usize;
-        // for r in 0..rows {
-        //     let (row, data) = rx.recv().expect("Error receiving data from thread.");
-        //     num_inflowing.set_row_data(row, data);
-        //     for col in 0..columns {
-        //         if num_inflowing[(row, col)] == 0i8 {
-        //             stack.push((row, col));
-        //         } else if num_inflowing[(row, col)] == -1i8 {
-        //             num_solved_cells += 1;
-        //         }
-        //     }
-
-        //     if verbose {
-        //         progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
-        //         if progress != old_progress {
-        //             println!("Num. inflowing neighbours: {}%", progress);
-        //             old_progress = progress;
-        //         }
-        //     }
-        // }
-        
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
         let dx = [1, 1, 1, 0, -1, -1, -1, 0];
         let dy = [-1, 0, 1, 1, 1, 0, -1, -1];

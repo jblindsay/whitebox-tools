@@ -80,6 +80,7 @@ Version 1.6.0 (XX-XX-2021)
   z_factor conversion value for each row in the raster, rather than using a single value based on the raster 
   mid-point latitude. This should help improve the accuracy of these shape indices on large-extent rasters 
   in geographic coordinate systems.
+- Fixed several bugs in the isobasins tool.
 - The NewRasterFromBase tool now accepts a vector base file (and grid cell size) as well as a raster.
 - The WhiteboxTools user manual has had a refresh and is now hosted at: 
   https://www.whiteboxgeo.com/manual/wbt_book/intro.html
