@@ -59,15 +59,16 @@ for more details.
 Version 1.6.0 (XX-XX-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ
   compressed LiDAR format for all of the LiDAR tools in WBT.
+- Added the RasterCalculator tool for performing complex mathematical operations on input rasters.
 - Added the ConditionalEvaluation tool for performing an if-then-else operation on an input raster.
 - Added the EdgeContamination tool to identify grid cells for which the upslope area extends beyond
   the data extent.
 - Added the ExposureTowardsWind tool.
 - Added the QuinnFlowAccumulation tool to perform a Quinn et al. (1995) flow accumulation operation.
 - Added the QinFlowAccumulation tool to perform a Qin et al. (2007) flow accumulation operation.
-- Added the Rho8FlowAccumulation tool to perform a Fairfield and Leymarie (1991) flow accumulation operation.
-- Added the RasterCalculator tool for performing complex mathematical operations on input rasters.
-- LidarHistogram now allows for a GPS time parameter, which can be useful for determining the number of
+- Added the Rho8FlowAccumulation tool to perform a Fairfield and Leymarie (1991) flow accumulation 
+  operation.
+- LidarHistogram now allows a GPS time parameter, which can be useful for determining the number of
   flightlines in a LiDAR tile.
 - Fixed a bug with the Resample tool that created an artifact when reampling to resolutions less than 
   one meter.
@@ -79,9 +80,11 @@ Version 1.6.0 (XX-XX-2021)
   z_factor conversion value for each row in the raster, rather than using a single value based on the raster 
   mid-point latitude. This should help improve the accuracy of these shape indices on large-extent rasters 
   in geographic coordinate systems.
-- Updated the way the z_factor is used to adjust DEM elevations for rasters in geographic coordinates in the 
-  surface shape metric tools, e.g. slope, aspect, hillshade, and the curvatures. This allows for the adjustment 
-  factor to be calculated per row, rather than using a single raster-wide value based on the middle latitude.
+- The NewRasterFromBase tool now accepts a vector base file (and grid cell size) as well as a raster.
+- The WhiteboxTools user manual has had a refresh and is now hosted at: 
+  https://www.whiteboxgeo.com/manual/wbt_book/intro.html
+- We have added numerous tools to the WhiteboxTools Extensions. For details see:
+  https://www.whiteboxgeo.com/whitebox-geospatial-extensions/
 
 Version 1.5.0 (31-05-2021)
 - This release does not include very many new tools. Despite this, this is probably one of the largest 
