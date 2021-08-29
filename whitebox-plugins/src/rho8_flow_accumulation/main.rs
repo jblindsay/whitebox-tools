@@ -258,7 +258,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             let input = input.clone();
             let tx1 = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
+                // let nodata = input.configs.nodata;
                 let columns = input.configs.columns as isize;
                 let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
                 let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
@@ -316,7 +316,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             let input = input.clone();
             let tx = tx.clone();
             thread::spawn(move || {
-                let nodata = input.configs.nodata;
+                // let nodata = input.configs.nodata;
                 let mut z: f64;
                 let mut interior_pit_found = false;
                 let dx = [1, 1, 1, 0, -1, -1, -1, 0];
@@ -351,7 +351,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     pntr_matches[128] = 0i8;
                 }
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data: Vec<i8> = vec![-1i8; columns as usize];
+                    let mut data: Vec<i8> = vec![-2i8; columns as usize];
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
@@ -394,6 +394,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     }
 
     let mut output = Raster::initialize_using_file(&output_file, &input);
+    let out_nodata = -32768f64;
+    output.configs.nodata = out_nodata;
     output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
     output.configs.data_type = DataType::F32;
     output.reinitialize_values(1.0);
@@ -493,21 +495,6 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     }
 
     let mut cell_area = cell_size_x * cell_size_y;
-    // if flow width is allowed to vary by direction, the flow accumulation output will not
-    // increase continuously downstream and any applications involving stream network
-    // extraction will encounter issues with discontinuous streams. The Whitebox GAT tool
-    // used a constant flow width value. I'm reverting this tool to the equivalent.
-    // let mut flow_widths = [
-    //     diag_cell_size,
-    //     cell_size_y,
-    //     diag_cell_size,
-    //     cell_size_x,
-    //     diag_cell_size,
-    //     cell_size_y,
-    //     diag_cell_size,
-    //     cell_size_x,
-    // ];
-
     let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
     let mut flow_widths = [
         avg_cell_size,
@@ -529,9 +516,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     if log_transform {
         for row in 0..rows {
             for col in 0..columns {
-                // if input[(row, col)] == nodata {
+                // if input.get_value(row, col) == nodata {
                 if flow_dir.get_value(row, col) == -2 {
-                    output[(row, col)] = nodata;
+                    output.set_value(row, col, out_nodata);
                 } else {
                     let dir = flow_dir[(row, col)];
                     if dir >= 0 {
@@ -555,9 +542,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     } else {
         for row in 0..rows {
             for col in 0..columns {
-                // if input[(row, col)] == nodata {
+                // if input.get_value(row, col) == nodata {
                 if flow_dir.get_value(row, col) == -2 {
-                    output[(row, col)] = nodata;
+                    output.set_value(row, col, out_nodata);
                 } else {
                     let dir = flow_dir.get_value(row, col);
                     if dir >= 0 {
