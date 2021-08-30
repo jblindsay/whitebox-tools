@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 1.6.0 (XX-XX-2021)
+Version 2.0.0 (30-08-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ
   compressed LiDAR format for all of the LiDAR tools in WBT.
 - Added the RasterCalculator tool for performing complex mathematical operations on input rasters.
@@ -80,7 +80,7 @@ Version 1.6.0 (XX-XX-2021)
   z_factor conversion value for each row in the raster, rather than using a single value based on the raster 
   mid-point latitude. This should help improve the accuracy of these shape indices on large-extent rasters 
   in geographic coordinate systems.
-- Fixed several bugs in the isobasins tool.
+- Fixed several bugs in the isobasins and D8 flow accumulation tool.
 - The NewRasterFromBase tool now accepts a vector base file (and grid cell size) as well as a raster.
 - The WhiteboxTools user manual has had a refresh and is now hosted at: 
   https://www.whiteboxgeo.com/manual/wbt_book/intro.html

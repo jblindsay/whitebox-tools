@@ -473,6 +473,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -681,7 +682,7 @@ class WhiteboxTools(object):
         if exclude_holes: args.append("--exclude_holes")
         return self.run_tool('multi_part_to_single_part', args, callback) # returns 1 if error
 
-    def new_raster_from_base(self, base, output, value="nodata", data_type="float", callback=None):
+    def new_raster_from_base(self, base, output, value="nodata", data_type="float", cell_size=None, callback=None):
         """Creates a new raster using a base image.
 
         Keyword arguments:
@@ -690,6 +691,7 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         value -- Constant value to fill raster with; either 'nodata' or numeric value. 
         data_type -- Output raster data type; options include 'double' (64-bit), 'float' (32-bit), and 'integer' (signed 16-bit) (default is 'float'). 
+        cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -697,6 +699,7 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         args.append("--value={}".format(value))
         args.append("--data_type={}".format(data_type))
+        if cell_size is not None: args.append("--cell_size='{}'".format(cell_size))
         return self.run_tool('new_raster_from_base', args, callback) # returns 1 if error
 
     def polygons_to_lines(self, i, output, callback=None):
@@ -3918,7 +3921,7 @@ class WhiteboxTools(object):
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
         pntr -- Is the input raster a D8 flow pointer rather than a DEM?. 
-        esri_pntr -- Input  D8 pointer uses the ESRI style scheme. 
+        esri_pntr -- Input D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -4624,6 +4627,30 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         args.append("--height={}".format(height))
         return self.run_tool('raise_walls', args, callback) # returns 1 if error
+
+    def rho8_flow_accumulation(self, i, output, out_type="specific contributing area", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
+        """This tool calculates Fairfield and Leymarie (1991) flow accumulation.
+
+        Keyword arguments:
+
+        i -- Input DEM or Rho8 pointer file; if a DEM is used, it must be depressionless. 
+        output -- Name of the output raster file. 
+        out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
+        log -- Log-transform the output values?. 
+        clip -- Optional flag to request clipping the display max by 1%. 
+        pntr -- Is the input raster a Rho8 flow pointer rather than a DEM?. 
+        esri_pntr -- Does the input Rho8 pointer use the ESRI style scheme?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--out_type={}".format(out_type))
+        if log: args.append("--log")
+        if clip: args.append("--clip")
+        if pntr: args.append("--pntr")
+        if esri_pntr: args.append("--esri_pntr")
+        return self.run_tool('rho8_flow_accumulation', args, callback) # returns 1 if error
 
     def rho8_pointer(self, dem, output, esri_pntr=False, callback=None):
         """Calculates a stochastic Rho8 flow pointer raster from an input DEM.
@@ -8609,6 +8636,32 @@ class WhiteboxTools(object):
     # Precision Agriculture #
     #########################
 
+    def reconcile_multiple_headers(self, i, region_field, yield_field, output, radius=None, min_yield=None, max_yield=None, mean_tonnage=None, callback=None):
+        """This tool can be used to normalize the yield points for a field.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        region_field -- Name of the attribute containing region data. 
+        yield_field -- Name of the attribute containing yield data. 
+        output -- Name of the output points shapefile. 
+        radius -- Optional search radius, in metres. Only specify this value if you want to calculate locally normalized yield. 
+        min_yield -- Minimum yield value in output. 
+        max_yield -- Maximum yield value in output. 
+        mean_tonnage -- Use this optional parameter to force the output to have a certain overall average tonnage. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--region_field='{}'".format(region_field))
+        args.append("--yield_field='{}'".format(yield_field))
+        args.append("--output='{}'".format(output))
+        if radius is not None: args.append("--radius='{}'".format(radius))
+        if min_yield is not None: args.append("--min_yield='{}'".format(min_yield))
+        if max_yield is not None: args.append("--max_yield='{}'".format(max_yield))
+        if mean_tonnage is not None: args.append("--mean_tonnage='{}'".format(mean_tonnage))
+        return self.run_tool('reconcile_multiple_headers', args, callback) # returns 1 if error
+
     def recreate_pass_lines(self, i, yield_field_name, output_lines, output_points, max_change_in_heading=25.0, ignore_zeros=False, callback=None):
         """This tool can be used to approximate the harvester pass lines from yield points.
 
@@ -8630,6 +8683,26 @@ class WhiteboxTools(object):
         args.append("--max_change_in_heading={}".format(max_change_in_heading))
         if ignore_zeros: args.append("--ignore_zeros")
         return self.run_tool('recreate_pass_lines', args, callback) # returns 1 if error
+
+    def remove_field_edge_points(self, i, output, dist=None, max_change_in_heading=25.0, flag_edges=False, callback=None):
+        """This tool can be used to remove most of the points along the edges from a crop yield data set.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        output -- Name of the output points shapefile. 
+        dist -- Average distance between passes, in meters. 
+        max_change_in_heading -- Max change in heading. 
+        flag_edges -- Don't remove edge points, just flag them in the attribute table?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        if dist is not None: args.append("--dist='{}'".format(dist))
+        args.append("--max_change_in_heading={}".format(max_change_in_heading))
+        if flag_edges: args.append("--flag_edges")
+        return self.run_tool('remove_field_edge_points', args, callback) # returns 1 if error
 
     def yield_filter(self, i, yield_field, pass_field, output, width=6.096, z_score_threshold=2.5, min_yield=0.0, max_yield=99999.9, callback=None):
         """Filters crop yield values of point data derived from combine harvester yield monitors.
