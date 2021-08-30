@@ -4,7 +4,7 @@
     "short_description": "This tool evaluates hydrologic connectivity within a DEM",
     "toolbox": "Geomorphometric Analysis",
     "license": "MIT",
-    "example": ".*EXE_NAME -r=ExposureTowardsWindFlux -i=input.tif -s=streams.tif -o=new.tif",
+    "example": ".*EXE_NAME -r=ExposureTowardsWindFlux -dem=input.tif -o=exposure.tif --azimuth=35.0 --max_dist=500.0",
     "parameters": [
         {
             "name": "Input DEM Raster",

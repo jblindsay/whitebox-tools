@@ -504,7 +504,7 @@ impl WhiteboxTool for LidarPointDensity {
                         FixedRadiusSearch2D::new(search_radius, DistanceMetric::SquaredEuclidean);
 
                     if verbose && inputs.len() == 1 {
-                        println!("Reading input LAS file...");
+                        println!("reading input LiDAR file...");
                     }
 
                     let mut progress: i32;

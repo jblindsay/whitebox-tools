@@ -250,7 +250,7 @@ impl WhiteboxTool for LasToMultipointShapefile {
                         .replace(".ZLIDAR", ".shp");
 
                     if verbose && num_tiles == 1 {
-                        println!("Reading input LAS file...");
+                        println!("reading input LiDAR file...");
                     }
 
                     let path = path::Path::new(&input_file);

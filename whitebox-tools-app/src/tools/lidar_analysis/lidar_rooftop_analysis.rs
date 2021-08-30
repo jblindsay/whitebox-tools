@@ -566,7 +566,7 @@ impl WhiteboxTool for LidarRooftopAnalysis {
             println!("Clipping lidar to building footprints...")
         };
 
-        // let input = LasFile::new(&inputs[0], "r").expect("Error reading input LAS file");
+        // let input = LasFile::new(&inputs[0], "r").expect("Error reading input LiDAR file");
         // let mut output_lidar = LasFile::initialize_using_file(&output_lidar_file, &input);
         // output_lidar.header.system_id = "EXTRACTION".to_string();
         // output_lidar.header.point_format = 2;

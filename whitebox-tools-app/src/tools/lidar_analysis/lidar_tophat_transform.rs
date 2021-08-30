@@ -207,7 +207,7 @@ impl WhiteboxTool for LidarTophatTransform {
         }
 
         if verbose {
-            println!("Reading input LAS file...");
+            println!("reading input LiDAR file...");
         }
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,

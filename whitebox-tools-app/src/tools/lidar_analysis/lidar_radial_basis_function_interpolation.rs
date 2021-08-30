@@ -639,7 +639,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                     let mut z: f64;
 
                     if verbose && inputs.len() == 1 {
-                        println!("Reading input LAS file...");
+                        println!("reading input LiDAR file...");
                     }
 
                     let mut progress: i32;

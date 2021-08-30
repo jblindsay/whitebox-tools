@@ -236,7 +236,7 @@ impl WhiteboxTool for LidarThin {
             println!("{}", "*".repeat(welcome_len));
         }
 
-        println!("Reading input LAS file...");
+        println!("reading input LiDAR file...");
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,
             Err(err) => panic!("Error reading file {}: {}", input_file, err),

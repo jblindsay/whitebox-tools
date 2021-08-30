@@ -421,7 +421,7 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                     let mut z_values = vec![];
 
                     if verbose && inputs.len() == 1 {
-                        println!("Reading input LAS file...");
+                        println!("reading input LiDAR file...");
                     }
 
                     let mut progress: usize;

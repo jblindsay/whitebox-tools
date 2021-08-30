@@ -311,7 +311,7 @@ impl WhiteboxTool for LidarBlockMinimum {
             }
 
             if verbose && inputs.len() == 1 {
-                println!("Reading input LAS file...");
+                println!("reading input LiDAR file...");
             }
             let input = match LasFile::new(&input_file, "r") {
                 Ok(lf) => lf,
