@@ -206,7 +206,7 @@ fn run() -> Result<(), Error> {
         } else if arg.starts_with("-toolbox") || arg.starts_with("--toolbox") {
             let mut v = arg
                 .replace("--toolbox", "")
-                .replace("-toolhelp", "")
+                .replace("-toolbox", "")
                 .replace("\"", "")
                 .replace("\'", "");
             if v.starts_with("=") {
