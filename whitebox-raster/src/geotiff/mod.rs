@@ -1607,14 +1607,62 @@ pub fn read_geotiff<'a>(
             if ifd.interpret_as_u16()[0] == 2 {
                 // Horizontal predictor
                 // transform the data
-                let mut idx: usize;
-                for row in 0..configs.rows {
-                    for col in 1..configs.columns {
-                        idx = row * configs.columns + col;
-                        data[idx] += data[idx - 1];
+                match sample_format[0] {
+                    1 => {
+                        // unsigned integer
+                        let max_value = 2.0_f64.powf(bits_per_sample[0] as f64) - 1.0;
+                        let mut diff_wraparound: f64;
+                        let mut idx: usize;
+                        for row in 0..configs.rows {
+                            for col in 1..configs.columns {
+                                idx = row * configs.columns + col;
+
+                                if data[idx] + data[idx - 1] > max_value {
+                                    // Integer underflow occured at encoding
+                                    diff_wraparound = max_value - data[idx - 1];
+                                    data[idx] -= diff_wraparound + 1.0;
+                                } else {
+                                    // No integer wraparound occured at encoding
+                                    data[idx] += data[idx - 1];
+                                }
+                            }
+                        }
                     }
+                    2 => {
+                        // signed integer
+                        let max_value = 2.0_f64.powf(bits_per_sample[0] as f64 - 1.0) - 1.0;
+                        let mut diff_wraparound: f64;
+                        let mut idx: usize;
+                        for row in 0..configs.rows {
+                            for col in 1..configs.columns {
+                                idx = row * configs.columns + col;
+
+                                if data[idx] + data[idx - 1] < -max_value {
+                                    // Integer overflow occured at encoding
+                                    diff_wraparound = -max_value - data[idx];
+                                    data[idx] = data[idx - 1] - diff_wraparound + max_value + 2.0;
+                                } else if data[idx] + data[idx - 1] > max_value {
+                                    // Integer underflow occured at encoding
+                                    diff_wraparound = max_value - data[idx];
+                                    data[idx] = data[idx - 1] - diff_wraparound - max_value - 2.0;
+                                } else {
+                                    // No integer wraparound occured at encoding
+                                    data[idx] += data[idx - 1];
+                                }
+                            }
+                        }
+                    }
+                    3 => {
+                        // floating point
+                        return Err(Error::new(
+                            ErrorKind::InvalidData,
+                            "The GeoTIFF reader does not currently support 32-bit floating points with horizontal predictor (PREDICTOR=2).",
+                        ))
+                    }
+                    _ => {} // do nothing
                 }
             }
+
             // if ifd.interpret_as_u16()[0] == 3 {
             //     if configs.endian == Endianness::LittleEndian {
             //         if configs.data_type == DataType::F32 {
