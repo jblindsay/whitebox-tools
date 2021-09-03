@@ -571,7 +571,7 @@ pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
     let _ = writer.flush();
 
     // output the projection file
-    if !r.configs.projection.is_empty() {
+    if r.configs.projection != "not specified" {
         let prj_file = Path::new(&r.file_name)
             .with_extension("prj")
             .into_os_string()

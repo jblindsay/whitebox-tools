@@ -615,7 +615,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // Write the projection file //
     ///////////////////////////////
 
-    if !r.configs.projection.is_empty() {
+    if r.configs.projection != "not specified" {
         let prj_file = Path::new(&r.file_name)
             .with_extension("prj")
             .into_os_string()
