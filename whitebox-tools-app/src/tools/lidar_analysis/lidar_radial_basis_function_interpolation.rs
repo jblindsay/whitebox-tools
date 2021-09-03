@@ -184,8 +184,10 @@ impl LidarRbfInterpolation {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -637,7 +639,7 @@ impl WhiteboxTool for LidarRbfInterpolation {
                     let mut z: f64;
 
                     if verbose && inputs.len() == 1 {
-                        println!("Reading input LAS file...");
+                        println!("reading input LiDAR file...");
                     }
 
                     let mut progress: i32;

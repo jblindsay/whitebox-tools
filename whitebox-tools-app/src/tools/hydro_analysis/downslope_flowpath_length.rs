@@ -100,8 +100,10 @@ impl DownslopeFlowpathLength {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -370,7 +372,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                             dist += grid_lengths[c] * weights.get_value(y, x);
 
                             if output.get_value(y, x) != -999f64 {
-                                dist += output.get_value(y, x) * weights.get_value(y, x);
+                                dist += output.get_value(y, x);
                                 flag = true;
                             } else if watersheds[(y, x)] != current_id {
                                 flag = true;

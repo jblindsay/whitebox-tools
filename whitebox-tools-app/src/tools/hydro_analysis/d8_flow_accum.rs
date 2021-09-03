@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 26/016/2017
-Last Modified: 21/02/2020
+Last Modified: 29/08/2021
 License: MIT
 */
 
@@ -127,15 +127,17 @@ impl D8FlowAccumulation {
         parameters.push(ToolParameter {
             name: "If a pointer is input, does it use the ESRI pointer scheme?".to_owned(),
             flags: vec!["--esri_pntr".to_owned()],
-            description: "Input  D8 pointer uses the ESRI style scheme.".to_owned(),
+            description: "Input D8 pointer uses the ESRI style scheme.".to_owned(),
             parameter_type: ParameterType::Boolean,
             default_value: Some("false".to_owned()),
             optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -314,7 +316,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                 let input = input.clone();
                 let tx = tx.clone();
                 thread::spawn(move || {
-                    let nodata = input.configs.nodata;
+                    // let nodata = input.configs.nodata;
                     let dx = [1, 1, 1, 0, -1, -1, -1, 0];
                     let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
                     let grid_lengths = [
@@ -389,7 +391,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                 let input = input.clone();
                 let tx = tx.clone();
                 thread::spawn(move || {
-                    let nodata = input.configs.nodata;
+                    // let nodata = input.configs.nodata;
                     let mut z: f64;
                     let mut interior_pit_found = false;
                     let dx = [1, 1, 1, 0, -1, -1, -1, 0];
@@ -424,7 +426,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                         pntr_matches[128] = 0i8;
                     }
                     for row in (0..rows).filter(|r| r % num_procs == tid) {
-                        let mut data: Vec<i8> = vec![-1i8; columns as usize];
+                        let mut data: Vec<i8> = vec![-2i8; columns as usize];
                         for col in 0..columns {
                             z = input.get_value(row, col);
                             if z != nodata {
@@ -437,6 +439,7 @@ impl WhiteboxTool for D8FlowAccumulation {
                                     for i in 0..8 {
                                         if input.get_value(row + dy[i], col + dx[i]) == nodata {
                                             neighbouring_nodata = true;
+                                            break;
                                         }
                                     }
                                     if !neighbouring_nodata {
@@ -467,7 +470,10 @@ impl WhiteboxTool for D8FlowAccumulation {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        let out_nodata = -32768f64;
+        output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
+        output.configs.data_type = DataType::F32;
         output.reinitialize_values(1.0);
         drop(input);
 
@@ -543,7 +549,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             col = cell.1;
             fa = output[(row, col)];
             num_inflowing.decrement(row, col, 1i8);
-            dir = flow_dir[(row, col)];
+            dir = flow_dir.get_value(row, col);
             if dir >= 0 {
                 row_n = row + dy[dir as usize];
                 col_n = col + dx[dir as usize];
@@ -601,11 +607,11 @@ impl WhiteboxTool for D8FlowAccumulation {
         if log_transform {
             for row in 0..rows {
                 for col in 0..columns {
-                    // if input[(row, col)] == nodata {
+                    // if input.get_value(row, col) == nodata {
                     if flow_dir.get_value(row, col) == -2 {
-                        output[(row, col)] = nodata;
+                        output.set_value(row, col, out_nodata);
                     } else {
-                        let dir = flow_dir[(row, col)];
+                        dir = flow_dir.get_value(row, col);
                         if dir >= 0 {
                             output[(row, col)] =
                                 (output[(row, col)] * cell_area / flow_widths[dir as usize]).ln();
@@ -627,11 +633,11 @@ impl WhiteboxTool for D8FlowAccumulation {
         } else {
             for row in 0..rows {
                 for col in 0..columns {
-                    // if input[(row, col)] == nodata {
+                    // if input.get_value(row, col) == nodata {
                     if flow_dir.get_value(row, col) == -2 {
-                        output[(row, col)] = nodata;
+                        output.set_value(row, col, out_nodata);
                     } else {
-                        let dir = flow_dir.get_value(row, col);
+                        dir = flow_dir.get_value(row, col);
                         if dir >= 0 {
                             output.set_value(
                                 row,

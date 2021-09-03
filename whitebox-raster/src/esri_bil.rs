@@ -522,12 +522,12 @@ pub fn write_esri_bil<'a>(r: &'a mut Raster) -> Result<(), Error> {
         .write_all(s.as_bytes())
         .expect("Error while writing to BIL file.");
 
-    let s = format!("BANDROWBYTES   {}\n", nbits / 4 * r.configs.columns);
+    let s = format!("BANDROWBYTES   {}\n", nbits / 8 * r.configs.columns);
     writer
         .write_all(s.as_bytes())
         .expect("Error while writing to BIL file.");
 
-    let s = format!("TOTALROWBYTES  {}\n", nbits / 4 * r.configs.columns);
+    let s = format!("TOTALROWBYTES  {}\n", nbits / 8 * r.configs.columns);
     writer
         .write_all(s.as_bytes())
         .expect("Error while writing to BIL file.");

@@ -60,6 +60,9 @@ use std::{f32, f64};
 /// After smoothing treatment with FPS:
 /// ![](../../doc_img/FeaturePreservingSmoothing_fig2.png)
 ///
+/// For a video tutorial on how to use the `FeaturePreservingSmoothing` tool, please see
+/// [this YouTube video](https://www.youtube.com/watch?v=FM3It51L7ZA&t=421s).
+///
 /// # Reference
 /// Lindsay JB, Francioni A, Cockburn JMH. 2019. LiDAR DEM smoothing and the preservation of
 /// drainage features. *Remote Sensing*, 11(16), 1926; DOI: 10.3390/rs11161926.
@@ -148,8 +151,10 @@ impl FeaturePreservingSmoothing {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")

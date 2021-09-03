@@ -61,8 +61,10 @@ impl FilterLidarScanAngles {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -187,7 +189,7 @@ impl WhiteboxTool for FilterLidarScanAngles {
         }
 
         if verbose {
-            println!("Reading input LAS file...");
+            println!("reading input LiDAR file...");
         }
         let input = match LasFile::new(&input_file, "r") {
             Ok(lf) => lf,

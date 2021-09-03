@@ -208,8 +208,13 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         ));
     }
     for i in 0..args.len() {
-        let mut arg = args[i].replace("\"", "");
-        arg = arg.replace("\'", "");
+        let arg = if !args[i].contains("--statement") {
+            args[i].replace("\"", "").replace("'", "")
+        } else {
+            args[i].clone()
+        };
+        // let mut arg = args[i].replace("\"", "");
+        // arg = arg.replace("\'", "");
         let cmd = arg.split("="); // in case an equals sign was used
         let vec = cmd.collect::<Vec<&str>>();
         let mut keyval = false;
@@ -223,12 +228,19 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             } else {
                 args[i + 1].to_string()
             };
-        } else if flag_val == "-statement" {
-            con_statement = if keyval {
-                vec[1].to_string()
-            } else {
-                args[i + 1].to_string()
-            };
+        // } else if flag_val == "-statement" {
+        //     con_statement = if keyval {
+        //         vec[1].to_string()
+        //     } else {
+        //         args[i + 1].to_string()
+        //     };
+
+        //     println!("{}", con_statement);
+        } else if arg.contains("-statement") {
+            con_statement = arg.replace("--statement=", "")
+                           .replace("-statement=", "")
+                           .replace("--statement", "")
+                           .replace("-statement", "");
         } else if flag_val == "-true" {
             true_value = if keyval {
                 vec[1].to_string()
@@ -316,6 +328,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         } else if !false_value.contains(&sep) && !false_value.contains("/") {
             false_value = format!("{}{}", working_directory, false_value);
         }
+    }
+
+    if con_statement.contains("'") {
+        con_statement = con_statement.replace("'", "");
     }
 
     con_statement = con_statement
@@ -488,7 +504,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         if configurations.verbose_mode {
             progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Calculating index: {}%", progress);
+                println!("Progress: {}%", progress);
                 old_progress = progress;
             }
         }

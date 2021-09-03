@@ -29,12 +29,17 @@ name = "raster_calculator"
 path = "src/raster_calculator/main.rs"
 
 [[bin]]
+name = "rho8_flow_accumulation"
+path = "src/rho8_flow_accumulation/main.rs"
+
+[[bin]]
 name = "split_vector_lines"
 path = "src/split_vector_lines/main.rs"
 
 [dependencies]
 fasteval = "0.2.4"
 num_cpus = "1.13.0"
+rand = { version = "0.7", features = ["small_rng"] }
 whitebox_common = { path = "../whitebox-common" }
 whitebox_raster = { path = "../whitebox-raster" }
 whitebox_vector = { path = "../whitebox-vector" }

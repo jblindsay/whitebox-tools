@@ -22,8 +22,8 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Burns streams into a DEM using the FillBurn (Saunders, 1999) method. This tool uses the
-/// algorithm described in:
+/// Burns streams into a DEM using the FillBurn (Saunders, 1999) method which produces a hydro-enforced DEM.
+/// This tool uses the algorithm described in:
 ///
 /// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
 /// and Landforms, 41(5): 658-668. DOI: 10.1002/esp.3888
@@ -85,8 +85,10 @@ impl FillBurn {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -590,7 +592,7 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
-        // Find the minimum elevaton difference between the
+        // Find the minimum elevation difference between the
         // filled DEM and the original DEM along the
         // stream network and raise all stream cells by this
         // value less 1 m.
@@ -613,7 +615,7 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
-        min_diff += 1f64;
+        min_diff -= 1f64;
 
         for row in 0..rows {
             for col in 0..columns {

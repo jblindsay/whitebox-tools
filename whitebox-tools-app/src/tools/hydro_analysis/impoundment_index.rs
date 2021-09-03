@@ -14,14 +14,15 @@ use std::collections::{BinaryHeap, VecDeque};
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
-use std::path;
-use std::path::Path;
+// use std::path;
+// use std::path::Path;
 
 /// This tool can be used to calculate the impoundment size index (ISI) from a digital elevation model (DEM).
 /// The ISI is a land-surface parameter related to the size of the impoundment that would result from inserting
-/// a dam of a user-specified maximum length (`--damlength`) into each DEM grid cell. In addition to an
-/// output dam-height raster (same name as `--output` file but with an *_dam_height* suffix appended), the tool outputs
-/// a measure of impoundment size (`--out_type`) related to impoundment average depth, total volume, or flooded area.
+/// a dam of a user-specified maximum length (`--damlength`) into each DEM grid cell. The tool requires the user
+/// to specify the name of one or more of the possible outputs, which include the mean flooded depth (`--out_mean`),
+/// the maximum flooded depth (`--out_max`), the flooded volume (`--out_volume`), the flooded area (`--out_area`),
+/// and the dam height (`--out_dam_height`).
 ///
 /// Please note that this tool performs an extremely complex and computationally intensive flow-accumulation operation.
 /// As such, it may take a substantial amount of processing time and may encounter issues (including memory issues) when
@@ -61,27 +62,47 @@ impl ImpoundmentSizeIndex {
         });
 
         parameters.push(ToolParameter {
-            name: "Output File".to_owned(),
-            flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output file.".to_owned(),
+            name: "Output Mean Depth File".to_owned(),
+            flags: vec!["--out_mean".to_owned()],
+            description: "Output mean flooded depth file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
-            optional: false,
+            optional: true,
         });
 
         parameters.push(ToolParameter {
-            name: "Output Type".to_owned(),
-            flags: vec!["--out_type".to_owned()],
-            description:
-                "Output type; one of 'mean depth' (default), 'volume', 'area', 'max depth'."
-                    .to_owned(),
-            parameter_type: ParameterType::OptionList(vec![
-                "mean depth".to_owned(),
-                "volume".to_owned(),
-                "area".to_owned(),
-                "max depth".to_owned(),
-            ]),
-            default_value: Some("mean depth".to_owned()),
+            name: "Output Max. Depth File".to_owned(),
+            flags: vec!["--out_max".to_owned()],
+            description: "Output maximum flooded depth file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Volume File".to_owned(),
+            flags: vec!["--out_volume".to_owned()],
+            description: "Output flooded volume file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Area File".to_owned(),
+            flags: vec!["--out_area".to_owned()],
+            description: "Output flooded area file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Output Dam Height File".to_owned(),
+            flags: vec!["--out_dam_height".to_owned()],
+            description: "Output dam height file.".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            default_value: None,
             optional: true,
         });
 
@@ -95,8 +116,10 @@ impl ImpoundmentSizeIndex {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -159,8 +182,11 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut output_file = String::new();
-        let mut out_type = 0; // 0 = area; 1 = volume
+        let mut out_mean_file = String::new();
+        let mut out_max_file = String::new();
+        let mut out_volume_file = String::new();
+        let mut out_area_file = String::new();
+        let mut out_height_file = String::new();
         let mut dam_length = 111f64;
 
         if args.len() == 0 {
@@ -185,27 +211,57 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-o" || flag_val == "-output" {
-                output_file = if keyval {
+            } else if flag_val == "-out_mean" {
+                out_mean_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-out_type" {
-                let val = if keyval {
-                    vec[1].to_lowercase()
+            } else if flag_val == "-out_max" {
+                out_max_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    args[i + 1].to_lowercase()
+                    args[i + 1].to_string()
                 };
-                out_type = if val.contains("v") {
-                    1
-                } else if val.contains("mean depth") {
-                    2
-                } else if val.contains("max depth") {
-                    3
+            } else if flag_val == "-out_volume" {
+                out_volume_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    0 // area
+                    args[i + 1].to_string()
                 };
+            } else if flag_val == "-out_area" {
+                out_area_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-out_dam_height" {
+                out_height_file = if keyval {
+                    vec[1].to_string()
+                } else {
+                    args[i + 1].to_string()
+                };
+            // } else if flag_val == "-o" || flag_val == "-output" {
+            //     output_file = if keyval {
+            //         vec[1].to_string()
+            //     } else {
+            //         args[i + 1].to_string()
+            //     };
+            // } else if flag_val == "-out_type" {
+            //     let val = if keyval {
+            //         vec[1].to_lowercase()
+            //     } else {
+            //         args[i + 1].to_lowercase()
+            //     };
+            //     out_type = if val.contains("v") {
+            //         1
+            //     } else if val.contains("mean depth") {
+            //         2
+            //     } else if val.contains("max depth") {
+            //         3
+            //     } else {
+            //         0 // area
+            //     };
             } else if flag_val == "-damlength" {
                 dam_length = if keyval {
                     vec[1]
@@ -240,8 +296,44 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
-        if !output_file.contains(&sep) && !output_file.contains("/") {
-            output_file = format!("{}{}", working_directory, output_file);
+        if !out_mean_file.is_empty() && !out_mean_file.contains(&sep) && !out_mean_file.contains("/") {
+            out_mean_file = format!("{}{}", working_directory, out_mean_file);
+        }
+        if !out_max_file.is_empty() && !out_max_file.contains(&sep) && !out_max_file.contains("/") {
+            out_max_file = format!("{}{}", working_directory, out_max_file);
+        }
+        if !out_volume_file.is_empty() && !out_volume_file.contains(&sep) && !out_volume_file.contains("/") {
+            out_volume_file = format!("{}{}", working_directory, out_volume_file);
+        }
+        if !out_area_file.is_empty() && !out_area_file.contains(&sep) && !out_area_file.contains("/") {
+            out_area_file = format!("{}{}", working_directory, out_area_file);
+        }
+        if !out_height_file.is_empty() && !out_height_file.contains(&sep) && !out_height_file.contains("/") {
+            out_height_file = format!("{}{}", working_directory, out_height_file);
+        }
+
+        // There must be at least one output.
+        let mut num_output = 0;
+        if !out_mean_file.is_empty() {
+            num_output += 1;
+        }
+        if !out_max_file.is_empty() {
+            num_output += 1;
+        }
+        if !out_volume_file.is_empty() {
+            num_output += 1;
+        }
+        if !out_area_file.is_empty() {
+            num_output += 1;
+        }
+        if !out_height_file.is_empty() {
+            num_output += 1;
+        }
+        if num_output == 0 {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Tool run with no outputs. At least one output type is required.",
+            ));
         }
 
         /*
@@ -582,11 +674,25 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         let mut cutoff_z: f64;
         let mut threshold: f64;
         let mut num_upslope: f64;
+        let mut total_elev_diff: f64;
         let mut vol: f64;
         let mut diff: f64;
         let mut max_depth: f64;
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.reinitialize_values(0.0);
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
+        // let mut out_mean = Raster::initialize_using_file(&out_mean_file, &input);
+        // out_mean.reinitialize_values(0.0);
+        // let mut out_max = Raster::initialize_using_file(&out_max_file, &input);
+        // out_max.reinitialize_values(0.0);
+        // let mut out_volume = Raster::initialize_using_file(&out_volume_file, &input);
+        // out_volume.reinitialize_values(0.0);
+        // let mut num_flooded_cells = Raster::initialize_using_file(&out_area_file, &input);
+        // let mut num_flooded_cells: Array2D<u32> = Array2D::new(rows, columns, 0, 0)?; // needed for the mean depth
+        // output.reinitialize_values(0.0);
+
+        let mut out_max: Array2D<f32> = Array2D::new(rows, columns, 0f32, -32768.0)?;
+        let mut out_volume: Array2D<f32> = Array2D::new(rows, columns, 0f32, -32768.0)?;
+        let mut out_area: Array2D<f32> = Array2D::new(rows, columns, 0f32, -32768.0)?;
+
         while !stack.is_empty() {
             let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
@@ -602,7 +708,8 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 cutoff_z = filled_dem.get_value(row_n, col_n);
                 threshold = crest_elev.get_value(row_n, col_n);
                 num_upslope = 0f64;
-                vol = 0f64;
+                // vol = 0f64;
+                total_elev_diff = 0f64;
                 max_depth = 0f64;
                 upslope_elevs[row as usize][col as usize].push(z); // adding the elevation of row, col
                 for up_z in upslope_elevs[row as usize][col as usize].clone() {
@@ -611,8 +718,8 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                         if up_z < threshold {
                             num_upslope += 1f64;
                             diff = threshold - up_z;
-                            vol += diff;
-                            if max_depth < diff {
+                            total_elev_diff += diff;
+                            if diff > max_depth {
                                 max_depth = diff;
                             }
                         }
@@ -620,23 +727,31 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                 }
                 upslope_elevs[row as usize][col as usize] = vec![];
 
-                if out_type == 0 {
+                // if out_type == 0 {
                     // area
-                    output.increment(row_n, col_n, num_upslope * grid_area);
-                } else if out_type == 1 {
+                    // output.increment(row_n, col_n, num_upslope * grid_area);
+                    out_area.increment(row_n, col_n, (num_upslope * grid_area) as f32);
+                // } else if out_type == 1 {
                     // volume
-                    output.increment(row_n, col_n, vol);
-                } else if out_type == 1 {
+                    vol = total_elev_diff * grid_area;
+                    // output.increment(row_n, col_n, vol);
+                    out_volume.increment(row_n, col_n, vol as f32);
+                // } else if out_type == 2 {
                     // mean depth
-                    if num_upslope > 0f64 {
-                        output.increment(row_n, col_n, vol / (num_upslope * grid_area));
-                    }
-                } else {
+                    // if num_upslope > 0f64 {
+                        // output.increment(row_n, col_n, total_elev_diff);
+                        // num_flooded_cells.increment(row_n, col_n, num_upslope as u32);
+                        // out_mean.increment(row_n, col_n, total_elev_diff);
+                    // }
+                // } else {
                     // max depth
-                    if output.get_value(row_n, col_n) < max_depth {
-                        output.set_value(row_n, col_n, max_depth);
+                    // if output.get_value(row_n, col_n) < max_depth {
+                    //     output.set_value(row_n, col_n, max_depth);
+                    // }
+                    if out_max.get_value(row_n, col_n) < max_depth as f32 {
+                        out_max.set_value(row_n, col_n, max_depth as f32);
                     }
-                }
+                // }
 
                 num_inflowing.decrement(row_n, col_n, 1i8);
                 if num_inflowing[(row_n, col_n)] == 0i8 {
@@ -654,92 +769,208 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
             }
         }
 
+
+        let elapsed_time = get_formatted_elapsed_time(start);
+
         // Output the dam height above the ground elevation
-        let extension: String = match Path::new(&output_file).extension().unwrap().to_str() {
-            Some(n) => n.to_string(),
-            None => "".to_string(),
-        };
-        let output_hgt_file = &output_file.replace(
-            &format!(".{}", extension),
-            &format!("_dam_height.{}", extension),
-        );
-        let mut output_hgt = Raster::initialize_using_file(&output_hgt_file, &input);
-        for row in 0..rows {
-            for col in 0..columns {
-                z = input.get_value(row, col);
-                if z != nodata {
-                    output_hgt.set_value(row, col, crest_elev.get_value(row, col) - z);
-                } else {
-                    // this handles the nodata values in the input that should also be
-                    // nodata in the output ISI image. The dam height raster will already
-                    // have nodata in each of these cells.
-                    output.set_value(row, col, nodata);
+        if !out_height_file.is_empty() {
+            // let extension: String = match Path::new(&output_file).extension().unwrap().to_str() {
+            //     Some(n) => n.to_string(),
+            //     None => "".to_string(),
+            // };
+            // let output_hgt_file = &output_file.replace(
+            //     &format!(".{}", extension),
+            //     &format!("_dam_height.{}", extension),
+            // );
+            let mut output_hgt = Raster::initialize_using_file(&out_height_file, &input);
+            output_hgt.configs.data_type = DataType::F32;
+            for row in 0..rows {
+                for col in 0..columns {
+                    z = input.get_value(row, col);
+                    if z != nodata {
+                        output_hgt.set_value(row, col, crest_elev.get_value(row, col) - z);
+                    // } else {
+                    //     // this handles the nodata values in the input that should also be
+                    //     // nodata in the output ISI image. The dam height raster will already
+                    //     // have nodata in each of these cells.
+                    //     output.set_value(row, col, nodata);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Outputting dam heights: {}%", progress);
+                        old_progress = progress;
+                    }
                 }
             }
+
+            drop(crest_elev);
+
+            output_hgt.configs.palette = "spectrum.plt".to_string();
+            output_hgt.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            output_hgt.add_metadata_entry(format!("Input file: {}", input_file));
+            output_hgt.add_metadata_entry(format!("Dam length: {}", dam_length));
+            output_hgt.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+
+            if verbose {
+                println!("Saving dam height data...")
+            };
+            let _ = match output_hgt.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
+                Err(e) => return Err(e),
+            };
+        }
+        
+        // let mut out_mean = Raster::initialize_using_file(&out_mean_file, &input);
+        let mut out_mean: Array2D<f32> = Array2D::new(rows, columns, 0f32, -32768.0)?;
+        let mut area: f32;
+        let mut vol_f32: f32;
+        for row in 0..rows {
+            for col in 0..columns {
+                if input.get_value(row, col) != nodata {
+                    area = out_area.get_value(row, col);
+                    if area != 0f32 {
+                        vol_f32 = out_volume.get_value(row, col);
+                        out_mean.set_value(row, col, vol_f32 / area);
+                    }
+                } else {
+                    out_mean.set_value(row, col, -32768f32);
+                    out_max.set_value(row, col, -32768f32);
+                    out_volume.set_value(row, col, -32768f32);
+                    out_area.set_value(row, col, -32768f32);
+                }
+            }
+
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Outputting dam heights: {}%", progress);
+                    println!("Calculating mean depths: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let elapsed_time = get_formatted_elapsed_time(start);
+        let mut out_configs = input.configs.clone();
+        out_configs.nodata = -32768f64;
 
-        output.configs.palette = "spectrum.plt".to_string();
-        output.add_metadata_entry(format!(
-            "Created by whitebox_tools\' {} tool",
-            self.get_tool_name()
-        ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Dam length: {}", dam_length));
-        if out_type == 0 {
-            output.add_metadata_entry(format!("Out type: flooded area"));
-        } else if out_type == 1 {
-            output.add_metadata_entry(format!("Out type: reservoir volume"));
-        } else {
-            output.add_metadata_entry(format!("Out type: average reservoir depth"));
-        }
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        drop(input);
 
-        if verbose {
-            println!("Saving index data...")
-        };
-        let _ = match output.write() {
-            Ok(_) => {
-                if verbose {
-                    println!("Output file written")
+        // Output max depth data
+        if !out_mean_file.is_empty() {
+            //Raster::initialize_using_file(&output_file, &input);
+            let mut output = Raster::initialize_from_array2d(&out_mean_file, &out_configs, &out_mean);
+            output.configs.data_type = DataType::F32;
+            drop(out_mean);
+            if verbose {
+                println!("Saving mean depth data...")
+            };
+            let _ = match output.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
                 }
-            }
-            Err(e) => return Err(e),
-        };
-
-        output_hgt.configs.palette = "spectrum.plt".to_string();
-        output_hgt.add_metadata_entry(format!(
-            "Created by whitebox_tools\' {} tool",
-            self.get_tool_name()
-        ));
-        output_hgt.add_metadata_entry(format!("Input file: {}", input_file));
-        output_hgt.add_metadata_entry(format!("Dam length: {}", dam_length));
-        if out_type == 0 {
-            output_hgt.add_metadata_entry(format!("Out type: flooded area"));
-        } else {
-            output_hgt.add_metadata_entry(format!("Out type: reservoir volume"));
+                Err(e) => return Err(e),
+            };
         }
-        output_hgt.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
-        if verbose {
-            println!("Saving dam height data...")
-        };
-        let _ = match output_hgt.write() {
-            Ok(_) => {
-                if verbose {
-                    println!("Output file written")
+        
+        // Output max depth data
+        if !out_max_file.is_empty() {
+            //Raster::initialize_using_file(&output_file, &input);
+            let mut output = Raster::initialize_from_array2d(&out_max_file, &out_configs, &out_max);
+            output.configs.data_type = DataType::F32;
+            drop(out_max);
+            if verbose {
+                println!("Saving max depth data...")
+            };
+            let _ = match output.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
                 }
-            }
-            Err(e) => return Err(e),
-        };
+                Err(e) => return Err(e),
+            };
+        }
+
+        // Output flooded volume data
+        if !out_volume_file.is_empty() {
+            let mut output = Raster::initialize_from_array2d(&out_volume_file, &out_configs, &out_volume);
+            output.configs.data_type = DataType::F32;
+            drop(out_volume);
+            if verbose {
+                println!("Saving flooded volume data...")
+            };
+            let _ = match output.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
+                Err(e) => return Err(e),
+            };
+        }
+
+        // Output flooded area data
+        if !out_area_file.is_empty() {
+            //Raster::initialize_using_file(&output_file, &input);
+            let mut output = Raster::initialize_from_array2d(&out_area_file, &out_configs, &out_area);
+            output.configs.data_type = DataType::F32;
+            drop(out_area);
+            if verbose {
+                println!("Saving flooded area data...")
+            };
+            let _ = match output.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("Output file written")
+                    }
+                }
+                Err(e) => return Err(e),
+            };
+        }
+
+
+
+        
+        
+        // output.configs.palette = "spectrum.plt".to_string();
+        // output.add_metadata_entry(format!(
+        //     "Created by whitebox_tools\' {} tool",
+        //     self.get_tool_name()
+        // ));
+        // output.add_metadata_entry(format!("Input file: {}", input_file));
+        // output.add_metadata_entry(format!("Dam length: {}", dam_length));
+        // if out_type == 0 {
+        //     output.add_metadata_entry(format!("Out type: flooded area"));
+        // } else if out_type == 1 {
+        //     output.add_metadata_entry(format!("Out type: reservoir volume"));
+        // } else {
+        //     output.add_metadata_entry(format!("Out type: average reservoir depth"));
+        // }
+        // output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+
+        // if verbose {
+        //     println!("Saving index data...")
+        // };
+        // let _ = match output.write() {
+        //     Ok(_) => {
+        //         if verbose {
+        //             println!("Output file written")
+        //         }
+        //     }
+        //     Err(e) => return Err(e),
+        // };
+
+        
 
         if verbose {
             println!(

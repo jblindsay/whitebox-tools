@@ -1164,7 +1164,7 @@ class WbRunner(tk.Frame):
         #format subtoolboxes as for URLs
         self.toolbox_name = self.camel_to_snake(self.toolbox_name).replace('/', '').replace(' ', '') 
         #open the user manual section for the current tool
-        webbrowser.open_new_tab("https://jblindsay.github.io/wbt_book/available_tools/" + self.toolbox_name + ".html#" + self.tool_name)    
+        webbrowser.open_new_tab("https://www.whiteboxgeo.com/manual/wbt_book/available_tools/" + self.toolbox_name + ".html#" + self.tool_name)    
     
     def camel_to_snake(self, s):    # taken from tools_info.py
         _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')

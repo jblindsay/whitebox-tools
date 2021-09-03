@@ -64,6 +64,9 @@ use std::thread;
 ///
 /// ![](../../doc_img/StochasticDepressionAnalysis_fig1.png)
 ///
+/// For a video demonstrating the application of the `StochasticDepressionAnalysis` tool, see 
+/// [this YouTube video](https://www.youtube.com/watch?v=pg8puYYbSzU).
+///
 /// # Reference
 /// Lindsay, J. B., & Creed, I. F. (2005). Sensitivity of digital landscapes to artifact depressions in
 /// remotely-sensed DEMs. Photogrammetric Engineering & Remote Sensing, 71(9), 1029-1036.
@@ -132,8 +135,10 @@ impl StochasticDepressionAnalysis {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")

@@ -29,8 +29,9 @@ use std::thread;
 ///
 /// The tool can optionally (`--connections`) output a CSV table that contains the upstream/downstream connections
 /// among isobasins. That is, this table will identify the downstream basin of each isobasin, or will list N/A in
-/// the event that there is no downstream basin, i.e. if it drains to an edge. The output CSV file will have the
-/// same name as the output raster, but with a *.csv file extension.
+/// the event that there is no downstream basin, i.e. if it drains to an edge. Additionally, the CSV file will contain
+/// information about the number of grid cells in each isobasin and the isobasin outlet's row and column number and  
+/// flow direction. The output CSV file will have the same name as the output raster, but with a *.csv file extension.
 ///
 /// # See Also
 /// `Watershed`, `Basins`, `BreachDepressions`, `FillDepressions`
@@ -89,8 +90,10 @@ impl Isobasins {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
@@ -330,62 +333,42 @@ impl WhiteboxTool for Isobasins {
         /////////////////////////////////////////////
         // Calculate the number of inflowing cells //
         /////////////////////////////////////////////
-        let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
-        let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let flow_dir = flow_dir.clone();
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
-                let mut z: f64;
-                let mut count: i8;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data: Vec<i8> = vec![-1i8; columns as usize];
-                    for col in 0..columns {
-                        z = input.get_value(row, col);
-                        if z != nodata {
-                            count = 0i8;
-                            for i in 0..8 {
-                                if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
-                                {
-                                    count += 1;
-                                }
-                            }
-                            data[col as usize] = count;
-                        } else {
-                            data[col as usize] = -1i8;
-                        }
-                    }
-                    tx.send((row, data)).unwrap();
-                }
-            });
-        }
-
+        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+        let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
+        let mut z: f64;
+        let mut count: i8;
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0usize;
-        for r in 0..rows {
-            let (row, data) = rx.recv().expect("Error receiving data from thread.");
-            num_inflowing.set_row_data(row, data);
+        for row in 0..rows {
             for col in 0..columns {
-                if num_inflowing[(row, col)] == 0i8 {
-                    stack.push((row, col));
-                } else if num_inflowing[(row, col)] == -1i8 {
+                z = input.get_value(row, col);
+                if z != nodata {
+                    count = 0i8;
+                    for i in 0..8 {
+                        if flow_dir.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i] {
+                            count += 1;
+                        }
+                    }
+                    num_inflowing.set_value(row, col, count);
+
+                    if count == 0 {
+                        stack.push((row, col));
+                    }
+                } else {
                     num_solved_cells += 1;
                 }
             }
-
             if verbose {
-                progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
+                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
                     println!("Num. inflowing neighbours: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
+
 
         /////////////////////////////////
         // Find and ID the pour points //
@@ -397,16 +380,15 @@ impl WhiteboxTool for Isobasins {
         output.configs.nodata = out_nodata;
         output.reinitialize_values(out_nodata);
         let mut outlet_id = 1f64;
-        // output.reinitialize_values(1.0);
-        let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-        let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
-        let inflowing_vals: [i8; 8] = [4, 5, 6, 7, 0, 1, 2, 3];
         let (mut row, mut col): (isize, isize);
         let (mut row_n, mut col_n): (isize, isize);
         let mut dir: i8;
         let mut fa: usize;
         let mut inla_index: usize;
         let mut inla_mag: usize;
+        let mut outlet_row = vec![];
+        let mut outlet_col = vec![];
+        let mut outlet_fa = vec![];
         while !stack.is_empty() {
             let cell = stack.pop().expect("Error during pop operation.");
             row = cell.0;
@@ -434,17 +416,26 @@ impl WhiteboxTool for Isobasins {
                         fa -= inla_mag;
                         output.set_value(row_n, col_n, outlet_id);
                         outlet_id += 1f64;
+                        outlet_row.push(row_n);
+                        outlet_col.push(col_n);
+                        outlet_fa.push(inla_mag);
                     } else {
                         accum.set_value(row, col, 1);
                         fa = 1;
                         output.set_value(row, col, outlet_id);
                         outlet_id += 1f64;
+                        outlet_row.push(row);
+                        outlet_col.push(col);
+                        outlet_fa.push(inla_mag);
                     }
                 } else {
+                    outlet_fa.push(fa);
                     accum.set_value(row, col, 1);
                     fa = 1;
                     output.set_value(row, col, outlet_id);
                     outlet_id += 1f64;
+                    outlet_row.push(row);
+                    outlet_col.push(col);
                 }
             }
             num_inflowing.decrement(row, col, 1i8);
@@ -458,8 +449,13 @@ impl WhiteboxTool for Isobasins {
                     stack.push((row_n, col_n));
                 }
             } else {
-                output.set_value(row, col, outlet_id);
-                outlet_id += 1f64;
+                if output.get_value(row, col) == out_nodata {
+                    output.set_value(row, col, outlet_id);
+                    outlet_id += 1f64;
+                    outlet_row.push(row);
+                    outlet_col.push(col);
+                    outlet_fa.push(fa);
+                }
             }
 
             if verbose {
@@ -542,7 +538,7 @@ impl WhiteboxTool for Isobasins {
         }
 
         if output_connections {
-            let mut connections_table = vec![-1isize; num_outlets];
+            let mut connections_table = vec![-1isize; num_outlets+1];
             let dx = [1, 1, 1, 0, -1, -1, -1, 0];
             let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
             let mut z_n: f64;
@@ -581,16 +577,25 @@ impl WhiteboxTool for Isobasins {
             let f = File::create(csv_file.clone()).expect("Error while creating CSV file.");
             let mut writer = BufWriter::new(f);
             writer
-                .write_all("UPSTREAM,DOWNSTREAM\n".as_bytes())
+                .write_all("UPSTREAM,DOWNSTREAM,OUTLET_ROW,OUTLET_COL,ACCUM,FLOW_DIR\n".as_bytes())
                 .expect("Error while writing to CSV file.");
-            for i in 1..num_outlets {
+            for i in 1..=num_outlets {
+                row_n = outlet_row[i-1];
+                col_n = outlet_col[i-1];
+                fa = outlet_fa[i-1];
+                dir = flow_dir.get_value(row_n, col_n);
+                let fd = if dir >= 0 {
+                    2i32.pow(dir as u32)
+                } else {
+                    0i32
+                };
                 if connections_table[i] != -1 {
-                    let s = format!("{},{}\n", i, connections_table[i]);
+                    let s = format!("{},{},{},{},{},{}\n", i, connections_table[i], row_n, col_n, fa, fd);
                     writer
                         .write_all(s.as_bytes())
                         .expect("Error while writing to CSV file.");
                 } else {
-                    let s = format!("{},N/A\n", i);
+                    let s = format!("{},N/A,{},{},{},{}\n", i, row_n, col_n, fa, fd);
                     writer
                         .write_all(s.as_bytes())
                         .expect("Error while writing to CSV file.");

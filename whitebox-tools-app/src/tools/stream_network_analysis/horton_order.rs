@@ -14,7 +14,7 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to assign the Strahler stream order to each link in a stream network. Stream ordering is often used
+/// This tool can be used to assign the Horton stream order to each link in a stream network. Stream ordering is often used
 /// in hydro-geomorphic and ecological studies to quantify the relative size and importance of a stream segment to the overall
 /// river system. There are several competing stream ordering schemes. Based on to this common stream numbering system, headwater
 /// stream links are assigned an order of one. Stream order only increases downstream when two links of equal order join, otherwise
@@ -104,8 +104,10 @@ impl HortonStreamOrder {
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
-        let p = format!("{}", env::current_dir().unwrap().display());
         let e = format!("{}", env::current_exe().unwrap().display());
+        let mut parent = env::current_exe().unwrap();
+        parent.pop();
+        let p = format!("{}", parent.display());
         let mut short_exe = e
             .replace(&p, "")
             .replace(".exe", "")
