@@ -151,7 +151,7 @@ impl BreachDepressionsLeastCost {
             description: "Optional flag indicating whether to minimize breach distances."
                 .to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: Some("true".to_string()),
+            default_value: Some("false".to_string()),
             optional: true,
         });
 
@@ -171,7 +171,7 @@ impl BreachDepressionsLeastCost {
                 "Optional flag indicating whether to fill any remaining unbreached depressions."
                     .to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: Some("true".to_string()),
+            default_value: Some("false".to_string()),
             optional: true,
         });
 
