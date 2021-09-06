@@ -64,7 +64,7 @@ impl LidarClassifySubset {
         let name = "LidarClassifySubset".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description =
-            "Classifies the values in one LiDAR point cloud that correpond with points in a subset cloud."
+            "Classifies the values in one LiDAR point cloud that correspond with points in a subset cloud."
                 .to_string();
 
         let mut parameters = vec![];
