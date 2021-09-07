@@ -1605,61 +1605,74 @@ pub fn read_geotiff<'a>(
     match ifd_map.get(&317) {
         Some(ifd) => {
             if ifd.interpret_as_u16()[0] == 2 {
-                // Horizontal predictor
-                // transform the data
-                match sample_format[0] {
-                    1 => {
-                        // unsigned integer
-                        let max_value = 2.0_f64.powf(bits_per_sample[0] as f64) - 1.0;
-                        let mut diff_wraparound: f64;
-                        let mut idx: usize;
-                        for row in 0..configs.rows {
-                            for col in 1..configs.columns {
-                                idx = row * configs.columns + col;
-
-                                if data[idx] + data[idx - 1] > max_value {
-                                    // Integer underflow occured at encoding
-                                    diff_wraparound = max_value - data[idx - 1];
-                                    data[idx] -= diff_wraparound + 1.0;
-                                } else {
-                                    // No integer wraparound occured at encoding
-                                    data[idx] += data[idx - 1];
+                // Horizontal predictor transformation
+                // Only the width of the blocks matters because the
+                // transformation only affects values on the same row and block
+                let mut col_start: usize;
+                let mut col_end: usize;
+                for i in 0..blocks_across {
+                    let blk_w = if block_padding && i == blocks_across - 1 && configs.columns % block_width != 0 {
+                        configs.columns % block_width
+                    } else {
+                        block_width
+                    };
+                    col_start = i * block_width + 1;
+                    col_end = i * block_width + blk_w;
+                    
+                    match sample_format[0] {
+                        1 => {
+                            // unsigned integer
+                            let max_value = 2.0_f64.powf(bits_per_sample[0] as f64) - 1.0;
+                            let mut diff_wraparound: f64;
+                            let mut idx: usize;
+                            for row in 0..configs.rows {
+                                for col in col_start..col_end {
+                                    idx = row * configs.columns + col;
+                                    
+                                    if data[idx] + data[idx - 1] > max_value {
+                                        // Integer underflow occured at encoding
+                                        diff_wraparound = max_value - data[idx - 1];
+                                        data[idx] -= diff_wraparound + 1.0;
+                                    } else {
+                                        // No integer wraparound occured at encoding
+                                        data[idx] += data[idx - 1];
+                                    }
                                 }
                             }
                         }
-                    }
-                    2 => {
-                        // signed integer
-                        let max_value = 2.0_f64.powf(bits_per_sample[0] as f64 - 1.0) - 1.0;
-                        let mut diff_wraparound: f64;
-                        let mut idx: usize;
-                        for row in 0..configs.rows {
-                            for col in 1..configs.columns {
-                                idx = row * configs.columns + col;
-
-                                if data[idx] + data[idx - 1] < -max_value {
-                                    // Integer overflow occured at encoding
-                                    diff_wraparound = -max_value - data[idx];
-                                    data[idx] = data[idx - 1] - diff_wraparound + max_value + 2.0;
-                                } else if data[idx] + data[idx - 1] > max_value {
-                                    // Integer underflow occured at encoding
-                                    diff_wraparound = max_value - data[idx];
-                                    data[idx] = data[idx - 1] - diff_wraparound - max_value - 2.0;
-                                } else {
-                                    // No integer wraparound occured at encoding
-                                    data[idx] += data[idx - 1];
+                        2 => {
+                            // signed integer
+                            let max_value = 2.0_f64.powf(bits_per_sample[0] as f64 - 1.0) - 1.0;
+                            let mut diff_wraparound: f64;
+                            let mut idx: usize;
+                            for row in 0..configs.rows {
+                                for col in col_start..col_end {
+                                    idx = row * configs.columns + col;
+                                    
+                                    if data[idx] + data[idx - 1] < -max_value {
+                                        // Integer overflow occured at encoding
+                                        diff_wraparound = -max_value - data[idx];
+                                        data[idx] = data[idx - 1] - diff_wraparound + max_value + 2.0;
+                                    } else if data[idx] + data[idx - 1] > max_value {
+                                        // Integer underflow occured at encoding
+                                        diff_wraparound = max_value - data[idx];
+                                        data[idx] = data[idx - 1] - diff_wraparound - max_value - 2.0;
+                                    } else {
+                                        // No integer wraparound occured at encoding
+                                        data[idx] += data[idx - 1];
+                                    }
                                 }
                             }
                         }
+                        3 => {
+                            // floating point
+                            return Err(Error::new(
+                                ErrorKind::InvalidData,
+                                "The GeoTIFF reader does not currently support 32-bit floating points with horizontal predictor (PREDICTOR=2).",
+                            ))
+                        }
+                        _ => {} // do nothing
                     }
-                    3 => {
-                        // floating point
-                        return Err(Error::new(
-                            ErrorKind::InvalidData,
-                            "The GeoTIFF reader does not currently support 32-bit floating points with horizontal predictor (PREDICTOR=2).",
-                        ))
-                    }
-                    _ => {} // do nothing
                 }
             }
 
