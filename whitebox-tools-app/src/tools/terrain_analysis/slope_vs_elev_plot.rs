@@ -38,7 +38,7 @@ use std::thread;
 /// ![](../../doc_img/SlopeVsElevationPlot_fig1.png)
 ///
 /// # See Also
-/// `HypsometricAnalysis`
+/// `HypsometricAnalysis`, `SlopeVsAspectPlot`
 pub struct SlopeVsElevationPlot {
     name: String,
     description: String,

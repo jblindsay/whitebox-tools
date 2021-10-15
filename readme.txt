@@ -56,6 +56,9 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 2.X.X (XX-XX-20XX)
+- Added the MeanCurvature tool.
+
 Version 2.0.0 (30-08-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ
   compressed LiDAR format for all of the LiDAR tools in WBT.

@@ -468,6 +468,7 @@ impl ToolManager {
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
+        tool_names.push("MeanCurvature".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
         tool_names.push("MultidirectionalHillshade".to_string());
         tool_names.push("MultiscaleElevationPercentile".to_string());
@@ -1121,6 +1122,7 @@ impl ToolManager {
                 Some(Box::new(terrain_analysis::MaxElevationDeviation::new()))
             }
             "maxelevdevsignature" => Some(Box::new(terrain_analysis::MaxElevDevSignature::new())),
+            "meancurvature" => Some(Box::new(terrain_analysis::MeanCurvature::new())),
             "mindownslopeelevchange" => {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
             }

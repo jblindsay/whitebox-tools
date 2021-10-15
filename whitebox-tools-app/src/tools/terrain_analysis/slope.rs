@@ -27,7 +27,7 @@ use std::thread;
 ///
 /// > zfactor = 1.0 / (111320.0 x cos(mid_lat))
 ///
-/// where `mid_lat` is the latitude of the centre of the raster, in radians.
+/// where `mid_lat` is the latitude of the centre of each raster row, in radians.
 ///
 /// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given
 /// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),

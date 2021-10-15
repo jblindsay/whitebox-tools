@@ -248,6 +248,7 @@ impl WhiteboxTool for GaussianFilter {
         let mut d_x = vec![0isize; num_pixels_in_filter];
         let mut d_y = vec![0isize; num_pixels_in_filter];
         let mut weights = vec![0.0; num_pixels_in_filter];
+        let mut sum = 0f64;
 
         // fill the filter d_x and d_y values and the distance-weights
         let midpoint: isize = (filter_size as f64 / 2f64).floor() as isize; // + 1;
@@ -262,8 +263,13 @@ impl WhiteboxTool for GaussianFilter {
                 weight = recip_root_2_pi_times_sigma_d
                     * (-1.0 * ((x * x + y * y) as f64) / two_sigma_sqr_d).exp();
                 weights[a] = weight;
+                sum += weight;
                 a += 1;
             }
+        }
+
+        for a in 0..num_pixels_in_filter {
+            weights[a] /= sum;
         }
 
         // let midpoint = (filter_size as f64 / 2f64).floor() as isize;

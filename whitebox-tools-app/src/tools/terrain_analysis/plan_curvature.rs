@@ -276,6 +276,7 @@ impl WhiteboxTool for PlanCurvature {
                     f64,
                 );
                 let mut p: f64;
+                let mut q: f64;
                 let mut z_factor_array = Vec::with_capacity(rows as usize);
                 if input.is_in_geographic_coordinates() && z_factor < 0.0 {
                     // calculate a new z-conversion factor
@@ -312,11 +313,12 @@ impl WhiteboxTool for PlanCurvature {
                             zx2 = zx * zx;
                             zy2 = zy * zy;
                             p = zx2 + zy2;
+                            q = p + 1.0f64;
                             if p > 0.0f64 {
                                 data[col as usize] = ((zxx * zy2 - 2.0f64 * zxy * zx * zy
                                     + zyy * zx2)
-                                    / p.powf(1.5f64))
-                                .to_degrees()
+                                    / (p * q.powf(1.5f64)))
+                                // .to_degrees()
                                     *
                                      100f64;
                             } else {

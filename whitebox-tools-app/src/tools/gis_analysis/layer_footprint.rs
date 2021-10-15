@@ -2,11 +2,12 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 31/09/2018
-Last Modified: 13/10/2018
+Last Modified: 09/09/2021
 License: MIT
 */
 
 use whitebox_raster::*;
+use whitebox_common::algorithms::is_clockwise_order;
 use whitebox_common::structures::Point2D;
 use crate::tools::*;
 use whitebox_vector::ShapefileGeometry;
@@ -216,6 +217,11 @@ impl WhiteboxTool for LayerFootprint {
             envelope_points.push(Point2D::new(input.header.x_max, input.header.y_max));
             envelope_points.push(Point2D::new(input.header.x_min, input.header.y_max));
             envelope_points.push(Point2D::new(input.header.x_min, input.header.y_min));
+
+            if !is_clockwise_order(&envelope_points) {
+                // the first part is assumed to be the hull and must be in clockwise order.
+                envelope_points.reverse();
+            }
 
             let mut sfg = ShapefileGeometry::new(ShapeType::Polygon);
             sfg.add_part(&envelope_points);

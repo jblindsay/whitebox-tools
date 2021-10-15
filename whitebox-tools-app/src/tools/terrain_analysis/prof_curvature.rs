@@ -317,7 +317,7 @@ impl WhiteboxTool for ProfileCurvature {
                                 data[col as usize] =
                                     ((zxx * zx2 + 2.0f64 * zxy * zx * zy + zyy * zy2)
                                         / (p * q.powf(1.5f64)))
-                                    .to_degrees()
+                                    // .to_degrees()
                                         * 100f64;
                             } else {
                                 data[col as usize] = 0f64;

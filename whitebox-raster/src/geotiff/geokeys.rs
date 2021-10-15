@@ -169,15 +169,15 @@ impl GeoKeys {
 
         for i in 0..number_of_keys as usize {
             let offset = 4 * (i + 1);
+            if offset > (self.geo_key_directory.len() - 4) / 4 {
+                break;
+            }
             let key_id = self.geo_key_directory[offset];
             let unknown_tag = TiffTag::new_unknown_tag();
             let key = match keys.get(&key_id) {
                 Some(key) => key,
                 None => &unknown_tag, //&TiffTag::new_unknown_tag()
             };
-            // if key.name != "Unknown" {
-            //
-            // }
 
             let tiff_tag_location = self.geo_key_directory[offset + 1];
             let count = self.geo_key_directory[offset + 2];
@@ -465,6 +465,20 @@ pub fn get_keys_map() -> HashMap<u16, TiffTag> {
         TiffTag {
             name: "SampleFormat".to_string(),
             code: 339,
+        },
+    );
+    k.insert(
+        340u16,
+        TiffTag {
+            name: "SMinSampleValue".to_string(),
+            code: 340,
+        },
+    );
+    k.insert(
+        341u16,
+        TiffTag {
+            name: "SMaxSampleValue".to_string(),
+            code: 341,
         },
     );
     k.insert(

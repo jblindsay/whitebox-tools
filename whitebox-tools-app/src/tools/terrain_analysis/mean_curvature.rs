@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 22/06/2017
+Created: 22/062017
 Last Modified: 01/03/2021
 License: MIT
 */
@@ -17,44 +17,33 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates slope aspect (i.e. slope orientation in degrees clockwise from north) for each grid cell
-/// in an input digital elevation model (DEM). The user must specify the name of the input
-/// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
-/// when the vertical and horizontal units are not the same in the DEM. When this is the case,
-/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
-/// DEM is in the geographic coordinate system (latitude and longitude), the following equation
-/// is used:
+/// This tool calculates the mean curvature, or the rate of change in slope along a flow line,
+/// from a digital elevation model (DEM). Curvature is the second
+/// derivative of the topographic surface defined by a DEM. Profile curvature characterizes the
+/// degree of downslope acceleration or deceleration within the landscape (Gallant and Wilson, 2000).
+/// The user must specify the name of the input DEM (`--dem`) and the output raster image.
+/// WhiteboxTools reports curvature in radians multiplied by 100 for easier interpretation because
+/// curvature values are typically very small. The
+/// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units
+/// are not the same in the DEM. When this is the case, the algorithm will multiply each
+/// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate
+/// system (latitude and longitude), the following equation is used:
 ///
 /// > zfactor = 1.0 / (111320.0 x cos(mid_lat))
 ///
-/// where `mid_lat` is the latitude of the centre of each raster row, in radians.
+/// where `mid_lat` is the latitude of the centre of the raster, in radians.
 ///
-/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given
-/// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),
-///
-/// |  7  |  8  |  1  | \
-/// |  6  |  9  |  2  | \
-/// |  5  |  4  |  3  |
-///
-/// > aspect = 180 - arctan(f<sub>y</sub> / f<sub>x</sub>) + 90(f<sub>x</sub> / |f<sub>x</sub>|)
-///
-/// where,
-///
-/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
-///
-///  and,
-///
-/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / 8 * &Delta;y
-///
-/// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
+/// The algorithm uses the same formula for the calculation of plan curvature as Gallant and
+/// Wilson (2000). Profile curvature is negative for slope increasing downhill (convex flow profile,
+/// typical of upper slopes) and positive for slope decreasing downhill (concave, typical of lower slopes).
 ///
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
 /// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
 ///
 /// # See Also
-/// `Slope`, `PlanCurvature`, `ProfileCurvature`
-pub struct Aspect {
+/// `ProfileCurvature`, `TangentialCurvature`, `TotalCurvature`, `Slope`, `Aspect`
+pub struct MeanCurvature {
     name: String,
     description: String,
     toolbox: String,
@@ -62,12 +51,12 @@ pub struct Aspect {
     example_usage: String,
 }
 
-impl Aspect {
-    pub fn new() -> Aspect {
+impl MeanCurvature {
+    pub fn new() -> MeanCurvature {
         // public constructor
-        let name = "Aspect".to_string();
+        let name = "MeanCurvature".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates an aspect raster from an input DEM.".to_string();
+        let description = "Calculates a mean curvature raster from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -118,7 +107,7 @@ impl Aspect {
         )
         .replace("*", &sep);
 
-        Aspect {
+        MeanCurvature {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -128,7 +117,7 @@ impl Aspect {
     }
 }
 
-impl WhiteboxTool for Aspect {
+impl WhiteboxTool for MeanCurvature {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -142,10 +131,17 @@ impl WhiteboxTool for Aspect {
     }
 
     fn get_tool_parameters(&self) -> String {
-        match serde_json::to_string(&self.parameters) {
-            Ok(json_str) => return format!("{{\"parameters\":{}}}", json_str),
-            Err(err) => return format!("{:?}", err),
+        let mut s = String::from("{\"parameters\": [");
+        for i in 0..self.parameters.len() {
+            if i < self.parameters.len() - 1 {
+                s.push_str(&(self.parameters[i].to_string()));
+                s.push_str(",");
+            } else {
+                s.push_str(&(self.parameters[i].to_string()));
+            }
         }
+        s.push_str("]}");
+        s
     }
 
     fn get_example_usage(&self) -> String {
@@ -237,19 +233,20 @@ impl WhiteboxTool for Aspect {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
-        let nodata = input.configs.nodata;
 
         let start = Instant::now();
 
-        let eight_grid_res = input.configs.resolution_x * 8.0;
+        let cell_size = input.configs.resolution_x;
+        let cell_size_times2 = cell_size * 2.0f64;
+        let cell_size_sqrd = cell_size * cell_size;
+        let four_times_cell_size_sqrd = cell_size_sqrd * 4.0f64;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
+        let rows = input.configs.rows as isize;
         if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
             output.configs.data_type = DataType::F32;
         }
-        let output_nodata = -999.0;
+        let output_nodata = -9999.0;
         output.configs.nodata = output_nodata;
 
         let mut num_procs = num_cpus::get() as isize;
@@ -261,13 +258,25 @@ impl WhiteboxTool for Aspect {
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let input = input.clone();
-            let tx = tx.clone();
+            let tx1 = tx.clone();
             thread::spawn(move || {
-                let dx = [1, 1, 1, 0, -1, -1, -1, 0];
-                let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+                let nodata = input.configs.nodata;
+                let columns = input.configs.columns as isize;
+                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let mut n: [f64; 8] = [0.0; 8];
                 let mut z: f64;
-                let (mut fx, mut fy): (f64, f64);
+                let (mut zx, mut zy, mut zxx, mut zyy, mut zxy, mut zx2, mut zy2): (
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                    f64,
+                );
+                let (mut p, mut q): (f64, f64);
+                let (mut profile, mut tangential): (f64, f64);
                 let mut z_factor_array = Vec::with_capacity(rows as usize);
                 if input.is_in_geographic_coordinates() && z_factor < 0.0 {
                     // calculate a new z-conversion factor
@@ -286,29 +295,42 @@ impl WhiteboxTool for Aspect {
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
+                            z = z * z_factor_array[row as usize];
                             for c in 0..8 {
-                                n[c] = input[(row + dy[c], col + dx[c])];
+                                n[c] = input[(row + d_y[c], col + d_x[c])];
                                 if n[c] != nodata {
                                     n[c] = n[c] * z_factor_array[row as usize];
                                 } else {
-                                    n[c] = z * z_factor_array[row as usize];
+                                    n[c] = z;
                                 }
                             }
-                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                            
-                            if fx + fy != 0f64 { // slope is greater than zero
-                                if fx == 0f64 {
-                                    fx = 0.00001;
-                                }
-                                data[col as usize] = 180f64 - ((fy / fx).atan()).to_degrees()
-                                    + 90f64 * (fx / (fx).abs());
+                            // calculate curvature
+                            zx = (n[1] - n[5]) / cell_size_times2;
+                            zy = (n[7] - n[3]) / cell_size_times2;
+                            zxx = (n[1] - 2.0f64 * z + n[5]) / cell_size_sqrd;
+                            zyy = (n[7] - 2.0f64 * z + n[3]) / cell_size_sqrd;
+                            zxy = (-n[6] + n[0] + n[4] - n[2]) / four_times_cell_size_sqrd;
+                            zx2 = zx * zx;
+                            zy2 = zy * zy;
+                            p = zx2 + zy2;
+                            q = p + 1.0f64;
+                            if p > 0.0f64 {
+                                profile =
+                                    ((zxx * zx2 + 2.0f64 * zxy * zx * zy + zyy * zy2)
+                                        / (p * q.powf(1.5f64)))
+                                    // .to_degrees()
+                                        * 100f64;
+                                tangential = ((zxx * zy2 - 2.0f64 * zxy * zx * zy + zyy * zx2)
+                                        / (p * q.sqrt()))
+                                    // .to_degrees()
+                                        * 100f64;
+                                data[col as usize] = (profile + tangential) / 2f64;
                             } else {
-                                data[col as usize] = -1f64;
+                                data[col as usize] = 0f64;
                             }
                         }
                     }
-                    tx.send((row, data)).unwrap();
+                    tx1.send((row, data)).unwrap();
                 }
             });
         }
@@ -327,7 +349,9 @@ impl WhiteboxTool for Aspect {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "pointer.plt".to_string();
+        output.configs.palette = "blue_white_red.plt".to_string();
+        output.configs.display_min = -1000.0f64;
+        output.configs.display_max = 1000.0f64;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
