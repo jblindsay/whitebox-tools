@@ -2,7 +2,7 @@
 name = "whitebox_plugins"
 version = "1.5.0"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
-edition = "2018"
+edition = "2021"
 
 [[bin]]
 name = "conditional_evaluation"
