@@ -21,7 +21,7 @@ use whitebox_raster::*;
 // use v_eval::{Value, Eval};
 use fasteval;
 
-/// The RasterCalculator tool can be used to perform an complex mathematical operations on one or more input
+/// The RasterCalculator tool can be used to perform a complex mathematical operations on one or more input
 /// raster images on a cell-to-cell basis. The user specifies the name of the output raster (`--output`)
 /// and a mathematical expression, or statement (`--statement`). Rasters are treated like variables (that
 /// change value with each grid cell) and are specified within the statement with the file name contained 

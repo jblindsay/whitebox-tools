@@ -474,6 +474,8 @@ class WhiteboxTools(object):
     
     
     
+    
+    
     ##############
     # Data Tools #
     ##############
@@ -3044,6 +3046,22 @@ class WhiteboxTools(object):
         args.append("--step={}".format(step))
         return self.run_tool('max_elevation_deviation', args, callback) # returns 1 if error
 
+    def mean_curvature(self, dem, output, zfactor=None, callback=None):
+        """Calculates a mean curvature raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
+        return self.run_tool('mean_curvature', args, callback) # returns 1 if error
+
     def min_downslope_elev_change(self, dem, output, callback=None):
         """Calculates the minimum downslope change in elevation between a grid cell and its eight downslope neighbors.
 
@@ -3512,6 +3530,26 @@ class WhiteboxTools(object):
         args.append("--units={}".format(units))
         return self.run_tool('slope', args, callback) # returns 1 if error
 
+    def slope_vs_aspect_plot(self, i, output, bin_size=2.0, min_slope=0.1, zfactor=1.0, callback=None):
+        """This tool creates a slope-aspect relation plot from an input DEM.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output report file (*.html). 
+        bin_size -- Aspect bin size, in degrees. 
+        min_slope -- Minimum slope, in degrees. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--bin_size={}".format(bin_size))
+        args.append("--min_slope={}".format(min_slope))
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('slope_vs_aspect_plot', args, callback) # returns 1 if error
+
     def slope_vs_elevation_plot(self, inputs, output, watershed=None, callback=None):
         """Creates a slope vs. elevation plot for one or more DEMs.
 
@@ -3889,26 +3927,6 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if width is not None: args.append("--width='{}'".format(width))
         return self.run_tool('burn_streams_at_roads', args, callback) # returns 1 if error
-
-    def change_in_contributing_area(self, dem, output, exponent=1.0, threshold=None, log=False, callback=None):
-        """This tool calculates the downslope rate of change in specific contributing area (SCA).
-
-        Keyword arguments:
-
-        dem -- Name of the input DEM raster file; must be depressionless. 
-        output -- Name of the output raster file. 
-        exponent -- Optional exponent parameter; default is 1.0. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
-        log -- Log-transform the output values?. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--output='{}'".format(output))
-        args.append("--exponent={}".format(exponent))
-        if threshold is not None: args.append("--threshold='{}'".format(threshold))
-        if log: args.append("--log")
-        return self.run_tool('change_in_contributing_area', args, callback) # returns 1 if error
 
     def d8_flow_accumulation(self, i, output, out_type="cells", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
         """Calculates a D8 flow accumulation raster from an input DEM or flow pointer.
@@ -4564,7 +4582,7 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         dem -- Name of the input DEM raster file; must be depressionless. 
-        output -- Name of the output upslope saturated area file. 
+        output -- Name of the output raster file. 
         out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
         exponent -- Optional upper-bound exponent parameter; default is 10.0. 
         max_slope -- Optional upper-bound slope parameter, in degrees (0-90); default is 45.0. 
@@ -8245,7 +8263,7 @@ class WhiteboxTools(object):
         return self.run_tool('random_sample', args, callback) # returns 1 if error
 
     def raster_calculator(self, output, statement="", callback=None):
-        """This tool performs a conditional evaluaton (if-then-else) operation on a raster.
+        """This tool performs a complex mathematical operations on one or more input raster images on a cell-to-cell basis.
 
         Keyword arguments:
 
