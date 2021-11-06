@@ -1,4 +1,10 @@
-on: push
+# purpose of this workflow is for running clippy linting checks on pushes and pull requests.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
 name: Clippy check
 jobs:
   clippy_check:
