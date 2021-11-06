@@ -129,7 +129,7 @@ fn help() {
     --out_type     Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.
     --exponent     Optional upper-bound exponent parameter; default is 10.0.
     --max_slope    Optional upper-bound slope parameter, in degrees (0-90); default is 45.0.
-    --threshold    Optional convergence threshold parameter, in grid cells; default is inifinity.
+    --threshold    Optional convergence threshold parameter, in grid cells; default is infinity.
     --log          Log-transform the output values?
     --clip         Optional flag to request clipping the display max by 1%.
     

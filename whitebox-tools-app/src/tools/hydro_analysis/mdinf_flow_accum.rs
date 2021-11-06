@@ -110,7 +110,7 @@ impl MDInfFlowAccumulation {
             name: "Convergence Threshold (grid cells; blank for none)".to_owned(),
             flags: vec!["--threshold".to_owned()],
             description:
-                "Optional convergence threshold parameter, in grid cells; default is inifinity."
+                "Optional convergence threshold parameter, in grid cells; default is infinity."
                     .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,

@@ -981,7 +981,7 @@ class WhiteboxTools(object):
         return self.run_tool('centroid', args, callback) # returns 1 if error
 
     def centroid_vector(self, i, output, callback=None):
-        """Identifes the centroid point of a vector polyline or polygon feature or a group of vector points.
+        """Identifies the centroid point of a vector polyline or polygon feature or a group of vector points.
 
         Keyword arguments:
 
@@ -3268,8 +3268,8 @@ class WhiteboxTools(object):
         Keyword arguments:
 
         i -- Name of the input raster image file. 
-        pos_output -- Name of the positive openenness output raster file. 
-        neg_output -- Name of the negative openenness output raster file. 
+        pos_output -- Name of the positive openness output raster file. 
+        neg_output -- Name of the negative openness output raster file. 
         dist -- Search distance, in grid cells. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -3996,7 +3996,7 @@ class WhiteboxTools(object):
         i -- Input raster DEM or D-infinity pointer file. 
         output -- Output raster file. 
         out_type -- Output type; one of 'cells', 'sca' (default), and 'ca'. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
         pntr -- Is the input raster a D-infinity flow pointer rather than a DEM?. 
@@ -4159,7 +4159,7 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
         exponent -- Optional exponent parameter; default is 1.1. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
         callback -- Custom function for handling tool text outputs.
@@ -4403,7 +4403,7 @@ class WhiteboxTools(object):
         output1 -- Name of the output downslope unsaturated length (DUL) file. 
         output2 -- Name of the output upslope disconnected saturated area (UDSA) file. 
         exponent -- Optional exponent parameter; default is 1.0. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -4547,7 +4547,7 @@ class WhiteboxTools(object):
         output -- Output raster file. 
         out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
         exponent -- Optional exponent parameter; default is 1.1. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         log -- Optional flag to request the output be log-transformed. 
         clip -- Optional flag to request clipping the display max by 1%. 
         callback -- Custom function for handling tool text outputs.
@@ -4586,7 +4586,7 @@ class WhiteboxTools(object):
         out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
         exponent -- Optional upper-bound exponent parameter; default is 10.0. 
         max_slope -- Optional upper-bound slope parameter, in degrees (0-90); default is 45.0. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         log -- Log-transform the output values?. 
         clip -- Optional flag to request clipping the display max by 1%. 
         callback -- Custom function for handling tool text outputs.
@@ -4611,7 +4611,7 @@ class WhiteboxTools(object):
         output -- Name of the output raster file. 
         out_type -- Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'. 
         exponent -- Optional exponent parameter; default is 1.0. 
-        threshold -- Optional convergence threshold parameter, in grid cells; default is inifinity. 
+        threshold -- Optional convergence threshold parameter, in grid cells; default is infinity. 
         log -- Log-transform the output values?. 
         clip -- Optional flag to request clipping the display max by 1%. 
         callback -- Custom function for handling tool text outputs.
@@ -6501,7 +6501,7 @@ class WhiteboxTools(object):
         return self.run_tool('lidar_block_minimum', args, callback) # returns 1 if error
 
     def lidar_classify_subset(self, base, subset, output, subset_class, nonsubset_class=None, callback=None):
-        """Classifies the values in one LiDAR point cloud that correpond with points in a subset cloud.
+        """Classifies the values in one LiDAR point cloud that correspond with points in a subset cloud.
 
         Keyword arguments:
 
@@ -6622,7 +6622,7 @@ class WhiteboxTools(object):
         i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         radius -- Search Radius. 
-        min_neighbours -- The minimum number of neighbouring points within search areas. If fewer points than this threshold are idenfied during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours. 
+        min_neighbours -- The minimum number of neighbouring points within search areas. If fewer points than this threshold are identified during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours. 
         slope_threshold -- Maximum inter-point slope to be considered an off-terrain point. 
         height_threshold -- Inter-point height difference to be considered an off-terrain point. 
         classify -- Classify points as ground (2) or off-ground (1). 
@@ -7559,7 +7559,7 @@ class WhiteboxTools(object):
         return self.run_tool('ceil', args, callback) # returns 1 if error
 
     def conditional_evaluation(self, i, output, statement="", true=None, false=None, callback=None):
-        """This tool performs a conditional evaluaton (if-then-else) operation on a raster.
+        """This tool performs a conditional evaluation (if-then-else) operation on a raster.
 
         Keyword arguments:
 
@@ -7816,7 +7816,7 @@ class WhiteboxTools(object):
         input1 -- Input raster file (independent variable, X). 
         input2 -- Input raster file (dependent variable, Y). 
         output -- Output HTML file for regression summary report. 
-        out_residuals -- Output raster regression resdidual file. 
+        out_residuals -- Output raster regression residual file. 
         standardize -- Optional flag indicating whether to standardize the residuals map. 
         scattergram -- Optional flag indicating whether to output a scattergram. 
         num_samples -- Number of samples used to create scattergram. 
@@ -9040,7 +9040,7 @@ class WhiteboxTools(object):
         d8_pntr -- Input raster D8 pointer file. 
         streams -- Input raster streams file. 
         output -- Output raster file. 
-        min_length -- Minimum tributary length (in map units) used for network prunning. 
+        min_length -- Minimum tributary length (in map units) used for network pruning. 
         esri_pntr -- D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
         """

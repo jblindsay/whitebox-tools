@@ -41,7 +41,7 @@
         {
             "name": "Convergence Threshold (grid cells; blank for none)",
             "flags": ["--threshold"],
-            "description": "Optional convergence threshold parameter, in grid cells; default is inifinity.",
+            "description": "Optional convergence threshold parameter, in grid cells; default is infinity.",
             "parameter_type": "Float",
             "default_value": null,
             "optional": true

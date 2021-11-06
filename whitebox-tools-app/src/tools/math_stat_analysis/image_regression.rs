@@ -91,7 +91,7 @@ impl ImageRegression {
         parameters.push(ToolParameter {
             name: "Optional Residuals Output File".to_owned(),
             flags: vec!["--out_residuals".to_owned()],
-            description: "Output raster regression resdidual file.".to_owned(),
+            description: "Output raster regression residual file.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
             default_value: None,
             optional: true,

@@ -72,7 +72,7 @@ impl RemoveShortStreams {
         parameters.push(ToolParameter {
             name: "Minimum Tributary Length (map units)".to_owned(),
             flags: vec!["--min_length".to_owned()],
-            description: "Minimum tributary length (in map units) used for network prunning."
+            description: "Minimum tributary length (in map units) used for network pruning."
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: None,
@@ -427,7 +427,7 @@ impl WhiteboxTool for RemoveShortStreams {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Prunning the network: {}%", progress);
+                    println!("pruning the network: {}%", progress);
                     old_progress = progress;
                 }
             }

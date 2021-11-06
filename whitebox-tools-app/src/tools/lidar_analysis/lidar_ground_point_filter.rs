@@ -93,7 +93,7 @@ impl LidarGroundPointFilter {
         parameters.push(ToolParameter {
             name: "Minimum Number of Neighbours".to_owned(),
             flags: vec!["--min_neighbours".to_owned()],
-            description: "The minimum number of neighbouring points within search areas. If fewer points than this threshold are idenfied during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours.".to_owned(),
+            description: "The minimum number of neighbouring points within search areas. If fewer points than this threshold are identified during the fixed-radius search, a subsequent kNN search is performed to identify the k number of neighbours.".to_owned(),
             parameter_type: ParameterType::Integer,
             default_value: Some("0".to_owned()),
             optional: true,

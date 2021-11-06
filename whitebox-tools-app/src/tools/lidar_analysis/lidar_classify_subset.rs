@@ -17,7 +17,7 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool classifies points within a user-specified LiDAR point cloud (`--base`) that correpond
+/// This tool classifies points within a user-specified LiDAR point cloud (`--base`) that correspond
 /// with points in a subset cloud (`--subset`). The subset point cloud may have been derived by filtering
 /// the original point cloud. The user must specify the names of the two input LAS files (i.e.
 /// the full and subset clouds) and the class value (`--subset_class`) to assign the matching points. This class
@@ -64,7 +64,7 @@ impl LidarClassifySubset {
         let name = "LidarClassifySubset".to_string();
         let toolbox = "LiDAR Tools".to_string();
         let description =
-            "Classifies the values in one LiDAR point cloud that correpond with points in a subset cloud."
+            "Classifies the values in one LiDAR point cloud that correspond with points in a subset cloud."
                 .to_string();
 
         let mut parameters = vec![];

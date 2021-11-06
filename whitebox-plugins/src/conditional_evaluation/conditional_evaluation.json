@@ -1,7 +1,7 @@
 {
     "tool_name": "ConditionalEvaluation",
     "exe": "conditional_evaluation",
-    "short_description": "This tool performs a conditional evaluaton (if-then-else) operation on a raster.",
+    "short_description": "This tool performs a conditional evaluation (if-then-else) operation on a raster.",
     "toolbox": "Math and Stats Tools",
     "license": "MIT",
     "example": ".*EXE_NAME -r=ConditionalEvaluation -i=DEM.tif --statement='value > 2500.0' --true=2500.0 --false=DEM.tif --output=onlyLowPlaces.tif",

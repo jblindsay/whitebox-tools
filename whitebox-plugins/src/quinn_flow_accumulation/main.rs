@@ -109,7 +109,7 @@ fn help() {
     --output       Name of the output raster file.
     --out_type     Output type; one of 'cells', 'specific contributing area' (default), and 'catchment area'.
     --exponent     Optional exponent parameter; default is 1.0.
-    --threshold    Optional convergence threshold parameter, in grid cells; default is inifinity.
+    --threshold    Optional convergence threshold parameter, in grid cells; default is infinity.
     --log          Log-transform the output values?
     --clip         Optional flag to request clipping the display max by 1%.
     
