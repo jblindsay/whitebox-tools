@@ -991,9 +991,10 @@ dependencies = [
 
 [[package]]
 name = "whitebox_plugins"
-version = "1.5.0"
+version = "2.0.0"
 dependencies = [
  "fasteval",
+ "nalgebra",
  "num_cpus",
  "rand 0.7.3",
  "whitebox_common",

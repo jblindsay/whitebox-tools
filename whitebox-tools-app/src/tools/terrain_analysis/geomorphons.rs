@@ -479,7 +479,7 @@ impl WhiteboxTool for Geomorphons {
                                         code += (pattern[p] as usize) * power;
                                         power *= 3;
                                     }
-                                    // extract rotated and mirrod code from a ternary code
+                                    // extract rotated and mirrored code from a ternary code
                                     data[col as usize] = gtc[code] as f64;
                                 }
                             }

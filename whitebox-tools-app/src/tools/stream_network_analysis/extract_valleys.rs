@@ -42,7 +42,7 @@ use std::thread;
 /// higher than the centre grid cell or if the east and west neighbours meet this same criterion. The group of
 /// cells that are flagged after one pass of the roving window constituted the drainage network. This method is
 /// best applied to DEMs that are relatively smooth and do not exhibit high levels of short-range roughness. As
-/// such, it may be desirable to use a smoothing filter before applying this tool. The `FeaturePreservingDenoise`
+/// such, it may be desirable to use a smoothing filter before applying this tool. The `FeaturePreservingSmoothing`
 /// is a good option for removing DEM roughness while preserving the topographic information contain in
 /// breaks-in-slope (i.e. edges).
 ///
@@ -50,7 +50,7 @@ use std::thread;
 /// for topography-based network extraction. Their 'valley recognition' method operates by passing a 2 x 2 roving
 /// window over a DEM and flagging the highest grid cell in each group of four. Once the window has passed over
 /// the entire DEM, channel grid cells are left unflagged. This method is also best applied to DEMs that are relatively
-/// smooth and do not exhibit high levels of short-range roughness. Pre-processing the DEM with the `FeaturePreservingDenoise`
+/// smooth and do not exhibit high levels of short-range roughness. Pre-processing the DEM with the `FeaturePreservingSmoothing`
 /// tool may also be useful when applying this method.
 ///
 /// Each of these methods of extracting valley networks result in line networks that can be wider than a single
@@ -69,7 +69,7 @@ use std::thread;
 /// processing of discrete terrain elevation data. Computer Graphics and image processing, 4(4), 375-387.
 ///
 /// # See Also
-/// `FeaturePreservingDenoise`
+/// `FeaturePreservingSmoothing`
 pub struct ExtractValleys {
     name: String,
     description: String,
@@ -334,32 +334,34 @@ impl WhiteboxTool for ExtractValleys {
                         let mut lower_quartile: usize;
 
                         let mut filter_shape = vec![true; num_cells_in_filter];
-                        let asqr = midpoint * midpoint;
+                        let sqr_radius = (midpoint * midpoint) as f64;
                         let mut i = 0;
                         for row in 0..filter_size as isize {
                             for col in 0..filter_size as isize {
                                 dx[i] = col - midpoint;
                                 dy[i] = row - midpoint;
-                                z = (dx[i] * dx[i]) as f64 / asqr as f64
-                                    + (dy[i] * dy[i]) as f64 / asqr as f64;
-                                if z > 1f64 {
+                                z = (dx[i] * dx[i]) as f64 as f64
+                                    + (dy[i] * dy[i]) as f64 as f64;
+                                if z > sqr_radius {
                                     filter_shape[i] = false;
                                 }
                                 i += 1;
                             }
                         }
 
+                        let mut cell_data = vec![0f64; num_cells_in_filter];
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data = vec![nodata; columns as usize];
                             for col in 0..columns {
-                                z = input[(row, col)];
+                                z = input.get_value(row, col);
                                 if z != nodata {
-                                    let mut cell_data = vec![1f64; num_cells_in_filter];
                                     n = 0f64;
+                                    // let mut cell_data = Vec::with_capacity(num_cells_in_filter);
                                     for i in 0..num_cells_in_filter {
                                         if filter_shape[i] {
-                                            zn = input[(row + dy[i], col + dx[i])];
+                                            zn = input.get_value(row + dy[i], col + dx[i]);
                                             if zn != nodata {
+                                                // cell_data.push(zn);
                                                 cell_data[i] = zn;
                                                 n += 1f64;
                                             } else {
@@ -367,16 +369,17 @@ impl WhiteboxTool for ExtractValleys {
                                             }
                                         }
                                     }
+                                    // n = cell_data.len() as f64;
                                     if n > 0f64 {
                                         // sort the array
                                         cell_data.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Equal));
                                         lower_quartile = (n / 4f64).floor() as usize;
                                         if z <= cell_data[lower_quartile] {
                                             data[col as usize] = 1f64;
+                                        } else {
+                                            data[col as usize] = 0f64;
                                         }
                                     }
-                                } else {
-                                    data[col as usize] = nodata;
                                 }
                             }
                             tx.send((row, data)).unwrap();

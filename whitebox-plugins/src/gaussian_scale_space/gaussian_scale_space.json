@@ -1,0 +1,90 @@
+{
+    "tool_name": "GaussianScaleSpace",
+    "exe": "gaussian_scale_space",
+    "short_description": "This tool uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.",
+    "toolbox": "Geomorphometric Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=GaussianScaleSpace --dem=DEM.tif --output=slope.tif --output_zscore=slope_z.tif --output_scale=slope_scale.tif --sigma=0.5 --step=1.0 --num_steps=100 --lsp='Slope'",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Input Vector Points File",
+            "flags": ["-p", "--points"],
+            "description": "Name of the input vector points shapefile.",
+            "parameter_type": {"ExistingFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Land-surface Parameter Raster File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output land-surface parameter raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output z-Score Raster File",
+            "flags": ["--output_zscore"],
+            "description": "Name of the output z-score raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Scale Raster File",
+            "flags": ["--output_scale"],
+            "description": "Name of the output scale raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Starting Scale",
+            "flags": ["--sigma"],
+            "description": "Initial sigma value (cells).",
+            "parameter_type": "Float",
+            "default_value": "0.5",
+            "optional": false
+        },
+        {
+            "name": "Step Size",
+            "flags": ["--step"],
+            "description": "Step size as any positive non-zero integer.",
+            "parameter_type": "Float",
+            "default_value": "0.5",
+            "optional": true
+        },
+        {
+            "name": "Number of Steps",
+            "flags": ["--num_steps"],
+            "description": "Number of steps.",
+            "parameter_type": "Integer",
+            "default_value": "10",
+            "optional": true
+        },
+        {
+            "name": "Land-surface Parameter to Calculate",
+            "flags": ["--lsp"],
+            "description": "Output land-surface parameter; one of 'AnisotropyLTP', 'Aspect', 'DiffMeanElev', 'Eastness', 'Elevation', 'Hillshade', 'MeanCurvature', 'Northness', 'PlanCurvature', 'ProfileCurvature', 'Ruggedness', 'Slope', 'TanCurvature', 'TotalCurvature'.",
+            "parameter_type": {"OptionList": ["AnisotropyLTP", "Aspect", "DiffMeanElev", "Eastness", "Elevation", "Hillshade", "MeanCurvature", "Northness", "PlanCurvature", "ProfileCurvature", "Ruggedness", "Slope", "TanCurvature", "TotalCurvature"]},
+            "default_value": "Slope",
+            "optional": true
+        },
+        {
+            "name": "Z Conversion Factor",
+            "flags": ["--z_factor"],
+            "description": "Optional multiplier for when the vertical and horizontal units are not the same.",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        }
+    ]
+}

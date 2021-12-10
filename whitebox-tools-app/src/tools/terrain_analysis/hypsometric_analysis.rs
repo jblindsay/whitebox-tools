@@ -239,6 +239,7 @@ impl WhiteboxTool for HypsometricAnalysis {
         let mut xdata = vec![];
         let mut ydata = vec![];
         let mut shortnames = vec![];
+        let mut hi_data = vec![];
 
         if watershed_files_str.is_empty() {
             for i in 0..num_files {
@@ -248,39 +249,35 @@ impl WhiteboxTool for HypsometricAnalysis {
                 }
                 let input = Raster::new(&input_file, "r")?;
 
-                if num_files == 1 {
-                    writer.write_all(
-                        (format!(
-                            "<p><strong>Input DEM</strong>: {}",
-                            input.get_short_filename()
-                        ))
-                        .as_bytes(),
-                    )?;
-                }
+                
                 let rows = input.configs.rows as isize;
                 let columns = input.configs.columns as isize;
                 let nodata = input.configs.nodata;
 
                 let min = input.configs.minimum;
                 let max = input.configs.maximum;
-                let range = max - min + 0.00001f64;
-                let mut num_bins = (max - min) as usize / 5;
-                if num_bins < ((rows * columns) as f64).log2().ceil() as usize + 1 {
-                    num_bins = ((rows * columns) as f64).log2().ceil() as usize + 1;
-                }
-                let bin_width = range / num_bins as f64;
+                let range = max - min; // + 0.00001f64;
+                let num_bins = 101; // (max - min) as usize / 5;
+                // if num_bins < ((rows * columns) as f64).log2().ceil() as usize + 1 {
+                //     num_bins = ((rows * columns) as f64).log2().ceil() as usize + 1;
+                // }
+                // let bin_width = range / num_bins as f64;
                 let mut freq_data = vec![0f64; num_bins];
                 let mut bin_elevations = vec![0f64; num_bins];
                 let mut val: f64;
                 let mut bin: usize;
+                let mut total = 0f64;
                 let mut total_n = 0f64;
                 for row in 0..rows {
                     for col in 0..columns {
                         val = input.get_value(row, col);
                         if val != nodata {
-                            bin = ((val - min) / bin_width).floor() as usize;
+                            // bin = ((val - min) / bin_width).floor() as usize;
+                            bin = (100f64 * (val - min) / range).floor() as usize;
+                            // if bin >= num_bins { bin = num_bins - 1; }
                             freq_data[bin] += 1f64;
                             total_n += 1f64;
+                            total += val;
                         }
                     }
                     if verbose {
@@ -292,23 +289,38 @@ impl WhiteboxTool for HypsometricAnalysis {
                     }
                 }
 
-                bin_elevations[0] = min;
+                let mean = total / total_n;
+
+                bin_elevations[0] = 0.0001;
                 for i in 1..num_bins {
                     freq_data[i] += freq_data[i - 1];
-                    bin_elevations[i] = min + i as f64 * bin_width;
+                    // bin_elevations[i] =  min + i as f64 * bin_width;
+                    bin_elevations[i] =  i as f64 / num_bins as f64;
                 }
 
                 for i in 0..num_bins {
-                    freq_data[i] = 100f64 * (1f64 - freq_data[i] / total_n);
+                    // freq_data[i] = 100f64 * (1f64 - freq_data[i] / total_n);
+                    freq_data[i] = 1f64 - freq_data[i] / total_n;
                 }
 
                 freq_data[num_bins - 1] = 0.0001; // this is necessary so the axis will start at zero.
                 xdata.push(freq_data);
                 ydata.push(bin_elevations);
                 shortnames.push(input.get_short_filename());
+                hi_data.push((mean - min) / range);
 
-                if num_files > 1 {
-                    writer.write_all(&format!("{}<br>", shortnames[i]).as_bytes())?;
+                if num_files == 1 {
+                    writer.write_all(
+                        (format!(
+                            "<p><strong>Input DEM</strong>: {}, Hypsometric Integral: {:.3}",
+                            input.get_short_filename(),
+                            hi_data[i]
+                        ))
+                        .as_bytes(),
+                    )?;
+                } else {
+                // if num_files > 1 {
+                    writer.write_all(&format!("{}, Hypsometric Integral: {:.3}<br>", shortnames[i], hi_data[i]).as_bytes())?;
                 }
             }
         } else {
@@ -474,16 +486,16 @@ impl WhiteboxTool for HypsometricAnalysis {
         let elapsed_time = get_formatted_elapsed_time(start);
 
         let multiples = num_files > 1;
-
+        let width = if multiples { 650f64 } else { 500f64 };
         let graph = LineGraph {
             parent_id: "graph".to_string(),
-            width: 600f64,
+            width: width,
             height: 500f64,
             data_x: xdata.clone(),
             data_y: ydata.clone(),
             series_labels: shortnames.clone(),
-            x_axis_label: "% Area Above".to_string(),
-            y_axis_label: "Elevation".to_string(),
+            x_axis_label: "Relative Area (a / A)".to_string(),
+            y_axis_label: "Relative Altitude (h / H)".to_string(),
             draw_points: false,
             draw_gridlines: true,
             draw_legend: multiples,

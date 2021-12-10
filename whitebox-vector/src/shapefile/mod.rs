@@ -29,11 +29,11 @@ use std::str;
 #[derive(Debug, Default, Clone)]
 pub struct ShapefileHeader {
     file_code: i32,            // BigEndian; value is 9994
-    unused1: i32,              // BigEndian
-    unused2: i32,              // BigEndian
-    unused3: i32,              // BigEndian
-    unused4: i32,              // BigEndian
-    unused5: i32,              // BigEndian
+    // unused1: i32,              // BigEndian
+    // unused2: i32,              // BigEndian
+    // unused3: i32,              // BigEndian
+    // unused4: i32,              // BigEndian
+    // unused5: i32,              // BigEndian
     pub file_length: i32,      // BigEndian
     pub version: i32,          // LittleEndian
     pub shape_type: ShapeType, // LittleEndian

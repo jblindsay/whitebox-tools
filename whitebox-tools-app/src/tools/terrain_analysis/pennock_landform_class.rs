@@ -410,7 +410,7 @@ impl WhiteboxTool for PennockLandformClass {
                                 slope = (fx * fx + fy * fy).sqrt().atan().to_degrees();
                                 plan = -1f64
                                     * ((zxx * zy2 - 2f64 * zxy * zx * zy + zyy * zx2)
-                                        / p.powf(1.5f64))
+                                        / (p * q.powf(1.5f64)))
                                     .to_degrees();
                                 prof = -1f64
                                     * ((zxx * zx2 - 2f64 * zxy * zx * zy + zyy * zy2)

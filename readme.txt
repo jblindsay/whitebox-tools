@@ -58,6 +58,12 @@ for more details.
 
 Version 2.X.X (XX-XX-20XX)
 - Added the MeanCurvature tool.
+- Added GaussianScaleSpace tool, which uses the fast Gaussian approximation algorithm to produce 
+  scaled land-surface parameter measurements from an input DEM.
+- Added LocalQuadraticRegression tool, which is an implementation of the constrained quadratic 
+  regression algorithm using a flexible window size described in Wood (1996).
+- Fixed a bug in the lower quartile valley mapping method of the ExtractValleys tool.
+- Fixed a bug in the PennockLandformClass tool.
 
 Version 2.0.0 (30-08-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ

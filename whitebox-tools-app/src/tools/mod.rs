@@ -444,7 +444,6 @@ impl ToolManager {
         tool_names.push("DiffFromMeanElev".to_string());
         tool_names.push("DirectionalRelief".to_string());
         tool_names.push("DownslopeIndex".to_string());
-        // tool_names.push("DrainagePreservingSmoothing".to_string());
         tool_names.push("EdgeDensity".to_string());
         tool_names.push("ElevAbovePit".to_string());
         tool_names.push("ElevPercentile".to_string());
@@ -455,7 +454,7 @@ impl ToolManager {
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
-        // tool_names.push("Geomorphons".to_string());
+        tool_names.push("Geomorphons".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
         tool_names.push("HypsometricAnalysis".to_string());
@@ -1082,9 +1081,6 @@ impl ToolManager {
             "difffrommeanelev" => Some(Box::new(terrain_analysis::DiffFromMeanElev::new())),
             "directionalrelief" => Some(Box::new(terrain_analysis::DirectionalRelief::new())),
             "downslopeindex" => Some(Box::new(terrain_analysis::DownslopeIndex::new())),
-            // "drainagepreservingsmoothing" => Some(Box::new(
-            //     terrain_analysis::DrainagePreservingSmoothing::new(),
-            // )),
             "edgedensity" => Some(Box::new(terrain_analysis::EdgeDensity::new())),
             "elevabovepit" => Some(Box::new(terrain_analysis::ElevAbovePit::new())),
             "elevpercentile" => Some(Box::new(terrain_analysis::ElevPercentile::new())),
@@ -1099,7 +1095,7 @@ impl ToolManager {
             "fetchanalysis" => Some(Box::new(terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(terrain_analysis::FillMissingData::new())),
             "findridges" => Some(Box::new(terrain_analysis::FindRidges::new())),
-            // "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
+            "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
             "hypsometricanalysis" => Some(Box::new(terrain_analysis::HypsometricAnalysis::new())),
@@ -1266,10 +1262,58 @@ impl ToolManager {
                         println!("Failure to run plugin subprocess.");
                     }
                 } else {
-                    return Err(Error::new(
-                        ErrorKind::NotFound,
-                        format!("Unrecognized tool name {}.", tool_name),
-                    ))
+                    // We couldn't find an executable file for the tool, but still check to see if it's 
+                    // one of the extension plugins. If it is, issue a 'need valid license' warning. If 
+                    // not, then issue an unrecognized tool error.
+                    let plugin_names = vec![
+                        "assessroute",
+                        "cannyedgedetection", 
+                        "evaluatetrainingsites", 
+                        "fix_danglingarcs",
+                        "generalizeclassifiedraster",
+                        "generalizewithsimilarity",
+                        "hydrologicconnectivity",
+                        "imagesegmentation",
+                        "imageslider",
+                        "inversepca", 
+                        "lastolaz",
+                        "laztolas",
+                        "lidarcontour",
+                        "lidarpointreturnanalysis",
+                        "lidarsibsoninterpolation", 
+                        "lidarsortbytime", 
+                        "localhypsometricanalysis",
+                        "lowpointsonheadwaterdivides",
+                        "mindistclassification",
+                        "openness",
+                        "parallelepipedclassification",
+                        "phicoefficient",
+                        "reconcilemultipleheaders",
+                        "recreatepasslines",
+                        "registerlicense",
+                        "removefieldedgepoints",
+                        "repairstreamvectortopology",
+                        "shadowanimation",
+                        "shadowimage",
+                        "slopevsaspectplot",
+                        "smoothvegetationresidual",
+                        "topographicpositionanimation",
+                        "vectorstreamnetworkanalysis",
+                        "yieldfilter",
+                        "yieldmap",
+                        "yieldnormalization"
+                    ];
+                    if plugin_names.contains(&tool_name.to_lowercase().as_ref()) {
+                        return Err(Error::new(
+                            ErrorKind::NotFound,
+                            format!("Invalid license: \nThis tool is part of a Whitebox extension product \nand there is a missing license. Please contact \nWhitebox Geospatial Inc. (support@whiteboxgeo.com) to obtain \na valid license key."),
+                        ))
+                    } else {
+                        return Err(Error::new(
+                            ErrorKind::NotFound,
+                            format!("Unrecognized tool name {}.", tool_name),
+                        ))
+                    }
                 }
                 return Ok(())
             }
