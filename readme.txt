@@ -64,6 +64,7 @@ Version 2.X.X (XX-XX-20XX)
   regression algorithm using a flexible window size described in Wood (1996).
 - Fixed a bug in the lower quartile valley mapping method of the ExtractValleys tool.
 - Fixed a bug in the PennockLandformClass tool.
+- Fixed a bug in the Shapefile reader that affected files of the PointZ ShapeType.
 
 Version 2.0.0 (30-08-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ
