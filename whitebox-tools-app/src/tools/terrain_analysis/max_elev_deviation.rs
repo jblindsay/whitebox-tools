@@ -369,7 +369,7 @@ impl WhiteboxTool for MaxElevationDeviation {
 
         let num_loops = (max_scale - min_scale) / step;
         let mut loop_num = 0;
-        for midpoint in (min_scale..=max_scale).step_by(step as usize) {
+        for midpoint in (min_scale..max_scale).step_by(step as usize) {
             loop_num += 1;
             let (tx, rx) = mpsc::channel();
             for tid in 0..num_procs {

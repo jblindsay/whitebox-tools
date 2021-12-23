@@ -10,4 +10,5 @@ chrono = "0.4.15"
 lzw = "0.10.0"
 miniz_oxide = "0.3.6"
 num_cpus = "1.6.2"
+num-traits = "0.2.14"
 whitebox_common = { path = "../whitebox-common" }

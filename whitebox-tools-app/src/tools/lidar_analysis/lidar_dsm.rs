@@ -49,7 +49,7 @@ use std::{env, f64, fs, path, thread};
 ///
 /// The user must specify the grid resolution of the output raster (`--resolution`), and optionally, the name of the
 /// input LiDAR file (`--input`) and output raster (`--output`). Note that if an input LiDAR file (`--input`) is not
-/// specified by the user, the tool will search for all valid LiDAR (*.las, *.zlidar) contained within the current
+/// specified by the user, the tool will search for all valid LiDAR (*.las, *.laz, *.zlidar) contained within the current
 /// working directory. This feature can be very useful when you need to interpolate a DSM for a large number of LiDAR
 /// files. Not only does this batch processing mode enable the tool to run in a more optimized parallel manner, but it
 /// will also allow the tool to include a small buffer of points extending into adjacent tiles when interpolating an

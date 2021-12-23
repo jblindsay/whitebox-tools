@@ -103,12 +103,12 @@ class FileSelector(tk.Frame):
                     ftypes = [("Shapefiles", "*.shp"), ('Raster files', ('*.dep', '*.tif',
                                                 '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
-                                                '*.asc'))]
+                                                '*.asc', '*grd'))]
                 elif 'Raster' in self.file_type:
                     ftypes = [('Raster files', ('*.dep', '*.tif',
                                                 '*.tiff', '*.bil', '*.flt',
                                                 '*.sdat', '*.rdc',
-                                                '*.asc'))]
+                                                '*.asc', '*.grd'))]
                 elif 'Lidar' in self.file_type:
                     ftypes = [("LiDAR files", ('*.las', '*.zlidar', '*.laz', '*.zip'))]
                 elif 'Vector' in self.file_type:

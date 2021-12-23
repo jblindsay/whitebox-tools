@@ -12,6 +12,7 @@ License: MIT
 // use late_static::LateStatic;
 // pub static USE_COMPRESSION: LateStatic<bool> = LateStatic::new();
 // pub static USE_COMPRESSION: bool = true;
+extern crate num_traits;
 
 mod arcascii_raster;
 mod arcbinary_raster;
@@ -34,6 +35,7 @@ use self::saga_raster::*;
 use self::surfer7_raster::*;
 use self::surfer_ascii_raster::*;
 use self::whitebox_raster::*;
+use num_traits::cast::AsPrimitive;
 use whitebox_common::structures::{Array2D, BoundingBox};
 use whitebox_common::utils::*;
 use std::cmp::Ordering::Equal;
@@ -247,6 +249,67 @@ impl Raster {
             .data
             .reserve(output.configs.rows * output.configs.columns);
         output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
+
+        output
+    }
+
+    /// Creates a new in-memory `Raster` object with grid extent and location
+    /// based on specified configurations contained within a `RasterConfigs`.
+    pub fn initialize_using_array<'a, T: AsPrimitive<f64> + Copy + AddAssign + SubAssign>(file_name: &'a str, configs: &'a RasterConfigs, data: Array2D<T>) -> Raster {
+        let new_file_name = if file_name.contains(".") {
+            file_name.to_string()
+        } else {
+            // likely no extension provided; default to .tif
+            format!("{}.tif", file_name)
+        };
+        let mut output = Raster {
+            file_name: new_file_name.clone(),
+            // configs: configs.clone(),
+            ..Default::default()
+        };
+        output.file_mode = "w".to_string();
+        output.raster_type = get_raster_type_from_file(new_file_name.clone(), "w".to_string());
+
+        output.configs.rows = configs.rows;
+        output.configs.columns = configs.columns;
+        output.configs.north = configs.north;
+        output.configs.south = configs.south;
+        output.configs.east = configs.east;
+        output.configs.west = configs.west;
+        output.configs.resolution_x = configs.resolution_x;
+        output.configs.resolution_y = configs.resolution_y;
+        output.configs.nodata = configs.nodata;
+        output.configs.data_type = configs.data_type;
+        output.configs.photometric_interp = configs.photometric_interp;
+        output.configs.palette = configs.palette.clone();
+        output.configs.projection = configs.projection.clone();
+        output.configs.xy_units = configs.xy_units.clone();
+        output.configs.z_units = configs.z_units.clone();
+        output.configs.endian = configs.endian.clone();
+        output.configs.pixel_is_area = configs.pixel_is_area;
+        output.configs.epsg_code = configs.epsg_code;
+        output.configs.coordinate_ref_system_wkt = configs.coordinate_ref_system_wkt.clone();
+        output.configs.model_tiepoint = configs.model_tiepoint.clone();
+        output.configs.model_pixel_scale = configs.model_pixel_scale.clone();
+        output.configs.model_transformation = configs.model_transformation.clone();
+        output.configs.geo_key_directory = configs.geo_key_directory.clone();
+        output.configs.geo_double_params = configs.geo_double_params.clone();
+        output.configs.geo_ascii_params = configs.geo_ascii_params.clone();
+
+        if output.raster_type == RasterType::SurferAscii
+            || output.raster_type == RasterType::Surfer7Binary
+        {
+            output.configs.nodata = 1.71041e38;
+        }
+        output
+            .data
+            .reserve(output.configs.rows * output.configs.columns);
+        // output.data = vec![output.configs.nodata; output.configs.rows * output.configs.columns];
+        for row in 0..output.configs.rows {
+            for col in 0..output.configs.columns {
+                output.data.push(data.get_value(row as isize, col as isize).as_());
+            }
+        }
 
         output
     }
@@ -566,7 +629,7 @@ impl Raster {
     }
 
     pub fn get_data_as_f32_array2d(&self) -> Array2D<f32> {
-        let out_nodata = self.configs.nodata as f32; // -32768f32;
+        let out_nodata = self.configs.nodata as f32; 
         let mut data: Array2D<f32> = Array2D::new(
             self.configs.rows as isize,
             self.configs.columns as isize,

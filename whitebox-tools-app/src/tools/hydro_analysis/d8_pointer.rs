@@ -16,6 +16,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use whitebox_common::structures::Array2D;
 
 /// This tool is used to generate a flow pointer grid using the simple D8 (O'Callaghan and Mark, 1984) algorithm. The
 /// user must specify the name (`--dem`) of a digital elevation model (DEM) that has been hydrologically
@@ -228,10 +229,10 @@ impl WhiteboxTool for D8Pointer {
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        // let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
         let nodata = input.configs.nodata;
-        let out_nodata = -32768f64;
+        let out_nodata = -32768i16;
         let columns = input.configs.columns as isize;
 
         let mut num_procs = num_cpus::get() as isize;
@@ -257,12 +258,17 @@ impl WhiteboxTool for D8Pointer {
                     diag_cell_size,
                     cell_size_y,
                 ];
+                // let out_vals = match esri_style {
+                //     true => [128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64],
+                //     false => [1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64],
+                // };
                 let out_vals = match esri_style {
-                    true => [128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64],
-                    false => [1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64],
+                    true => [128i16, 1, 2, 4, 8, 16, 32, 64],
+                    false => [1i16, 2, 4, 8, 16, 32, 64, 128],
                 };
                 let (mut z, mut z_n, mut slope): (f64, f64, f64);
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    // let mut data = vec![out_nodata; columns as usize];
                     let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
@@ -282,7 +288,7 @@ impl WhiteboxTool for D8Pointer {
                             if max_slope >= 0f64 {
                                 data[col as usize] = out_vals[dir]; //(1 << dir) as f64;
                             } else {
-                                data[col as usize] = 0f64;
+                                data[col as usize] = 0i16; // 0f64;
                             }
                         }
                     }
@@ -291,6 +297,7 @@ impl WhiteboxTool for D8Pointer {
             });
         }
 
+        let mut output: Array2D<i16> = Array2D::new(rows, columns, out_nodata, out_nodata)?;
         for row in 0..rows {
             let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
@@ -304,27 +311,32 @@ impl WhiteboxTool for D8Pointer {
             }
         }
 
+        let in_configs = input.configs.clone();
+        drop(input);
+
+        let mut output_raster = Raster::initialize_using_array(&output_file, &in_configs, output);
+
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.nodata = out_nodata;
-        output.configs.data_type = DataType::I16;
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!(
+        output_raster.configs.nodata = out_nodata as f64;
+        output_raster.configs.data_type = DataType::I16;
+        output_raster.configs.palette = "qual.plt".to_string();
+        output_raster.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output_raster.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output_raster.add_metadata_entry(format!("Input file: {}", input_file));
         if esri_style {
-            output.add_metadata_entry("ESRI-style output: true".to_string());
+            output_raster.add_metadata_entry("ESRI-style output: true".to_string());
         } else {
-            output.add_metadata_entry("ESRI-style output: false".to_string());
+            output_raster.add_metadata_entry("ESRI-style output: false".to_string());
         }
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        output_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
         };
-        let _ = match output.write() {
+        let _ = match output_raster.write() {
             Ok(_) => {
                 if verbose {
                     println!("Output file written")

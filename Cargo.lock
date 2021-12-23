@@ -1010,6 +1010,7 @@ dependencies = [
  "chrono",
  "lzw",
  "miniz_oxide 0.3.7",
+ "num-traits",
  "num_cpus",
  "whitebox_common",
 ]
