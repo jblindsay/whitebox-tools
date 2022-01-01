@@ -55,7 +55,7 @@ impl KMeansClustering {
     pub fn new() -> KMeansClustering {
         // public constructor
         let name = "KMeansClustering".to_string();
-        let toolbox = "Image Processing Tools/Classification".to_string();
+        let toolbox = "Machine Learning".to_string();
         let description =
             "Performs a k-means clustering operation on a multi-spectral dataset.".to_string();
 

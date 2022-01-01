@@ -17,6 +17,7 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use whitebox_common::structures::Array2D;
 
 /// This tool is used to generate a flow pointer grid (i.e. flow direction) using the stochastic
 /// Rho8 (J. Fairfield and P. Leymarie, 1991) algorithm. Like the D8 flow algorithm (`D8Pointer`),
@@ -40,6 +41,9 @@ use std::thread;
 ///
 /// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output image.
 ///
+/// # Memory Usage
+/// The peak memory usage of this tool is approximately 10 bytes per grid cell.
+/// 
 /// # References
 /// Fairfield, J., and Leymarie, P. 1991. Drainage networks from grid digital elevation models. *Water
 /// Resources Research*, 27(5), 709-717.
@@ -228,8 +232,9 @@ impl WhiteboxTool for Rho8Pointer {
 
         let start = Instant::now();
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let out_nodata = -32768i16;
 
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
@@ -243,18 +248,17 @@ impl WhiteboxTool for Rho8Pointer {
             let tx1 = tx.clone();
             thread::spawn(move || {
                 let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
                 let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
                 let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
                 let out_vals = match esri_style {
-                    true => [128f64, 1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64],
-                    false => [1f64, 2f64, 4f64, 8f64, 16f64, 32f64, 64f64, 128f64],
+                    true => [128i16, 1, 2, 4, 8, 16, 32, 64],
+                    false => [1i16, 2, 4, 8, 16, 32, 64, 128],
                 };
                 let (mut z, mut z_n, mut slope): (f64, f64, f64);
                 // let between = Range::new(0f64, 1f64);
                 let mut rng = thread_rng();
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
+                    let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
@@ -276,10 +280,8 @@ impl WhiteboxTool for Rho8Pointer {
                             if max_slope >= 0f64 {
                                 data[col as usize] = out_vals[dir];
                             } else {
-                                data[col as usize] = 0f64;
+                                data[col as usize] = 0i16;
                             }
-                        } else {
-                            data[col as usize] = nodata;
                         }
                     }
                     tx1.send((row, data)).unwrap();
@@ -287,6 +289,7 @@ impl WhiteboxTool for Rho8Pointer {
             });
         }
 
+        let mut output: Array2D<i16> = Array2D::new(rows, columns, out_nodata, out_nodata)?;
         for row in 0..rows {
             let data = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(data.0, data.1);
@@ -300,25 +303,32 @@ impl WhiteboxTool for Rho8Pointer {
             }
         }
 
+        let in_configs = input.configs.clone();
+        drop(input);
+
+        let mut output_raster = Raster::initialize_using_array2d(&output_file, &in_configs, output);
+
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "qual.plt".to_string();
-        output.configs.photometric_interp = PhotometricInterpretation::Categorical;
-        output.add_metadata_entry(format!(
+        output_raster.configs.nodata = out_nodata as f64;
+        output_raster.configs.data_type = DataType::I16;
+        output_raster.configs.palette = "qual.plt".to_string();
+        output_raster.configs.photometric_interp = PhotometricInterpretation::Categorical;
+        output_raster.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()
         ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output_raster.add_metadata_entry(format!("Input file: {}", input_file));
         if esri_style {
-            output.add_metadata_entry("ESRI-style output: true".to_string());
+            output_raster.add_metadata_entry("ESRI-style output: true".to_string());
         } else {
-            output.add_metadata_entry("ESRI-style output: false".to_string());
+            output_raster.add_metadata_entry("ESRI-style output: false".to_string());
         }
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+        output_raster.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {
             println!("Saving data...")
         };
-        let _ = match output.write() {
+        let _ = match output_raster.write() {
             Ok(_) => {
                 if verbose {
                     println!("Output file written")

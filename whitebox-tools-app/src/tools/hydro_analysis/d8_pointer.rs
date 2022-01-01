@@ -39,6 +39,9 @@ use whitebox_common::structures::Array2D;
 ///
 /// Grid cells possessing the NoData value in the input DEM are assigned the NoData value in the output image.
 ///
+/// # Memory Usage
+/// The peak memory usage of this tool is approximately 10 bytes per grid cell.
+/// 
 /// # Reference
 /// O'Callaghan, J. F., & Mark, D. M. (1984). The extraction of drainage networks from digital elevation data.
 /// Computer vision, graphics, and image processing, 28(3), 323-344.
@@ -314,7 +317,7 @@ impl WhiteboxTool for D8Pointer {
         let in_configs = input.configs.clone();
         drop(input);
 
-        let mut output_raster = Raster::initialize_using_array(&output_file, &in_configs, output);
+        let mut output_raster = Raster::initialize_using_array2d(&output_file, &in_configs, output);
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output_raster.configs.nodata = out_nodata as f64;

@@ -255,7 +255,7 @@ impl Raster {
 
     /// Creates a new in-memory `Raster` object with grid extent and location
     /// based on specified configurations contained within a `RasterConfigs`.
-    pub fn initialize_using_array<'a, T: AsPrimitive<f64> + Copy + AddAssign + SubAssign>(file_name: &'a str, configs: &'a RasterConfigs, data: Array2D<T>) -> Raster {
+    pub fn initialize_using_array2d<'a, T: AsPrimitive<f64> + Copy + AddAssign + SubAssign>(file_name: &'a str, configs: &'a RasterConfigs, data: Array2D<T>) -> Raster {
         let new_file_name = if file_name.contains(".") {
             file_name.to_string()
         } else {

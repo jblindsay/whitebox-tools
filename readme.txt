@@ -66,7 +66,7 @@ Version 2.X.X (XX-XX-20XX)
 - Fixed a bug in the PennockLandformClass tool.
 - Fixed a bug in the Shapefile reader that affected files of the PointZ ShapeType.
 - Fixed a bug with the CsvPointsToVector tool.
-- Reduced the peak memory usage of the D8Pointer tool by about 37.5%.
+- Reduced the peak memory usage of the D8Pointer and Rho8Pointer tools by about 37.5%.
 
 Version 2.0.0 (30-08-2021)
 - The most important feature in this release is the addition of support for reading and writing the LAZ

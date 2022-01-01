@@ -476,6 +476,7 @@ class WhiteboxTools(object):
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1589,7 +1590,7 @@ class WhiteboxTools(object):
         return self.run_tool('smooth_vectors', args, callback) # returns 1 if error
 
     def split_vector_lines(self, i, output, length=None, callback=None):
-        """This tool can be used to approximate the harvester pass lines from yield points.
+        """This tool can be used to split a vector line coverage into even-lengthed segments.
 
         Keyword arguments:
 
@@ -2804,6 +2805,58 @@ class WhiteboxTools(object):
         if line_thin: args.append("--line_thin")
         return self.run_tool('find_ridges', args, callback) # returns 1 if error
 
+    def gaussian_scale_space(self, dem, output, output_zscore, output_scale, points=None, sigma=0.5, step=0.5, num_steps=10, lsp="Slope", z_factor=None, callback=None):
+        """This tool uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input DEM raster file. 
+        points -- Name of the input vector points shapefile. 
+        output -- Name of the output land-surface parameter raster file. 
+        output_zscore -- Name of the output z-score raster file. 
+        output_scale -- Name of the output scale raster file. 
+        sigma -- Initial sigma value (cells). 
+        step -- Step size as any positive non-zero integer. 
+        num_steps -- Number of steps. 
+        lsp -- Output land-surface parameter; one of 'AnisotropyLTP', 'Aspect', 'DiffMeanElev', 'Eastness', 'Elevation', 'Hillshade', 'MeanCurvature', 'Northness', 'PlanCurvature', 'ProfileCurvature', 'Ruggedness', 'Slope', 'TanCurvature', 'TotalCurvature'. 
+        z_factor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        if points is not None: args.append("--points='{}'".format(points))
+        args.append("--output='{}'".format(output))
+        args.append("--output_zscore='{}'".format(output_zscore))
+        args.append("--output_scale='{}'".format(output_scale))
+        args.append("--sigma={}".format(sigma))
+        args.append("--step={}".format(step))
+        args.append("--num_steps={}".format(num_steps))
+        args.append("--lsp={}".format(lsp))
+        if z_factor is not None: args.append("--z_factor='{}'".format(z_factor))
+        return self.run_tool('gaussian_scale_space', args, callback) # returns 1 if error
+
+    def geomorphons(self, dem, output, search=3, threshold=0.0, tdist=0, forms=False, callback=None):
+        """Computes geomorphon patterns.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        search -- Look up distance. 
+        threshold -- Flatness threshold for the classification function (in degrees). 
+        tdist -- Distance (in cells) to begin reducing the flatness threshold to avoid problems with pseudo-flat lines-of-sight. 
+        forms -- Classify geomorphons into 10 common land morphologies, else, output ternary code. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--search={}".format(search))
+        args.append("--threshold={}".format(threshold))
+        args.append("--tdist={}".format(tdist))
+        if forms: args.append("--forms")
+        return self.run_tool('geomorphons', args, callback) # returns 1 if error
+
     def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=None, callback=None):
         """Calculates a hillshade raster from an input DEM.
 
@@ -2887,6 +2940,46 @@ class WhiteboxTools(object):
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         if full_mode: args.append("--full_mode")
         return self.run_tool('hypsometrically_tinted_hillshade', args, callback) # returns 1 if error
+
+    def local_hypsometric_analysis(self, i, out_mag, out_scale, min_scale=4, step=1, num_steps=10, step_nonlinearity=1.0, callback=None):
+        """This tool calculates a local, neighbourhood-based hypsometric integral raster.
+
+        Keyword arguments:
+
+        i -- Name of the input raster DEM file. 
+        out_mag -- Name of the openness output raster file. 
+        out_scale -- Name of the openness output raster file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        num_steps -- Number of steps. 
+        step_nonlinearity -- Step nonlinearity factor (1.0-2.0 is typical). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--out_mag='{}'".format(out_mag))
+        args.append("--out_scale='{}'".format(out_scale))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--step={}".format(step))
+        args.append("--num_steps={}".format(num_steps))
+        args.append("--step_nonlinearity={}".format(step_nonlinearity))
+        return self.run_tool('local_hypsometric_analysis', args, callback) # returns 1 if error
+
+    def local_quadratic_regression(self, dem, output, filter=3, callback=None):
+        """This tool is an implementation of the constrained quadratic regression algorithm using a flexible window size described in Wood (1996).
+
+        Keyword arguments:
+
+        dem -- Name of the input DEM raster file. 
+        output -- Name of the output raster file. 
+        filter -- Edge length of the filter kernel. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--filter={}".format(filter))
+        return self.run_tool('local_quadratic_regression', args, callback) # returns 1 if error
 
     def map_off_terrain_objects(self, dem, output, max_slope=40.0, min_size=1, callback=None):
         """Maps off-terrain objects in a digital elevation model (DEM).
@@ -3267,7 +3360,7 @@ class WhiteboxTools(object):
 
         Keyword arguments:
 
-        i -- Name of the input raster image file. 
+        i -- Name of the input raster DEM file. 
         pos_output -- Name of the positive openness output raster file. 
         neg_output -- Name of the negative openness output raster file. 
         dist -- Search distance, in grid cells. 
@@ -5250,6 +5343,42 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         return self.run_tool('evaluate_training_sites', args, callback) # returns 1 if error
 
+    def generalize_classified_raster(self, i, output, min_size=4, method="longest", callback=None):
+        """Generalizes a raster containing class or object features by removing small features.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output raster file. 
+        min_size -- Minimum feature size, in grid cells. 
+        method -- Grouping method; one of 'longest' (default), 'largest', and 'nearest'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--min_size={}".format(min_size))
+        args.append("--method={}".format(method))
+        return self.run_tool('generalize_classified_raster', args, callback) # returns 1 if error
+
+    def generalize_with_similarity(self, i, similarity, output, min_size=4, callback=None):
+        """Generalizes a raster containing class or object features by removing small features using similarity criteria of neighbouring features.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        similarity -- Names of the input similarity images. 
+        output -- Name of the output raster file. 
+        min_size -- Minimum feature size, in grid cells. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--similarity='{}'".format(similarity))
+        args.append("--output='{}'".format(output))
+        args.append("--min_size={}".format(min_size))
+        return self.run_tool('generalize_with_similarity', args, callback) # returns 1 if error
+
     def image_segmentation(self, inputs, output, threshold=0.5, steps=10, min_area=4, callback=None):
         """Performs a region-growing based segmentation on a set of multi-spectral images.
 
@@ -5270,32 +5399,6 @@ class WhiteboxTools(object):
         args.append("--min_area={}".format(min_area))
         return self.run_tool('image_segmentation', args, callback) # returns 1 if error
 
-    def k_means_clustering(self, inputs, output, classes, out_html=None, max_iterations=10, class_change=2.0, initialize="diagonal", min_class_size=10, callback=None):
-        """Performs a k-means clustering operation on a multi-spectral dataset.
-
-        Keyword arguments:
-
-        inputs -- Input raster files. 
-        output -- Output raster file. 
-        out_html -- Output HTML report file. 
-        classes -- Number of classes. 
-        max_iterations -- Maximum number of iterations. 
-        class_change -- Minimum percent of cells changed between iterations before completion. 
-        initialize -- How to initialize cluster centres?. 
-        min_class_size -- Minimum class size, in pixels. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--inputs='{}'".format(inputs))
-        args.append("--output='{}'".format(output))
-        if out_html is not None: args.append("--out_html='{}'".format(out_html))
-        args.append("--classes='{}'".format(classes))
-        args.append("--max_iterations={}".format(max_iterations))
-        args.append("--class_change={}".format(class_change))
-        args.append("--initialize={}".format(initialize))
-        args.append("--min_class_size={}".format(min_class_size))
-        return self.run_tool('k_means_clustering', args, callback) # returns 1 if error
-
     def min_dist_classification(self, inputs, polys, field, output, threshold=None, callback=None):
         """Performs a supervised minimum-distance classification using training site polygons and multi-spectral images.
 
@@ -5315,30 +5418,6 @@ class WhiteboxTools(object):
         args.append("--output='{}'".format(output))
         if threshold is not None: args.append("--threshold='{}'".format(threshold))
         return self.run_tool('min_dist_classification', args, callback) # returns 1 if error
-
-    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
-        """Performs a modified k-means clustering operation on a multi-spectral dataset.
-
-        Keyword arguments:
-
-        inputs -- Input raster files. 
-        output -- Output raster file. 
-        out_html -- Output HTML report file. 
-        start_clusters -- Initial number of clusters. 
-        merge_dist -- Cluster merger distance. 
-        max_iterations -- Maximum number of iterations. 
-        class_change -- Minimum percent of cells changed between iterations before completion. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--inputs='{}'".format(inputs))
-        args.append("--output='{}'".format(output))
-        if out_html is not None: args.append("--out_html='{}'".format(out_html))
-        args.append("--start_clusters={}".format(start_clusters))
-        if merge_dist is not None: args.append("--merge_dist='{}'".format(merge_dist))
-        args.append("--max_iterations={}".format(max_iterations))
-        args.append("--class_change={}".format(class_change))
-        return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
 
     def parallelepiped_classification(self, inputs, polys, field, output, callback=None):
         """Performs a supervised parallelepiped classification using training site polygons and multi-spectral images.
@@ -7274,6 +7353,244 @@ class WhiteboxTools(object):
         if outdir is not None: args.append("--outdir='{}'".format(outdir))
         return self.run_tool('zlidar_to_las', args, callback) # returns 1 if error
 
+    ####################
+    # Machine Learning #
+    ####################
+
+    def dbscan(self, inputs, output, scaling="Normalize", search_dist=0.01, min_points=5, callback=None):
+        """Performs a DBSCAN-based unsupervised clustering operation.
+
+        Keyword arguments:
+
+        inputs -- Names of the input rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        output -- Name of the output raster file. 
+        search_dist -- Search-distance parameter. 
+        min_points -- Minimum point density needed to define 'core' point in cluster. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--output='{}'".format(output))
+        args.append("--search_dist={}".format(search_dist))
+        args.append("--min_points={}".format(min_points))
+        return self.run_tool('dbscan', args, callback) # returns 1 if error
+
+    def k_means_clustering(self, inputs, output, classes, out_html=None, max_iterations=10, class_change=2.0, initialize="diagonal", min_class_size=10, callback=None):
+        """Performs a k-means clustering operation on a multi-spectral dataset.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        out_html -- Output HTML report file. 
+        classes -- Number of classes. 
+        max_iterations -- Maximum number of iterations. 
+        class_change -- Minimum percent of cells changed between iterations before completion. 
+        initialize -- How to initialize cluster centres?. 
+        min_class_size -- Minimum class size, in pixels. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        if out_html is not None: args.append("--out_html='{}'".format(out_html))
+        args.append("--classes='{}'".format(classes))
+        args.append("--max_iterations={}".format(max_iterations))
+        args.append("--class_change={}".format(class_change))
+        args.append("--initialize={}".format(initialize))
+        args.append("--min_class_size={}".format(min_class_size))
+        return self.run_tool('k_means_clustering', args, callback) # returns 1 if error
+
+    def knn_classification(self, inputs, training, field, output, scaling="Normalize", k=5, clip=True, test_proportion=0.2, callback=None):
+        """Performs a supervised k-nearest neighbour classification using training site polygons/points and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        training -- Name of the input training site polygons/points shapefile. 
+        field -- Name of the attribute containing class name data. 
+        output -- Name of the output raster file. 
+        k -- k-parameter, which determines the number of nearest neighbours used. 
+        clip -- Perform training data clipping to remove outlier pixels?. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        args.append("--output='{}'".format(output))
+        args.append("-k={}".format(k))
+        if clip: args.append("--clip")
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('knn_classification', args, callback) # returns 1 if error
+
+    def knn_regression(self, inputs, training, field, scaling="Normalize", output=None, k=5, weight=True, test_proportion=0.2, callback=None):
+        """Performs a supervised k-nearest neighbour regression using training site points and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        training -- Name of the input training site points Shapefile. 
+        field -- Name of the attribute containing response variable name data. 
+        output -- Name of the output raster file. 
+        k -- k-parameter, which determines the number of nearest neighbours used. 
+        weight -- Use distance weighting?. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("-k={}".format(k))
+        if weight: args.append("--weight")
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('knn_regression', args, callback) # returns 1 if error
+
+    def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
+        """Performs a modified k-means clustering operation on a multi-spectral dataset.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        out_html -- Output HTML report file. 
+        start_clusters -- Initial number of clusters. 
+        merge_dist -- Cluster merger distance. 
+        max_iterations -- Maximum number of iterations. 
+        class_change -- Minimum percent of cells changed between iterations before completion. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        if out_html is not None: args.append("--out_html='{}'".format(out_html))
+        args.append("--start_clusters={}".format(start_clusters))
+        if merge_dist is not None: args.append("--merge_dist='{}'".format(merge_dist))
+        args.append("--max_iterations={}".format(max_iterations))
+        args.append("--class_change={}".format(class_change))
+        return self.run_tool('modified_k_means_clustering', args, callback) # returns 1 if error
+
+    def random_forest_classification(self, inputs, training, field, output=None, split_criterion="Gini", n_trees=500, min_samples_leaf=1, min_samples_split=2, test_proportion=0.2, callback=None):
+        """Performs a supervised random forest classification using training site polygons/points and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        training -- Name of the input training site polygons/points shapefile. 
+        field -- Name of the attribute containing class data. 
+        output -- Name of the output raster file. 
+        split_criterion -- Split criterion to use when building a tree. Options include 'Gini', 'Entropy', and 'ClassificationError'. 
+        n_trees -- The number of trees in the forest. 
+        min_samples_leaf -- The minimum number of samples required to be at a leaf node. 
+        min_samples_split -- The minimum number of samples required to split an internal node. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--split_criterion={}".format(split_criterion))
+        args.append("--n_trees={}".format(n_trees))
+        args.append("--min_samples_leaf={}".format(min_samples_leaf))
+        args.append("--min_samples_split={}".format(min_samples_split))
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('random_forest_classification', args, callback) # returns 1 if error
+
+    def random_forest_regression(self, inputs, training, field, output=None, n_trees=100, min_samples_leaf=1, min_samples_split=2, test_proportion=0.2, callback=None):
+        """Performs a random forest regression analysis using training site data and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        training -- Name of the input training site points shapefile. 
+        field -- Name of the attribute containing response variable name data. 
+        output -- Name of the output raster file. This parameter is optional. When unspecified, the tool will only build the model. When specified, the tool will use the built model and predictor rasters to perform a spatial prediction. 
+        n_trees -- The number of trees in the forest. 
+        min_samples_leaf -- The minimum number of samples required to be at a leaf node. 
+        min_samples_split -- The minimum number of samples required to split an internal node. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--n_trees={}".format(n_trees))
+        args.append("--min_samples_leaf={}".format(min_samples_leaf))
+        args.append("--min_samples_split={}".format(min_samples_split))
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('random_forest_regression', args, callback) # returns 1 if error
+
+    def svm_classification(self, inputs, training, field, scaling="Normalize", output=None, gamma=50.0, tolerance=0.1, c_pos=5000.0, c_neg=500.0, test_proportion=0.2, callback=None):
+        """Performs a supervised SVM classification using training site polygons/points and multiple input images.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        training -- Name of the input training site polygons/points Shapefile. 
+        field -- Name of the attribute containing class data. 
+        output -- Name of the output raster file. 
+        gamma -- Gamma parameter used in defining the kernel function. 
+        tolerance -- Tolerance value (eps), used in setting the training stopping condition. 
+        c_pos -- c-value for positive values. 
+        c_neg -- c-value for negative values. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--gamma={}".format(gamma))
+        args.append("--tolerance={}".format(tolerance))
+        args.append("--c_pos={}".format(c_pos))
+        args.append("--c_neg={}".format(c_neg))
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('svm_classification', args, callback) # returns 1 if error
+
+    def svm_regression(self, inputs, training, field, scaling="Normalize", output=None, c=50.0, eps=10.0, gamma=0.5, test_proportion=0.2, callback=None):
+        """Performs a supervised SVM regression analysis using training site points and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        training -- Name of the input training site points Shapefile. 
+        field -- Name of the attribute containing class data. 
+        output -- Name of the output raster file. 
+        c -- c-value, the regularization parameter. 
+        eps -- Epsilon in the epsilon-SVR model. 
+        gamma -- Gamma parameter used in setting the RBF (Gaussian) kernel function. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("-c={}".format(c))
+        args.append("--eps={}".format(eps))
+        args.append("--gamma={}".format(gamma))
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('svm_regression', args, callback) # returns 1 if error
+
     ########################
     # Math and Stats Tools #
     ########################
@@ -7563,10 +7880,10 @@ class WhiteboxTools(object):
 
         Keyword arguments:
 
-        i -- Name of the input DEM raster file; must be depressionless. 
+        i -- Name of the input raster file. 
         statement -- Conditional statement e.g. value > 35.0. This statement must be a valid Rust statement. 
-        true -- Value  where TRUE (input raster or constant value). 
-        false -- Value  where FALSE (input raster or constant value). 
+        true -- Value where condition evaluates TRUE (input raster or constant value). 
+        false -- Value where condition evaluates FALSE (input raster or constant value). 
         output -- Name of the output raster file. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -8655,7 +8972,7 @@ class WhiteboxTools(object):
     #########################
 
     def reconcile_multiple_headers(self, i, region_field, yield_field, output, radius=None, min_yield=None, max_yield=None, mean_tonnage=None, callback=None):
-        """This tool can be used to normalize the yield points for a field.
+        """This tool adjusts the crop yield values for data sets collected with multiple headers or combines.
 
         Keyword arguments:
 
@@ -8703,7 +9020,7 @@ class WhiteboxTools(object):
         return self.run_tool('recreate_pass_lines', args, callback) # returns 1 if error
 
     def remove_field_edge_points(self, i, output, dist=None, max_change_in_heading=25.0, flag_edges=False, callback=None):
-        """This tool can be used to remove most of the points along the edges from a crop yield data set.
+        """This tool can be used to remove, or flag, most of the points along the edges from a crop yield data set.
 
         Keyword arguments:
 
@@ -9053,7 +9370,7 @@ class WhiteboxTools(object):
         return self.run_tool('remove_short_streams', args, callback) # returns 1 if error
 
     def repair_stream_vector_topology(self, i, output, dist="", callback=None):
-        """This tool resolve topological errors and inconsistencies associated with digitized vector streams.
+        """This tool resolves topological errors and inconsistencies associated with digitized vector streams.
 
         Keyword arguments:
 
@@ -9257,7 +9574,7 @@ class WhiteboxTools(object):
 
         Keyword arguments:
 
-        streams -- Name of the input routes vector file. 
+        streams -- Name of the input streams vector file. 
         dem -- Name of the input DEM raster file. 
         output -- Name of the output lines shapefile. 
         cutting_height -- Maximum ridge-cutting height (z units). 
