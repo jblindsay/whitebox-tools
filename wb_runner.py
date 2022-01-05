@@ -983,7 +983,6 @@ class WbRunner(tk.Frame):
             self.filemenu.entryconfig(3, label = "Do Not Compress Output TIFFs")
 
     def install_extension(self):
-        print("Here I am")
         wbt.install_wbt_extension()
 
     def get_toolboxes(self):

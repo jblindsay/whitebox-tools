@@ -432,7 +432,6 @@ class WhiteboxTools(object):
 
     def install_wbt_extension(self, ext_name=""):
         try:
-            print("I'm here")
             if len(ext_name) == 0:
                 ext_name = input(
 '''Which extension would you like to install? Options include: 
@@ -509,13 +508,13 @@ class WhiteboxTools(object):
 
             # Get the updated Python API, so that they can use any new extension tools that
             # have been released since the last open-core release from Python.
-            # print("Updating WBT Python API...")
+            print("Updating WBT Python API...")
             
-            # url = "https://raw.githubusercontent.com/jblindsay/whitebox-tools/master/whitebox_tools.py"
-            # with urllib.request.urlopen(url) as f:
-            #     api_text = f.read().decode('utf-8')
-            #     with open('./whitebox_tools.py', 'w') as output:
-            #         output.write(api_text)
+            url = "https://raw.githubusercontent.com/jblindsay/whitebox-tools/master/whitebox_tools.py"
+            with urllib.request.urlopen(url) as f:
+                api_text = f.read().decode('utf-8')
+                with open('./whitebox_tools.py', 'w') as output:
+                    output.write(api_text)
 
             if "agri" in ext_name.lower():
                 print("The Whitebox Agriculture Toolset Extension has been installed!")
