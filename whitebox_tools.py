@@ -529,7 +529,7 @@ class WhiteboxTools(object):
             reply = input("\nWould you like to activate a license key for the extension now? (Y/n) ")
 
             if "y" in reply.lower():
-                activate_license()
+                self.activate_license()
             else:
                 print(
 '''

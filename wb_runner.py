@@ -984,6 +984,7 @@ class WbRunner(tk.Frame):
 
     def install_extension(self):
         wbt.install_wbt_extension()
+        self.refresh_tools()
 
     def get_toolboxes(self):
         toolboxes = set()
