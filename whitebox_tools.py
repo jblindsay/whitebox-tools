@@ -10,6 +10,9 @@ See whitebox_example.py for an example of how to use it.
 # License: MIT
 
 from __future__ import print_function
+import urllib.request
+import zipfile
+import shutil
 import os
 from os import path
 import sys
@@ -427,6 +430,132 @@ class WhiteboxTools(object):
         except (OSError, ValueError, CalledProcessError) as err:
             return err
 
+    def install_wbt_extension(self, ext_name=""):
+        try:
+            print("I'm here")
+            if len(ext_name) == 0:
+                ext_name = input(
+'''Which extension would you like to install? Options include: 
+'gte' (General Toolset Extension)
+'lidar' (LiDAR and Remote Sensing Extension)
+'dem' (DEM and Spatial Hydrology Extension)
+'agri' (Agriculture Extension)
+
+''')
+
+            # Figure out the appropriate URL to download the extension binary from.
+            url = "https://www.whiteboxgeo.com/GTE_Windows/GeneralToolsetExtension_win.zip" # default
+            unzipped_dir_name = "GeneralToolsetExtension"
+            if "agri" in ext_name.lower():
+                if platform.system() == 'Windows':
+                    url = "https://www.whiteboxgeo.com/AgricultureToolset/AgricultureToolset_win.zip"
+                elif platform.system() == 'Darwin':
+                    url = "https://www.whiteboxgeo.com/AgricultureToolset/AgricultureToolset_MacOS_Intel.zip"
+                elif platform.system() == 'Linux':
+                    url = "https://www.whiteboxgeo.com/AgricultureToolset/AgricultureToolset_linux.zip"
+                
+                unzipped_dir_name = "AgricultureToolset"
+            elif "dem" in ext_name.lower():
+                if platform.system() == 'Windows':
+                    url = "https://www.whiteboxgeo.com/DemAndSpatialHydrologyToolset/DemAndSpatialHydrologyToolset_win.zip"
+                elif platform.system() == 'Darwin':
+                    url = "https://www.whiteboxgeo.com/DemAndSpatialHydrologyToolset/DemAndSpatialHydrologyToolset_MacOS_Intel.zip"
+                elif platform.system() == 'Linux':
+                    url = "https://www.whiteboxgeo.com/DemAndSpatialHydrologyToolset/DemAndSpatialHydrologyToolset_linux.zip"
+
+                unzipped_dir_name = "DemAndSpatialHydrologyToolset"
+            elif "lidar" in ext_name.lower():
+                if platform.system() == 'Windows':
+                    url = "https://www.whiteboxgeo.com/LidarAndRemoteSensingToolset/LidarAndRemoteSensingToolset_win.zip"
+                elif platform.system() == 'Darwin':
+                    url = "https://www.whiteboxgeo.com/LidarAndRemoteSensingToolset/LidarAndRemoteSensingToolset_MacOS_Intel.zip"
+                elif platform.system() == 'Linux':
+                    url = "https://www.whiteboxgeo.com/LidarAndRemoteSensingToolset/LidarAndRemoteSensingToolset_linux.zip"
+                
+                unzipped_dir_name = "LidarAndRemoteSensingToolset"
+            else: # default to the general toolset
+                if "gte" not in ext_name.lower():
+                    print(f"Warning: Unrecognized extension ext_name {ext_name}. Installing the GTE instead...")
+
+                if platform.system() == 'Darwin':
+                    url = "https://www.whiteboxgeo.com/GTE_Darwin/GeneralToolsetExtension_MacOS_Intel.zip"
+                elif platform.system() == 'Linux':
+                    url = "https://www.whiteboxgeo.com/GTE_Linux/GeneralToolsetExtension_linux.zip"
+
+            # Download the extension binary
+            print("Downloading extension plugins...")
+            compressed_plugins_file = urllib.request.urlopen(url)
+
+            # Save it to a zip then decompress it and move the files to the plugins folder.
+            print("Installing extension plugins...")
+            with open('./compressed_plugins.zip','wb') as output:
+                output.write(compressed_plugins_file.read())
+
+            if not os.path.exists('./plugins'):
+                os.makedirs('./plugins')
+
+            with zipfile.ZipFile('./compressed_plugins.zip', 'r') as zip_ref:
+                zip_ref.extractall('./')
+
+            for entry in os.scandir(f'./{unzipped_dir_name}'):
+                new_path = entry.path.replace(f'{unzipped_dir_name}', 'plugins')
+                os.replace(entry.path, new_path)
+                if ".json" not in new_path and platform.system() != "Windows":
+                    os.system("chmod 755 " + new_path) # grant executable permission
+
+            # Remove the unzipped directory, which isn't needed anymore.
+            if os.path.exists(f'./{unzipped_dir_name}'):
+                shutil.rmtree(f'./{unzipped_dir_name}')
+
+            # Get the updated Python API, so that they can use any new extension tools that
+            # have been released since the last open-core release from Python.
+            # print("Updating WBT Python API...")
+            
+            # url = "https://raw.githubusercontent.com/jblindsay/whitebox-tools/master/whitebox_tools.py"
+            # with urllib.request.urlopen(url) as f:
+            #     api_text = f.read().decode('utf-8')
+            #     with open('./whitebox_tools.py', 'w') as output:
+            #         output.write(api_text)
+
+            if "agri" in ext_name.lower():
+                print("The Whitebox Agriculture Toolset Extension has been installed!")
+            elif "dem" in ext_name.lower():
+                print("The Whitebox DEM and Spatial Hydrology Toolset Extension has been installed!")
+            elif "lidar" in ext_name.lower():
+                print("The Whitebox DEM and LiDAR and Remote Sensing Toolset Extension has been installed!")
+            else:
+                print("The Whitebox General Toolset Extension (GTE) has been installed!")
+
+            # Does the user want to register an activation key for this extension?
+            reply = input("\nWould you like to activate a license key for the extension now? (Y/n) ")
+
+            if "y" in reply.lower():
+                activate_license()
+            else:
+                print(
+'''
+Okay, that's it for now. You will need to activate a license before using 
+the installed tools. To purchase an activation key at any time visit:
+
+https://www.whiteboxgeo.com/whitebox-geospatial-extensions/
+''')
+
+        except Exception as e:
+            print("Unexpected error:", e)
+            print("Please contact support@whiteboxgeo.com if you continue to experience issues.")
+            raise
+
+    def activate_license(self):
+        try:
+            if platform.system() == 'Windows':
+                os.system("./plugins/register_license.exe")
+            else:
+                os.system("./plugins/register_license")
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            print("Please contact support@whiteboxgeo.com if you continue to experience issues.")
+            raise
+
     ########################################################################
     # The following methods are convenience methods for each available tool.
     # This needs updating whenever new tools are added to the WhiteboxTools
@@ -437,6 +566,7 @@ class WhiteboxTools(object):
     # restrict the ability for text editors and IDEs to use autocomplete.
     ########################################################################
 
+    
     
     
     
@@ -7455,6 +7585,28 @@ class WhiteboxTools(object):
         args.append("--test_proportion={}".format(test_proportion))
         return self.run_tool('knn_regression', args, callback) # returns 1 if error
 
+    def logistic_regression(self, inputs, training, field, scaling="Normalize", output=None, test_proportion=0.2, callback=None):
+        """Performs a logistic regression analysis using training site polygons/points and predictor rasters.
+
+        Keyword arguments:
+
+        inputs -- Names of the input predictor rasters. 
+        scaling -- Scaling method for predictors. Options include 'None', 'Normalize', and 'Standardize'. 
+        training -- Name of the input training site polygons/points shapefile. 
+        field -- Name of the attribute containing class data. 
+        output -- Name of the output raster file. 
+        test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--scaling={}".format(scaling))
+        args.append("--training='{}'".format(training))
+        args.append("--field='{}'".format(field))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--test_proportion={}".format(test_proportion))
+        return self.run_tool('logistic_regression', args, callback) # returns 1 if error
+
     def modified_k_means_clustering(self, inputs, output, out_html=None, start_clusters=1000, merge_dist=None, max_iterations=10, class_change=2.0, callback=None):
         """Performs a modified k-means clustering operation on a multi-spectral dataset.
 
@@ -7533,7 +7685,7 @@ class WhiteboxTools(object):
         args.append("--test_proportion={}".format(test_proportion))
         return self.run_tool('random_forest_regression', args, callback) # returns 1 if error
 
-    def svm_classification(self, inputs, training, field, scaling="Normalize", output=None, gamma=50.0, tolerance=0.1, c_pos=5000.0, c_neg=500.0, test_proportion=0.2, callback=None):
+    def svm_classification(self, inputs, training, field, scaling="Normalize", output=None, c=200.0, gamma=50.0, tolerance=0.1, test_proportion=0.2, callback=None):
         """Performs a supervised SVM classification using training site polygons/points and multiple input images.
 
         Keyword arguments:
@@ -7543,10 +7695,9 @@ class WhiteboxTools(object):
         training -- Name of the input training site polygons/points Shapefile. 
         field -- Name of the attribute containing class data. 
         output -- Name of the output raster file. 
-        gamma -- Gamma parameter used in defining the kernel function. 
-        tolerance -- Tolerance value (eps), used in setting the training stopping condition. 
-        c_pos -- c-value for positive values. 
-        c_neg -- c-value for negative values. 
+        c -- c-value, the regularization parameter. 
+        gamma -- Gamma parameter used in setting the RBF (Gaussian) kernel function. 
+        tolerance -- The tolerance parameter used in determining the stopping condition. 
         test_proportion -- The proportion of the dataset to include in the test split; default is 0.2. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -7556,10 +7707,9 @@ class WhiteboxTools(object):
         args.append("--training='{}'".format(training))
         args.append("--field='{}'".format(field))
         if output is not None: args.append("--output='{}'".format(output))
+        args.append("-c={}".format(c))
         args.append("--gamma={}".format(gamma))
         args.append("--tolerance={}".format(tolerance))
-        args.append("--c_pos={}".format(c_pos))
-        args.append("--c_neg={}".format(c_neg))
         args.append("--test_proportion={}".format(test_proportion))
         return self.run_tool('svm_classification', args, callback) # returns 1 if error
 

@@ -1286,6 +1286,7 @@ impl ToolManager {
                         "lidarsibsoninterpolation", 
                         "lidarsortbytime", 
                         "localhypsometricanalysis",
+                        "logistic_regression",
                         "lowpointsonheadwaterdivides",
                         "mindistclassification",
                         "openness",

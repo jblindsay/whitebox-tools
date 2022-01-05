@@ -422,6 +422,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                         let val = match input.attributes.get_value(record_num, &field_name) {
                             FieldData::Int(val) => val as f64,
                             FieldData::Real(val) => val,
+                            FieldData::Null => continue,
                             _ => {
                                 return Err(Error::new(
                                     ErrorKind::InvalidInput,

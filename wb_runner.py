@@ -956,6 +956,8 @@ class WbRunner(tk.Frame):
         wbt.set_compress_rasters(True)
         self.filemenu.add_command(label="Do Not Compress Output TIFFs", command=self.update_compress)
         self.filemenu.add_separator()
+        self.filemenu.add_command(label="Install a Whitebox Extension", command=self.install_extension)
+        self.filemenu.add_separator()
         self.filemenu.add_command(label="Exit", command=self.quit)
         menubar.add_cascade(label="File", menu=self.filemenu)
 
@@ -979,6 +981,10 @@ class WbRunner(tk.Frame):
         else:
             wbt.set_compress_rasters(True)
             self.filemenu.entryconfig(3, label = "Do Not Compress Output TIFFs")
+
+    def install_extension(self):
+        print("Here I am")
+        wbt.install_wbt_extension()
 
     def get_toolboxes(self):
         toolboxes = set()

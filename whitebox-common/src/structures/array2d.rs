@@ -180,6 +180,7 @@ where
     pub fn nodata(&self) -> T {
         self.nodata
     }
+
 }
 
 impl<T: Copy> Index<(isize, isize)> for Array2D<T>
