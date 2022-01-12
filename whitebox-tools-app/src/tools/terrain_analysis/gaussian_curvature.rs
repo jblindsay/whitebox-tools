@@ -330,28 +330,25 @@ impl WhiteboxTool for GaussianCurvature {
                                 s = 1. / (100. * res * res) * (z[8] + z[16] - z[6] - z[18] + 4. * (z[4] + z[20] - z[0] - z[24])
                                 + 2. * (z[3] + z[9] + z[15] + z[21] - z[1] - z[5] - z[19] - z[23]));
 
-                                p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
                                 + 5. * (z[9] + z[19] - z[5] - z[15]));
 
-                                q = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                p = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
-                                if p.abs() > 0. && q.abs() > 0. {
-                                    /* 
-                                    The following equation has been taken from Florinsky (2016) Principles and Methods
-                                    of Digital Terrain Modelling, Chapter 2, pg. 18.
-                                    */
-                                    gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
-                                    
-                                    if log_transform {
-                                        // Based on Florinsky (2016) pg. 244 eq. 8.1
-                                        gaussian_curv = gaussian_curv.signum() * (1. + log_multiplier * gaussian_curv.abs()).ln();
-                                    }
-                                } else {
-                                    gaussian_curv = 0.;
+                                /* 
+                                The following equation has been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 2, pg. 18.
+                                */
+                                gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
+                                
+                                if log_transform {
+                                    // Based on Florinsky (2016) pg. 244 eq. 8.1
+                                    gaussian_curv = gaussian_curv.signum() * (1. + log_multiplier * gaussian_curv.abs()).ln();
                                 }
+                                    
                                 data[col as usize] = gaussian_curv;
                             }
                         }
@@ -510,20 +507,17 @@ impl WhiteboxTool for GaussianCurvature {
                                 + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
                                 - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1]));
 
-                                if p.abs() > 0. && q.abs() > 0. {
-                                    /* 
-                                    The following equation has been taken from Florinsky (2016) Principles and Methods
-                                    of Digital Terrain Modelling, Chapter 2, pg. 18.
-                                    */
-                                    gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
-                                    
-                                    if log_transform {
-                                        // Based on Florinsky (2016) pg. 244 eq. 8.1
-                                        gaussian_curv = gaussian_curv.signum() * (1. + log_multiplier * gaussian_curv.abs()).ln();
-                                    }
-                                } else {
-                                    gaussian_curv = 0.;
+                                /* 
+                                The following equation has been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 2, pg. 18.
+                                */
+                                gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
+                                
+                                if log_transform {
+                                    // Based on Florinsky (2016) pg. 244 eq. 8.1
+                                    gaussian_curv = gaussian_curv.signum() * (1. + log_multiplier * gaussian_curv.abs()).ln();
                                 }
+                                    
                                 data[col as usize] = gaussian_curv;
                             }
                         }

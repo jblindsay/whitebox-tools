@@ -292,22 +292,18 @@ impl WhiteboxTool for Aspect {
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
                                 of Digital Terrain Modelling, Chapter 4, pg. 117.
                                 */
-                                p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
                                 + 5. * (z[9] + z[19] - z[5] - z[15]));
 
-                                q = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                p = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
-                                if p + q != 0f64 { // slope is greater than zero
-                                    if p == 0f64 {
-                                        p = 0.00001;
-                                    }
-                                    data[col as usize] = 180f64 - ((q / p).atan()).to_degrees()
-                                        + 90f64 * (p / (p).abs());
+                                if p != 0f64 { // slope is greater than zero
+                                    data[col as usize] = 180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs());
                                 } else {
-                                    data[col as usize] = -1f64;
+                                    data[col as usize] = -1f64; // undefined for flat surfaces
                                 }
                             }
                         }
@@ -436,14 +432,10 @@ impl WhiteboxTool for Aspect {
                                 + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
                                 - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1]));
                                 
-                                if p + q != 0f64 { // slope is greater than zero
-                                    if p == 0f64 {
-                                        p = 0.00001;
-                                    }
-                                    data[col as usize] = 180f64 - ((q / p).atan()).to_degrees()
-                                        + 90f64 * (p / (p).abs());
+                                if p != 0f64 { // slope is greater than zero
+                                    data[col as usize] = 180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs());
                                 } else {
-                                    data[col as usize] = -1f64;
+                                    data[col as usize] = -1f64; // undefined for flat surfaces
                                 }
                             }
                         }

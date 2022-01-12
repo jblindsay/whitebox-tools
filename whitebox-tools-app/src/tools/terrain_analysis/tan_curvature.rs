@@ -192,7 +192,7 @@ impl WhiteboxTool for TangentialCurvature {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" {
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -309,6 +309,13 @@ impl WhiteboxTool for TangentialCurvature {
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
                                 of Digital Terrain Modelling, Chapter 4, pg. 117.
                                 */
+
+                                // 1, 2, 3, 4, 5
+                                // 6, 7, 8, 9, 10
+                                // 11, 12, 13, 14, 15
+                                // 16, 17, 18, 19, 20
+                                // 21, 22, 23, 24, 25
+
                                 r = 1f64 / (35f64 * res * res) * (2. * (z[0] + z[4] + z[5] + z[9] + z[10] + z[14] + z[15] + z[19] + z[20] + z[24])
                                 - 2. * (z[2] + z[7] + z[12] + z[17] + z[22]) - z[1] - z[3] - z[6] - z[8]
                                 - z[11] - z[13] - z[16] - z[18] - z[21] - z[23]);
@@ -320,15 +327,15 @@ impl WhiteboxTool for TangentialCurvature {
                                 s = 1. / (100. * res * res) * (z[8] + z[16] - z[6] - z[18] + 4. * (z[4] + z[20] - z[0] - z[24])
                                 + 2. * (z[3] + z[9] + z[15] + z[21] - z[1] - z[5] - z[19] - z[23]));
 
-                                p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
                                 + 5. * (z[9] + z[19] - z[5] - z[15]));
 
-                                q = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                p = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
-                                if p.abs() > 0. && q.abs() > 0. {
+                                if (p + q).abs() > 0. {
                                     /* 
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
                                     of Digital Terrain Modelling, Chapter 2, pg. 18.
@@ -499,7 +506,7 @@ impl WhiteboxTool for TangentialCurvature {
                                 + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
                                 - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1]));
 
-                                if p.abs() > 0. && q.abs() > 0. {
+                                if (p + q).abs() > 0. {
                                     /* 
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
                                     of Digital Terrain Modelling, Chapter 2, pg. 18.
