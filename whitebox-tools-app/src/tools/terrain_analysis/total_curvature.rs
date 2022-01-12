@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 03/09/2020
+Last Modified: 12/01/2022
 License: MIT
 */
 
@@ -16,6 +16,11 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+// use whitebox_common::utils::{
+//     get_formatted_elapsed_time, 
+//     haversine_distance,
+//     vincenty_distance
+// };
 
 /// This tool calculates the total curvature, which measures the curvature of the topographic surface rather
 /// than the curvature of a line across the surface in some direction (Gallant and Wilson, 2000). Total

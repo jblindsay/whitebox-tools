@@ -1,7 +1,7 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 01/06/2017
+Created: 12/01/2022
 Last Modified: 12/01/2022
 License: MIT
 */
@@ -22,12 +22,13 @@ use whitebox_common::utils::{
     vincenty_distance
 };
 
-/// This tool calculates the plan curvature (i.e. contour curvature), or the rate of change in
-/// aspect along a contour line, from a digital elevation model (DEM). Curvature is the second
-/// derivative of the topographic surface defined by a DEM. Plan curvature characterizes the
-/// degree of flow convergence or divergence within the landscape (Gallant and Wilson, 2000).
+/// This tool calculates the mean curvature, or the rate of change in slope along a flow line,
+/// from a digital elevation model (DEM). Curvature is the second
+/// derivative of the topographic surface defined by a DEM. Profile curvature characterizes the
+/// degree of downslope acceleration or deceleration within the landscape (Gallant and Wilson, 2000).
 /// The user must specify the name of the input DEM (`--dem`) and the output raster image.
-/// WhiteboxTools reports curvature in degrees multiplied by 100 for easier interpretation. The
+/// WhiteboxTools reports curvature in radians multiplied by 100 for easier interpretation because
+/// curvature values are typically very small. The
 /// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units
 /// are not the same in the DEM. When this is the case, the algorithm will multiply each
 /// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate
@@ -38,8 +39,8 @@ use whitebox_common::utils::{
 /// where `mid_lat` is the latitude of the centre of the raster, in radians.
 ///
 /// The algorithm uses the same formula for the calculation of plan curvature as Gallant and
-/// Wilson (2000). Plan curvature is negative for diverging flow along ridges and positive for
-/// convergent areas, e.g. along valley bottoms.
+/// Wilson (2000). Profile curvature is negative for slope increasing downhill (convex flow profile,
+/// typical of upper slopes) and positive for slope decreasing downhill (concave, typical of lower slopes).
 ///
 /// # Reference
 /// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
@@ -47,7 +48,7 @@ use whitebox_common::utils::{
 ///
 /// # See Also
 /// `ProfileCurvature`, `TangentialCurvature`, `TotalCurvature`, `Slope`, `Aspect`
-pub struct PlanCurvature {
+pub struct MaximalCurvature {
     name: String,
     description: String,
     toolbox: String,
@@ -55,13 +56,12 @@ pub struct PlanCurvature {
     example_usage: String,
 }
 
-impl PlanCurvature {
-    pub fn new() -> PlanCurvature {
+impl MaximalCurvature {
+    pub fn new() -> MaximalCurvature {
         // public constructor
-        let name = "PlanCurvature".to_string();
+        let name = "MaximalCurvature".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description =
-            "Calculates a plan (contour) curvature raster from an input DEM.".to_string();
+        let description = "Calculates a mean curvature raster from an input DEM.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -122,7 +122,7 @@ impl PlanCurvature {
         )
         .replace("*", &sep);
 
-        PlanCurvature {
+        MaximalCurvature {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -132,7 +132,7 @@ impl PlanCurvature {
     }
 }
 
-impl WhiteboxTool for PlanCurvature {
+impl WhiteboxTool for MaximalCurvature {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -202,7 +202,7 @@ impl WhiteboxTool for PlanCurvature {
                 keyval = true;
             }
             let flag_val = vec[0].to_lowercase().replace("--", "-");
-            if flag_val == "-i" || flag_val == "-input" {
+            if flag_val == "-i" || flag_val == "-input" || flag_val == "-dem" {
                 input_file = if keyval {
                     vec[1].to_string()
                 } else {
@@ -292,7 +292,9 @@ impl WhiteboxTool for PlanCurvature {
                     let mut r: f64;
                     let mut s: f64;
                     let mut t: f64;
-                    let mut plan_curv: f64;
+                    let mut mean_curv: f64;
+                    let mut gaussian_curv: f64;
+                    let mut maximal_curv: f64;
                     let offsets = [
                         [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], 
                         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], 
@@ -341,17 +343,20 @@ impl WhiteboxTool for PlanCurvature {
                                 if p.abs() > 0. && q.abs() > 0. {
                                     /* 
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
-                                    of Digital Terrain Modelling, Chapter 2, pg. 19.
+                                    of Digital Terrain Modelling, Chapter 2, pg. 18.
                                     */
-                                    plan_curv = (q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q).powi(3).sqrt());
+                                    mean_curv = ((1. + q * q) * r - 2. * p * q * s + (1. + p * p) * t) / (2. * ((1. + p * p + q * q).powi(3)).sqrt());
+                                    gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
+                                    maximal_curv = mean_curv + (mean_curv * mean_curv - gaussian_curv);
+                                    
                                     if log_transform {
                                         // Based on Florinsky (2016) pg. 244 eq. 8.1
-                                        plan_curv = plan_curv.signum() * (1. + log_multiplier * plan_curv.abs()).ln();
+                                        maximal_curv = maximal_curv.signum() * (1. + log_multiplier * maximal_curv.abs()).ln();
                                     }
                                 } else {
-                                    plan_curv = 0.;
+                                    maximal_curv = 0.;
                                 }
-                                data[col as usize] = plan_curv;
+                                data[col as usize] = maximal_curv;
                             }
                         }
 
@@ -403,7 +408,9 @@ impl WhiteboxTool for PlanCurvature {
                     let mut lambda1: f64;
                     let mut phi2: f64;
                     let mut lambda2: f64;
-                    let mut plan_curv: f64;
+                    let mut mean_curv: f64;
+                    let mut gaussian_curv: f64;
+                    let mut maximal_curv: f64;
                     let offsets = [
                         [-1, -1], [0, -1], [1, -1], 
                         [-1, 0], [0, 0], [1, 0], 
@@ -512,17 +519,20 @@ impl WhiteboxTool for PlanCurvature {
                                 if p.abs() > 0. && q.abs() > 0. {
                                     /* 
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
-                                    of Digital Terrain Modelling, Chapter 2, pg. 19.
+                                    of Digital Terrain Modelling, Chapter 2, pg. 18.
                                     */
-                                    plan_curv = (q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q).powi(3).sqrt());
+                                    mean_curv = ((1. + q * q) * r - 2. * p * q * s + (1. + p * p) * t) / (2. * ((1. + p * p + q * q).powi(3)).sqrt());
+                                    gaussian_curv = (r * t - s * s) / (1. + p * p + q * q).powi(2);
+                                    maximal_curv = mean_curv + (mean_curv * mean_curv - gaussian_curv);
+                                    
                                     if log_transform {
                                         // Based on Florinsky (2016) pg. 244 eq. 8.1
-                                        plan_curv = plan_curv.signum() * (1. + log_multiplier * plan_curv.abs()).ln();
+                                        maximal_curv = maximal_curv.signum() * (1. + log_multiplier * maximal_curv.abs()).ln();
                                     }
                                 } else {
-                                    plan_curv = 0.;
+                                    maximal_curv = 0.;
                                 }
-                                data[col as usize] = plan_curv;
+                                data[col as usize] = maximal_curv;
                             }
                         }
 

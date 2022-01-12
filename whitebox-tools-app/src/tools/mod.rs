@@ -454,6 +454,7 @@ impl ToolManager {
         tool_names.push("FetchAnalysis".to_string());
         tool_names.push("FillMissingData".to_string());
         tool_names.push("FindRidges".to_string());
+        tool_names.push("GaussianCurvature".to_string());
         tool_names.push("Geomorphons".to_string());
         tool_names.push("Hillshade".to_string());
         tool_names.push("HorizonAngle".to_string());
@@ -467,8 +468,10 @@ impl ToolManager {
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
+        tool_names.push("MaximalCurvature".to_string());
         tool_names.push("MeanCurvature".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
+        tool_names.push("MinimalCurvature".to_string());
         tool_names.push("MultidirectionalHillshade".to_string());
         tool_names.push("MultiscaleElevationPercentile".to_string());
         tool_names.push("MultiscaleRoughness".to_string());
@@ -1095,6 +1098,7 @@ impl ToolManager {
             "fetchanalysis" => Some(Box::new(terrain_analysis::FetchAnalysis::new())),
             "fillmissingdata" => Some(Box::new(terrain_analysis::FillMissingData::new())),
             "findridges" => Some(Box::new(terrain_analysis::FindRidges::new())),
+            "gaussiancurvature" => Some(Box::new(terrain_analysis::GaussianCurvature::new())),
             "geomorphons" => Some(Box::new(terrain_analysis::Geomorphons::new())),
             "hillshade" => Some(Box::new(terrain_analysis::Hillshade::new())),
             "horizonangle" => Some(Box::new(terrain_analysis::HorizonAngle::new())),
@@ -1118,10 +1122,12 @@ impl ToolManager {
                 Some(Box::new(terrain_analysis::MaxElevationDeviation::new()))
             }
             "maxelevdevsignature" => Some(Box::new(terrain_analysis::MaxElevDevSignature::new())),
+            "maximalcurvature" => Some(Box::new(terrain_analysis::MaximalCurvature::new())),
             "meancurvature" => Some(Box::new(terrain_analysis::MeanCurvature::new())),
             "mindownslopeelevchange" => {
                 Some(Box::new(terrain_analysis::MinDownslopeElevChange::new()))
             }
+            "minimalcurvature" => Some(Box::new(terrain_analysis::MinimalCurvature::new())),
             "multidirectionalhillshade" => {
                 Some(Box::new(terrain_analysis::MultidirectionalHillshade::new()))
             }

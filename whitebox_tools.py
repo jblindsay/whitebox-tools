@@ -525,6 +525,11 @@ class WhiteboxTools(object):
             else:
                 print("The Whitebox General Toolset Extension (GTE) has been installed!")
 
+            print(
+'''
+You will need to activate a license before using this extension. If you do 
+not currently have a valid activation key, you may purchase one by visiting 
+https://www.whiteboxgeo.com/extension-pricing/''')
             # Does the user want to register an activation key for this extension?
             reply = input("\nWould you like to activate a license key for the extension now? (Y/n) ")
 
@@ -533,10 +538,7 @@ class WhiteboxTools(object):
             else:
                 print(
 '''
-Okay, that's it for now. You will need to activate a license before using 
-the installed tools. To purchase an activation key at any time visit:
-
-https://www.whiteboxgeo.com/whitebox-geospatial-extensions/
+Okay, that's it for now.
 ''')
 
         except Exception as e:

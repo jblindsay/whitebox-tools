@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 01/03/2021
+Last Modified: 12/01/2022
 License: MIT
 */
 
@@ -16,6 +16,11 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use whitebox_common::utils::{
+    get_formatted_elapsed_time, 
+    haversine_distance,
+    vincenty_distance
+};
 
 /// This tool calculates slope gradient (i.e. slope steepness in degrees, radians, or percent) for each grid cell
 /// in an input digital elevation model (DEM). The user must specify the name of the input
@@ -183,6 +188,14 @@ impl WhiteboxTool for Slope {
         working_directory: &'a str,
         verbose: bool,
     ) -> Result<(), Error> {
+        let tool_name = self.get_tool_name();
+
+        let sep: String = path::MAIN_SEPARATOR.to_string();
+
+        // Read in the environment variables and get the necessary values
+        let configs = whitebox_common::configs::get_configs()?;
+        let max_procs = configs.max_procs;
+
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut z_factor = -1f64;
@@ -245,7 +258,6 @@ impl WhiteboxTool for Slope {
         }
 
         if verbose {
-            let tool_name = self.get_tool_name();
             let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28); 
             // 28 = length of the 'Powered by' by statement.
             println!("{}", "*".repeat(welcome_len));
@@ -255,10 +267,10 @@ impl WhiteboxTool for Slope {
             println!("{}", "*".repeat(welcome_len));
         }
 
-        let sep: String = path::MAIN_SEPARATOR.to_string();
-
         let mut progress: usize;
         let mut old_progress: usize = 1;
+
+        let start = Instant::now();
 
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
@@ -267,110 +279,249 @@ impl WhiteboxTool for Slope {
             output_file = format!("{}{}", working_directory, output_file);
         }
 
-        if verbose {
-            println!("Reading data...")
-        };
-
+        // Read in the input raster
         let input = Arc::new(Raster::new(&input_file, "r")?);
-        let start = Instant::now();
-
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
-        let eight_grid_res = input.configs.resolution_x * 8.0;
-
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
-            output.configs.data_type = DataType::F32;
-        }
-        let output_nodata = -9999.0;
-        output.configs.nodata = output_nodata;
+        let nodata = input.configs.nodata;
+        let resx = input.configs.resolution_x;
+        let resy = input.configs.resolution_y;
+        let res = (resx + resy) / 2.;
         
         let mut num_procs = num_cpus::get() as isize;
-        let configs = whitebox_common::configs::get_configs()?;
-        let max_procs = configs.max_procs;
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }
         let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx1 = tx.clone();
-            thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
-                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let mut n: [f64; 8] = [0.0; 8];
-                let mut z: f64;
-                let (mut fx, mut fy): (f64, f64);
-                let mut z_factor_array = Vec::with_capacity(rows as usize);
-                if input.is_in_geographic_coordinates() && z_factor < 0.0 {
-                    // calculate a new z-conversion factor
-                    for row in 0..rows {
-                        let lat = input.get_y_from_row(row);
-                        z_factor_array.push(1.0 / (111320.0 * lat.cos()));
-                    }
-                } else {
-                    if z_factor < 0.0 {
-                        z_factor = 1.0;
-                    }
-                    z_factor_array = vec![z_factor; rows as usize];
-                }
-
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![output_nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            for c in 0..8 {
-                                n[c] = input[(row + d_y[c], col + d_x[c])];
-                                if n[c] != nodata {
-                                    n[c] = n[c] * z_factor_array[row as usize];
-                                } else {
-                                    n[c] = z * z_factor_array[row as usize];
+        if !input.is_in_geographic_coordinates() {
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z12: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    let offsets = [
+                        [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], 
+                        [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], 
+                        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], 
+                        [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], 
+                        [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]
+                    ];
+                    let mut z = [0f64; 25];
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z12 = input.get_value(row, col);
+                            if z12 != nodata {
+                                for n in 0..25 {
+                                    z[n] = input.get_value(row + offsets[n][0], col + offsets[n][1]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z12 * z_factor;
+                                    }
                                 }
-                            }
-                            // calculate slope
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
 
-                            data[col as usize] = match units_numeric {
-                                1 => (fx * fx + fy * fy).sqrt().atan().to_degrees(), // degrees
-                                2 => (fx * fx + fy * fy).sqrt().atan(),              // radians
-                                _ => (fx * fx + fy * fy).sqrt() * 100f64,            // percent
-                            };
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                */
+                                p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
+                                + 5. * (z[9] + z[19] - z[5] - z[15]));
+
+                                q = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                    + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
+                                    + 5. * (z[1] + z[3] - z[21] - z[23]));
+
+                                /* 
+                                The following equation has been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 2, pg. 18.
+                                */
+
+                                data[col as usize] = match units_numeric {
+                                    1 => (p * p + q * q).sqrt().atan().to_degrees(), // degrees
+                                    2 => (p * p + q * q).sqrt().atan(),              // radians
+                                    _ => (p * p + q * q).sqrt() * 100f64,            // percent
+                                };
+                            }
                         }
+
+                        tx.send((row, data)).unwrap();
                     }
-                    tx1.send((row, data)).unwrap();
-                }
-            });
+                });
+            }
+        } else { // geographic coordinates
+
+            let phi1 = input.get_y_from_row(0);
+            let lambda1 = input.get_x_from_column(0);
+
+            let phi2 = phi1;
+            let lambda2 = input.get_x_from_column(-1);
+
+            let linear_res = vincenty_distance((phi1, lambda1), (phi2, lambda2));
+            let lr2 =  haversine_distance((phi1, lambda1), (phi2, lambda2)); 
+            let diff = 100. * (linear_res - lr2).abs() / linear_res;
+            let use_haversine = diff < 0.5; // if the difference is less than 0.5%, use the faster haversine method to calculate distances.
+
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z4: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    let mut a: f64;
+                    let mut b: f64;
+                    let mut c: f64;
+                    let mut d: f64;
+                    let mut e: f64;
+                    let mut phi1: f64;
+                    let mut lambda1: f64;
+                    let mut phi2: f64;
+                    let mut lambda2: f64;
+                    let offsets = [
+                        [-1, -1], [0, -1], [1, -1], 
+                        [-1, 0], [0, 0], [1, 0], 
+                        [-1, 1], [0, 1], [1, 1]
+                    ];
+                    let mut z = [0f64; 25];
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z4 = input.get_value(row, col);
+                            if z4 != nodata {
+                                for n in 0..9 {
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z4 * z_factor;
+                                    }
+                                }
+
+                                // Calculate a, b, c, d, and e.
+                                phi1 = input.get_y_from_row(row);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                b = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row+1);
+                                lambda2 = lambda1;
+
+                                d = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row-1);
+                                lambda2 = lambda1;
+
+                                e = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row+1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                a = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row-1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                c = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                */
+
+                                p = (a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
+                                / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e)));
+
+                                q = 1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
+                                * ((d * d * (a.powi(4) + b.powi(4) + b * b * c * c) + c * c * e * e * (a * a - b * b)) * (z[0] + z[2])
+                                - (d * d * (a.powi(4) + c.powi(4) + b * b * c * c) - e * e * (a.powi(4) + c.powi(4) + a * a * b * b)) * (z[3] + z[5])
+                                - (e * e * (b.powi(4) + c.powi(4) + a * a * b * b) - a * a * d * d * (b * b - c * c)) * (z[6] + z[8])
+                                + d * d * (b.powi(4) * (z[1] - 3. * z[4]) + c.powi(4) * (3. * z[1] - z[4]) + (a.powi(4) - 2. * b * b * c * c) * (z[1] - z[4]))
+                                + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
+                                - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1]));
+
+                                /* 
+                                The following equation has been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 2, pg. 18.
+                                */
+
+                                data[col as usize] = match units_numeric {
+                                    1 => (p * p + q * q).sqrt().atan().to_degrees(), // degrees
+                                    2 => (p * p + q * q).sqrt().atan(),              // radians
+                                    _ => (p * p + q * q).sqrt() * 100f64,            // percent
+                                };
+                            }
+                        }
+
+                        tx.send((row, data)).unwrap();
+                    }
+                });
+            }
         }
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F32;
         for row in 0..rows {
-            let data = rx.recv().expect("Error receiving data from thread.");
-            output.set_row_data(data.0, data.1);
-
+            let (r, data) = rx.recv().expect("Error receiving data from thread.");
+            output.set_row_data(r, data);
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.palette = "spectrum_soft.plt".to_string();
-        output.add_metadata_entry(format!(
-            "Created by whitebox_tools\' {} tool",
-            self.get_tool_name()
-        ));
-        output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Z-factor: {}", z_factor));
-        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
-
+        
+        //////////////////////
+        // Output the image //
+        //////////////////////
         if verbose {
             println!("Saving data...")
         };
+        
+        let elapsed_time = get_formatted_elapsed_time(start);
+        
+        output.add_metadata_entry(format!(
+            "Created by whitebox_tools\' {} tool",
+            tool_name
+        ));
+        output.add_metadata_entry(format!("Input file: {}", input_file));
+        output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
+
         let _ = match output.write() {
             Ok(_) => {
                 if verbose {
@@ -379,6 +530,7 @@ impl WhiteboxTool for Slope {
             }
             Err(e) => return Err(e),
         };
+
         if verbose {
             println!(
                 "{}",
