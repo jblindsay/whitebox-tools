@@ -608,6 +608,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -2534,6 +2535,24 @@ Okay, that's it for now.
     # Geomorphometric Analysis #
     ############################
 
+    def accumulation_curvature(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates accumulation curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('accumulation_curvature', args, callback) # returns 1 if error
+
     def aspect(self, dem, output, zfactor=None, callback=None):
         """Calculates an aspect raster from an input DEM.
 
@@ -2650,6 +2669,24 @@ Okay, that's it for now.
         args.append("--tolerance={}".format(tolerance))
         return self.run_tool('contours_from_raster', args, callback) # returns 1 if error
 
+    def curvedness(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates curvedness from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('curvedness', args, callback) # returns 1 if error
+
     def dev_from_mean_elev(self, dem, output, filterx=11, filtery=11, callback=None):
         """Calculates deviation from mean elevation.
 
@@ -2685,6 +2722,24 @@ Okay, that's it for now.
         args.append("--filterx={}".format(filterx))
         args.append("--filtery={}".format(filtery))
         return self.run_tool('diff_from_mean_elev', args, callback) # returns 1 if error
+
+    def difference_curvature(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates difference curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('difference_curvature', args, callback) # returns 1 if error
 
     def directional_relief(self, dem, output, azimuth=0.0, max_dist=None, callback=None):
         """Calculates relief for cells in an input DEM for a specified direction.
@@ -2936,6 +2991,24 @@ Okay, that's it for now.
         if line_thin: args.append("--line_thin")
         return self.run_tool('find_ridges', args, callback) # returns 1 if error
 
+    def gaussian_curvature(self, dem, output, log=False, zfactor=None, callback=None):
+        """Calculates a mean curvature raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
+        return self.run_tool('gaussian_curvature', args, callback) # returns 1 if error
+
     def gaussian_scale_space(self, dem, output, output_zscore, output_scale, points=None, sigma=0.5, step=0.5, num_steps=10, lsp="Slope", z_factor=None, callback=None):
         """This tool uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.
 
@@ -2965,6 +3038,24 @@ Okay, that's it for now.
         args.append("--lsp={}".format(lsp))
         if z_factor is not None: args.append("--z_factor='{}'".format(z_factor))
         return self.run_tool('gaussian_scale_space', args, callback) # returns 1 if error
+
+    def generating_function(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates generating function from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('generating_function', args, callback) # returns 1 if error
 
     def geomorphons(self, dem, output, search=3, threshold=0.0, tdist=0, forms=False, callback=None):
         """Computes geomorphon patterns.
@@ -3025,6 +3116,24 @@ Okay, that's it for now.
         args.append("--azimuth={}".format(azimuth))
         args.append("--max_dist={}".format(max_dist))
         return self.run_tool('horizon_angle', args, callback) # returns 1 if error
+
+    def horizontal_excess_curvature(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates horizontal excess curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('horizontal_excess_curvature', args, callback) # returns 1 if error
 
     def hypsometric_analysis(self, inputs, output, watershed=None, callback=None):
         """Calculates a hypsometric curve for one or more DEMs.
@@ -3270,19 +3379,39 @@ Okay, that's it for now.
         args.append("--step={}".format(step))
         return self.run_tool('max_elevation_deviation', args, callback) # returns 1 if error
 
-    def mean_curvature(self, dem, output, zfactor=None, callback=None):
+    def maximal_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a mean curvature raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
+        log -- Display output values using a log-scale. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
+        return self.run_tool('maximal_curvature', args, callback) # returns 1 if error
+
+    def mean_curvature(self, dem, output, log=False, zfactor=None, callback=None):
+        """Calculates a mean curvature raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('mean_curvature', args, callback) # returns 1 if error
 
@@ -3299,6 +3428,24 @@ Okay, that's it for now.
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         return self.run_tool('min_downslope_elev_change', args, callback) # returns 1 if error
+
+    def minimal_curvature(self, dem, output, log=False, zfactor=None, callback=None):
+        """Calculates a mean curvature raster from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
+        return self.run_tool('minimal_curvature', args, callback) # returns 1 if error
 
     def multidirectional_hillshade(self, dem, output, altitude=45.0, zfactor=None, full_mode=False, callback=None):
         """Calculates a multi-direction hillshade raster from an input DEM.
@@ -3544,19 +3691,21 @@ Okay, that's it for now.
         args.append("--filtery={}".format(filtery))
         return self.run_tool('percent_elev_range', args, callback) # returns 1 if error
 
-    def plan_curvature(self, dem, output, zfactor=None, callback=None):
+    def plan_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a plan (contour) curvature raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
+        log -- Display output values using a log-scale. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
+        if log: args.append("--log")
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('plan_curvature', args, callback) # returns 1 if error
 
@@ -3576,19 +3725,21 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('profile', args, callback) # returns 1 if error
 
-    def profile_curvature(self, dem, output, zfactor=None, callback=None):
+    def profile_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a profile curvature raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
+        log -- Display output values using a log-scale. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
+        if log: args.append("--log")
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('profile_curvature', args, callback) # returns 1 if error
 
@@ -3645,6 +3796,42 @@ Okay, that's it for now.
         args.append("--filter={}".format(filter))
         args.append("--slope={}".format(slope))
         return self.run_tool('remove_off_terrain_objects', args, callback) # returns 1 if error
+
+    def ring_curvature(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates ring curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('ring_curvature', args, callback) # returns 1 if error
+
+    def rotor(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates rotor from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('rotor', args, callback) # returns 1 if error
 
     def ruggedness_index(self, dem, output, zfactor=None, callback=None):
         """Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
@@ -3735,6 +3922,22 @@ Okay, that's it for now.
         args.append("--time={}".format(time))
         args.append("--location={}".format(location))
         return self.run_tool('shadow_image', args, callback) # returns 1 if error
+
+    def shape_index(self, dem, output, zfactor=1.0, callback=None):
+        """This tool calculates the shape index from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('shape_index', args, callback) # returns 1 if error
 
     def slope(self, dem, output, zfactor=None, units="degrees", callback=None):
         """Calculates a slope raster from an input DEM.
@@ -3878,19 +4081,21 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('surface_area_ratio', args, callback) # returns 1 if error
 
-    def tangential_curvature(self, dem, output, zfactor=None, callback=None):
+    def tangential_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a tangential curvature raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
+        log -- Display output values using a log-scale. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
+        if log: args.append("--log")
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('tangential_curvature', args, callback) # returns 1 if error
 
@@ -3956,21 +4161,59 @@ Okay, that's it for now.
         if dev_max: args.append("--dev_max")
         return self.run_tool('topographic_position_animation', args, callback) # returns 1 if error
 
-    def total_curvature(self, dem, output, zfactor=None, callback=None):
+    def total_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a total curvature raster from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
+        log -- Display output values using a log-scale. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
+        if log: args.append("--log")
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('total_curvature', args, callback) # returns 1 if error
+
+    def unsphericity(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates the unsphericity curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('unsphericity', args, callback) # returns 1 if error
+
+    def vertical_excess_curvature(self, dem, output, log=False, zfactor=1.0, callback=None):
+        """This tool calculates vertical excess curvature from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        output -- Name of the output raster image file. 
+        log -- Display output values using a log-scale. 
+        zfactor -- Z conversion factor. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        if log: args.append("--log")
+        args.append("--zfactor={}".format(zfactor))
+        return self.run_tool('vertical_excess_curvature', args, callback) # returns 1 if error
 
     def viewshed(self, dem, stations, output, height=2.0, callback=None):
         """Identifies the viewshed for a point or set of points.
@@ -7687,7 +7930,7 @@ Okay, that's it for now.
         return self.run_tool('random_forest_regression', args, callback) # returns 1 if error
 
     def svm_classification(self, inputs, training, field, scaling="Normalize", output=None, c=200.0, gamma=50.0, tolerance=0.1, test_proportion=0.2, callback=None):
-        """Performs a supervised SVM classification using training site polygons/points and multiple input images.
+        """Performs an SVM binary classification using training site polygons/points and multiple input images.
 
         Keyword arguments:
 

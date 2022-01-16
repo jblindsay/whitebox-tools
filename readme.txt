@@ -56,12 +56,20 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 2.X.X (XX-XX-20XX)
-- Added the MeanCurvature tool.
+Version 2.1.0 (XX-XX-20XX)
+- The Geomorphons tool for landform classification is now available.
+- Added the MeanCurvature, GaussianCurvature, MinimalCurvature and MaximalCurvature tools.
 - Added GaussianScaleSpace tool, which uses the fast Gaussian approximation algorithm to produce 
   scaled land-surface parameter measurements from an input DEM.
 - Added LocalQuadraticRegression tool, which is an implementation of the constrained quadratic 
   regression algorithm using a flexible window size described in Wood (1996).
+- Updated the Slope, Aspect, ProfileCurvature, TangentialCurvature, PlanCurvature, and
+  TotalCurvature tools to use the more robust 5x5 3rd order bivariate polynomial method
+  of Florinsky (2016) for rectangular grid DEMs, and the 3x3 method, also described by
+  Florinsky (2016), for DEMs in geographic coordinates. This is a large improvement in
+  accuracy for calculating these surface morphology parameters on geographic coordinates
+  compared with the Esri 'z-conversion fudge factor' method used previously.
+- Added the ability to automatically install the Whitebox extensions using the Python API.
 - Fixed a bug in the lower quartile valley mapping method of the ExtractValleys tool.
 - Fixed a bug in the PennockLandformClass tool.
 - Fixed a bug in the Shapefile reader that affected files of the PointZ ShapeType.

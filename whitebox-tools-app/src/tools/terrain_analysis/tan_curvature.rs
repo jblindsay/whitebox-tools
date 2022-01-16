@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 12/01/2022
+Last Modified: 15/01/2022
 License: MIT
 */
 
@@ -22,20 +22,41 @@ use whitebox_common::utils::{
     vincenty_distance
 };
 
-/// This tool calculates the tangential curvature, which is the curvature of an inclined plan perpendicular
-/// to both the direction of flow and the surface (Gallant and Wilson, 2000). Curvature is a second
-/// derivative of the topographic surface defined by a digital elevation model (DEM). The user must specify
-/// the name of the input DEM (`--dem`) and the output raster image (`--output`). The output reports curvature
-/// in degrees multiplied by 100 for easier interpretation, as curvature values are often very small. The Z
-/// Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the
+/// This tool calculates the tangential (or horizontal) curvature, which is the curvature of an inclined 
+/// plane perpendicular to both the direction of flow and the surface (Gallant and Wilson, 2000). Alternatively,
+/// it could be described as the curvature of a normal section tangential to a contour line at a given 
+/// point of the topographic surface (Florinsky, 2017). This variable has an unbounded range that can be
+/// either positive or negative. Positive values are indicative of flow divergence while negative tangential
+/// curvature values indicate flow convergence. Thus tangential curvature is similar to plan curvature, although the 
+/// literature suggests that the former is more numerically stable (Wilson, 2018). Tangential curvature is measured in units of m<sup>-1</sup>.
+/// 
+/// The user must specify the name of the input digital elevation model (DEM) (`--dem`) and the output 
+/// raster (`--output`). The Z conversion factor (`--zfactor`) is only important when the vertical and horizontal units are not the
 /// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
-/// Z Conversion Factor. If the DEM is in the geographic coordinate system (latitude and longitude), with
-/// XY units measured in degrees, an appropriate Z Conversion Factor is calculated internally based on
-/// site latitude.
+/// Z Conversion Factor. Curvature values are often very small and as such the user may opt to log-transform
+/// the output raster (`--log`). Transforming the values applies the equation by Shary et al. (2002):
+/// 
+/// *Θ*' = sign(*Θ*) ln(1 + 10<sup>*n*</sup|*Θ*|) 
+/// 
+/// where *Θ* is the parameter value and *n* is dependent on the grid cell size.
+/// 
+/// For DEMs in projected coordinate systems, the tool uses the 3rd-order bivariate 
+/// Taylor polynomial method described by Florinsky (2016). Based on a polynomial fit 
+/// of the elevations within the 5x5 neighbourhood surrounding each cell, this method is considered more 
+/// robust against outlier elevations (noise) than other methods. For DEMs in geographic coordinate systems
+/// (i.e. angular units), the tool uses the 3x3 polynomial fitting method for equal angle grids also 
+/// described by Florinsky (2016). 
 ///
-/// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
-/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// # References
+/// Florinsky, I. (2016). Digital terrain analysis in soil science and geology. Academic Press.
+/// 
+/// Florinsky, I. V. (2017). An illustrated introduction to general geomorphometry. Progress in Physical 
+/// Geography, 41(6), 723-752.
+/// 
+/// Shary P. A., Sharaya L. S. and Mitusov A. V. (2002) Fundamental quantitative methods of land surface analysis. 
+/// Geoderma 107: 1–32.
+/// 
+/// Wilson, J. P. (2018). Environmental applications of digital terrain modeling. John Wiley & Sons.
 ///
 /// `PlanCurvature`, `ProfileCurvature`, `TotalCurvature`, `Slope`, `Aspect`
 pub struct TangentialCurvature {
@@ -307,7 +328,8 @@ impl WhiteboxTool for TangentialCurvature {
 
                                 /* 
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
-                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                of Digital Terrain Modelling, Chapter 4, pg. 117. Note that I believe Florinsky reversed
+                                the equations for q and p.
                                 */
 
                                 // 1, 2, 3, 4, 5
@@ -340,7 +362,7 @@ impl WhiteboxTool for TangentialCurvature {
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
                                     of Digital Terrain Modelling, Chapter 2, pg. 18.
                                     */
-                                    tan_curv = (q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q) * (1. + p * p + q * q).sqrt());
+                                    tan_curv = -(q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q) * (1. + p * p + q * q).sqrt());
                                     if log_transform {
                                         // Based on Florinsky (2016) pg. 244 eq. 8.1
                                         tan_curv = tan_curv.signum() * (1. + log_multiplier * tan_curv.abs()).ln();
@@ -511,7 +533,7 @@ impl WhiteboxTool for TangentialCurvature {
                                     The following equation has been taken from Florinsky (2016) Principles and Methods
                                     of Digital Terrain Modelling, Chapter 2, pg. 18.
                                     */
-                                    tan_curv = (q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q) * (1. + p * p + q * q).sqrt());
+                                    tan_curv = -(q * q * r - 2. * p * q * s + p * p * t) / ((p * p + q * q) * (1. + p * p + q * q).sqrt());
                                     if log_transform {
                                         // Based on Florinsky (2016) pg. 244 eq. 8.1
                                         tan_curv = tan_curv.signum() * (1. + log_multiplier * tan_curv.abs()).ln();

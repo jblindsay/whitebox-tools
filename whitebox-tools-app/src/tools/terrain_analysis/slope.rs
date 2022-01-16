@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 22/06/2017
-Last Modified: 12/01/2022
+Last Modified: 15/01/2022
 License: MIT
 */
 
@@ -26,39 +26,20 @@ use whitebox_common::utils::{
 /// in an input digital elevation model (DEM). The user must specify the name of the input
 /// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
 /// when the vertical and horizontal units are not the same in the DEM. When this is the case,
-/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
-/// DEM is in the geographic coordinate system (latitude and longitude), the following equation
-/// is used:
-///
-/// > zfactor = 1.0 / (111320.0 x cos(mid_lat))
-///
-/// where `mid_lat` is the latitude of the centre of each raster row, in radians.
-///
-/// The tool uses Horn's (1981) 3rd-order finite difference method to estimate slope. Given
-/// the following clock-type grid cell numbering scheme (Gallant and Wilson, 2000),
-///
-/// |  7  |  8  |  1  | \
-/// |  6  |  9  |  2  | \
-/// |  5  |  4  |  3  |
-///
-/// > slope = arctan(f<sub>x</sub><sup>2</sup> + f<sub>y</sub><sup>2</sup>)<sup>0.5</sup>
-///
-/// where,
-///
-/// > f<sub>x</sub> = (z<sub>3</sub> - z<sub>5</sub> + 2(z<sub>2</sub> - z<sub>6</sub>) + z<sub>1</sub> - z<sub>7</sub>) / 8 * &Delta;x
-///
-///  and,
-///
-/// > f<sub>y</sub> = (z<sub>7</sub> - z<sub>5</sub> + 2(z<sub>8</sub> - z<sub>4</sub>) + z<sub>1</sub> - z<sub>3</sub>) / * &Delta;y
-///
-/// &Delta;x and &Delta;y are the grid resolutions in the x and y direction respectively
+/// the algorithm will multiply each elevation in the DEM by the Z conversion factor. 
+/// 
+/// For DEMs in projected coordinate systems, the tool uses the 3rd-order bivariate 
+/// Taylor polynomial method described by Florinsky (2016). Based on a polynomial fit 
+/// of the elevations within the 5x5 neighbourhood surrounding each cell, this method is considered more 
+/// robust against outlier elevations (noise) than other methods. For DEMs in geographic coordinate systems
+/// (i.e. angular units), the tool uses the 3x3 polynomial fitting method for equal angle grids also 
+/// described by Florinsky (2016). 
 ///
 /// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
-/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
+/// Florinsky, I. (2016). Digital terrain analysis in soil science and geology. Academic Press.
 ///
 /// # See Also
-/// `Aspect`, `PlanCurvature`, `ProfileCurvature`
+/// `Aspect`, `TangentialCurvature`, `PlanCurvature`, `ProfileCurvature`, `MeanCurvature`, `GaussianCurvature`
 pub struct Slope {
     name: String,
     description: String,
@@ -325,7 +306,8 @@ impl WhiteboxTool for Slope {
 
                                 /* 
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
-                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                of Digital Terrain Modelling, Chapter 4, pg. 117. Note that I believe Florinsky reversed
+                                the equations for q and p.
                                 */
                                 q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))

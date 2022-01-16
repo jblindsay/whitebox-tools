@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/01/2022
-Last Modified: 12/01/2022
+Last Modified: 15/01/2022
 License: MIT
 */
 
@@ -22,32 +22,38 @@ use whitebox_common::utils::{
     vincenty_distance
 };
 
-/// This tool calculates the mean curvature, or the rate of change in slope along a flow line,
-/// from a digital elevation model (DEM). Curvature is the second
-/// derivative of the topographic surface defined by a DEM. Profile curvature characterizes the
-/// degree of downslope acceleration or deceleration within the landscape (Gallant and Wilson, 2000).
-/// The user must specify the name of the input DEM (`--dem`) and the output raster image.
-/// WhiteboxTools reports curvature in radians multiplied by 100 for easier interpretation because
-/// curvature values are typically very small. The
-/// *Z conversion factor* (`--zfactor`) is only important when the vertical and horizontal units
-/// are not the same in the DEM. When this is the case, the algorithm will multiply each
-/// elevation in the DEM by the Z Conversion Factor. If the DEM is in the geographic coordinate
-/// system (latitude and longitude), the following equation is used:
+/// This tool calculates the Gaussian curvature from a digital elevation model (DEM). Gaussian curvature 
+/// is the product of maximal and minimal curvatures, and retains values in each point of the topographic 
+/// surface after its bending without breaking, stretching, and compressing (Florinsky, 2017). Gaussian 
+/// curvature is measured in units of m<sup>-2</sup>.
+/// 
+/// The user must specify the name of the input DEM (`--dem`) and the output raster (`--output`). The
+/// The Z conversion factor (`--zfactor`) is only important when the vertical and horizontal units are not the
+/// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
+/// Z Conversion Factor. Curvature values are often very small and as such the user may opt to log-transform
+/// the output raster (`--log`). Transforming the values applies the equation by Shary et al. (2002):
+/// 
+/// *Θ*' = sign(*Θ*) ln(1 + 10<sup>*n*</sup|*Θ*|) 
+/// 
+/// where *Θ* is the parameter value and *n* is dependent on the grid cell size.
+/// 
+/// For DEMs in projected coordinate systems, the tool uses the 3rd-order bivariate 
+/// Taylor polynomial method described by Florinsky (2016). Based on a polynomial fit 
+/// of the elevations within the 5x5 neighbourhood surrounding each cell, this method is considered more 
+/// robust against outlier elevations (noise) than other methods. For DEMs in geographic coordinate systems
+/// (i.e. angular units), the tool uses the 3x3 polynomial fitting method for equal angle grids also 
+/// described by Florinsky (2016). 
 ///
-/// > zfactor = 1.0 / (111320.0 x cos(mid_lat))
+/// # References
+/// Florinsky, I. (2016). Digital terrain analysis in soil science and geology. Academic Press.
+/// 
+/// Florinsky, I. V. (2017). An illustrated introduction to general geomorphometry. Progress in Physical 
+/// Geography, 41(6), 723-752.
+/// 
+/// Shary P. A., Sharaya L. S. and Mitusov A. V. (2002) Fundamental quantitative methods of land surface analysis. 
+/// Geoderma 107: 1–32.
 ///
-/// where `mid_lat` is the latitude of the centre of the raster, in radians.
-///
-/// The algorithm uses the same formula for the calculation of plan curvature as Gallant and
-/// Wilson (2000). Profile curvature is negative for slope increasing downhill (convex flow profile,
-/// typical of upper slopes) and positive for slope decreasing downhill (concave, typical of lower slopes).
-///
-/// # Reference
-/// Gallant, J. C., and J. P. Wilson, 2000, Primary topographic attributes, in Terrain Analysis: Principles
-/// and Applications, edited by J. P. Wilson and J. C. Gallant pp. 51-86, John Wiley, Hoboken, N.J.
-///
-/// # See Also
-/// `ProfileCurvature`, `TangentialCurvature`, `TotalCurvature`, `Slope`, `Aspect`
+/// `TangentialCurvature`, `ProfileCurvature`, `PlanCurvature`, `MeanCurvature`, `MinimalCurvature`, `MaximalCurvature`
 pub struct GaussianCurvature {
     name: String,
     description: String,
@@ -317,7 +323,8 @@ impl WhiteboxTool for GaussianCurvature {
 
                                 /* 
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
-                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                of Digital Terrain Modelling, Chapter 4, pg. 117. Note that I believe Florinsky reversed
+                                the equations for q and p.
                                 */
                                 r = 1f64 / (35f64 * res * res) * (2. * (z[0] + z[4] + z[5] + z[9] + z[10] + z[14] + z[15] + z[19] + z[20] + z[24])
                                 - 2. * (z[2] + z[7] + z[12] + z[17] + z[22]) - z[1] - z[3] - z[6] - z[8]
