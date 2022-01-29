@@ -609,6 +609,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -3057,7 +3058,7 @@ Okay, that's it for now.
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('generating_function', args, callback) # returns 1 if error
 
-    def geomorphons(self, dem, output, search=3, threshold=0.0, tdist=0, forms=False, callback=None):
+    def geomorphons(self, dem, output, search=50, threshold=0.0, tdist=0, forms=True, callback=None):
         """Computes geomorphon patterns.
 
         Keyword arguments:
@@ -3378,6 +3379,20 @@ Okay, that's it for now.
         args.append("--max_scale='{}'".format(max_scale))
         args.append("--step={}".format(step))
         return self.run_tool('max_elevation_deviation', args, callback) # returns 1 if error
+
+    def max_upslope_elev_change(self, dem, output, callback=None):
+        """Calculates the maximum upslope change in elevation between a grid cell and its eight downslope neighbors.
+
+        Keyword arguments:
+
+        dem -- Input raster DEM file. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('max_upslope_elev_change', args, callback) # returns 1 if error
 
     def maximal_curvature(self, dem, output, log=False, zfactor=None, callback=None):
         """Calculates a mean curvature raster from an input DEM.
@@ -7518,6 +7533,26 @@ Okay, that's it for now.
         args.append("--maxzdiff={}".format(maxzdiff))
         if classify: args.append("--classify")
         return self.run_tool('lidar_segmentation_based_filter', args, callback) # returns 1 if error
+
+    def lidar_shift(self, i, output, x_shift="", y_shift="", z_shift="", callback=None):
+        """Shifts the x,y,z coordinates of a LiDAR file.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        x_shift -- x-shift value, blank for none. 
+        y_shift -- y-shift value, blank for none. 
+        z_shift -- z-shift value, blank for none. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--x_shift={}".format(x_shift))
+        args.append("--y_shift={}".format(y_shift))
+        args.append("--z_shift={}".format(z_shift))
+        return self.run_tool('lidar_shift', args, callback) # returns 1 if error
 
     def lidar_sibson_interpolation(self, i=None, output=None, parameter="elevation", returns="all", resolution=1.0, exclude_cls=None, minz=None, maxz=None, callback=None):
         """This tool interpolates one or more LiDAR tiles using Sibson's natural neighbour method.

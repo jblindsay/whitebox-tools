@@ -1,0 +1,50 @@
+{
+    "tool_name": "LidarShift",
+    "exe": "lidar_shift",
+    "short_description": "Shifts the x,y,z coordinates of a LiDAR file.",
+    "toolbox": "LiDAR Tools",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=LidarShift -i=input.las -o=output.las",
+    "parameters": [
+        {
+            "name": "Input LiDAR Points",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input LiDAR points.",
+            "parameter_type": {"ExistingFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output LiDAR Points",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output LiDAR points.",
+            "parameter_type": {"NewFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "x-shift",
+            "flags": ["-x", "--x_shift"],
+            "description": "x-shift value, blank for none.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "y-shift",
+            "flags": ["-y", "--y_shift"],
+            "description": "y-shift value, blank for none.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "z-shift",
+            "flags": ["-z", "--z_shift"],
+            "description": "z-shift value, blank for none.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        }
+    ]
+}

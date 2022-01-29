@@ -29,13 +29,15 @@ use whitebox_common::utils::{
 /// Thus plan curvature is similar to tangential curvature, although the literature suggests that the latter
 /// is more numerically stable (Wilson, 2018). Plan curvature is measured in units of m<sup>-1</sup>.
 /// 
+/// ![](../../doc_img/PlanCurvature.png)
+/// 
 /// The user must specify the name of the input DEM (`--dem`) and the output raster (`--output`). The
 /// The Z conversion factor (`--zfactor`) is only important when the vertical and horizontal units are not the
 /// same in the DEM. When this is the case, the algorithm will multiply each elevation in the DEM by the
 /// Z Conversion Factor. Curvature values are often very small and as such the user may opt to log-transform
 /// the output raster (`--log`). Transforming the values applies the equation by Shary et al. (2002):
 /// 
-/// *Θ*' = sign(*Θ*) ln(1 + 10<sup>*n*</sup|*Θ*|) 
+/// *Θ*' = sign(*Θ*) ln(1 + 10<sup>*n*</sup>|*Θ*|) 
 /// 
 /// where *Θ* is the parameter value and *n* is dependent on the grid cell size.
 /// 

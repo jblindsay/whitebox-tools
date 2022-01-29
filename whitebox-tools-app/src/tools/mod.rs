@@ -468,6 +468,7 @@ impl ToolManager {
         tool_names.push("MaxDownslopeElevChange".to_string());
         tool_names.push("MaxElevDevSignature".to_string());
         tool_names.push("MaxElevationDeviation".to_string());
+        tool_names.push("MaxUpslopeElevChange".to_string());
         tool_names.push("MaximalCurvature".to_string());
         tool_names.push("MeanCurvature".to_string());
         tool_names.push("MinDownslopeElevChange".to_string());
@@ -1122,6 +1123,7 @@ impl ToolManager {
                 Some(Box::new(terrain_analysis::MaxElevationDeviation::new()))
             }
             "maxelevdevsignature" => Some(Box::new(terrain_analysis::MaxElevDevSignature::new())),
+            "maxupslopeelevchange" => Some(Box::new(terrain_analysis::MaxUpslopeElevChange::new())),
             "maximalcurvature" => Some(Box::new(terrain_analysis::MaximalCurvature::new())),
             "meancurvature" => Some(Box::new(terrain_analysis::MeanCurvature::new())),
             "mindownslopeelevchange" => {
@@ -1272,13 +1274,18 @@ impl ToolManager {
                     // one of the extension plugins. If it is, issue a 'need valid license' warning. If 
                     // not, then issue an unrecognized tool error.
                     let plugin_names = vec![
+                        "accumulationcurvature",
                         "assessroute",
                         "cannyedgedetection", 
+                        "curvedness",
                         "dbscan",
+                        "differencecurvature",
                         "evaluatetrainingsites", 
                         "fix_danglingarcs",
                         "generalizeclassifiedraster",
                         "generalizewithsimilarity",
+                        "generatingfunction",
+                        "horizontalexcesscurvature",
                         "hydrologicconnectivity",
                         "imagesegmentation",
                         "imageslider",
@@ -1305,6 +1312,8 @@ impl ToolManager {
                         "registerlicense",
                         "removefieldedgepoints",
                         "repairstreamvectortopology",
+                        "ringcurvature",
+                        "rotor",
                         "shadowanimation",
                         "shadowimage",
                         "slopevsaspectplot",
@@ -1312,7 +1321,9 @@ impl ToolManager {
                         "svm_classification",
                         "svm_regression",
                         "topographicpositionanimation",
+                        "unsphericity",
                         "vectorstreamnetworkanalysis",
+                        "verticalexcesscurvature",
                         "yieldfilter",
                         "yieldmap",
                         "yieldnormalization"

@@ -21,6 +21,10 @@ name = "gaussian_scale_space"
 path = "src/gaussian_scale_space/main.rs"
 
 [[bin]]
+name = "lidar_shift"
+path = "src/lidar_shift/main.rs"
+
+[[bin]]
 name = "local_quadratic_regression"
 path = "src/local_quadratic_regression/main.rs"
 
@@ -50,5 +54,6 @@ nalgebra = "0.18.0"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
 whitebox_common = { path = "../whitebox-common" }
+whitebox_lidar = { path = "../whitebox-lidar" }
 whitebox_raster = { path = "../whitebox-raster" }
 whitebox_vector = { path = "../whitebox-vector" }

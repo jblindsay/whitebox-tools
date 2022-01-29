@@ -63,12 +63,14 @@ Version 2.1.0 (XX-XX-20XX)
   scaled land-surface parameter measurements from an input DEM.
 - Added LocalQuadraticRegression tool, which is an implementation of the constrained quadratic 
   regression algorithm using a flexible window size described in Wood (1996).
+- Added the MaxUpslopeElevChange tool, the upslope equivalent of the MaxDownslopeElevChange tool.
 - Updated the Slope, Aspect, ProfileCurvature, TangentialCurvature, PlanCurvature, and
   TotalCurvature tools to use the more robust 5x5 3rd order bivariate polynomial method
   of Florinsky (2016) for rectangular grid DEMs, and the 3x3 method, also described by
   Florinsky (2016), for DEMs in geographic coordinates. This is a large improvement in
   accuracy for calculating these surface morphology parameters on geographic coordinates
-  compared with the Esri 'z-conversion fudge factor' method used previously.
+  compared with the 'z-conversion fudge factor' method used previously.
+- Added the LidarShift tool for applying a simple shift to point x,y,z coordinates.
 - Added the ability to automatically install the Whitebox extensions using the Python API.
 - Fixed a bug in the lower quartile valley mapping method of the ExtractValleys tool.
 - Fixed a bug in the PennockLandformClass tool.

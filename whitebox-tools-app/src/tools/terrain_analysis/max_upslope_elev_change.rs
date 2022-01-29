@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 11/07/2017
-Last Modified: 12/10/2018
+Created: 27/01/2022
+Last Modified: 27/01/2022
 License: MIT
 */
 
@@ -17,13 +17,13 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool calculates the maximum elevation drop between each grid cell and its neighbouring cells within
+/// This tool calculates the maximum elevation difference in the upslope direction between each grid cell and its neighbouring cells within
 /// a digital elevation model (DEM). The user must specify the name of the input DEM (`--dem`) and the output
 /// (`--output`) raster name.
 ///
 /// # See Also
-/// `MaxUpslopeElevChange`, `MinDownslopeElevChange`, `NumDownslopeNeighbours`
-pub struct MaxDownslopeElevChange {
+/// `MaxDownslopeElevChange`
+pub struct MaxUpslopeElevChange {
     name: String,
     description: String,
     toolbox: String,
@@ -31,12 +31,12 @@ pub struct MaxDownslopeElevChange {
     example_usage: String,
 }
 
-impl MaxDownslopeElevChange {
-    pub fn new() -> MaxDownslopeElevChange {
+impl MaxUpslopeElevChange {
+    pub fn new() -> MaxUpslopeElevChange {
         // public constructor
-        let name = "MaxDownslopeElevChange".to_string();
+        let name = "MaxUpslopeElevChange".to_string();
         let toolbox = "Geomorphometric Analysis".to_string();
-        let description = "Calculates the maximum downslope change in elevation between a grid cell and its eight downslope neighbors."
+        let description = "Calculates the maximum upslope change in elevation between a grid cell and its eight downslope neighbors."
             .to_string();
 
         let mut parameters = vec![];
@@ -77,7 +77,7 @@ impl MaxDownslopeElevChange {
         )
         .replace("*", &sep);
 
-        MaxDownslopeElevChange {
+        MaxUpslopeElevChange {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -87,7 +87,7 @@ impl MaxDownslopeElevChange {
     }
 }
 
-impl WhiteboxTool for MaxDownslopeElevChange {
+impl WhiteboxTool for MaxUpslopeElevChange {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -238,12 +238,12 @@ impl WhiteboxTool for MaxDownslopeElevChange {
                             for n in 0..8 {
                                 dist = grid_lengths[n];
                                 zn = input[(row + dy[n], col + dx[n])];
-                                if zn != nodata && zn < z {
-                                    slope = (z - zn) / dist;
+                                if zn != nodata && zn > z {
+                                    slope = (zn - z) / dist;
 
                                     if slope > max_slope {
                                         max_slope = slope;
-                                        max_z_change = z - zn;
+                                        max_z_change = zn - z;
                                     }
                                 }
                             }

@@ -661,7 +661,7 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
         only once each inflowing cell has been solved. The flow-accumulation component
         propagates elevation values from upstream to downstream. Only those upstream
         elevations that are less than the maximum downstream dam elevation are propagated
-        downstream. In upslope and divergent areas, this will be very few cell elevaitons.
+        downstream. In upslope and divergent areas, this will be very few cell elevations.
         In deeply incised downstream areas, this may be many cells. For each grid cell,
         the index will count the number of upstream cells that have a lower elevation than
         the cell's calculated dam elevation. This can be reported either as a reservoir volume
@@ -789,6 +789,12 @@ impl WhiteboxTool for ImpoundmentSizeIndex {
                     z = input.get_value(row, col);
                     if z != nodata {
                         output_hgt.set_value(row, col, crest_elev.get_value(row, col) - z);
+
+                        if output_hgt.get_value(row, col) <= 0f64 {
+                            out_max.set_value(row, col, 0f32);
+                            out_volume.set_value(row, col, 0f32);
+                            out_area.set_value(row, col, 0f32);
+                        }
                     // } else {
                     //     // this handles the nodata values in the input that should also be
                     //     // nodata in the output ISI image. The dam height raster will already

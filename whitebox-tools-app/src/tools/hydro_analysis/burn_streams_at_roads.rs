@@ -247,6 +247,9 @@ impl WhiteboxTool for BurnStreamsAtRoads {
         if !dem_file.contains(&sep) && !dem_file.contains("/") {
             dem_file = format!("{}{}", working_directory, dem_file);
         }
+        if !roads_file.contains(&sep) && !roads_file.contains("/") {
+            roads_file = format!("{}{}", working_directory, roads_file);
+        }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }

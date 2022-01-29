@@ -270,6 +270,7 @@ impl WhiteboxTool for InsertDams {
                                                    passes through the cell. Potential dams are calculated for each
                                                    grid cell in the N-S, NE-SW, E-W, SE-NW directions.
                                                    */
+        let mut num_points_found = 0;
         for record_num in 0..dam_pts.num_records {
             let record = dam_pts.get_record(record_num);
             target_row = input.get_row_from_y(record.points[0].y);
@@ -443,6 +444,8 @@ impl WhiteboxTool for InsertDams {
                         }
                     }
                 }
+
+                num_points_found += 1;
             } else {
                 // No dam was found that covered the point
                 if verbose {
@@ -458,6 +461,13 @@ impl WhiteboxTool for InsertDams {
                     old_progress = progress;
                 }
             }
+        }
+
+        if num_points_found == 0 {
+            println!(
+                "No points were dammed. If this is an unexpected result, it may be that the 
+                coordinate reference system (CRS) are not the same for the DEM and points file."
+            )
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
