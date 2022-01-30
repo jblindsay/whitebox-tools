@@ -434,7 +434,7 @@ class WhiteboxTools(object):
         try:
             if len(ext_name) == 0:
                 ext_name = input(
-'''Which extension would you like to install? (gte/lidar/dem/agri) '''))
+'''Which extension would you like to install? (gte/lidar/dem/agri) ''')
 
             # Figure out the appropriate URL to download the extension binary from.
             url = "https://www.whiteboxgeo.com/GTE_Windows/GeneralToolsetExtension_win.zip" # default
