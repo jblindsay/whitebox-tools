@@ -30,7 +30,7 @@ use std::io::{Error, ErrorKind};
 /// threshold (`--threshold`), and 2 when the nadir angle is greater than the zenith angle. A ternary number 
 /// is then derived from the digits assigned to each of the eight profiles, with digits sequenced counter-clockwise
 /// from east. This ternary number forms the  geomorphons code assigned to the grid cell. There are 
-/// 3<super>8</super> = 6561 possible codes, although many of these codes are equivalent geomorphons through
+/// 3<sup>8</sup> = 6561 possible codes, although many of these codes are equivalent geomorphons through
 /// rotations and reflections. Some of the remaining geomorphons also rarely if ever occur in natural
 /// topography. Jasiewicz et al. (2013) identified 10 common landform types by reclassifying related
 /// geomorphons codes. The user may choose to output these common forms (`--forms`) rather than the 
@@ -53,6 +53,8 @@ use std::io::{Error, ErrorKind};
 /// angles, the scale used to estimate the landform type at a site adapts to the surrounding terrain.
 /// In principle, choosing a large value of search distance (`--search`) should result in 
 /// identification of a landform element regardless of its scale.
+/// 
+/// ![](../../doc_img/Geomorphons.jpg)
 /// 
 /// # Reference
 /// Jasiewicz, J., and Stepinski, T. F. (2013). Geomorphons — a pattern recognition approach to classification 
