@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/06/2017
-Last Modified: 13/06/2021
+Last Modified: 30/01/2022
 License: MIT
 */
 
@@ -53,7 +53,7 @@ impl LidarInfo {
             description: "Output HTML file for summary report.".to_owned(),
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
-            optional: true,
+            optional: false,
         });
 
         parameters.push(ToolParameter {
