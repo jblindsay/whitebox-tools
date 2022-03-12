@@ -1,0 +1,34 @@
+{
+    "tool_name": "MaxUpslopeValue",
+    "exe": "max_upslope_value",
+    "short_description": "This tool calculates the maximum upslope value from an input values raster along flowpaths.",
+    "toolbox": "Hydrological Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=MaxUpslopeValue --dem=DEM.tif --values=values.tif --output=out.tif",
+    "parameters": [
+        {
+            "name": "Input DEM",
+            "flags": ["-d", "--dem"],
+            "description": "Input DEM; it must be depressionless.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Values Raster File",
+            "flags": ["--values"],
+            "description": "Name of the input values raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

@@ -198,7 +198,9 @@ impl LasFile {
         let y: f64;
         let z: f64;
         match point {
-            LidarPointRecord::PointRecord0 { point_data } => {
+            LidarPointRecord::PointRecord0 { 
+                point_data 
+            } => {
                 self.point_data.push(point_data);
                 x = point_data.x as f64 * self.header.x_scale_factor + self.header.x_offset;
                 y = point_data.y as f64 * self.header.y_scale_factor + self.header.y_offset;

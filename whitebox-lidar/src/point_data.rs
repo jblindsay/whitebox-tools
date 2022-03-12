@@ -404,7 +404,7 @@ impl PointData {
         }
     }
 
-    /// Returns the classification name associated with the ClassificationBitField
+    /// Returns the classification number associated with the ClassificationBitField
     pub fn classification(&self) -> u8 {
         if !self.is_64bit {
             return self.class_bit_field & 0b0001_1111u8;
@@ -438,8 +438,8 @@ impl PointData {
             10 => return String::from("Rail"),
             11 => return String::from("Road surface"),
             12 => return String::from("Reserved"),
-            13 => return String::from("Wire – guard (shield)"),
-            14 => return String::from("Wire – conductor (phase)"),
+            13 => return String::from("Wire - guard (shield)"),
+            14 => return String::from("Wire - conductor (phase)"),
             15 => return String::from("Transmission tower"),
             16 => return String::from("Wire-structure connector (e.g. insulator)"),
             17 => return String::from("Bridge deck"),

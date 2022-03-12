@@ -55,8 +55,12 @@ for more details.
 ******************
 * Release Notes: *
 ******************
+Version 2.X.X (XX-XX-20XX)
+- Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
+- Added the MultiplyOverlay tool.
+- Added the MaxUpslopeValue tool.
 
-Version 2.1.0 (XX-XX-20XX)
+Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.
 - Added the MeanCurvature, GaussianCurvature, MinimalCurvature and MaximalCurvature tools.
 - Added GaussianScaleSpace tool, which uses the fast Gaussian approximation algorithm to produce 

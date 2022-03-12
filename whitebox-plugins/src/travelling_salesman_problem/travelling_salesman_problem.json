@@ -1,0 +1,34 @@
+{
+    "tool_name": "TravellingSalesmanProblem",
+    "exe": "travelling_salesman_problem",
+    "short_description": "This tool finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.",
+    "toolbox": "GIS Analysis",
+    "license": "MIT",
+    "example": ">> .*EXE_NAME -r=TravellingSalesmanProblem -i=input.shp -o=route.shp --duration=120",
+    "parameters": [
+        {
+            "name": "Input Points",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input points shapefile.",
+            "parameter_type": {"ExistingFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Lines",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output lines shapefile.",
+            "parameter_type": {"NewFile":{"Vector":"Line"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Max Duration",
+            "flags": ["--duration"],
+            "description": "Maximum duration, in seconds.",
+            "parameter_type": "Integer",
+            "default_value": "60",
+            "optional": false
+        }
+    ]
+}

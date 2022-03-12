@@ -449,7 +449,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2021
+        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2022
 
 WhiteboxTools is an advanced geospatial data analysis platform developed at
 the University of Guelph's Geomorphometry and Hydrogeomatics Research 

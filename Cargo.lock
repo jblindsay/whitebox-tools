@@ -926,6 +926,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tsp-rs"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02f971d0e820c6e73d2c71cf139e2cbe6962bdacb456efc4a78c2a41b4244426"
+dependencies = [
+ "rand 0.6.5",
+]
+
+[[package]]
 name = "typenum"
 version = "1.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -997,6 +1006,7 @@ dependencies = [
  "nalgebra",
  "num_cpus",
  "rand 0.7.3",
+ "tsp-rs",
  "whitebox_common",
  "whitebox_lidar",
  "whitebox_raster",
@@ -1018,7 +1028,7 @@ dependencies = [
 
 [[package]]
 name = "whitebox_tools"
-version = "2.0.1"
+version = "2.1.0"
 dependencies = [
  "byteorder",
  "chrono",

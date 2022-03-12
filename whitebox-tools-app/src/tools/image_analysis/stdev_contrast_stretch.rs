@@ -36,7 +36,7 @@ use std::thread;
 /// This is the same kind of stretch that is used to display raster type data on the fly in many GIS software packages.
 ///
 /// # See Also
-/// `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
+/// `PiecewiseContrastStretch`, `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
 /// `SigmoidalContrastStretch`
 pub struct StandardDeviationContrastStretch {
     name: String,

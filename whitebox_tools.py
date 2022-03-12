@@ -543,7 +543,7 @@ Okay, that's it for now.
     def activate_license(self):
         try:
             if platform.system() == 'Windows':
-                os.system("./plugins/register_license.exe")
+                os.system("plugins\\register_license.exe")
             else:
                 os.system("./plugins/register_license")
         except:
@@ -561,6 +561,9 @@ Okay, that's it for now.
     # restrict the ability for text editors and IDEs to use autocomplete.
     ########################################################################
 
+    
+    
+    
     
     
     
@@ -1756,6 +1759,22 @@ Okay, that's it for now.
         if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))
         return self.run_tool('tin_gridding', args, callback) # returns 1 if error
 
+    def travelling_salesman_problem(self, i, output, duration=60, callback=None):
+        """This tool finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        output -- Name of the output lines shapefile. 
+        duration -- Maximum duration, in seconds. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--duration={}".format(duration))
+        return self.run_tool('travelling_salesman_problem', args, callback) # returns 1 if error
+
     def vector_hex_binning(self, i, output, width, orientation="horizontal", callback=None):
         """Hex-bins a set of vector points.
 
@@ -2139,6 +2158,20 @@ Okay, that's it for now.
         args.append("--inputs='{}'".format(inputs))
         args.append("--output='{}'".format(output))
         return self.run_tool('min_overlay', args, callback) # returns 1 if error
+
+    def multiply_overlay(self, inputs, output, callback=None):
+        """Calculates the sum for each grid cell from a group of raster images.
+
+        Keyword arguments:
+
+        inputs -- Input raster files. 
+        output -- Output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('multiply_overlay', args, callback) # returns 1 if error
 
     def percent_equal_to(self, inputs, comparison, output, callback=None):
         """Calculates the percentage of a raster stack that have cell values equal to an input on a cell-by-cell basis.
@@ -5014,6 +5047,22 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('max_upslope_flowpath_length', args, callback) # returns 1 if error
 
+    def max_upslope_value(self, dem, values, output, callback=None):
+        """This tool calculates the maximum upslope value from an input values raster along flowpaths.
+
+        Keyword arguments:
+
+        dem -- Input DEM; it must be depressionless. 
+        values -- Name of the input values raster file. 
+        output -- Name of the output raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--values='{}'".format(values))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('max_upslope_value', args, callback) # returns 1 if error
+
     def md_inf_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=1.1, threshold=None, log=False, clip=False, callback=None):
         """Calculates an FD8 flow accumulation raster from an input DEM.
 
@@ -6648,6 +6697,24 @@ Okay, that's it for now.
         args.append("--num_tones={}".format(num_tones))
         return self.run_tool('percentage_contrast_stretch', args, callback) # returns 1 if error
 
+    def piecewise_contrast_stretch(self, i, output, function="", greytones=1024, callback=None):
+        """Modify points within a LiDAR point cloud based on point properties.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output raster image file. 
+        function -- Piecewise function break-points e.g. '(50, 0.1); (150, 0.8); (255; 1.0). 
+        greytones -- Number of greytones in the output image. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--function={}".format(function))
+        args.append("--greytones={}".format(greytones))
+        return self.run_tool('piecewise_contrast_stretch', args, callback) # returns 1 if error
+
     def sigmoidal_contrast_stretch(self, i, output, cutoff=0.0, gain=1.0, num_tones=256, callback=None):
         """Performs a sigmoidal contrast stretch on input images.
 
@@ -6771,6 +6838,22 @@ Okay, that's it for now.
         args.append("--polygons='{}'".format(polygons))
         args.append("--output='{}'".format(output))
         return self.run_tool('erase_polygon_from_lidar', args, callback) # returns 1 if error
+
+    def filter_lidar(self, i, output, statement="", callback=None):
+        """This sorts the points in a LiDAR file by the GPS time.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        statement -- Statement e.g. cos("raster1") * 35.0 + "raster2". This statement must be a valid Rust statement. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--statement={}".format(statement))
+        return self.run_tool('filter_lidar', args, callback) # returns 1 if error
 
     def filter_lidar_classes(self, i, output, exclude_cls=None, callback=None):
         """Removes points in a LAS file with certain specified class values.
@@ -7190,7 +7273,7 @@ Okay, that's it for now.
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_idw_interpolation', args, callback) # returns 1 if error
 
-    def lidar_info(self, i, output=None, vlr=True, geokeys=True, callback=None):
+    def lidar_info(self, i, output, vlr=True, geokeys=True, callback=None):
         """Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
         Keyword arguments:
@@ -7203,7 +7286,7 @@ Okay, that's it for now.
         """
         args = []
         args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--output='{}'".format(output))
         if vlr: args.append("--vlr")
         if geokeys: args.append("--geokeys")
         return self.run_tool('lidar_info', args, callback) # returns 1 if error
@@ -7295,6 +7378,22 @@ Okay, that's it for now.
         if minz is not None: args.append("--minz='{}'".format(minz))
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_point_density', args, callback) # returns 1 if error
+
+    def lidar_point_features(self, i=None, output=None, search="", callback=None):
+        """Modify points within a LiDAR point cloud based on point properties.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        search -- Search distance parameter. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--search={}".format(search))
+        return self.run_tool('lidar_point_features', args, callback) # returns 1 if error
 
     def lidar_point_return_analysis(self, i, output=None, callback=None):
         """This tool performs a quality control check on the return values of points in a LiDAR file.
@@ -7710,6 +7809,22 @@ Okay, that's it for now.
         args.append("--radius={}".format(radius))
         return self.run_tool('lidar_tophat_transform', args, callback) # returns 1 if error
 
+    def modify_lidar(self, i=None, output=None, statement="", callback=None):
+        """Modify points within a LiDAR point cloud based on point properties.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        statement -- Filter statement e.g. x < 5000.0 && y > 100.0 && is_late && !is_noise. This statement must be a valid Rust statement. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--statement={}".format(statement))
+        return self.run_tool('modify_lidar', args, callback) # returns 1 if error
+
     def normal_vectors(self, i, output, radius=1.0, callback=None):
         """Calculates normal vectors for points within a LAS file and stores these data (XYZ vector components) in the RGB field.
 
@@ -7726,6 +7841,28 @@ Okay, that's it for now.
         args.append("--radius={}".format(radius))
         return self.run_tool('normal_vectors', args, callback) # returns 1 if error
 
+    def recover_flightline_info(self, i, output, max_time_diff=5.0, pt_src_id=False, user_data=False, rgb=False, callback=None):
+        """This sorts the points in a LiDAR file by the GPS time.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        max_time_diff -- Maximum in-flightline time difference (seconds). 
+        pt_src_id -- Add flightline information to the point source ID. 
+        user_data -- Add flightline information to the user data. 
+        rgb -- Add flightline information to the RGB colour data. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--max_time_diff={}".format(max_time_diff))
+        if pt_src_id: args.append("--pt_src_id")
+        if user_data: args.append("--user_data")
+        if rgb: args.append("--rgb")
+        return self.run_tool('recover_flightline_info', args, callback) # returns 1 if error
+
     def select_tiles_by_polygon(self, indir, outdir, polygons, callback=None):
         """Copies LiDAR tiles overlapping with a polygon into an output directory.
 
@@ -7741,6 +7878,40 @@ Okay, that's it for now.
         args.append("--outdir='{}'".format(outdir))
         args.append("--polygons='{}'".format(polygons))
         return self.run_tool('select_tiles_by_polygon', args, callback) # returns 1 if error
+
+    def sort_lidar(self, i=None, output=None, criterion="time", callback=None):
+        """Sorts LiDAR points based on their properties.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        criterion -- Criterion on which to base the split of the input file. Options include 'time', 'x', 'y', 'z', intensity, 'class', 'user_data', 'point_source_id', 'scan_angle'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--criterion={}".format(criterion))
+        return self.run_tool('sort_lidar', args, callback) # returns 1 if error
+
+    def split_lidar(self, i=None, criterion="num_pts", interval="", min_pts=5, callback=None):
+        """This tool splits LiDAR points up into a series of new files based on their properties.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        criterion -- Criterion on which to base the split of the input file. Options include 'num_pts, 'x', 'y', 'z', intensity, 'class', 'user_data', 'point_source_id', 'scan_angle', 'time'. 
+        interval -- Interval. 
+        min_pts -- Minimum number of points in an output file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        args.append("--criterion={}".format(criterion))
+        args.append("--interval={}".format(interval))
+        args.append("--min_pts={}".format(min_pts))
+        return self.run_tool('split_lidar', args, callback) # returns 1 if error
 
     def zlidar_to_las(self, inputs=None, outdir=None, callback=None):
         """Converts one or more zlidar files into the LAS data format.

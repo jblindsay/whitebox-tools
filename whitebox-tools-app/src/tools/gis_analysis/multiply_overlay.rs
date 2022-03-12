@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
-Created: 26/09/2018
-Last Modified: 13/10/2018
+Created: 04/02/2022
+Last Modified: 04/02/2022
 License: MIT
 */
 
@@ -13,15 +13,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool calculates the sum for each grid cell from a group of raster images (`--inputs`). NoData values in any of the input
-/// images will result in a NoData pixel in the output image (`--output`).
+/// This tool multiplies a stack of raster images (`--inputs`) on a pixel-by-pixel basis. This tool is particularly
+/// well suited when you need to create a masking layer from the combination of several Boolean rasters, i.e. 
+/// for constraint mapping applications. NoData values in any of the input images will result in a NoData pixel in 
+/// the output image (`--output`).
 ///
 /// # Warning
 /// Each of the input rasters must have the same spatial extent and number of rows and columns.
 ///
 /// # See Also
-/// `WeightedSum`, `MultiplyOverlay`
-pub struct SumOverlay {
+/// `SumOverlay`, `WeightedSum`
+pub struct MultiplyOverlay {
     name: String,
     description: String,
     toolbox: String,
@@ -29,10 +31,10 @@ pub struct SumOverlay {
     example_usage: String,
 }
 
-impl SumOverlay {
-    pub fn new() -> SumOverlay {
+impl MultiplyOverlay {
+    pub fn new() -> MultiplyOverlay {
         // public constructor
-        let name = "SumOverlay".to_string();
+        let name = "MultiplyOverlay".to_string();
         let toolbox = "GIS Analysis/Overlay Tools".to_string();
         let description =
             "Calculates the sum for each grid cell from a group of raster images.".to_string();
@@ -71,7 +73,7 @@ impl SumOverlay {
         }
         let usage = format!(">>.*{} -r={} -v --wd='*path*to*data*' -i='image1.dep;image2.dep;image3.tif' -o=output.tif", short_exe, name).replace("*", &sep);
 
-        SumOverlay {
+        MultiplyOverlay {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -81,7 +83,7 @@ impl SumOverlay {
     }
 }
 
-impl WhiteboxTool for SumOverlay {
+impl WhiteboxTool for MultiplyOverlay {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -222,12 +224,16 @@ impl WhiteboxTool for SumOverlay {
                                 "The input files must have the same number of rows and columns and spatial extent."));
                 }
 
+                let mut existing_value: f64;
+                let mut new_value: f64;
                 for row in 0..rows {
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != in_nodata {
-                            if output.get_value(row, col) != out_nodata {
-                                output.increment(row, col, z);
+                            existing_value = output.get_value(row, col);
+                            if existing_value != out_nodata {
+                                new_value = existing_value * z;
+                                output.set_value(row, col, new_value);
                             } else {
                                 output.set_value(row, col, z);
                             }

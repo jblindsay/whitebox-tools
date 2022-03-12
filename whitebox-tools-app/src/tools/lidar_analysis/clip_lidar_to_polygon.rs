@@ -28,7 +28,7 @@ use std::thread;
 /// that are contained within a set of polygons.
 ///
 /// # See Also
-/// `ErasePolygonFromLidar`, `Clip`, `ClipRasterToPolygon`
+/// `ErasePolygonFromLidar`, `FilterLidar`, `Clip`, `ClipRasterToPolygon`
 pub struct ClipLidarToPolygon {
     name: String,
     description: String,

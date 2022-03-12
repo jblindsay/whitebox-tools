@@ -140,7 +140,7 @@ impl Geomorphons {
         if e.contains(".exe") {
             short_exe += ".exe";
         }
-        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --slope=3.0 --prof=0.1 --plan=0.0", short_exe, name).replace("*", &sep);
+        let usage = format!(">>.*{} -r={} -v --wd=\"*path*to*data*\" --dem=DEM.tif -o=output.tif --search=50 --threshold=0.0 --tdist=0.0 --forms", short_exe, name).replace("*", &sep);
 
         Geomorphons {
             name: name,

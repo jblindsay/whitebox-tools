@@ -32,7 +32,7 @@ use std::thread;
 /// `PercentageContrastStretch`, `SigmoidalContrastStretch`, and `StandardDeviationContrastStretch`.
 ///
 /// # See Also
-/// `HistogramEqualization`, `MinMaxContrastStretch`, `PercentageContrastStretch`, `SigmoidalContrastStretch`,
+/// `PiecewiseContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`, `PercentageContrastStretch`, `SigmoidalContrastStretch`,
 /// `StandardDeviationContrastStretch`, `HistogramMatching`
 pub struct GaussianContrastStretch {
     name: String,

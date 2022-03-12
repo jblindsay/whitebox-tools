@@ -1476,6 +1476,48 @@ impl DataType {
             DataType::Unknown => 0usize,
         }
     }
+
+    pub fn is_float(&self) -> bool {
+        match *self {
+            DataType::F64 => true,
+            DataType::F32 => true,
+            _ => false
+        }
+    }
+
+    pub fn is_integer(&self) -> bool {
+        match *self {
+            DataType::U64 => true,
+            DataType::U32 => true,
+            DataType::U16 => true,
+            DataType::U8 => true,
+            DataType::I64 => true,
+            DataType::I32 => true,
+            DataType::I16 => true,
+            DataType::I8 => true,
+            _ => false
+        }
+    }
+
+    pub fn is_unsigned_integer(&self) -> bool {
+        match *self {
+            DataType::U64 => true,
+            DataType::U32 => true,
+            DataType::U16 => true,
+            DataType::U8 => true,
+            _ => false
+        }
+    }
+
+    pub fn is_signed_integer(&self) -> bool {
+        match *self {
+            DataType::I64 => true,
+            DataType::I32 => true,
+            DataType::I16 => true,
+            DataType::I8 => true,
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]

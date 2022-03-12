@@ -39,7 +39,7 @@ use std::thread;
 /// of tonal values is determined by the number of palette entries.
 ///
 /// # See Also
-/// `GaussianContrastStretch`, `HistogramEqualization`, `PercentageContrastStretch`, `SigmoidalContrastStretch`,
+/// `PiecewiseContrastStretch`, `GaussianContrastStretch`, `HistogramEqualization`, `PercentageContrastStretch`, `SigmoidalContrastStretch`,
 /// `StandardDeviationContrastStretch`
 pub struct MinMaxContrastStretch {
     name: String,

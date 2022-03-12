@@ -47,7 +47,7 @@ use std::thread;
 /// - Histogram equalization is not appropriate for images containing categorical (class) data.
 ///
 /// # See Also
-/// `HistogramMatching`, `HistogramMatchingTwoImages`, `GaussianContrastStretch`
+/// `PiecewiseContrastStretch`, `HistogramMatching`, `HistogramMatchingTwoImages`, `GaussianContrastStretch`
 pub struct HistogramEqualization {
     name: String,
     description: String,

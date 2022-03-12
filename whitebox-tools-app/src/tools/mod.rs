@@ -113,6 +113,7 @@ impl ToolManager {
         tool_names.push("MinimumBoundingCircle".to_string());
         tool_names.push("MinimumBoundingEnvelope".to_string());
         tool_names.push("MinimumConvexHull".to_string());
+        tool_names.push("MultiplyOverlay".to_string());
         tool_names.push("NarrownessIndex".to_string());
         tool_names.push("NaturalNeighbourInterpolation".to_string());
         tool_names.push("NearestNeighbourGridding".to_string());
@@ -621,6 +622,7 @@ impl ToolManager {
             }
             "minimumconvexhull" => Some(Box::new(gis_analysis::MinimumConvexHull::new())),
             "minoverlay" => Some(Box::new(gis_analysis::MinOverlay::new())),
+            "multiplyoverlay" => Some(Box::new(gis_analysis::MultiplyOverlay::new())),
             "naturalneighbourinterpolation" => {
                 Some(Box::new(gis_analysis::NaturalNeighbourInterpolation::new()))
             }
@@ -1281,6 +1283,7 @@ impl ToolManager {
                         "dbscan",
                         "differencecurvature",
                         "evaluatetrainingsites", 
+                        "filterlidar",
                         "fix_danglingarcs",
                         "generalizeclassifiedraster",
                         "generalizewithsimilarity",
@@ -1302,12 +1305,14 @@ impl ToolManager {
                         "logistic_regression",
                         "lowpointsonheadwaterdivides",
                         "mindistclassification",
+                        "modifylidar",
                         "openness",
                         "parallelepipedclassification",
                         "phicoefficient",
                         "random_forest_classification",
                         "random_forest_regression",
                         "reconcilemultipleheaders",
+                        "recoverflightlineinfo",
                         "recreatepasslines",
                         "registerlicense",
                         "removefieldedgepoints",
@@ -1318,6 +1323,7 @@ impl ToolManager {
                         "shadowimage",
                         "slopevsaspectplot",
                         "smoothvegetationresidual",
+                        "splitlidar",
                         "svm_classification",
                         "svm_regression",
                         "topographicpositionanimation",

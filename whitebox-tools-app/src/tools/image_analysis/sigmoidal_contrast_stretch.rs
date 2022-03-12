@@ -42,7 +42,7 @@ use std::thread;
 /// images.
 ///
 /// # See Also
-/// `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
+/// `PiecewiseContrastStretch`, `GaussianContrastStretch`, `HistogramEqualization`, `MinMaxContrastStretch`,  `PercentageContrastStretch`,
 /// `StandardDeviationContrastStretch`
 pub struct SigmoidalContrastStretch {
     name: String,

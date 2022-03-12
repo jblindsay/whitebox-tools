@@ -25,7 +25,7 @@ use std::path;
 /// that are contained within a set of polygons, while removing points that lie outside the input polygons.
 ///
 /// # See Also
-/// `ClipLidarToPolygon`, `Clip`, `ClipRasterToPolygon`
+/// `ClipLidarToPolygon`, `FilterLidar`, `Clip`, `ClipRasterToPolygon`
 pub struct ErasePolygonFromLidar {
     name: String,
     description: String,
