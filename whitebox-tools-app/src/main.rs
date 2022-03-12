@@ -254,10 +254,12 @@ fn run() -> Result<(), Error> {
                 license();
             }
             return Ok(());
-        } else if arg.starts_with("-compress_rasters") || arg.starts_with("--compress_rasters") {
+        } else if arg.starts_with("-compress_raster") || arg.starts_with("--compress_raster") {
             let mut v = arg
                 .replace("--compress_rasters", "")
                 .replace("-compress_rasters", "")
+                .replace("--compress_raster", "")
+                .replace("-compress_raster", "")
                 .replace("\"", "")
                 .replace("\'", "");
             if v.starts_with("=") {

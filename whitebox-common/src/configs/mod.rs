@@ -56,7 +56,6 @@ pub fn save_configs<'a>(configs: &Configs) -> std::result::Result<(), Error> {
     let config_file = exe_path + &path::MAIN_SEPARATOR.to_string() + "settings.json";
     let mut file = File::create(config_file).expect("Error creating output settings.json file.");
     file.write_all(configs_json.as_bytes()).expect("Error writing to output settings.json file.");
-    println!("{:?}", configs);
     Ok(())
 }
 

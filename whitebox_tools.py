@@ -18,6 +18,7 @@ from os import path
 import sys
 import platform
 import re
+import json
 # import shutil
 from subprocess import CalledProcessError, Popen, PIPE, STDOUT
 
@@ -65,13 +66,27 @@ class WhiteboxTools(object):
         #     self.exe_name) or path.dirname(path.abspath(__file__)))
         # self.exe_path = os.path.dirname(os.path.join(os.path.realpath(__file__)))
         self.exe_path = path.dirname(path.abspath(__file__))
+
         self.work_dir = ""
         self.verbose = True
+        self.__compress_rasters = False
+
+        if os.path.isfile('settings.json'):
+            # read the settings.json file if it exists
+            with open('settings.json', 'r') as settings_file:
+                data = settings_file.read()
+
+            # parse file
+            settings = json.loads(data)
+            self.work_dir = str(settings['working_directory'])
+            self.verbose = str(settings['verbose_mode'])
+            self.__compress_rasters = settings['compress_rasters']
+
+
         self.cancel_op = False
         self.default_callback = default_callback
         self.start_minimized = False
-        self.__compress_rasters = False
-
+        
     def set_whitebox_dir(self, path_str):
         ''' 
         Sets the directory to the WhiteboxTools executable file.
@@ -86,6 +101,12 @@ class WhiteboxTools(object):
         specify the file name rather than the complete file path.
         '''
         self.work_dir = path.normpath(path_str)
+
+    def get_working_dir(self):
+        return self.work_dir
+
+    def get_verbose_mode(self):
+        return self.verbose
 
     def set_verbose_mode(self, val=True):
         ''' 
@@ -110,8 +131,6 @@ class WhiteboxTools(object):
                 args2.append("-v")
             else:
                 args2.append("-v=false")
-
-            print(args2)
 
             proc = None
 
@@ -151,11 +170,55 @@ class WhiteboxTools(object):
         '''
         self.default_callback = callback_func
 
-    def set_compress_rasters(self, compress_rasters):
+    def set_compress_rasters(self, val=True):
         ''' 
         Sets the flag used by WhiteboxTools to determine whether to use compression for output rasters.
         '''
-        self.__compress_rasters = compress_rasters
+        self.__compress_rasters = val
+
+        try:
+            callback = self.default_callback
+
+            os.chdir(self.exe_path)
+            args2 = []
+            args2.append("." + path.sep + self.exe_name)
+            
+            if self.__compress_rasters:
+                args2.append("--compress_rasters=true")
+            else:
+                args2.append("--compress_rasters=false")
+
+            proc = None
+
+            if running_windows and self.start_minimized == True:
+                si = STARTUPINFO()
+                si.dwFlags = STARTF_USESHOWWINDOW
+                si.wShowWindow = 7 #Set window minimized and not activated
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True,
+                            startupinfo=si)
+            else:
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True)
+
+            while proc is not None:
+                line = proc.stdout.readline()
+                sys.stdout.flush()
+                if line != '':
+                    if not self.cancel_op:
+                        callback(line.strip())
+                    else:
+                        self.cancel_op = False
+                        proc.terminate()
+                        return 2
+
+                else:
+                    break
+
+            return 0
+        except (OSError, ValueError, CalledProcessError) as err:
+            callback(str(err))
+            return 1
     
     def get_compress_rasters(self):
         return self.__compress_rasters
@@ -185,13 +248,15 @@ class WhiteboxTools(object):
             # args_str = args_str[:-1]
             # a.append("--args=\"{}\"".format(args_str))
 
-            # if self.verbose:
-            #     args2.append("-v")
-            # else:
-            #     args2.append("-v=false")
+            if self.verbose:
+                args2.append("-v")
+            else:
+                args2.append("-v=false")
 
             if self.__compress_rasters:
-                args2.append("--compress_rasters")
+                args2.append("--compress_rasters=True")
+            else:
+                args2.append("--compress_rasters=False")
 
             if self.verbose:
                 cl = " ".join(args2)

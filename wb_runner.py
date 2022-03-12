@@ -765,7 +765,7 @@ class WbRunner(tk.Frame):
             os.system(
                 '''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
         self.create_widgets()
-        self.working_dir = str(Path.home())
+        self.working_dir = wbt.get_working_dir() # str(Path.home())
 
     def create_widgets(self):
 
@@ -953,8 +953,17 @@ class WbRunner(tk.Frame):
         self.filemenu.add_command(label="Set Working Directory", command=self.set_directory)
         self.filemenu.add_command(label="Locate WhiteboxTools exe", command=self.select_exe)
         self.filemenu.add_command(label="Refresh Tools", command=self.refresh_tools)
-        wbt.set_compress_rasters(True)
-        self.filemenu.add_command(label="Do Not Compress Output TIFFs", command=self.update_compress)
+
+        if wbt.get_verbose_mode():
+            self.filemenu.add_command(label="Do Not Print Tool Output", command=self.update_verbose)
+        else:
+            self.filemenu.add_command(label="Print Tool Output", command=self.update_verbose)
+
+        if wbt.get_compress_rasters():
+            self.filemenu.add_command(label="Do Not Compress Output TIFFs", command=self.update_compress)
+        else:
+            self.filemenu.add_command(label="Compress Output TIFFs", command=self.update_compress)
+
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Install a Whitebox Extension", command=self.install_extension)
         self.filemenu.add_separator()
@@ -973,6 +982,14 @@ class WbRunner(tk.Frame):
         menubar.add_cascade(label="Help ", menu=helpmenu)
 
         self.master.config(menu=menubar)     
+
+    def update_verbose(self):
+        if wbt.get_verbose_mode():
+            wbt.set_verbose_mode(False)
+            self.filemenu.entryconfig(3, label = "Print Tool Output")
+        else:
+            wbt.set_verbose_mode(True)
+            self.filemenu.entryconfig(3, label = "Do Not Print Tool Output")
 
     def update_compress(self):
         if wbt.get_compress_rasters():
