@@ -276,6 +276,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd25036021b0de88a0aff6b850051563c6516d0bf53f8638938edbb9de732736"
 
 [[package]]
+name = "kd-tree"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ae4f4af33b7d5c128b3f989401075175e18b5de122891060556e048df5f07ca"
+dependencies = [
+ "num-traits",
+ "ordered-float",
+ "paste",
+ "pdqselect",
+ "typenum",
+]
+
+[[package]]
 name = "kdtree"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -513,6 +526,21 @@ dependencies = [
  "hermit-abi",
  "libc",
 ]
+
+[[package]]
+name = "ordered-float"
+version = "2.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7940cf2ca942593318d07fcf2596cdca60a85c9e7fab408a5e21a4f9dcd40d87"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
+name = "paste"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
 
 [[package]]
 name = "pdqselect"
@@ -936,9 +964,9 @@ dependencies = [
 
 [[package]]
 name = "typenum"
-version = "1.12.0"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "373c8a200f9e67a0c95e62a4f52fbf80c23b4381c05a17845531982fa99e6b33"
+checksum = "dcf81ac59edc17cc8697ff311e8f5ef2d99fcbd9817b34cec66f90b6c3dfd987"
 
 [[package]]
 name = "ucd-trie"
@@ -1032,6 +1060,7 @@ version = "2.1.0"
 dependencies = [
  "byteorder",
  "chrono",
+ "kd-tree",
  "kdtree",
  "miniz_oxide 0.3.7",
  "nalgebra",
@@ -1044,6 +1073,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "statrs",
+ "typenum",
  "whitebox_common",
  "whitebox_lidar",
  "whitebox_raster",

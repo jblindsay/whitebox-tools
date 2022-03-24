@@ -2,15 +2,14 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/06/2017
-Last Modified: 19/05/2020
+Last Modified: 24/03/2022
 License: MIT
-
-NOTES: This tool needs to be parallelized.
 */
 
+use kd_tree::{KdPoint, KdTree};
+use whitebox_common::structures::Point3D;
 use whitebox_lidar::*;
 use whitebox_raster::*;
-use whitebox_common::structures::{DistanceMetric, FixedRadiusSearch2D};
 use crate::tools::*;
 use std::env;
 use std::f64;
@@ -18,6 +17,32 @@ use std::fs;
 use std::io::{Error, ErrorKind};
 use std::path;
 
+/// This tool can be used to map areas of overlapping flightlines in an input LiDAR (LAS) file (`--input`). 
+/// The output raster file (`--output`) will contain the number of different flightlines that are contained
+/// within each grid cell. The user must specify the desired cell size (`--resolution`). The flightline 
+/// associated with a LiDAR point is assumed to be contained within the point's `Point Source ID` property.
+/// Thus, the tool essentially counts the number of different Point Source ID values among the points contained
+/// within each grid cell. If the Point Source ID property is not set, or has been lost, users may with to
+/// apply the `RecoverFlightlineInfo` tool prior to running `FlightlineOverlap`.
+/// 
+/// It is important to set the `--resolution` parameter appropriately, as setting this value too high will
+/// yield the mis-characterization of non-overlap areas, and setting the resolution to low will result in
+/// fewer than expected overlap areas. An appropriate resolution size value may require experimentation,
+/// however a value that is 2-3 times the nominal point spacing has been previously recommended. The nominal
+/// point spacing can be determined using the `LidarInfo` tool.
+/// 
+/// Note that this tool is intended to be applied to LiDAR tile data containing points that have been merged
+/// from multiple overlapping flightlines. It is commonly the case that airborne LiDAR data from each of the
+/// flightlines from a survey are merged and then tiled into 1 km<sup>2</sup> tiles, which are the target
+/// dataset for this tool.
+/// 
+/// Like many of the LiDAR related tools, the input and output file parameters are optional. If left unspecified,
+/// the tool will locate all valid LiDAR files within the current Whitebox working directory and use these
+/// for calculation (specifying the output raster file name based on the associated input LiDAR file). This can
+/// be a helpful way to run the tool on a batch of user inputs within a specific directory.
+///
+/// # See Also
+/// `ClassifyOverlapPoints`, `RecoverFlightlineInfo`, `LidarInfo`
 pub struct FlightlineOverlap {
     name: String,
     description: String,
@@ -31,7 +56,7 @@ impl FlightlineOverlap {
         // public constructor
         let name = "FlightlineOverlap".to_string();
         let toolbox = "LiDAR Tools".to_string();
-        let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.".to_string();
+        let description = "Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight-lines in each grid cell.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -183,6 +208,9 @@ impl WhiteboxTool for FlightlineOverlap {
             }
         }
 
+        let mut progress: usize;
+        let mut old_progress: usize = 1;
+
         let start = Instant::now();
 
         let mut inputs = vec![];
@@ -192,22 +220,6 @@ impl WhiteboxTool for FlightlineOverlap {
                 return Err(Error::new(ErrorKind::InvalidInput,
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
-            // match fs::read_dir(working_directory) {
-            //     Err(why) => println!("! {:?}", why.kind()),
-            //     Ok(paths) => {
-            //         for path in paths {
-            //             let s = format!("{:?}", path.unwrap().path());
-            //             if s.replace("\"", "").to_lowercase().ends_with(".las") {
-            //                 inputs.push(format!("{:?}", s.replace("\"", "")));
-            //                 outputs.push(
-            //                     inputs[inputs.len() - 1]
-            //                         .replace(".las", ".tif")
-            //                         .replace(".LAS", ".tif"),
-            //                 )
-            //             }
-            //         }
-            //     }
-            // }
             if std::path::Path::new(&working_directory).is_dir() {
                 for entry in fs::read_dir(working_directory.clone())? {
                     let s = entry?
@@ -308,121 +320,21 @@ impl WhiteboxTool for FlightlineOverlap {
             }
 
             let n_points = input.header.number_of_points as usize;
-            let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
-            let mut frs: FixedRadiusSearch2D<usize> =
-                FixedRadiusSearch2D::new(grid_res, DistanceMetric::SquaredEuclidean);
-            let mut gps_times = vec![-1f64; n_points];
-            let (mut x, mut y, mut gps_time): (f64, f64, f64);
-            let mut progress: usize;
-            let mut old_progress: usize = 1;
+            let mut points: Vec<TreeItem> = Vec::with_capacity(n_points);
+            let mut p: Point3D;
             for i in 0..n_points {
-                let p = input.get_transformed_coords(i);
-                match input.get_record(i) {
-                    LidarPointRecord::PointRecord1 {
-                        point_data: _,
-                        gps_data,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                    }
-                    LidarPointRecord::PointRecord3 {
-                        point_data: _,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                    }
-                    LidarPointRecord::PointRecord4 {
-                        point_data: _,
-                        gps_data,
-                        wave_packet,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = wave_packet;
-                    }
-                    LidarPointRecord::PointRecord5 {
-                        point_data: _,
-                        gps_data,
-                        colour_data,
-                        wave_packet,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                        let _ = wave_packet;
-                    }
-                    LidarPointRecord::PointRecord6 {
-                        point_data: _,
-                        gps_data,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                    }
-                    LidarPointRecord::PointRecord7 {
-                        point_data: _,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                    }
-                    LidarPointRecord::PointRecord8 {
-                        point_data: _,
-                        gps_data,
-                        colour_data,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                    }
-                    LidarPointRecord::PointRecord9 {
-                        point_data: _,
-                        gps_data,
-                        wave_packet,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = wave_packet;
-                    }
-                    LidarPointRecord::PointRecord10 {
-                        point_data: _,
-                        gps_data,
-                        colour_data,
-                        wave_packet,
-                    } => {
-                        x = p.x;
-                        y = p.y;
-                        gps_time = gps_data;
-                        let _ = colour_data;
-                        let _ = wave_packet;
-                    }
-                    _ => {
-                        panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
-                    }
-                };
-                frs.insert(x, y, i);
-                gps_times[i] = gps_time;
-                if verbose {
-                    progress = (100.0_f64 * i as f64 / num_points) as usize;
-                    if progress != old_progress {
-                        println!("Binning points: {}%", progress);
-                        old_progress = progress;
-                    }
+                if !input[i].withheld() {
+                    p = input.get_transformed_coords(i);
+                    points.push( TreeItem { point: [p.x, p.y ], id: i } );
                 }
             }
+            // build the tree
+            if verbose {
+                println!("Building kd-tree...");
+            }
+            let kdtree: KdTree<TreeItem> = KdTree::build_by_ordered_float(points);
+
 
             let west: f64 = input.header.min_x; // - 0.5 * grid_res;
             let north: f64 = input.header.max_y; // + 0.5 * grid_res;
@@ -447,42 +359,38 @@ impl WhiteboxTool for FlightlineOverlap {
             configs.data_type = DataType::F64;
             configs.photometric_interp = PhotometricInterpretation::Continuous;
             configs.palette = palette.clone();
-            // configs.projection = input.configs.projection.clone();
-            // configs.xy_units = input.configs.xy_units.clone();
-            // configs.z_units = input.configs.z_units.clone();
-            // configs.endian = input.configs.endian.clone();
-            // configs.epsg_code = input.configs.epsg_code;
-            // configs.coordinate_ref_system_wkt = input.configs.coordinate_ref_system_wkt.clone();
             let mut output = Raster::initialize_using_config(&output_file, &configs);
-            let time_threshold = 15f64;
+            let (mut x, mut y): (f64, f64);
             let (mut x_n, mut y_n): (f64, f64);
             let mut index_n: usize;
             let half_res_sqrd = grid_res / 2.0 * grid_res / 2.0;
+            let search_dist = grid_res * 2.0_f64.sqrt();
             for row in 0..rows as isize {
                 for col in 0..columns as isize {
                     x = west + col as f64 * grid_res + 0.5;
                     y = north - row as f64 * grid_res - 0.5;
-                    let ret = frs.search(x, y);
+
+                    let ret = kdtree.within_radius(&[x, y], search_dist);
+
                     if ret.len() > 0 {
-                        let mut times = vec![];
-                        for j in 0..ret.len() {
-                            index_n = ret[j].0;
-                            // let p = input[index_n];
-                            let p = input.get_transformed_coords(index_n);
-                            x_n = p.x;
-                            y_n = p.y;
-                            if (x_n - x) * (x_n - x) <= half_res_sqrd
-                                && (y_n - y) * (y_n - y) <= half_res_sqrd
+                        let mut pt_src_ids = Vec::with_capacity(ret.len());
+                        for i in 0..ret.len() {
+                            x_n = ret[i].point[0];
+                            y_n = ret[i].point[1];
+                            if (x_n - x).powi(2) <= half_res_sqrd
+                                && (y_n - y).powi(2) <= half_res_sqrd
                             {
                                 // it falls within the grid cell
-                                times.push(gps_times[ret[j].0]);
+                                index_n = ret[i].id;
+                                pt_src_ids.push(input[index_n].point_source_id);
                             }
                         }
-                        if times.len() > 0 {
-                            times.sort_by(|a, b| a.partial_cmp(&b).unwrap());
+
+                        if pt_src_ids.len() > 0 {
+                            pt_src_ids.sort();
                             let mut num_flightlines = 1.0;
-                            for j in 1..times.len() {
-                                if times[j] - times[j - 1] > time_threshold {
+                            for j in 1..pt_src_ids.len() {
+                                if pt_src_ids[j] != pt_src_ids[j-1] {
                                     num_flightlines += 1.0;
                                 }
                             }
@@ -490,8 +398,6 @@ impl WhiteboxTool for FlightlineOverlap {
                         } else {
                             output.set_value(row, col, nodata);
                         }
-                    } else {
-                        output.set_value(row, col, nodata);
                     }
                 }
                 if verbose {
@@ -537,4 +443,15 @@ impl WhiteboxTool for FlightlineOverlap {
 
         Ok(())
     }
+}
+
+struct TreeItem {
+    point: [f64; 2],
+    id: usize,
+}
+
+impl KdPoint for TreeItem {
+    type Scalar = f64;
+    type Dim = typenum::U2; // 3 dimensional tree.
+    fn at(&self, k: usize) -> f64 { self.point[k] }
 }

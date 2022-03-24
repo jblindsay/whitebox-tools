@@ -62,6 +62,11 @@ Version 2.X.X (XX-XX-20XX)
 - Fixed a bug in the automatic install of the Whitebox extensions that affected Windows users.
 - Fixed a bug with the persistence of the compress_rasters parameter. Python users were unable to
   turn off the compress flag previously.
+- Added the ability to set and get the maximum number of processors (--max_procs flag) used by WBT in 
+  the Whitebox Python API.
+- Added the ability to output average point density and nominal point spacing to the LidarInfo tool.
+- Updated the ClassifyOverlapPoints and FlightlineOverlap tools to use information contained within
+  the Point Source ID property, rather than a hard-coded time difference threshold, as previously used.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

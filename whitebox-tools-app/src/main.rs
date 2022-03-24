@@ -407,17 +407,19 @@ fn help() {
     let s = "WhiteboxTools Help
 
 The following commands are recognized:
---cd, --wd       Changes the working directory; used in conjunction with --run flag.
--h, --help       Prints help information.
--l, --license    Prints the whitebox-tools license. Tool names may also be used, --license=\"Slope\"
---listtools      Lists all available tools. Keywords may also be used, --listtools slope.
--r, --run        Runs a tool; used in conjunction with --wd flag; -r=\"LidarInfo\".
---toolbox        Prints the toolbox associated with a tool; --toolbox=Slope.
---toolhelp       Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
---toolparameters Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
--v               Verbose mode. Without this flag, tool outputs will not be printed.
---viewcode       Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
---version        Prints the version information.
+--cd, --wd          Changes the working directory; used in conjunction with --run flag.
+--compress_rasters  Sets the compress_raster option in the settings.json file; determines if newly created rasters are compressed. e.g. --compress_rasters=true
+-h, --help          Prints help information.
+-l, --license       Prints the whitebox-tools license. Tool names may also be used, --license=\"Slope\"
+--listtools         Lists all available tools. Keywords may also be used, --listtools slope.
+--max_procs         Sets the maximum number of processors used. -1 = all available processors. e.g. --max_procs=2
+-r, --run           Runs a tool; used in conjunction with --wd flag; -r=\"LidarInfo\".
+--toolbox           Prints the toolbox associated with a tool; --toolbox=Slope.
+--toolhelp          Prints the help associated with a tool; --toolhelp=\"LidarInfo\".
+--toolparameters    Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".
+-v                  Verbose mode. Without this flag, tool outputs will not be printed.
+--viewcode          Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".
+--version           Prints the version information.
 
 Example Usage:
 >> .*EXE_NAME -r=lidar_info --cd=\"*path*to*data*\" -i=input.las --vlr --geokeys

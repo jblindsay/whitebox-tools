@@ -70,6 +70,7 @@ class WhiteboxTools(object):
         self.work_dir = ""
         self.verbose = True
         self.__compress_rasters = False
+        self.__max_procs = -1
 
         if os.path.isfile('settings.json'):
             # read the settings.json file if it exists
@@ -81,6 +82,7 @@ class WhiteboxTools(object):
             self.work_dir = str(settings['working_directory'])
             self.verbose = str(settings['verbose_mode'])
             self.__compress_rasters = settings['compress_rasters']
+            self.__max_procs = settings['max_procs']
 
 
         self.cancel_op = False
@@ -223,6 +225,56 @@ class WhiteboxTools(object):
     def get_compress_rasters(self):
         return self.__compress_rasters
         
+    def set_max_procs(self, val=-1):
+        ''' 
+        Sets the flag used by WhiteboxTools to determine whether to use compression for output rasters.
+        '''
+        self.__max_procs = val
+
+        try:
+            callback = self.default_callback
+
+            os.chdir(self.exe_path)
+            args2 = []
+            args2.append("." + path.sep + self.exe_name)
+            
+            args2.append(f"--max_procs={val}")
+
+            proc = None
+
+            if running_windows and self.start_minimized == True:
+                si = STARTUPINFO()
+                si.dwFlags = STARTF_USESHOWWINDOW
+                si.wShowWindow = 7 # Set window minimized and not activated
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True,
+                            startupinfo=si)
+            else:
+                proc = Popen(args2, shell=False, stdout=PIPE,
+                            stderr=STDOUT, bufsize=1, universal_newlines=True)
+
+            while proc is not None:
+                line = proc.stdout.readline()
+                sys.stdout.flush()
+                if line != '':
+                    if not self.cancel_op:
+                        callback(line.strip())
+                    else:
+                        self.cancel_op = False
+                        proc.terminate()
+                        return 2
+
+                else:
+                    break
+
+            return 0
+        except (OSError, ValueError, CalledProcessError) as err:
+            callback(str(err))
+            return 1
+    
+    def get_max_procs(self):
+        return self.__max_procs
+    
     def run_tool(self, tool_name, args, callback=None):
         ''' 
         Runs a tool and specifies tool arguments.

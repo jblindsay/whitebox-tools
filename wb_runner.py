@@ -25,6 +25,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 from tkinter import filedialog
+from tkinter.simpledialog import askinteger
 from tkinter import messagebox
 from tkinter import PhotoImage
 import webbrowser
@@ -117,6 +118,8 @@ class FileSelector(tk.Frame):
                     ftypes = [("Text files", "*.txt"), ("all files", "*.*")]
                 elif 'Csv' in self.file_type:
                     ftypes = [("CSC files", "*.csv"), ("all files", "*.*")]
+                elif 'Dat' in self.file_type:
+                    ftypes = [("Binary data files", "*.dat"), ("all files", "*.*")]
                 elif 'Html' in self.file_type:
                     ftypes = [("HTML files", "*.html")]
 
@@ -964,6 +967,8 @@ class WbRunner(tk.Frame):
         else:
             self.filemenu.add_command(label="Compress Output TIFFs", command=self.update_compress)
 
+        self.filemenu.add_command(label="Set Num. Processors", command=self.set_procs)
+
         self.filemenu.add_separator()
         self.filemenu.add_command(label="Install a Whitebox Extension", command=self.install_extension)
         self.filemenu.add_separator()
@@ -1228,11 +1233,22 @@ class WbRunner(tk.Frame):
 
     def set_directory(self):
         try:
-            self.working_dir =filedialog.askdirectory(initialdir=self.working_dir)
+            self.working_dir = filedialog.askdirectory(initialdir=self.working_dir)
             wbt.set_working_dir(self.working_dir)
         except:
             messagebox.showinfo(
                 "Warning", "Could not set the working directory.")
+
+    def set_procs(self):
+        try:
+            self.__max_procs = askinteger(
+                "max_proc", 
+                "Set the maximum number of processors used (-1 for all):",
+                parent=self)
+            wbt.set_max_procs(self.__max_procs)
+        except:
+            messagebox.showinfo(
+                "Warning", "Could not set the number of processors.")
 
     def select_exe(self):
         try:

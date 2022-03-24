@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 25/04/2018
-Last Modified: 18/10/2019
+Last Modified: 16/03/2022
 License: MIT
 
 NOTES: This tool differs from the Whitebox GAT tool in that it only takes a single raster input.
@@ -82,7 +82,7 @@ impl ClipRasterToPolygon {
             flags: vec!["--maintain_dimensions".to_owned()],
             description: "Maintain input raster dimensions?".to_owned(),
             parameter_type: ParameterType::Boolean,
-            default_value: Some("false".to_string()),
+            default_value: Some("true".to_string()),
             optional: true,
         });
 

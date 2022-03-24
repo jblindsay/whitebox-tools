@@ -18,6 +18,8 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 use std::u16;
+use whitebox_common::structures::{ Point2D, Point3D };
+use whitebox_common::algorithms::{ convex_hull, polygon_area };
 
 /// This tool can be used to print basic information about the data contained within a LAS file, used to store LiDAR
 /// data. The reported information will include including data on the header, point return frequency, and classification
@@ -54,6 +56,17 @@ impl LidarInfo {
             parameter_type: ParameterType::NewFile(ParameterFileType::Html),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Calculate the average point density and nominal point spacing?".to_owned(),
+            flags: vec!["--density".to_owned()],
+            description:
+                "Flag indicating whether or not to calculate the average point density and nominal point spacing."
+                    .to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("true".to_string()),
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -152,6 +165,7 @@ impl WhiteboxTool for LidarInfo {
         let mut show_vlrs = false;
         let mut show_geokeys = false;
         let mut keyval: bool;
+        let mut show_density = false;
         if args.len() == 0 {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
@@ -180,6 +194,10 @@ impl WhiteboxTool for LidarInfo {
                 } else {
                     args[i + 1].to_string()
                 };
+            } else if flag_val == "-density" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    show_density = true;
+                }
             } else if flag_val == "-vlr" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     show_vlrs = true;
@@ -302,9 +320,13 @@ impl WhiteboxTool for LidarInfo {
         // let mut p: Point3D;
         let mut ret_array: [i32; 5] = [0; 5];
         let mut class_array: [i32; 256] = [0; 256];
+        // read the points into a Vec<Point2D>
+        let mut points: Vec<Point2D> = Vec::with_capacity(input.header.number_of_points as usize);
+        let mut p: Point3D;
         for i in 0..input.header.number_of_points as usize {
             pd = input[i]; 
-            // p = input.get_transformed_coords(i);
+            p = input.get_transformed_coords(i);
+            points.push(Point2D::new(p.x, p.y));
             ret = pd.return_number();
             if ret > 5 {
                 // Return is too high
@@ -459,6 +481,16 @@ impl WhiteboxTool for LidarInfo {
 
         s = "</table></p>";
         writer.write_all(s.as_bytes())?;
+
+        if show_density {
+            let hull_points = convex_hull(&mut points);
+            let area = polygon_area(&hull_points);
+            let density = (input.header.number_of_points as f64) / area;
+            let spacing = 1f64 / density.sqrt();
+
+            let s1 = &format!("<p>Average point density: {:.3} pts / m<sup>2</sup><br>Nominal point spacing: {:.4} m</p>", density, spacing);
+            writer.write_all(s1.as_bytes()).expect("Error writing to file.");
+        }
 
         if show_vlrs {
             s = "<h2>Variable Length Records</h2>";
