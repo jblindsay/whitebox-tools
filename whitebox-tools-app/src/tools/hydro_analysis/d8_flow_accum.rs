@@ -133,6 +133,15 @@ impl D8FlowAccumulation {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Output a D8 pointer raster at the same time?".to_owned(),
+            flags: vec!["--pntr_output".to_owned()],
+            description: "Should a D8 pointer raster be generated along with the D8 Flow raster?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -200,6 +209,7 @@ impl WhiteboxTool for D8FlowAccumulation {
         let mut clip_max = false;
         let mut pntr_input = false;
         let mut esri_style = false;
+        let mut pntr_output = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -258,6 +268,10 @@ impl WhiteboxTool for D8FlowAccumulation {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                     pntr_input = true;
+                }
+            } else if flag_val == "-pntr_output" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    pntr_output = true;
                 }
             }
         }
@@ -687,6 +701,51 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
             Err(e) => return Err(e),
         };
+
+        
+        if pntr_output {
+            // Initialize raster for D8 pointer output
+            let file_path = path::Path::new(&output_file);
+            let extension = file_path.extension().unwrap().to_str().unwrap().to_string();
+            let basename = file_path.file_stem().unwrap().to_str().unwrap().to_string();
+            let dirpath = file_path.parent().unwrap();
+            let d8pointer_file = dirpath.join(format!("{}_d8pointer.{}", basename, extension))
+                .to_str().unwrap().to_string();
+
+            let header = output.configs.clone();
+            drop(output);
+            let mut d8pointer = Raster::initialize_using_config(&d8pointer_file, &header);
+            d8pointer.configs.nodata = 255_f64;
+            d8pointer.configs.data_type = DataType::U8;
+
+            d8pointer.add_metadata_entry(format!(
+                "Created by whitebox_tools\' {} tool",
+                self.get_tool_name()
+            ));
+            d8pointer.add_metadata_entry(format!("Input file: {}", input_file));
+
+            // Updating pointer values using WhiteboxTools' base-2 numeric index convention
+            let pntr_matches_u8 = [255u8, 0u8, 1u8, 2u8, 4u8, 8u8, 16u8, 32u8, 64u8, 128u8];
+            for row in 0..rows {
+                for col in 0..columns {
+                    let idx = flow_dir.get_value(row, col) + 2;
+                    d8pointer.set_value(row, col, pntr_matches_u8[idx as usize].into());
+                }
+            }
+    
+            if verbose {
+                println!("Saving D8 pointer...")
+            };
+            let _ = match d8pointer.write() {
+                Ok(_) => {
+                    if verbose {
+                        println!("D8 pointer file written")
+                    }
+                }
+                Err(e) => return Err(e),
+            };
+        }
+
         if verbose {
             println!(
                 "{}",
