@@ -30,7 +30,7 @@ use std::path;
 /// north, south, east, west) and row and column count will be the same as the base file.
 ///
 /// In the case that multiple points are contained within a single grid cell, the output can be
-/// assigned (`--assign`) the first, last (default), min, max, or sum of the contained points.
+/// assigned (`--assign`) the first, last (default), min, max, sum, or number of the contained points.
 ///
 /// # See Also
 /// `VectorPolygonsToRaster`, `VectorLinesToRaster`
@@ -85,8 +85,8 @@ impl VectorPointsToRaster {
         parameters.push(ToolParameter{
             name: "Assignment Operation".to_owned(), 
             flags: vec!["--assign".to_owned()], 
-            description: "Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum'".to_owned(),
-            parameter_type: ParameterType::OptionList(vec!["first".to_owned(), "last".to_owned(), "min".to_owned(), "max".to_owned(), "sum".to_owned()]),
+            description: "Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum', 'number'".to_owned(),
+            parameter_type: ParameterType::OptionList(vec!["first".to_owned(), "last".to_owned(), "min".to_owned(), "max".to_owned(), "sum".to_owned(), "number".to_owned()]),
             default_value: Some("last".to_owned()),
             optional: true
         });
@@ -288,7 +288,7 @@ impl WhiteboxTool for VectorPointsToRaster {
         if vector_data.header.shape_type.base_shape_type() != ShapeType::Point {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
-                "The input vector data must either be of point base shape type.",
+                "The input vector data must be of point base shape type.",
             ));
         }
 
@@ -513,6 +513,34 @@ impl WhiteboxTool for VectorPointsToRaster {
                         output.set_value(row, col, attribute_data[record_num]);
                     } else {
                         output.set_value(row, col, z + attribute_data[record_num]);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
+                        old_progress = progress;
+                    }
+                }
+            }
+        } else if assign_op.contains("num") {
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata {
+                        output.set_value(row, col, 1f64);
+                    } else {
+                        output.set_value(row, col, z + 1f64);
                     }
                 }
                 if verbose {

@@ -147,49 +147,53 @@ impl Raster {
             match get_raster_type_from_file(file_name.to_string(), fm) {
                 RasterType::ArcBinary => {
                     let _ = read_arcbinary(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
+                    // return Ok(r);
                 }
                 RasterType::ArcAscii => {
                     let _ = read_arcascii(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::EsriBil => {
                     let _ = read_esri_bil(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::GeoTiff => {
                     let _ = read_geotiff(&r.file_name, &mut r.configs, &mut r.data)?;
                     r.update_min_max();
-                    return Ok(r);
                 }
                 RasterType::GrassAscii => {
                     let _ = read_grass_raster(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::IdrisiBinary => {
                     let _ = read_idrisi(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::SagaBinary => {
                     let _ = read_saga(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::Surfer7Binary => {
                     let _ = read_surfer7(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::SurferAscii => {
                     let _ = read_surfer_ascii_raster(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::Whitebox => {
                     let _ = read_whitebox(&r.file_name, &mut r.configs, &mut r.data)?;
-                    return Ok(r);
                 }
                 RasterType::Unknown => {
                     return Err(Error::new(ErrorKind::Other, "Unrecognized raster type"));
                 }
             }
+
+            // The nodata value can't be NaN or Inf because Rust does not handle equality using == with either. 
+            // If the nodata value is either, modify it in memory so that the various tools will work as expected.
+            if r.configs.nodata.is_nan() || !r.configs.nodata.is_infinite() {
+                r.configs.nodata = -32768.0;
+                for i in 0..r.data.len() {
+                    if r.data[i].is_nan() || r.data[i].is_infinite() {
+                        r.data[i] = -32768.0;
+                    }
+                }
+            }
+
+            return Ok(r);
         } else {
             // write
             return Ok(r);

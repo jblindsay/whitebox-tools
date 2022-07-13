@@ -724,6 +724,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1108,7 +1109,7 @@ Okay, that's it for now.
         i -- Input vector Points file. 
         field -- Input field name in attribute table. 
         output -- Output raster file. 
-        assign -- Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum'. 
+        assign -- Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum', 'number'. 
         nodata -- Background value to set to NoData. Without this flag, it will be set to 0.0. 
         cell_size -- Optionally specified cell size of output raster. Not used when base raster is specified. 
         base -- Optionally specified input base raster file. Not used when a cell size is specified. 
@@ -1455,6 +1456,30 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         args.append("--out_type={}".format(out_type))
         return self.run_tool('find_lowest_or_highest_points', args, callback) # returns 1 if error
+
+    def heat_map(self, i, output, weight_field=None, bandwidth="", kernel="quartic", cell_size="", base=None, callback=None):
+        """This tool calculates a heat map, or kernel density estimation (KDE), for an input point set.
+
+        Keyword arguments:
+
+        i -- Name of the input points shapefile. 
+        weight_field -- Optional name of the attribute containing point weight. 
+        output -- Name of the output raster image file. 
+        bandwidth -- Bandwidth (metres). 
+        kernel -- Kernel type; one of 'uniform', 'triangular', 'epanechnikov', 'quartic', 'triweight', 'tricube', 'gaussian', 'cosine', 'logistic', 'sigmoid', 'silverman'. 
+        cell_size -- Optionally specified cell size of output raster, in metres. Not used when base raster is specified. 
+        base -- Optionally specified input base raster file. Not used when a cell size is specified. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        if weight_field is not None: args.append("--weight_field='{}'".format(weight_field))
+        args.append("--output='{}'".format(output))
+        args.append("--bandwidth={}".format(bandwidth))
+        args.append("--kernel={}".format(kernel))
+        args.append("--cell_size={}".format(cell_size))
+        if base is not None: args.append("--base='{}'".format(base))
+        return self.run_tool('heat_map', args, callback) # returns 1 if error
 
     def idw_interpolation(self, i, field, output, use_z=False, weight=2.0, radius=None, min_points=None, cell_size=None, base=None, callback=None):
         """Interpolates vector points into a raster surface using an inverse-distance weighted scheme.
@@ -2060,7 +2085,7 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('clip', args, callback) # returns 1 if error
 
-    def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=False, callback=None):
+    def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=True, callback=None):
         """Clips a raster to a vector polygon.
 
         Keyword arguments:
@@ -4273,7 +4298,7 @@ Okay, that's it for now.
         start_day -- Start day of the year (1-365). 
         end_day -- End day of the year (1-365). 
         start_time -- Starting hour to track shadows (e.g. 5, 5:00, 05:00:00). Assumes 24-hour time: HH:MM:SS. 'sunrise' is also a valid time. 
-        end_time -- Starting hour to track shadows (e.g. 21, 21:00, 21:00:00). Assumes 24-hour time: HH:MM:SS. 'sunset' is also a valid time. 
+        end_time -- Ending hour to track shadows (e.g. 21, 21:00, 21:00:00). Assumes 24-hour time: HH:MM:SS. 'sunset' is also a valid time. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -4687,6 +4712,24 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         if zero_background: args.append("--zero_background")
         return self.run_tool('depth_in_sink', args, callback) # returns 1 if error
+
+    def depth_to_water(self, dem, output, streams=None, lakes=None, callback=None):
+        """This tool calculates cartographic depth-to-water (DTW) index.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        streams -- Name of the input streams vector (optional). 
+        lakes -- Name of the input lakes vector (optional). 
+        output -- Name of the output raster image file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        if streams is not None: args.append("--streams='{}'".format(streams))
+        if lakes is not None: args.append("--lakes='{}'".format(lakes))
+        args.append("--output='{}'".format(output))
+        return self.run_tool('depth_to_water', args, callback) # returns 1 if error
 
     def downslope_distance_to_stream(self, dem, streams, output, dinf=False, callback=None):
         """Measures distance to the nearest downslope stream cell.
@@ -5217,6 +5260,22 @@ Okay, that's it for now.
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         return self.run_tool('num_inflowing_neighbours', args, callback) # returns 1 if error
+
+    def pilesjo_hasan(self, dem, output, exponent=1.0, callback=None):
+        """This tool calculates Pilesjo and Hasan (2014) flow accumulation.
+
+        Keyword arguments:
+
+        dem -- Name of the input DEM raster file; must be depressionless. 
+        output -- Name of the output raster file. 
+        exponent -- Optional exponent parameter; default is 1.0. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--exponent={}".format(exponent))
+        return self.run_tool('pilesjo_hasan', args, callback) # returns 1 if error
 
     def qin_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=10.0, max_slope=45.0, threshold=None, log=False, clip=False, callback=None):
         """This tool calculates Qin et al. (2007) flow accumulation.
@@ -6815,7 +6874,7 @@ Okay, that's it for now.
         return self.run_tool('percentage_contrast_stretch', args, callback) # returns 1 if error
 
     def piecewise_contrast_stretch(self, i, output, function="", greytones=1024, callback=None):
-        """Modify points within a LiDAR point cloud based on point properties.
+        """Performs a piecewise contrast stretch on an input image.
 
         Keyword arguments:
 
@@ -6906,7 +6965,35 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('classify_buildings_in_lidar', args, callback) # returns 1 if error
 
-    def classify_overlap_points(self, i, output, resolution=2.0, filter=False, callback=None):
+    def classify_lidar(self, i=None, output=None, radius=1.5, grd_threshold=0.1, oto_threshold=2.0, planarity_threshold=0.85, linearity_threshold=0.70, iterations=30, facade_threshold=0.5, callback=None):
+        """Classify points within a LiDAR point cloud based on point properties.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        radius -- Search distance used in neighbourhood search (metres). 
+        grd_threshold -- Ground threshold (metres). 
+        oto_threshold -- Off-terrain object threshold (metres). 
+        planarity_threshold -- Planarity threshold (0-1). 
+        linearity_threshold -- Linearity threshold (0-1). 
+        iterations -- Number of iterations. 
+        facade_threshold -- Facade threshold (metres). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--radius={}".format(radius))
+        args.append("--grd_threshold={}".format(grd_threshold))
+        args.append("--oto_threshold={}".format(oto_threshold))
+        args.append("--planarity_threshold={}".format(planarity_threshold))
+        args.append("--linearity_threshold={}".format(linearity_threshold))
+        args.append("--iterations={}".format(iterations))
+        args.append("--facade_threshold={}".format(facade_threshold))
+        return self.run_tool('classify_lidar', args, callback) # returns 1 if error
+
+    def classify_overlap_points(self, i, output, resolution=2.0, criterion="max scan angle", filter=False, callback=None):
         """Classifies or filters LAS points in regions of overlapping flight lines.
 
         Keyword arguments:
@@ -6914,6 +7001,7 @@ Okay, that's it for now.
         i -- Input LiDAR file. 
         output -- Output LiDAR file. 
         resolution -- The size of the square area used to evaluate nearby points in the LiDAR data. 
+        criterion -- Criterion used to identify overlapping points; options are 'max scan angle', 'not min point source ID', 'not min time', 'multiple point source IDs'. 
         filter -- Filter out points from overlapping flightlines? If false, overlaps will simply be classified. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -6921,6 +7009,7 @@ Okay, that's it for now.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         args.append("--resolution={}".format(resolution))
+        args.append("--criterion={}".format(criterion))
         if filter: args.append("--filter")
         return self.run_tool('classify_overlap_points', args, callback) # returns 1 if error
 
@@ -6940,6 +7029,52 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('clip_lidar_to_polygon', args, callback) # returns 1 if error
 
+    def colourize_based_on_class(self, i=None, output=None, intensity_blending=50.0, clr_str="", use_unique_clrs_for_buildings=False, radius="", callback=None):
+        """Sets the RGB values of a LiDAR point cloud based on the point classification values.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        intensity_blending -- Intensity blending amount (0-100%). 
+        clr_str -- Colour values, e.g. 2: (184, 167, 108); 5: #9ab86c. 
+        use_unique_clrs_for_buildings -- Use unique colours for each building?. 
+        radius -- Search distance used in neighbourhood search. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--intensity_blending={}".format(intensity_blending))
+        args.append("--clr_str={}".format(clr_str))
+        if use_unique_clrs_for_buildings: args.append("--use_unique_clrs_for_buildings")
+        args.append("--radius={}".format(radius))
+        return self.run_tool('colourize_based_on_class', args, callback) # returns 1 if error
+
+    def colourize_based_on_point_returns(self, i=None, output=None, intensity_blending=50.0, only="(230,214,170)", first="(0,140,0)", intermediate="(255,0,255)", last="(0,0,255)", callback=None):
+        """Sets the RGB values of a LiDAR point cloud based on the point returns.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        output -- Name of the output LiDAR points. 
+        intensity_blending -- Intensity blending amount (0-100%). 
+        only -- Only return colour, e.g. (230,214,170), #e6d6aa, or 0xe6d6aa. 
+        first -- First return colour, e.g. (230,214,170), #e6d6aa, or 0xe6d6aa. 
+        intermediate -- Intermediate return colour, e.g. (230,214,170), #e6d6aa, or 0xe6d6aa. 
+        last -- Last return colour, e.g. (230,214,170), #e6d6aa, or 0xe6d6aa. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--intensity_blending={}".format(intensity_blending))
+        args.append("--only={}".format(only))
+        args.append("--first={}".format(first))
+        args.append("--intermediate={}".format(intermediate))
+        args.append("--last={}".format(last))
+        return self.run_tool('colourize_based_on_point_returns', args, callback) # returns 1 if error
+
     def erase_polygon_from_lidar(self, i, polygons, output, callback=None):
         """Erases (cuts out) a vector polygon or polygons from a LiDAR point cloud.
 
@@ -6956,19 +7091,19 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('erase_polygon_from_lidar', args, callback) # returns 1 if error
 
-    def filter_lidar(self, i, output, statement="", callback=None):
-        """This sorts the points in a LiDAR file by the GPS time.
+    def filter_lidar(self, i=None, output=None, statement="", callback=None):
+        """Filters points within a LiDAR point cloud based on point properties.
 
         Keyword arguments:
 
         i -- Name of the input LiDAR points. 
         output -- Name of the output LiDAR points. 
-        statement -- Statement e.g. cos("raster1") * 35.0 + "raster2". This statement must be a valid Rust statement. 
+        statement -- Filter statement e.g. x < 5000.0 && y > 100.0 && is_late && !is_noise. This statement must be a valid Rust statement. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
-        args.append("--input='{}'".format(i))
-        args.append("--output='{}'".format(output))
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
         args.append("--statement={}".format(statement))
         return self.run_tool('filter_lidar', args, callback) # returns 1 if error
 
@@ -7019,7 +7154,7 @@ Okay, that's it for now.
         return self.run_tool('find_flightline_edge_points', args, callback) # returns 1 if error
 
     def flightline_overlap(self, i=None, output=None, resolution=1.0, callback=None):
-        """Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight lines in each grid cell.
+        """Reads a LiDAR (LAS) point file and outputs a raster containing the number of overlapping flight-lines in each grid cell.
 
         Keyword arguments:
 
@@ -7252,6 +7387,22 @@ Okay, that's it for now.
         if max_triangle_edge_length is not None: args.append("--max_triangle_edge_length='{}'".format(max_triangle_edge_length))
         return self.run_tool('lidar_digital_surface_model', args, callback) # returns 1 if error
 
+    def lidar_eigenvalue_features(self, i=None, num_neighbours=None, radius=None, callback=None):
+        """Calculate eigenvalue-based metrics from a LiDAR point cloud.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR points. 
+        num_neighbours -- Number of neighbours used in search. 
+        radius -- Search distance used in neighbourhood search. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if num_neighbours is not None: args.append("--num_neighbours='{}'".format(num_neighbours))
+        if radius is not None: args.append("--radius='{}'".format(radius))
+        return self.run_tool('lidar_eigenvalue_features', args, callback) # returns 1 if error
+
     def lidar_elevation_slice(self, i, output, minz=None, maxz=None, cls=False, inclassval=2, outclassval=1, callback=None):
         """Outputs all of the points within a LiDAR (LAS) point file that lie between a specified elevation range.
 
@@ -7390,13 +7541,14 @@ Okay, that's it for now.
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_idw_interpolation', args, callback) # returns 1 if error
 
-    def lidar_info(self, i, output, vlr=True, geokeys=True, callback=None):
+    def lidar_info(self, i, output, density=True, vlr=True, geokeys=True, callback=None):
         """Prints information about a LiDAR (LAS) dataset, including header, point return frequency, and classification data and information about the variable length records (VLRs) and geokeys.
 
         Keyword arguments:
 
         i -- Input LiDAR file. 
         output -- Output HTML file for summary report. 
+        density -- Flag indicating whether or not to calculate the average point density and nominal point spacing. 
         vlr -- Flag indicating whether or not to print the variable length records (VLRs). 
         geokeys -- Flag indicating whether or not to print the geokeys. 
         callback -- Custom function for handling tool text outputs.
@@ -7404,6 +7556,7 @@ Okay, that's it for now.
         args = []
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
+        if density: args.append("--density")
         if vlr: args.append("--vlr")
         if geokeys: args.append("--geokeys")
         return self.run_tool('lidar_info', args, callback) # returns 1 if error
@@ -7495,22 +7648,6 @@ Okay, that's it for now.
         if minz is not None: args.append("--minz='{}'".format(minz))
         if maxz is not None: args.append("--maxz='{}'".format(maxz))
         return self.run_tool('lidar_point_density', args, callback) # returns 1 if error
-
-    def lidar_point_features(self, i=None, output=None, search="", callback=None):
-        """Modify points within a LiDAR point cloud based on point properties.
-
-        Keyword arguments:
-
-        i -- Name of the input LiDAR points. 
-        output -- Name of the output LiDAR points. 
-        search -- Search distance parameter. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        if i is not None: args.append("--input='{}'".format(i))
-        if output is not None: args.append("--output='{}'".format(output))
-        args.append("--search={}".format(search))
-        return self.run_tool('lidar_point_features', args, callback) # returns 1 if error
 
     def lidar_point_return_analysis(self, i, output=None, callback=None):
         """This tool performs a quality control check on the return values of points in a LiDAR file.
@@ -7791,7 +7928,7 @@ Okay, that's it for now.
         return self.run_tool('lidar_sibson_interpolation', args, callback) # returns 1 if error
 
     def lidar_sort_by_time(self, i, output, callback=None):
-        """This sorts the points in a LiDAR file by the GPS time.
+        """This tool sorts the points in a LiDAR file by the GPS time.
 
         Keyword arguments:
 
@@ -7933,7 +8070,7 @@ Okay, that's it for now.
 
         i -- Name of the input LiDAR points. 
         output -- Name of the output LiDAR points. 
-        statement -- Filter statement e.g. x < 5000.0 && y > 100.0 && is_late && !is_noise. This statement must be a valid Rust statement. 
+        statement -- Modify statement e.g. x += 5000.0. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -7959,7 +8096,7 @@ Okay, that's it for now.
         return self.run_tool('normal_vectors', args, callback) # returns 1 if error
 
     def recover_flightline_info(self, i, output, max_time_diff=5.0, pt_src_id=False, user_data=False, rgb=False, callback=None):
-        """This sorts the points in a LiDAR file by the GPS time.
+        """Associates LiDAR points by their flightlines.
 
         Keyword arguments:
 
@@ -7996,24 +8133,24 @@ Okay, that's it for now.
         args.append("--polygons='{}'".format(polygons))
         return self.run_tool('select_tiles_by_polygon', args, callback) # returns 1 if error
 
-    def sort_lidar(self, i=None, output=None, criterion="time", callback=None):
+    def sort_lidar(self, i=None, output=None, criteria="", callback=None):
         """Sorts LiDAR points based on their properties.
 
         Keyword arguments:
 
         i -- Name of the input LiDAR points. 
         output -- Name of the output LiDAR points. 
-        criterion -- Criterion on which to base the split of the input file. Options include 'time', 'x', 'y', 'z', intensity, 'class', 'user_data', 'point_source_id', 'scan_angle'. 
+        criteria -- Sort criteria e.g. 'x 50.0, y 50.0, z'; criteria may include x, y, z, intensity, class, user_data, point_source_id, and scan_angle. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
-        args.append("--criterion={}".format(criterion))
+        args.append("--criteria={}".format(criteria))
         return self.run_tool('sort_lidar', args, callback) # returns 1 if error
 
     def split_lidar(self, i=None, criterion="num_pts", interval="", min_pts=5, callback=None):
-        """This tool splits LiDAR points up into a series of new files based on their properties.
+        """Splits LiDAR points up into a series of new files based on their properties.
 
         Keyword arguments:
 
@@ -8094,7 +8231,7 @@ Okay, that's it for now.
         args.append("--min_class_size={}".format(min_class_size))
         return self.run_tool('k_means_clustering', args, callback) # returns 1 if error
 
-    def knn_classification(self, inputs, training, field, output, scaling="Normalize", k=5, clip=True, test_proportion=0.2, callback=None):
+    def knn_classification(self, inputs, training, field, scaling="Normalize", output=None, k=5, clip=True, test_proportion=0.2, callback=None):
         """Performs a supervised k-nearest neighbour classification using training site polygons/points and predictor rasters.
 
         Keyword arguments:
@@ -8114,7 +8251,7 @@ Okay, that's it for now.
         args.append("--scaling={}".format(scaling))
         args.append("--training='{}'".format(training))
         args.append("--field='{}'".format(field))
-        args.append("--output='{}'".format(output))
+        if output is not None: args.append("--output='{}'".format(output))
         args.append("-k={}".format(k))
         if clip: args.append("--clip")
         args.append("--test_proportion={}".format(test_proportion))

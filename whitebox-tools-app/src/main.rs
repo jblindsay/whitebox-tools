@@ -25,7 +25,7 @@ by the WhiteboxTools library:
 | --toolbox         | Prints the toolbox associated with a tool; --toolbox=Slope.                                       |
 | --toolhelp        | Prints the help associated with a tool; --toolhelp="LidarInfo".                                   |
 | --toolparameters  | Prints the parameters (in json form) for a specific tool; --toolparameters=\"LidarInfo\".         |
-| -v                | Verbose mode. Without this flag, tool outputs will not be printed.                                |
+| -v                | Verbose mode. With this flag set to false, tool outputs will not be printed. -v=true, -v=false    |
 | --viewcode        | Opens the source code of a tool in a web browser; --viewcode=\"LidarInfo\".                       |
 | --version         | Prints the version information.                                                                   |
 

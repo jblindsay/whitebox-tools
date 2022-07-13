@@ -18,18 +18,30 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool performs a white [top-hat transform](https://en.wikipedia.org/wiki/Top-hat_transform) on a LiDAR point cloud.
+/// This tool performs a white [top-hat transform](https://en.wikipedia.org/wiki/Top-hat_transform) on a LiDAR point cloud (`--input`).
 /// A top-hat transform is a common digital image processing operation used for various tasks, such
 /// as feature extraction, background equalization, and image enhancement. When applied to a LiDAR point cloud, the white
 /// top-hat transform provides an estimate of *height above ground*, which is useful for modelling the vegetation canopy.
-///
+/// 
+/// As an example, notice that the input point cloud on the top of the image below has a substantial amount of
+/// topographic variability. After applying the top-hat transform (bottom point cloud), all of this topographic 
+/// variability has been removed and point elevations values effectively become height above ground.
+/// 
+/// ![](../../doc_img/LidarTophatTransform.png)
+///  
 /// The white top-hat transform is defined as the difference between a point's original elevation and its
 /// [opening](https://en.wikipedia.org/wiki/Opening_(morphology)). The opening operation can be thought of as the local
 /// neighbourhood maximum of a previous local minimum surface. The user must specify the size of the neighbourhood using the
-/// `--radius` parameter.
-///
+/// `--radius` parameter. Setting this parameter can require some experimentation. Generally, it is appropriate to
+/// use a radius of a few meters in non-urban landscapes. However, in urban areas, the radius may need to be set
+/// much larger, reflective of the size of the largest building.
+/// 
+/// If the input point cloud already has ground points classified, it may be better to use the `HeightAboveGround`,
+/// which simply measures the difference in height between each point and its nearest ground classified point within
+/// the search radius.
+/// 
 /// # See Also
-/// `TophatTransform`, `Closing`, `Opening`
+/// `HeightAboveGround`, `TophatTransform`, `Closing`, `Opening`
 pub struct LidarTophatTransform {
     name: String,
     description: String,

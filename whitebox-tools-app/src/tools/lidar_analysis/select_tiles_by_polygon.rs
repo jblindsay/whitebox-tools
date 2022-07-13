@@ -28,10 +28,6 @@ use std::thread;
 /// polygon is small relative to the tile size, this approach may miss some copying some tiles. It is advisable to
 /// buffer the polygon if this occurs.
 ///
-/// **A note on LAZ file inputs:** While WhiteboxTools does not currently support the reading and writing of the compressed
-/// LiDAR format `LAZ`, it is able to read `LAZ` file headers. Because this tool only requires information contained
-/// in the input file's header (i.e. the bounding box of the data), it is able to take `LAZ` input files.
-///
 /// # See Also
 /// `LidarTileFootprint`
 pub struct SelectTilesByPolygon {

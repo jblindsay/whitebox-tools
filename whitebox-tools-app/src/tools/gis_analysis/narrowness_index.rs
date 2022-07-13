@@ -19,16 +19,17 @@ use std::path;
 /// > *NI* = *A* / (&#960;*MD*<sup>2</sup>)
 ///
 /// where *A* is the patch area and *MD* is the maximum distance-to-edge of the patch. Circular-shaped patches
-/// will have a narrowness index near 1.0, while more narrow patche shapes will have higher index values. The
+/// will have a narrowness index near 1.0, while more narrow patch shapes will have higher index values. The
 /// index may be conceptualized as the ratio of the patch area to the area of the largest contained circle,
 /// although in practice the circle defined by the radius of the maximum distance-to-edge will often fall
 /// outside the patch boundaries.
 ///
 /// Objects in the input raster (`--input`) are designated by their unique identifiers. Identifier values must
-/// be positive, non-zero whole numbers.
+/// be positive, non-zero whole numbers. It is quite common for identifiers to be set using the `Clump` tool
+/// applied to some kind of thresholded raster.
 ///
 /// # See Also
-/// `LinearityIndex`, `ElongationRatio`
+/// `LinearityIndex`, `ElongationRatio`, `Clump`
 pub struct NarrownessIndex {
     name: String,
     description: String,

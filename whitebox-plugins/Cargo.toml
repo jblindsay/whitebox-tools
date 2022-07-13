@@ -21,6 +21,10 @@ name = "gaussian_scale_space"
 path = "src/gaussian_scale_space/main.rs"
 
 [[bin]]
+name = "heat_map"
+path = "src/heat_map/main.rs"
+
+[[bin]]
 name = "lidar_shift"
 path = "src/lidar_shift/main.rs"
 
@@ -58,10 +62,12 @@ path = "src/travelling_salesman_problem/main.rs"
 
 [dependencies]
 fasteval = "0.2.4"
+kd-tree = "0.4.1"
 nalgebra = "0.18.0"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
 tsp-rs = "0.1.0"
+typenum = "1.15.0"
 whitebox_common = { path = "../whitebox-common" }
 whitebox_lidar = { path = "../whitebox-lidar" }
 whitebox_raster = { path = "../whitebox-raster" }

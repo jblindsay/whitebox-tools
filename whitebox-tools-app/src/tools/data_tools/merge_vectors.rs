@@ -266,7 +266,7 @@ impl WhiteboxTool for MergeVectors {
                     atts.intersection(input.attributes.get_fields());
                 }
 
-                if input.header.shape_type != output.header.shape_type {
+                if input.header.shape_type.base_shape_type() != output.header.shape_type.base_shape_type() {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,
                         "Each of the input files must be of the same ShapeType.",

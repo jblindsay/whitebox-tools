@@ -1,7 +1,7 @@
 /* 
 Authors: Prof. John Lindsay
 Created: 23/02/2022
-Last Modified: 23/02/2022
+Last Modified: 06/05/2022
 License: MIT
 */
 extern crate tsp_rs;
@@ -13,9 +13,12 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 use std::str;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
 use std::time::Instant;
 use whitebox_common::structures::Point2D;
-use whitebox_common::utils::get_formatted_elapsed_time;
+use whitebox_common::utils::{haversine_distance, get_formatted_elapsed_time};
 use whitebox_vector::{AttributeField, FieldData, FieldDataType, Shapefile, ShapefileGeometry, ShapeType};
 
 /// This tool finds approximate solutions to [travelling salesman problems](https://en.wikipedia.org/wiki/Travelling_salesman_problem), 
@@ -24,7 +27,7 @@ use whitebox_vector::{AttributeField, FieldData, FieldDataType, Shapefile, Shape
 /// [3-opt](https://en.wikipedia.org/wiki/3-opt) heuristic as a fall-back if the initial approach 
 /// takes too long. The user must specify the names of the input points vector (`--input`) and output lines
 /// vector file (`--output`), as well as the duration, in seconds, over which the algorithm is allowed to search
-/// for improved solutions (`--duration`).
+/// for improved solutions (`--duration`). The tool works in parallel to find more optimal solutions.
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -103,6 +106,11 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut working_directory = configurations.working_directory.clone();
     if !working_directory.is_empty() && !working_directory.ends_with(&sep) {
         working_directory += &sep;
+    }
+    let max_procs = configurations.max_procs;
+    let mut num_procs = thread::available_parallelism()?.get();
+    if max_procs > 0 && (max_procs as usize) < num_procs {
+        num_procs = max_procs as usize;
     }
 
     // read the arguments
@@ -185,6 +193,11 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         ));
     }
 
+    let is_geographic_proj = if input.header.x_min.abs() <= 180.0 && input.header.x_max.abs() <= 180.0 && input.header.y_min.abs() < 90.0 && input.header.y_max.abs() <= 90.0 {
+        true
+    } else {
+        false
+    };
 
     let mut tour: Vec<Point> = vec![];
     for record_num in 0..input.num_records {
@@ -192,8 +205,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         if record.shape_type != ShapeType::Null {
             for i in 0..record.num_points as usize {
                 tour.push(Point::new(
-                    record.points[i].x,
+                    record.points[i].x, 
                     record.points[i].y,
+                    is_geographic_proj
                 ));
             }
         }
@@ -212,17 +226,44 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         println!("The tour includes {} locations.", tour.len());
     }
 
-
-    let mut tour = Tour::from(&tour);
-
     if configurations.verbose_mode {
         println!("Finding optimal route, please be patient...");
     }
 
-    tour.optimize_kopt(std::time::Duration::from_secs(duration));
-    let tour_len = tour.tour_len();
+    let tour = Arc::new(tour);
+    let (tx, rx) = mpsc::channel();
+    for _tid in 0..num_procs {
+        let tour = tour.clone();
+        let tx = tx.clone();
+        thread::spawn(move || {
+            let mut tour = Tour::from(&tour);
+            tour.optimize_kopt(std::time::Duration::from_secs(duration));
+            tx.send(tour).unwrap();
+        });
+    }
+
+    let mut progress: i32;
+    let mut old_progress: i32 = -1;
+    let mut min_len = f64::MAX;
+    let mut min_len_tour = Tour::from(&tour);
+    for n in 0..num_procs {
+        let tour_route = rx.recv().unwrap();
+        let tour_len = tour_route.tour_len();
+        if tour_len < min_len { 
+            min_len = tour_len; 
+            min_len_tour = tour_route.clone();
+        }
+        if configurations.verbose_mode {
+            progress = (100.0_f64 * n as f64 / (num_procs - 1) as f64) as i32;
+            if progress != old_progress {
+                println!("Progress: {}%", progress);
+                old_progress = progress;
+            }
+        }
+    }
+
     if configurations.verbose_mode {
-        println!("Tour distance: {:.3}", tour_len);
+        println!("Tour distance: {:.3}", min_len);
     }
 
     // create output file
@@ -232,15 +273,17 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     output.attributes.add_field(&AttributeField::new("LENGTH", FieldDataType::Real, 9u8, 3u8));
 
     let mut vec_pts = vec![];
-    for pt in tour.path {
+    let first_pt = min_len_tour.path[0].clone();
+    for pt in min_len_tour.path {
         vec_pts.push(Point2D::new(pt.x, pt.y));
     }
+    vec_pts.push(Point2D::new(first_pt.x, first_pt.y)); // close the loop
     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
     sfg.add_part(&vec_pts);
     output.add_record(sfg);
     output
         .attributes
-        .add_record(vec![FieldData::Int(1i32), FieldData::Real(tour_len)], false);
+        .add_record(vec![FieldData::Int(1i32), FieldData::Real(min_len)], false);
 
     if configurations.verbose_mode {
         println!("Saving data...")
@@ -264,17 +307,21 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 pub struct Point {
     pub x: f64,
     pub y: f64,
+    pub is_geographic_proj: bool,
 }
 
 impl Point {
-    pub fn new(x: f64, y: f64) -> Point {
-        Point { x, y }
+    pub fn new(x: f64, y: f64, is_geographic_proj: bool) -> Point {
+        Point { x, y, is_geographic_proj }
     }
 }
 
 impl Metrizable for Point {
     fn cost(&self, other: &Point) -> f64 {
-        // (self.x - other.x)*(self.x - other.x) + (self.y - other.y)*(self.y - other.y)
+        if self.is_geographic_proj {
+            return haversine_distance((self.y, self.x), (other.y, other.x));
+        }
+
         ((self.x - other.x)*(self.x - other.x) + (self.y - other.y)*(self.y - other.y)).sqrt()
     }
 }

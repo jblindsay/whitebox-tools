@@ -28,7 +28,7 @@ use std::path;
 /// | Classification Value  | Meaning                              |
 /// | :-------------------- | :------------------------------------|
 /// | 0                     | Created never classified
-/// | 1                     | Unclassified3
+/// | 1                     | Unclassified
 /// | 2                     | Ground
 /// | 3                     | Low Vegetation
 /// | 4                     | Medium Vegetation
@@ -40,7 +40,7 @@ use std::path;
 /// | 10                    | Rail
 /// | 11                    | Road Surface
 /// | 12                    | Reserved
-/// | 13                    |	Wire – Guard (Shield)
+/// | 13                    | Wire – Guard (Shield)
 /// | 14                    | Wire – Conductor (Phase)
 /// | 15                    | Transmission Tower
 /// | 16                    | Wire-structure Connector (e.g. Insulator)

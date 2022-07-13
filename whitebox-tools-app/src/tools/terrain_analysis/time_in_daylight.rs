@@ -169,7 +169,7 @@ impl TimeInDaylight {
         parameters.push(ToolParameter {
             name: "Ending Hour (24-hour time: HH:MM:SS e.g. 21:00:00)".to_owned(),
             flags: vec!["--end_time".to_owned()],
-            description: "Starting hour to track shadows (e.g. 21, 21:00, 21:00:00). Assumes 24-hour time: HH:MM:SS. 'sunset' is also a valid time.".to_owned(),
+            description: "Ending hour to track shadows (e.g. 21, 21:00, 21:00:00). Assumes 24-hour time: HH:MM:SS. 'sunset' is also a valid time.".to_owned(),
             parameter_type: ParameterType::String,
             default_value: Some("23:59:59".to_string()),
             optional: true,

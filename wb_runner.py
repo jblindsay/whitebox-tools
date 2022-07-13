@@ -1106,7 +1106,7 @@ class WbRunner(tk.Frame):
                 b.grid(row=param_num, column=0, sticky=tk.W)
                 param_num = param_num + 1
             elif ('Float' in pt or 'Integer' in pt or
-                  'String' in pt or 'StringOrNumber' in pt or
+                  'Text' in pt or 'String' in pt or 'StringOrNumber' in pt or
                   'StringList' in pt or 'VectorAttributeField' in pt):
                 b = DataInput(json_str, self.arg_scroll_frame)
                 b.grid(row=param_num, column=0, sticky=tk.NSEW)

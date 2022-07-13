@@ -1,0 +1,66 @@
+{
+    "tool_name": "HeatMap",
+    "exe": "heat_map",
+    "short_description": "This tool calculates a heat map, or kernel density estimation (KDE), for an input point set.",
+    "toolbox": "GIS Analysis",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=HeatMap -i=points.shp -o=density.tif --bandwidth=1000.0 --kernel='quartic' --cell_size=10.0",
+    "parameters": [
+        {
+            "name": "Input Points",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input points shapefile.",
+            "parameter_type": {"ExistingFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Weight Field Name (Optional)",
+            "flags": ["--weights", "--weight_field"],
+            "description": "Optional name of the attribute containing point weight.",
+            "parameter_type": "String",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Raster Image",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output raster image file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Bandwidth",
+            "flags": ["--bandwidth"],
+            "description": "Bandwidth (metres).",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": false
+        },
+        {
+            "name": "Kernel Type",
+            "flags": ["--kernel"],
+            "description": "Kernel type; one of 'uniform', 'triangular', 'epanechnikov', 'quartic', 'triweight', 'tricube', 'gaussian', 'cosine', 'logistic', 'sigmoid', 'silverman'.",
+            "parameter_type": {"OptionList": ["uniform", "triangular", "epanechnikov", "quartic", "triweight", "tricube", "gaussian", "cosine", "logistic", "sigmoid", "silverman"]},
+            "default_value": "quartic",
+            "optional": true
+        },
+        {
+            "name": "Output Raster Cell Size (Optional)",
+            "flags": ["--cell_size"],
+            "description": "Optionally specified cell size of output raster, in metres. Not used when base raster is specified.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "Base Raster (Optional)",
+            "flags": ["--base"],
+            "description": "Optionally specified input base raster file. Not used when a cell size is specified.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": true
+        }
+    ]
+}

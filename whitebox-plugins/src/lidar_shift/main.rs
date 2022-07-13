@@ -17,10 +17,11 @@ use whitebox_common::utils::get_formatted_elapsed_time;
 /// This tool can be used to shift the x,y,z coordinates of points within a LiDAR file. The user must specify 
 /// the name of the input file (`--input`) and the output file (`--output`). Additionally, the user must specify
 /// the x,y,z shift values (`x_shift`, `y_shift`, `z_shift`). At least one non-zero shift value is needed
-/// to run the tool.
+/// to run the tool. Notice that shifting the x,y,z coordinates of LiDAR points is also possible using the 
+/// `ModifyLidar` tool, which can also be used for more sophisticated point property manipulation (e.g. rotations).
 /// 
 /// # See Also
-/// `LidarElevationSlice`, `HeightAboveGround`
+/// `ModifyLidar`, `LidarElevationSlice`, `HeightAboveGround`
 fn main() {
     let args: Vec<String> = env::args().collect();
 

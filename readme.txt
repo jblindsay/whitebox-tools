@@ -57,16 +57,18 @@ for more details.
 ******************
 Version 2.X.X (XX-XX-20XX)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
+- Added the HeatMap tool for performing kernel density estimation (KDE) from vector points.
 - Added the MultiplyOverlay tool.
 - Added the MaxUpslopeValue tool.
 - Fixed a bug in the automatic install of the Whitebox extensions that affected Windows users.
 - Fixed a bug with the persistence of the compress_rasters parameter. Python users were unable to
   turn off the compress flag previously.
-- Added the ability to set and get the maximum number of processors (--max_procs flag) used by WBT in 
+- Added the option to set and get the maximum number of processors (--max_procs flag) used by WBT in 
   the Whitebox Python API.
-- Added the ability to output average point density and nominal point spacing to the LidarInfo tool.
+- Added the option to output average point density and nominal point spacing to the LidarInfo tool.
 - Updated the ClassifyOverlapPoints and FlightlineOverlap tools to use information contained within
-  the Point Source ID property, rather than a hard-coded time difference threshold, as previously used.
+  the Point Source ID property, rather than a hard-coded time difference threshold previously used.
+- Fixed an issue that affected many tools when input rasters use either NaN or Inf as NoData values.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

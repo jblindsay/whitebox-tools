@@ -468,7 +468,7 @@ impl LasFile {
     }
 
     pub fn get_rgb(&self, index: usize) -> Result<ColourData, Error> {
-        if self.colour_data.len() >= index {
+        if self.colour_data.len() > index {
             return Ok(self.colour_data[index]);
         } else {
             return Err(Error::new(ErrorKind::NotFound, "RGB value not found, possibly because the file point format does not include colour data."));
@@ -480,7 +480,7 @@ impl LasFile {
     }
 
     pub fn get_gps_time(&self, index: usize) -> Option<f64> { // Result<f64, Error> {
-        if self.gps_data.len() >= index {
+        if self.gps_data.len() > index {
             return Some(self.gps_data[index]); // Ok(self.gps_data[index]);
         // } else {
         //     return Err(Error::new(ErrorKind::NotFound, "GPS time value not found, possibly because the file point format does not include GPS data."));

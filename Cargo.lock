@@ -1031,10 +1031,12 @@ name = "whitebox_plugins"
 version = "2.0.0"
 dependencies = [
  "fasteval",
+ "kd-tree",
  "nalgebra",
  "num_cpus",
  "rand 0.7.3",
  "tsp-rs",
+ "typenum",
  "whitebox_common",
  "whitebox_lidar",
  "whitebox_raster",
