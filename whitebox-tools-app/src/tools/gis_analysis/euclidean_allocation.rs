@@ -209,8 +209,8 @@ impl WhiteboxTool for EuclideanAllocation {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z != 0.0 {
+                z = input.get_value(row, col);
+                if z != 0.0 && z != nodata {
                     distance[(row, col)] = 0.0;
                     allocation[(row, col)] = input[(row, col)];
                 } else {
@@ -315,8 +315,8 @@ impl WhiteboxTool for EuclideanAllocation {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z == nodata {
+                z = input.get_value(row, col);
+                if z != 0.0 && z != nodata {
                     allocation[(row, col)] = nodata;
                 }
             }

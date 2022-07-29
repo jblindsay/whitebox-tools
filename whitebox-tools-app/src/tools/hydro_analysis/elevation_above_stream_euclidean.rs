@@ -241,8 +241,8 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z != 0.0 {
+                z = input.get_value(row, col);
+                if z != 0.0 && z != nodata {
                     distance.set_value(row, col, 0.0);
                     allocation.set_value(row, col, dem.get_value(row, col));
                 } else {

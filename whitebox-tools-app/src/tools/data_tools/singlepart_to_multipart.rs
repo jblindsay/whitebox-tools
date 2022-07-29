@@ -6,7 +6,10 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use whitebox_common::algorithms::{is_clockwise_order, poly_in_poly};
+use whitebox_common::algorithms::{
+    is_clockwise_order, 
+    poly_in_poly
+};
 use whitebox_common::structures::Point2D;
 use crate::tools::*;
 use whitebox_vector::*;

@@ -623,7 +623,7 @@ impl WhiteboxTool for RaiseWalls {
         };
 
         if !output_something && verbose {
-            println!("Warning: No polygons were output to the raster.");
+            println!("Warning: No polygons were output to the raster. It's possible that that vector and raster inputs are in different projections.");
         }
 
         if verbose {

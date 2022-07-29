@@ -69,6 +69,9 @@ Version 2.X.X (XX-XX-20XX)
 - Updated the ClassifyOverlapPoints and FlightlineOverlap tools to use information contained within
   the Point Source ID property, rather than a hard-coded time difference threshold previously used.
 - Fixed an issue that affected many tools when input rasters use either NaN or Inf as NoData values.
+- Fixed an issue with the way that NoData values are handled during the euclidean distance transform
+  that impacted the EuclideanDistance, EuclideanAllocation, BufferRaster, and 
+  ElevationAboveStreamEuclidean tools.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

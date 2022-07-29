@@ -272,7 +272,7 @@ impl WhiteboxTool for D8MassFlux {
                 "All input images must share the same dimensions (rows and columns) and spatial extent."));
         }
         let efficiency_multiplier = if efficiency.configs.maximum > 1f64 {
-            0.01f64 // assumpted to be percent...need proportion
+            0.01f64 // assumed to be percent...need proportion
         } else {
             1f64
         };

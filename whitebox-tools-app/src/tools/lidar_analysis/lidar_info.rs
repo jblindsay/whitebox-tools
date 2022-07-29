@@ -229,8 +229,12 @@ impl WhiteboxTool for LidarInfo {
             input_file = format!("{}{}", working_directory, input_file);
         }
 
-        if output_file.len() == 0 {
-            output_file = input_file.replace(".las", "_summary.html");
+        if output_file.is_empty() {
+            let extension: String = match path::Path::new(&input_file).extension().unwrap().to_str() {
+                Some(n) => format!(".{}", n.to_string()),
+                None => "".to_string(),
+            };
+            output_file = input_file.replace(&extension, "_summary.html");
         }
 
         let f = File::create(output_file.clone())?;

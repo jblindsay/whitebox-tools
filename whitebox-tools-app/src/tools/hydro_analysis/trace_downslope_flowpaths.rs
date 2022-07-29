@@ -283,8 +283,10 @@ impl WhiteboxTool for TraceDownslopeFlowpaths {
         let mut seed_cols = vec![];
         for record_num in 0..seeds.num_records {
             let record = seeds.get_record(record_num);
-            seed_rows.push(flowdir.get_row_from_y(record.points[0].y));
-            seed_cols.push(flowdir.get_column_from_x(record.points[0].x));
+            for i in 0..record.points.len() {
+                seed_rows.push(flowdir.get_row_from_y(record.points[i].y));
+                seed_cols.push(flowdir.get_column_from_x(record.points[i].x));
+            }
 
             if verbose {
                 progress =

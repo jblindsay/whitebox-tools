@@ -257,8 +257,8 @@ impl WhiteboxTool for BufferRaster {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
-                if z != 0.0 {
+                z = input.get_value(row, col);
+                if z != 0.0 && z != nodata {
                     output[(row, col)] = 0.0;
                 } else {
                     output[(row, col)] = inf_val;

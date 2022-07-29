@@ -267,8 +267,8 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if verbose {
             println!("Initializing watershed data...")
         };
-        let watersheds: Array2D<f64> = match use_watersheds {
-            false => Array2D::new(1, 1, 1f64, 1f64)?,
+        let watersheds: Array2D<f32> = match use_watersheds {
+            false => Array2D::new(1, 1, 1f32, 1f32)?,
             true => {
                 // if verbose { println!("Reading watershed data...") };
                 let r = Raster::new(&watersheds_file, "r")?;
@@ -276,7 +276,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                         "The input files must have the same number of rows and columns and spatial extent."));
                 }
-                r.get_data_as_array2d()
+                r.get_data_as_f32_array2d()
             }
         };
         // let watershed_nodata = watersheds.nodata;
@@ -284,8 +284,8 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if verbose {
             println!("Initializing weights data...")
         };
-        let weights: Array2D<f64> = match use_weights {
-            false => Array2D::new(1, 1, 1f64, 1f64)?,
+        let weights: Array2D<f32> = match use_weights {
+            false => Array2D::new(1, 1, 1f32, 1f32)?,
             true => {
                 // if verbose { println!("Reading weights data...") };
                 let r = Raster::new(&weights_file, "r")?;
@@ -293,7 +293,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                         "The input files must have the same number of rows and columns and spatial extent."));
                 }
-                r.get_data_as_array2d()
+                r.get_data_as_f32_array2d()
             }
         };
 
@@ -350,8 +350,8 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let (mut x, mut y): (isize, isize);
         for row in 0..rows {
             for col in 0..columns {
-                if pntr.get_value(row, col) >= 0.0 && pntr.get_value(row, col) != nodata {
-                    current_id = watersheds.get_value(row, col);
+                current_id = watersheds.get_value(row, col) as f64;
+                if pntr.get_value(row, col) >= 0.0 && pntr.get_value(row, col) != nodata && current_id > 0f64 {
                     dist = 0f64;
                     flag = false;
                     x = col;
@@ -369,12 +369,12 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                             x += dx[c];
                             y += dy[c];
 
-                            dist += grid_lengths[c] * weights.get_value(y, x);
+                            dist += grid_lengths[c] * weights.get_value(y, x) as f64;
 
                             if output.get_value(y, x) != -999f64 {
                                 dist += output.get_value(y, x);
                                 flag = true;
-                            } else if watersheds[(y, x)] != current_id {
+                            } else if watersheds[(y, x)] as f64 != current_id {
                                 flag = true;
                             }
                         } else {
@@ -396,10 +396,10 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                             x += dx[c];
                             y += dy[c];
 
-                            dist -= grid_lengths[c] * weights.get_value(y, x);
+                            dist -= grid_lengths[c] * weights.get_value(y, x) as f64;
 
                             if output.get_value(y, x) != -999f64
-                                || watersheds.get_value(y, x) != current_id
+                                || watersheds.get_value(y, x) as f64 != current_id
                             {
                                 flag = true;
                             }

@@ -18,7 +18,7 @@ use std::path;
 
 /// This image processing tool can be used to thicken single-cell wide lines within a raster file along diagonal
 /// sections of the lines. Because of the limitation of the raster data format, single-cell wide raster lines can
-/// be traversed along diaganol sections without passing through a line grid cell. This causes problems for various
+/// be traversed along diagonal sections without passing through a line grid cell. This causes problems for various
 /// raster analysis functions for which lines are intended to be barriers. This tool will thicken raster lines,
 /// such that it is impossible to cross a line without passing through a line grid cell. While this can also be
 /// achieved using a maximum filter, unlike the filter approach, this tool will result in the smallest possible
