@@ -230,7 +230,7 @@ impl WhiteboxTool for LidarInfo {
         }
 
         if output_file.is_empty() {
-            let extension: String = match path::Path::new(&input_file).extension().unwrap().to_str() {
+            let extension: String = match path::Path::new(&input_file).extension().expect("Error: the input file name must have an extension").to_str() {
                 Some(n) => format!(".{}", n.to_string()),
                 None => "".to_string(),
             };

@@ -72,6 +72,8 @@ Version 2.X.X (XX-XX-20XX)
 - Fixed an issue with the way that NoData values are handled during the euclidean distance transform
   that impacted the EuclideanDistance, EuclideanAllocation, BufferRaster, and 
   ElevationAboveStreamEuclidean tools.
+- Fixed a bug with the LidarInfo tool that occurred when the user did not specify the mandatory 
+  output parameter along with a non LAS input file.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.
