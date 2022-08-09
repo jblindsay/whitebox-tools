@@ -647,6 +647,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         }
 
         let mut output = Raster::initialize_using_file(&accum_file, &input);
+        output.configs.data_type = DataType::F32;
         output.reinitialize_values(1.0);
         let mut stack = Vec::with_capacity((rows * columns) as usize);
         let mut num_solved_cells = 0;
