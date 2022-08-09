@@ -244,7 +244,11 @@ impl WhiteboxTool for Truncate {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.data_type = DataType::I32;
+        if num_decimals > 0 {
+            output.configs.data_type = DataType::F32;
+        } else {
+            output.configs.data_type = DataType::I32;
+        }
         for r in 0..rows {
             let (row, data) = rx.recv().expect("Error receiving data from thread.");
             output.set_row_data(row, data);

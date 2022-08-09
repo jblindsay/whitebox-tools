@@ -276,8 +276,8 @@ impl WhiteboxTool for VisibilityIndex {
         let nodata = dem.configs.nodata;
 
         if verbose {
-            println!("Performing analysis. Please be patient...")
-        };
+            println!("Performing analysis. Please be patient...");
+        }
 
         let num_cells_tested =
             (rows as f64 / res_factor as f64).ceil() * (columns as f64 / res_factor as f64).ceil();

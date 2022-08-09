@@ -74,6 +74,8 @@ Version 2.X.X (XX-XX-20XX)
   ElevationAboveStreamEuclidean tools.
 - Fixed a bug with the LidarInfo tool that occurred when the user did not specify the mandatory 
   output parameter along with a non LAS input file.
+- Fixed a bug with the Truncate tool; the output image was always integer, and therefore it did not
+  work as expected when using more than zero significant digits.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

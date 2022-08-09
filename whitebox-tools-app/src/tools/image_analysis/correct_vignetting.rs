@@ -21,7 +21,7 @@ use std::sync::Arc;
 use std::thread;
 
 /// This tool can be used to reduce vignetting within an image. Vignetting refers to the
-/// reducuction of image brightness away from the image centre (i.e. the principal point).
+/// reduction of image brightness away from the image centre (i.e. the principal point).
 /// Vignetting is a radiometric distortion resulting from lens characteristics. The
 /// algorithm calculates the brightness value in the output image (BVout) as:
 ///

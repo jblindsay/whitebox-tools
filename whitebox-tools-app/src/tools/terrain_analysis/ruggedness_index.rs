@@ -69,16 +69,16 @@ impl RuggednessIndex {
             optional: false,
         });
 
-        parameters.push(ToolParameter {
-            name: "Z Conversion Factor".to_owned(),
-            flags: vec!["--zfactor".to_owned()],
-            description:
-                "Optional multiplier for when the vertical and horizontal units are not the same."
-                    .to_owned(),
-            parameter_type: ParameterType::Float,
-            default_value: None,
-            optional: true,
-        });
+        // parameters.push(ToolParameter {
+        //     name: "Z Conversion Factor".to_owned(),
+        //     flags: vec!["--zfactor".to_owned()],
+        //     description:
+        //         "Optional multiplier for when the vertical and horizontal units are not the same."
+        //             .to_owned(),
+        //     parameter_type: ParameterType::Float,
+        //     default_value: None,
+        //     optional: true,
+        // });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
@@ -152,7 +152,7 @@ impl WhiteboxTool for RuggednessIndex {
     ) -> Result<(), Error> {
         let mut input_file = String::new();
         let mut output_file = String::new();
-        let mut z_factor = -1f64;
+        // let mut z_factor = -1f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -182,18 +182,18 @@ impl WhiteboxTool for RuggednessIndex {
                 } else {
                     output_file = args[i + 1].to_string();
                 }
-            } else if flag_val == "-zfactor" {
-                if keyval {
-                    z_factor = vec[1]
-                        .to_string()
-                        .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                } else {
-                    z_factor = args[i + 1]
-                        .to_string()
-                        .parse::<f64>()
-                        .expect(&format!("Error parsing {}", flag_val));
-                }
+            // } else if flag_val == "-zfactor" {
+            //     if keyval {
+            //         z_factor = vec[1]
+            //             .to_string()
+            //             .parse::<f64>()
+            //             .expect(&format!("Error parsing {}", flag_val));
+            //     } else {
+            //         z_factor = args[i + 1]
+            //             .to_string()
+            //             .parse::<f64>()
+            //             .expect(&format!("Error parsing {}", flag_val));
+            //     }
             }
         }
 
@@ -228,16 +228,16 @@ impl WhiteboxTool for RuggednessIndex {
 
         let start = Instant::now();
 
-        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
-            // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
-            if mid_lat <= 90.0 && mid_lat >= -90.0 {
-                mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (111320.0 * mid_lat.cos());
-            }
-        } else if z_factor < 0.0 {
-            z_factor = 1.0;
-        }
+        // if input.is_in_geographic_coordinates() && z_factor < 0.0 {
+        //     // calculate a new z-conversion factor
+        //     let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
+        //     if mid_lat <= 90.0 && mid_lat >= -90.0 {
+        //         mid_lat = mid_lat.to_radians();
+        //         z_factor = 1.0 / (111320.0 * mid_lat.cos());
+        //     }
+        // } else if z_factor < 0.0 {
+        //     z_factor = 1.0;
+        // }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         let rows = input.configs.rows as isize;
@@ -265,13 +265,13 @@ impl WhiteboxTool for RuggednessIndex {
                     for col in 0..columns {
                         z = input.get_value(row, col);
                         if z != nodata {
-                            z = z * z_factor;
+                            // z = z * z_factor;
                             n = 0.0;
                             ss = 0.0;
                             for c in 0..8 {
                                 z_n = input.get_value(row + d_y[c], col + d_x[c]);
                                 if z_n != nodata {
-                                    z_n = z_n * z_factor;
+                                    // z_n = z_n * z_factor;
                                     ss += (z_n - z) * (z_n - z);
                                     n += 1.0;
                                 }
@@ -308,7 +308,6 @@ impl WhiteboxTool for RuggednessIndex {
             self.get_tool_name()
         ));
         output.add_metadata_entry(format!("Input file: {}", input_file));
-        output.add_metadata_entry(format!("Z-factor: {}", z_factor));
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
         if verbose {

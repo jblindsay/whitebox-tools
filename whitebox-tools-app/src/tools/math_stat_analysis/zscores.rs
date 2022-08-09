@@ -202,7 +202,7 @@ impl WhiteboxTool for ZScores {
 
         if verbose {
             println!("Calculating image mean and standard deviation...")
-        };
+        }
         //let mean = input.calculate_mean();
         let (mean, stdev) = input.calculate_mean_and_stdev();
 

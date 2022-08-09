@@ -35,7 +35,7 @@ use std::thread;
 /// Turning bands simulation is a commonly applied technique in Monte Carlo style simulations of uncertainty.
 /// As such, it is frequently run many times during a simulation (often 1000s of times). When this is the
 /// case, algorithm performance and efficiency are key considerations. One alternative method to efficiently
-/// generate spatially autcorrelated random fields is to apply the `FastAlmostGaussianFilter` tool to the
+/// generate spatially autocorrelated random fields is to apply the `FastAlmostGaussianFilter` tool to the
 /// output of the `RandomField` tool. This can be used to generate a random field with the desired spatial
 /// characteristics and frequency distribution. This is the alternative approach used by the
 /// `StochasticDepressionAnalysis` tool.

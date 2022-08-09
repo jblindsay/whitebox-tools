@@ -95,7 +95,7 @@ impl TrendSurfaceVectorPoints {
         });
 
         parameters.push(ToolParameter{
-            name: "Cell Size (optional)".to_owned(), 
+            name: "Cell Size".to_owned(), 
             flags: vec!["--cell_size".to_owned()], 
             description: "Optionally specified cell size of output raster. Not used when base raster is specified.".to_owned(),
             parameter_type: ParameterType::Float,

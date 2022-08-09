@@ -184,7 +184,7 @@ impl Raster {
 
             // The nodata value can't be NaN or Inf because Rust does not handle equality using == with either. 
             // If the nodata value is either, modify it in memory so that the various tools will work as expected.
-            if r.configs.nodata.is_nan() || !r.configs.nodata.is_infinite() {
+            if r.configs.nodata.is_nan() || r.configs.nodata.is_infinite() {
                 r.configs.nodata = -32768.0;
                 for i in 0..r.data.len() {
                     if r.data[i].is_nan() || r.data[i].is_infinite() {

@@ -263,7 +263,9 @@ impl WhiteboxTool for FindRidges {
         }
 
         if line_thin {
-            println!("Line thinning operation...");
+            if verbose {
+                println!("Line thinning operation...");
+            }
             let mut did_something = true;
             let mut loop_num = 0;
             let dx = [1, 1, 1, 0, -1, -1, -1, 0];

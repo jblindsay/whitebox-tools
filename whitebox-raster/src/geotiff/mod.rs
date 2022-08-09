@@ -516,10 +516,11 @@ pub fn read_geotiff<'a>(
 
     configs.nodata = match ifd_map.get(&TAG_GDAL_NODATA) {
         Some(ifd) => {
+            let s = ifd.interpret_as_ascii().trim().to_string();
             if bits_per_sample[0] == 32 && sample_format[0] == 3 {
-                ifd.interpret_as_ascii().parse::<f32>().unwrap_or(-32768f32) as f64
+                s.parse::<f32>().unwrap_or(-32768f32) as f64
             } else {
-                ifd.interpret_as_ascii().parse::<f64>().unwrap_or(-32768f64)
+                s.parse::<f64>().unwrap_or(-32768f64)
             }
         }
         _ => -32768f64,
