@@ -354,6 +354,8 @@ impl WhiteboxTool for ConstructVectorTIN {
                             z_values.push(0f64);
                         }
                     }
+                } else {
+                    z_values.push(0f64);
                 }
             }
 

@@ -235,6 +235,13 @@ impl WhiteboxTool for FlightlineOverlap {
                                 .replace(".las", ".tif")
                                 .replace(".LAS", ".tif"),
                         )
+                    } else if s.to_lowercase().ends_with(".laz") {
+                        inputs.push(s);
+                        outputs.push(
+                            inputs[inputs.len() - 1]
+                                .replace(".laz", ".tif")
+                                .replace(".LAZ", ".tif"),
+                        )
                     } else if s.to_lowercase().ends_with(".zlidar") {
                         inputs.push(s);
                         outputs.push(
@@ -264,6 +271,8 @@ impl WhiteboxTool for FlightlineOverlap {
                     .clone()
                     .replace(".las", ".tif")
                     .replace(".LAS", ".tif")
+                    .replace(".laz", ".tif")
+                    .replace(".LAZ", ".tif")
                     .replace(".zlidar", ".tif");
             }
             outputs.push(output_file);

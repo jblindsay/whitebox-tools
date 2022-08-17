@@ -346,7 +346,6 @@ impl WhiteboxTool for PennockLandformClass {
         output.configs.nodata = -128f64;
         output.configs.data_type = DataType::I8;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; //Categorical;
-                                                                                   // output.configs.palette = "qual.plt".to_string();
 
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;

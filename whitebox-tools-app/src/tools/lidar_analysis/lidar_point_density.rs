@@ -8,7 +8,7 @@ License: MIT
 NOTES:
 1. This tool is designed to work either by specifying a single input and output file or
     a working directory containing multiple input LAS files.
-2. Need to add the ability to exclude points based on max scan angle divation.
+2. Need to add the ability to exclude points based on max scan angle deviation.
 */
 
 use whitebox_lidar::*;
@@ -593,13 +593,6 @@ impl WhiteboxTool for LidarPointDensity {
                                 y = north - row as f64 * grid_res - 0.5;
                                 let ret = frs.search(x, y);
                                 output.set_value(row, col, ret.len() as f64 / search_area);
-                            }
-                            if verbose && inputs.len() == 1 {
-                                progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as i32;
-                                if progress != old_progress {
-                                    println!("Progress: {}%", progress);
-                                    old_progress = progress;
-                                }
                             }
                         }
                     } else {

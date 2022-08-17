@@ -399,7 +399,7 @@ impl WhiteboxTool for BlockMaximumGridding {
                     }
                 }
             }
-        };
+        }
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(

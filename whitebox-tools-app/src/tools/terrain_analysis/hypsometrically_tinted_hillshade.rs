@@ -134,7 +134,7 @@ impl HypsometricallyTintedHillshade {
             name: "Palette".to_owned(),
             flags: vec!["--palette".to_owned()],
             description:
-                "Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'."
+                "Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridis', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'."
                     .to_owned(),
             parameter_type: ParameterType::OptionList(vec![
                 "atlas".to_owned(),
@@ -143,7 +143,7 @@ impl HypsometricallyTintedHillshade {
                 "soft".to_owned(),
                 "muted".to_owned(),
                 "purple".to_owned(),
-                "viridi".to_owned(),
+                "viridis".to_owned(),
                 "gn_yl".to_owned(),
                 "pi_y_g".to_owned(),
                 "bl_yl_rd".to_owned(),
@@ -692,7 +692,7 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
                         (90f32, 174f32, 97f32),
                         (27f32, 120f32, 55f32),
                     ]
-                } else if palette.contains("viridi") {
+                } else if palette.contains("viridis") {
                     vec![
                         (68f32, 1f32, 84f32),
                         (68f32, 2f32, 85f32),

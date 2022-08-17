@@ -378,6 +378,7 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                     .clone()
                     .replace(".las", ".shp")
                     .replace(".LAS", ".shp")
+                    .replace(".laz", ".shp")
                     .replace(".zlidar", ".shp");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
@@ -440,13 +441,15 @@ impl WhiteboxTool for LidarConstructVectorTIN {
                     let num_points: f64 = (input.header.number_of_points - 1) as f64; // used for progress calculation only
 
                     for i in 0..n_points {
-                        let p: PointData = input[i];
-                        if !p.withheld() {
+                        // let p: PointData = input[i];
+                        let pd = input[i];
+                        let p = input.get_transformed_coords(i);
+                        if !pd.withheld() {
                             if all_returns
-                                || (p.is_late_return() & late_returns)
-                                || (p.is_early_return() & early_returns)
+                                || (pd.is_late_return() & late_returns)
+                                || (pd.is_early_return() & early_returns)
                             {
-                                if include_class_vals[p.classification() as usize] {
+                                if include_class_vals[pd.classification() as usize] {
                                     if p.z >= min_z && p.z <= max_z {
                                         points.push(Point2D { x: p.x, y: p.y });
                                         z_values.push(p.z);

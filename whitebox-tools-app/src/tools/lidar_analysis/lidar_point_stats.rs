@@ -416,6 +416,7 @@ impl WhiteboxTool for LidarPointStats {
                     if num_points || num_pulses || avg_points_per_pulse {
                         let out_file_num_pnts = input_file
                             .replace(".las", "_num_pnts.tif")
+                            .replace(".laz", "_num_pnts.tif")
                             .replace(".zlidar", "_num_pnts.tif")
                             .clone();
                         let mut out_num_pnts =
@@ -424,6 +425,7 @@ impl WhiteboxTool for LidarPointStats {
 
                         let out_file_num_pulses = input_file
                             .replace(".las", "_num_pulses.tif")
+                            .replace(".laz", "_num_pulses.tif")
                             .replace(".zlidar", "_num_pulses.tif")
                             .clone();
                         let mut out_num_pulses =
@@ -467,6 +469,7 @@ impl WhiteboxTool for LidarPointStats {
                         if avg_points_per_pulse {
                             let out_file_avg_points_per_pulse = input_file
                                 .replace(".las", "_avg_points_per_pulse.tif")
+                                .replace(".laz", "_avg_points_per_pulse.tif")
                                 .replace(".zlidar", "_avg_points_per_pulse.tif")
                                 .clone();
                             let mut out_avg_points_per_pulse = Raster::initialize_using_config(
@@ -551,6 +554,7 @@ impl WhiteboxTool for LidarPointStats {
                         .unwrap();
                         let out_file_elev_range = input_file
                             .replace(".las", "_elev_range.tif")
+                            .replace(".laz", "_elev_range.tif")
                             .replace(".zlidar", "_elev_range.tif")
                             .clone();
                         let mut out_elev_range =
@@ -564,6 +568,7 @@ impl WhiteboxTool for LidarPointStats {
                                 .unwrap();
                         let out_file_intensity_range = input_file
                             .replace(".las", "_intensity_range.tif")
+                            .replace(".laz", "_intensity_range.tif")
                             .replace(".zlidar", "_intensity_range.tif")
                             .clone();
                         let mut out_intensity_range =
@@ -684,6 +689,7 @@ impl WhiteboxTool for LidarPointStats {
                         }
                         let out_file_predominant_class = input_file
                             .replace(".las", "_predominant_class.tif")
+                            .replace(".laz", "_predominant_class.tif")
                             .replace(".zlidar", "_predominant_class.tif")
                             .clone();
                         let mut out_predominant_class =
@@ -759,6 +765,7 @@ impl WhiteboxTool for LidarPointStats {
                         .replace("\"", "")
                         .replace(working_directory, "")
                         .replace(".las", "")
+                        .replace(".laz", "")
                         .replace(".zlidar", ""),
                     tile + 1,
                     inputs.len()

@@ -323,7 +323,7 @@ impl WhiteboxTool for KMeansClustering {
             output_html_file = format!("{}{}", working_directory, output_html_file);
         }
 
-        if !output_html_file.ends_with(".html") {
+        if !output_html_file.ends_with(".html") && !output_html_file.is_empty() {
             output_html_file.push_str(".html");
         }
 

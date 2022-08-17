@@ -225,7 +225,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
         let mut base_file = String::new();
         let mut radius = 0f64;
         let mut min_points = 0usize;
-        let mut func_type = String::from("ThinPlateSpline");
+        let mut func_type = String::from("ThinPlateSpline").to_lowercase();
         let mut poly_order = 0usize;
         let mut weight = 0.1f64;
 
@@ -362,11 +362,11 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
 
         let basis_func = if func_type.contains("thin") {
             Basis::ThinPlateSpine(weight)
-        } else if func_type.contains("PolyHarmonic") {
+        } else if func_type.contains("polyharmonic") {
             Basis::PolyHarmonic(weight as i32)
-        } else if func_type.contains("Gaussian") {
+        } else if func_type.contains("gaussian") {
             Basis::Gaussian(weight)
-        } else if func_type.contains("MultiQuadric") {
+        } else if func_type.contains("multiquadric") {
             Basis::MultiQuadric(weight)
         } else {
             //if func_type.contains("InverseMultiQuadric") {

@@ -54,8 +54,20 @@ pub fn save_configs<'a>(configs: &Configs) -> std::result::Result<(), Error> {
         exe_path = exe_path.replace(&plugin_dir, "");
     }
     let config_file = exe_path + &path::MAIN_SEPARATOR.to_string() + "settings.json";
-    let mut file = File::create(config_file).expect("Error creating output settings.json file.");
-    file.write_all(configs_json.as_bytes()).expect("Error writing to output settings.json file.");
+    match File::create(config_file) {
+        Ok(mut file) => {
+            match file.write_all(configs_json.as_bytes()) {
+                Ok(()) => {}, // do nothing
+                Err(_e) => {
+                    eprintln!("Error writing to output settings.json file, likely do to a permissions problem. Settings will not be updated.");
+                }
+            };
+        },
+        Err(_e) => { 
+            eprintln!("Could not create output settings.json file. WBT is likely installed somewhere without write permission.")
+        }
+    };
+    
     Ok(())
 }
 

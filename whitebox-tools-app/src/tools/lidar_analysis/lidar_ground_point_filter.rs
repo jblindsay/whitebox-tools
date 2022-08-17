@@ -552,15 +552,13 @@ impl WhiteboxTool for LidarGroundPointFilter {
                 }
             }
         }
-
-        // now output the data
-        let mut output = LasFile::initialize_using_file(&output_file, &input);
-        output.header.system_id = "EXTRACTION".to_string();
+        
 
         /////////////////////
         // Output the data //
         /////////////////////
         let mut output = LasFile::initialize_using_file(&output_file, &input);
+        output.header.system_id = "EXTRACTION".to_string();
         let mut num_points_filtered = 0;
         if filter {
             output.header.system_id = "EXTRACTION".to_string();

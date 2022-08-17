@@ -246,6 +246,7 @@ impl WhiteboxTool for LasToMultipointShapefile {
                         .clone()
                         .replace(".las", ".shp")
                         .replace(".LAS", ".shp")
+                        .replace(".laz", ".shp")
                         .replace(".zlidar", ".shp")
                         .replace(".ZLIDAR", ".shp");
 

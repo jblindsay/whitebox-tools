@@ -72,7 +72,7 @@ impl WeightedOverlay {
         parameters.push(ToolParameter{
             name: "Cost Factor? (e.g. false;true;true)".to_string(), 
             flags: vec!["--cost".to_string()], 
-            description: "Weight values, contained in quotes and separated by commas or semicolons. Must have the same number as factors.".to_string(),
+            description: "Boolean array indicating which factors are cost factors, contained in quotes and separated by commas or semicolons. Must have the same number as factors.".to_string(),
             parameter_type: ParameterType::String,
             default_value: None,
             optional: true

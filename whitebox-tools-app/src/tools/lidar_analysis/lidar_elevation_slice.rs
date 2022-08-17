@@ -176,7 +176,7 @@ impl WhiteboxTool for LidarElevationSlice {
     ) -> Result<(), Error> {
         let mut input_file: String = "".to_string();
         let mut output_file: String = "".to_string();
-        let mut minz = -f64::INFINITY;
+        let mut minz = f64::NEG_INFINITY;
         let mut maxz = f64::INFINITY;
         let mut filter = true;
         let mut in_class_value = 2u8;

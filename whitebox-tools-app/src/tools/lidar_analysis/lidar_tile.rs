@@ -272,6 +272,10 @@ impl WhiteboxTool for LidarTile {
             min_points = 2;
         }
 
+        if width_x <= 0f64 || width_y <= 0f64 {
+            panic!("ERROR: The grid cell width must be greater than zero.");
+        }
+
         if !input_file.contains(sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
         }
@@ -392,7 +396,7 @@ impl WhiteboxTool for LidarTile {
                 row = (tile_num as f64 / cols as f64).floor() as usize;
                 col = tile_num % cols;
                 let output_file = format!(
-                    "{}{}_row{}_col{}.las",
+                    "{}{}_row{}_col{}.laz",
                     output_dir,
                     name,
                     row - min_row + 1,

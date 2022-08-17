@@ -451,11 +451,11 @@ impl WhiteboxTool for LidarRbfInterpolation {
 
         let basis_func = if func_type.contains("thin") {
             Basis::ThinPlateSpine(weight)
-        } else if func_type.contains("PolyHarmonic") {
+        } else if func_type.contains("polyharmonic") {
             Basis::PolyHarmonic(weight as i32)
-        } else if func_type.contains("Gaussian") {
+        } else if func_type.contains("gaussian") {
             Basis::Gaussian(weight)
-        } else if func_type.contains("MultiQuadric") {
+        } else if func_type.contains("multiquadric") {
             Basis::MultiQuadric(weight)
         } else {
             //if func_type.contains("InverseMultiQuadric") {

@@ -519,6 +519,7 @@ impl WhiteboxTool for LidarRooftopAnalysis {
                     .clone()
                     .replace(".las", ".shp")
                     .replace(".LAS", ".shp")
+                    .replace(".laz", ".shp")
                     .replace(".zlidar", ".shp");
             }
             if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {

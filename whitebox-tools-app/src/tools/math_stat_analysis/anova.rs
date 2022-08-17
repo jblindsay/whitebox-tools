@@ -445,7 +445,7 @@ impl WhiteboxTool for Anova {
         let ms_w = ss_w / df_w as f64;
         let f = ms_b / ms_w;
 
-        println!("Calclating the p-value...");
+        println!("Calculating the p-value...");
         // Formula Used:
         // P value = [ 1 / Β(ndf/2,ddf/2) ] × [ (ndf × x) / (ndf × x + ddf) ]^ndf/2 × [1 - (ndf × x) / (ndf × x + ddf) ]^ddf/2 × x-1
         // Where,

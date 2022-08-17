@@ -119,7 +119,7 @@ impl JoinTables {
                 "--input2".to_string(),
             ),
             default_value: None,
-            optional: false,
+            optional: true,
         });
 
         let sep: String = path::MAIN_SEPARATOR.to_string();

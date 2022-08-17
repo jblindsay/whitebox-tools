@@ -315,7 +315,7 @@ impl WhiteboxTool for ChangeVectorAnalysis {
                 if input1.configs.rows as isize != rows
                     || input1.configs.columns as isize != columns
                     || input2.configs.rows as isize != rows
-                    || input1.configs.columns as isize != columns
+                    || input2.configs.columns as isize != columns
                 {
                     return Err(Error::new(
                         ErrorKind::InvalidInput,

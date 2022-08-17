@@ -71,7 +71,7 @@ fn help() {
     The following flags can be used with the 'run' command:
     -i, --input    Name of the input lines shapefile.
     -o, --output   Name of the output lines shapefile.
-    --length       Maximum segment length (m).
+    --duration     Maximum duration (s).
     
     Input/output file names can be fully qualified, or can rely on the
     working directory contained in the WhiteboxTools settings.json file.

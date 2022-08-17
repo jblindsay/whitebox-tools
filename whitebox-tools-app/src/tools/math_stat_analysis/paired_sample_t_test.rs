@@ -88,7 +88,7 @@ impl PairedSampleTTest {
         });
 
         parameters.push(ToolParameter {
-            name: "Num. Samples (blank for while image)".to_owned(),
+            name: "Num. Samples (blank for whole image)".to_owned(),
             flags: vec!["--num_samples".to_owned()],
             description: "Number of samples. Leave blank to use whole image.".to_owned(),
             parameter_type: ParameterType::Integer,

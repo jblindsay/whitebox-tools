@@ -76,6 +76,9 @@ Version 2.X.X (XX-XX-20XX)
   output parameter along with a non LAS input file.
 - Fixed a bug with the Truncate tool; the output image was always integer, and therefore it did not
   work as expected when using more than zero significant digits.
+- Fixed a bug with the ConstructVectorTIN tool that resulted in an error when no field data are used.
+- Modified the code for writing to the settings.json file so that rather than issuing an error when
+  the app doesn't have write permission, it simply prints a warning and carries on.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.
