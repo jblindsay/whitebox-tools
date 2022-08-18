@@ -31,7 +31,7 @@ use fasteval;
 /// or a raster image (which may be the same image as the input). These are specified by the `--true` and `--false`
 /// parameters, which can be either a file name pointing to existing rasters, or numerical values.
 ///
-/// The conditional statement is a single-line logical condition. In additon to the common comparison and logical  
+/// The conditional statement is a single-line logical condition. In addition to the common comparison and logical  
 /// operators, i.e. < > <= >= == (EQUAL TO) != (NOT EQUAL TO) || (OR) && (AND), conditional statements may contain a  
 /// number of valid mathematical functions. For example:
 /// 
@@ -351,7 +351,11 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         .replace("ROWS", "rows")
         .replace("Rows", "rows")
         .replace("ROW", "row")
-        .replace("Row", "row");
+        .replace("Row", "row")
+        .replace(" or ", " || ")
+        .replace(" OR ", " || ")
+        .replace(" and ", " && ")
+        .replace(" AND ", " && ");
 
     let statement_contains_nodata = if con_statement.contains("nodata") {
         true
