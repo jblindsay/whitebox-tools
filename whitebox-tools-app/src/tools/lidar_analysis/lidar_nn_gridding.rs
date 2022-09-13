@@ -782,9 +782,9 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                                             p.x,
                                                             p.y,
                                                             ((255u32 << 24)
-                                                                | ((clr.blue as u32) << 16)
-                                                                | ((clr.green as u32) << 8)
-                                                                | (clr.red as u32))
+                                                                | (((clr.blue / 256) as u32) << 16)
+                                                                | (((clr.green / 256) as u32) << 8)
+                                                                | ((clr.red / 256) as u32))
                                                                 as f64,
                                                         );
                                                     }
@@ -860,7 +860,11 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                         configs.resolution_y = grid_res;
                         configs.nodata = nodata;
                         configs.data_type = DataType::F32;
-                        configs.photometric_interp = PhotometricInterpretation::Continuous;
+                        if interp_parameter != "rgb" {
+                            configs.photometric_interp = PhotometricInterpretation::Continuous;
+                        } else {
+                            configs.photometric_interp = PhotometricInterpretation::RGB;
+                        }
                         configs.palette = palette.clone();
 
                         let mut output = Raster::initialize_using_config(&output_file, &configs);

@@ -816,9 +816,9 @@ impl WhiteboxTool for LidarIdwInterpolation {
                                                             p.x,
                                                             p.y,
                                                             ((255u32 << 24)
-                                                                | ((clr.blue as u32) << 16)
-                                                                | ((clr.green as u32) << 8)
-                                                                | (clr.red as u32))
+                                                                | (((clr.blue / 256) as u32) << 16)
+                                                                | (((clr.green / 256) as u32) << 8)
+                                                                | ((clr.red / 256) as u32))
                                                                 as f64,
                                                         );
                                                     }
