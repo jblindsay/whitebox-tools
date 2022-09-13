@@ -26,7 +26,7 @@ use std::path;
 /// The user must specify the name of a flow pointer (flow direction) raster (`--d8_pntr`), a streams raster
 /// (`--streams`), and the output raster (`--output`). The flow pointer and streams rasters should be generated
 /// using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either the
-/// `BreachDepressions` or `FillDepressions` tool. flow direction) raster, and the output raster.
+/// `BreachDepressions` or `FillDepressions` tool.
 ///
 /// By default, the pointer raster is assumed to use the clockwise indexing method used by WhiteboxTools.
 /// If the pointer file contains ESRI flow direction values instead, the `--esri_pntr` parameter must be specified.

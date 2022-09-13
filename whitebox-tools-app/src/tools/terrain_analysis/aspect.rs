@@ -247,6 +247,9 @@ impl WhiteboxTool for Aspect {
                     let mut z12: f64;
                     let mut p: f64;
                     let mut q: f64;
+                    let mut sign_p: f64;
+                    let mut sign_q: f64;
+                    const PI: f64 = std::f64::consts::PI;
                     let offsets = [
                         [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], 
                         [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], 
@@ -271,19 +274,26 @@ impl WhiteboxTool for Aspect {
 
                                 /* 
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
-                                of Digital Terrain Modelling, Chapter 4, pg. 117. Note that I believe Florinsky reversed
-                                the equations for q and p.
-                                */
-                                q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
-                                + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
-                                + 5. * (z[9] + z[19] - z[5] - z[15]));
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
 
-                                p = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                I don't fully understand why this is the case, but in order to make this work such that
+                                hillslopes have aspects that face the appropriate direction, you need to swap p and q and
+                                reverse their signs. I've spoken to Florinsky about this, and he maintains that his 
+                                equations are correct.
+                                */
+                                q = -1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                    + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
+                                    + 5. * (z[9] + z[19] - z[5] - z[15]));
+    
+                                p = -1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
                                 if p != 0f64 { // slope is greater than zero
-                                    data[col as usize] = 180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs());
+                                    // data[col as usize] = 180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs());
+                                    sign_p = if p != 0. { p.signum() } else { 0. };
+                                    sign_q = if q != 0. { q.signum() } else { 0. };
+                                    data[col as usize] = -90.*(1. - sign_q)*(1. - sign_p.abs()) + 180.*(1. + sign_p) - 180. / PI * sign_p * (-q / (p*p + q*q).sqrt()).acos();
                                 } else {
                                     data[col as usize] = -1f64; // undefined for flat surfaces
                                 }

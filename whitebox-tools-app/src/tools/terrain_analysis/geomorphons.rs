@@ -341,7 +341,12 @@ impl WhiteboxTool for Geomorphons {
             println!("Generating global ternary codes...");
         }
         let max_codes: usize = 6561; // = 3^8 for 8-bit ternary
-        let num_procs = num_cpus::get() as isize;
+        let mut num_procs = num_cpus::get() as isize;
+        let configs = whitebox_common::configs::get_configs()?;
+        let max_procs = configs.max_procs;
+        if max_procs > 0 && max_procs < num_procs {
+            num_procs = max_procs;
+        }
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
             let tx = tx.clone();

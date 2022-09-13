@@ -79,6 +79,7 @@ Version 2.X.X (XX-XX-20XX)
 - Fixed a bug with the ConstructVectorTIN tool that resulted in an error when no field data are used.
 - Modified the code for writing to the settings.json file so that rather than issuing an error when
   the app doesn't have write permission, it simply prints a warning and carries on.
+- Fixed bugs in the Geomorphons tool (submitted by Dan Newman).
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

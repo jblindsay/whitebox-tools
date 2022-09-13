@@ -311,7 +311,7 @@ impl WhiteboxTool for LidarClassifySubset {
 
         for i in 0..base_lidar.header.number_of_points as usize {
             let pd: PointData = base_lidar.get_point_info(i);
-            let p = subset_lidar.get_transformed_coords(i);
+            let p = base_lidar.get_transformed_coords(i);
             // let pr = base_lidar.get_transformed_coords(i);
             let pr = base_lidar.get_record(i);
             

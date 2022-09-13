@@ -421,7 +421,7 @@ impl WhiteboxTool for HortonStreamOrder {
                 if order_val == order_val_n {
                     output[(row_n, col_n)] = order_val + 1.0;
                 } else if order_val > order_val_n {
-                    output[(row_n, col_n)] = order_val
+                    output[(row_n, col_n)] = order_val;
                 }
 
                 num_inflowing.decrement(row_n, col_n, 1);
