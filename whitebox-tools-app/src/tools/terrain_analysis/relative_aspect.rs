@@ -16,6 +16,10 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use whitebox_common::utils::{
+    haversine_distance,
+    vincenty_distance
+};
 
 /// This tool creates a new raster in which each grid cell is assigned the terrain aspect relative to a user-specified
 /// direction (`--azimuth`). Relative terrain aspect is the angular distance (measured in degrees) between the land-surface
@@ -249,21 +253,14 @@ impl WhiteboxTool for RelativeAspect {
 
         let start = Instant::now();
 
-        let eight_grid_res = input.configs.resolution_x * 8.0;
-
-        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
-            // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
-            if mid_lat <= 90.0 && mid_lat >= -90.0 {
-                mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (111320.0 * mid_lat.cos());
-            }
-        } else if z_factor < 0.0 {
-            z_factor = 1.0;
-        }
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+        let resx = input.configs.resolution_x;
+        let resy = input.configs.resolution_y;
+        let res = (resx + resy) / 2.;
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        let rows = input.configs.rows as isize;
         if output.configs.data_type != DataType::F32 && output.configs.data_type != DataType::F64 {
             output.configs.data_type = DataType::F32;
         }
@@ -274,51 +271,211 @@ impl WhiteboxTool for RelativeAspect {
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }
+        
         let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx1 = tx.clone();
-            thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
-                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
-                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let mut n: [f64; 8] = [0.0; 8];
-                let mut z: f64;
-                let (mut fx, mut fy): (f64, f64);
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input[(row, col)];
-                        if z != nodata {
-                            for c in 0..8 {
-                                n[c] = input[(row + d_y[c], col + d_x[c])];
-                                if n[c] != nodata {
-                                    n[c] = n[c] * z_factor;
+        if !input.is_in_geographic_coordinates() {
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z12: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    // let mut sign_p: f64;
+                    // let mut sign_q: f64;
+                    // const PI: f64 = std::f64::consts::PI;
+                    let offsets = [
+                        [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], 
+                        [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], 
+                        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], 
+                        [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], 
+                        [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]
+                    ];
+                    let mut z = [0f64; 25];
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z12 = input.get_value(row, col);
+                            if z12 != nodata {
+                                for n in 0..25 {
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z12 * z_factor;
+                                    }
+                                }
+
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117. 
+
+                                I don't fully understand why this is the case, but in order to make this work such that
+                                hillslopes have aspects that face the appropriate direction, you need to reverse their 
+                                signs of p and q.
+                                */
+                                p = -1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
+                                + 5. * (z[9] + z[19] - z[5] - z[15]));
+
+                                q = -1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                    + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
+                                    + 5. * (z[1] + z[3] - z[21] - z[23]));
+
+                                // sign_p = if p != 0. { p.signum() } else { 0. };
+                                // sign_q = if q != 0. { q.signum() } else { 0. };
+                                // data[col as usize] = ((-90.*(1. - sign_q)*(1. - sign_p.abs()) + 180.*(1. + sign_p) - 180. / PI * sign_p * (-q / (p*p + q*q).sqrt()).acos()) - azimuth).abs();
+
+                                if p != 0f64 { // slope is greater than zero
+                                    data[col as usize] = (180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs()) - azimuth).abs();
+                                    if data[col as usize] > 180.0 {
+                                        data[col as usize] = 360.0 - data[col as usize];
+                                    }
                                 } else {
-                                    n[c] = z * z_factor;
+                                    data[col as usize] = -1f64; // undefined for flat surfaces
                                 }
-                            }
-                            // calculate slope
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            if fx != 0f64 {
-                                z = ((180f64 - ((fy / fx).atan()).to_degrees()
-                                    + 90f64 * (fx / (fx).abs()))
-                                    - azimuth)
-                                    .abs();
-                                if z > 180.0 {
-                                    z = 360.0 - z;
-                                }
-                                data[col as usize] = z;
-                            } else {
-                                data[col as usize] = -1f64;
                             }
                         }
+
+                        tx.send((row, data)).expect("Error sending data to thread.");
                     }
-                    tx1.send((row, data)).unwrap();
-                }
-            });
+                });
+            }
+        } else { // geographic coordinates
+
+            let phi1 = input.get_y_from_row(0);
+            let lambda1 = input.get_x_from_column(0);
+
+            let phi2 = phi1;
+            let lambda2 = input.get_x_from_column(-1);
+
+            let linear_res = vincenty_distance((phi1, lambda1), (phi2, lambda2));
+            let lr2 =  haversine_distance((phi1, lambda1), (phi2, lambda2)); 
+            let diff = 100. * (linear_res - lr2).abs() / linear_res;
+            let use_haversine = diff < 0.5; // if the difference is less than 0.5%, use the faster haversine method to calculate distances.
+
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z4: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    let mut a: f64;
+                    let mut b: f64;
+                    let mut c: f64;
+                    let mut d: f64;
+                    let mut e: f64;
+                    let mut phi1: f64;
+                    let mut lambda1: f64;
+                    let mut phi2: f64;
+                    let mut lambda2: f64;
+                    let offsets = [
+                        [-1, -1], [0, -1], [1, -1], 
+                        [-1, 0], [0, 0], [1, 0], 
+                        [-1, 1], [0, 1], [1, 1]
+                    ];
+                    let mut z = [0f64; 25];
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z4 = input.get_value(row, col);
+                            if z4 != nodata {
+                                for n in 0..9 {
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z4 * z_factor;
+                                    }
+                                }
+
+                                // Calculate a, b, c, d, and e.
+                                phi1 = input.get_y_from_row(row);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                b = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row+1);
+                                lambda2 = lambda1;
+
+                                d = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row-1);
+                                lambda2 = lambda1;
+
+                                e = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row+1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                a = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row-1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                c = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                */
+
+                                p = -((a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
+                                / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e))));
+
+                                q = -(1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
+                                * ((d * d * (a.powi(4) + b.powi(4) + b * b * c * c) + c * c * e * e * (a * a - b * b)) * (z[0] + z[2])
+                                - (d * d * (a.powi(4) + c.powi(4) + b * b * c * c) - e * e * (a.powi(4) + c.powi(4) + a * a * b * b)) * (z[3] + z[5])
+                                - (e * e * (b.powi(4) + c.powi(4) + a * a * b * b) - a * a * d * d * (b * b - c * c)) * (z[6] + z[8])
+                                + d * d * (b.powi(4) * (z[1] - 3. * z[4]) + c.powi(4) * (3. * z[1] - z[4]) + (a.powi(4) - 2. * b * b * c * c) * (z[1] - z[4]))
+                                + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
+                                - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1])));
+                                
+                                if p != 0f64 { // slope is greater than zero
+                                    data[col as usize] = (180f64 - (q / p).atan().to_degrees() + 90f64 * (p / p.abs()) - azimuth).abs();
+                                    if data[col as usize] > 180.0 {
+                                        data[col as usize] = 360.0 - data[col as usize];
+                                    }
+                                } else {
+                                    data[col as usize] = -1f64; // undefined for flat surfaces
+                                }
+                            }
+                        }
+
+                        tx.send((row, data)).expect("Error sending data to thread.");
+                    }
+                });
+            }
         }
 
         for row in 0..rows {

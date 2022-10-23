@@ -320,7 +320,7 @@ impl WhiteboxTool for TangentialCurvature {
                             z12 = input.get_value(row, col);
                             if z12 != nodata {
                                 for n in 0..25 {
-                                    z[n] = input.get_value(row + offsets[n][0], col + offsets[n][1]);
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
                                     if z[n] != nodata {
                                         z[n] *= z_factor;
                                     } else {
@@ -351,11 +351,11 @@ impl WhiteboxTool for TangentialCurvature {
                                 s = 1. / (100. * res * res) * (z[8] + z[16] - z[6] - z[18] + 4. * (z[4] + z[20] - z[0] - z[24])
                                 + 2. * (z[3] + z[9] + z[15] + z[21] - z[1] - z[5] - z[19] - z[23]));
 
-                                q = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                p = -1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
                                 + 5. * (z[9] + z[19] - z[5] - z[15]));
 
-                                p = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                q = -1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
@@ -519,16 +519,16 @@ impl WhiteboxTool for TangentialCurvature {
                                 s = (c * (a * a * (d + e) + b * b * e) * (z[2] - z[0]) - b * (a * a * d - c * c * e) * (z[3] - z[5]) + a * (c * c * (d + e) + b * b * d) * (z[6] - z[8]))
                                 / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e)));
 
-                                p = (a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
-                                / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e)));
+                                p = -((a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
+                                / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e))));
 
-                                q = 1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
+                                q = -(1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
                                 * ((d * d * (a.powi(4) + b.powi(4) + b * b * c * c) + c * c * e * e * (a * a - b * b)) * (z[0] + z[2])
                                 - (d * d * (a.powi(4) + c.powi(4) + b * b * c * c) - e * e * (a.powi(4) + c.powi(4) + a * a * b * b)) * (z[3] + z[5])
                                 - (e * e * (b.powi(4) + c.powi(4) + a * a * b * b) - a * a * d * d * (b * b - c * c)) * (z[6] + z[8])
                                 + d * d * (b.powi(4) * (z[1] - 3. * z[4]) + c.powi(4) * (3. * z[1] - z[4]) + (a.powi(4) - 2. * b * b * c * c) * (z[1] - z[4]))
                                 + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
-                                - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1]));
+                                - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1])));
 
                                 if (p + q).abs() > 0. {
                                     /* 

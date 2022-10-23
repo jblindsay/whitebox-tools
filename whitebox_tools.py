@@ -725,6 +725,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -835,7 +836,7 @@ Okay, that's it for now.
         args.append("--dist={}".format(dist))
         return self.run_tool('fix_dangling_arcs', args, callback) # returns 1 if error
 
-    def join_tables(self, input1, pkey, input2, fkey, import_field, callback=None):
+    def join_tables(self, input1, pkey, input2, fkey, import_field=None, callback=None):
         """Merge a vector's attribute table with another table based on a common field.
 
         Keyword arguments:
@@ -852,7 +853,7 @@ Okay, that's it for now.
         args.append("--pkey='{}'".format(pkey))
         args.append("--input2='{}'".format(input2))
         args.append("--fkey='{}'".format(fkey))
-        args.append("--import_field='{}'".format(import_field))
+        if import_field is not None: args.append("--import_field='{}'".format(import_field))
         return self.run_tool('join_tables', args, callback) # returns 1 if error
 
     def lines_to_polygons(self, i, output, callback=None):
@@ -1365,7 +1366,7 @@ Okay, that's it for now.
         Keyword arguments:
 
         i -- Input vector file. 
-        output -- Output vector polygon file. 
+        output -- Output vector points file. 
         tolerance -- The distance tolerance for points. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -2482,7 +2483,7 @@ Okay, that's it for now.
 
         factors -- Input factor raster files. 
         weights -- Weight values, contained in quotes and separated by commas or semicolons. Must have the same number as factors. 
-        cost -- Weight values, contained in quotes and separated by commas or semicolons. Must have the same number as factors. 
+        cost -- Boolean array indicating which factors are cost factors, contained in quotes and separated by commas or semicolons. Must have the same number as factors. 
         constraints -- Input constraints raster files. 
         output -- Output raster file. 
         scale_max -- Suitability scale maximum value (common values are 1.0, 100.0, and 255.0). 
@@ -2774,6 +2775,24 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         args.append("--filter={}".format(filter))
         return self.run_tool('average_normal_vector_angular_deviation', args, callback) # returns 1 if error
+
+    def breakline_mapping(self, dem, output, threshold=2.0, min_length=3, callback=None):
+        """This tool maps breaklines from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster image file. 
+        output -- Name of the output vector lines file. 
+        threshold -- Threshold value (0 - infinity but typcially 1 to 5 works well). 
+        min_length -- Minimum line length, in grid cells. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--threshold={}".format(threshold))
+        args.append("--min_length={}".format(min_length))
+        return self.run_tool('breakline_mapping', args, callback) # returns 1 if error
 
     def circular_variance_of_aspect(self, dem, output, filter=11, callback=None):
         """Calculates the circular variance of aspect at a scale for a DEM.
@@ -3227,17 +3246,19 @@ Okay, that's it for now.
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('generating_function', args, callback) # returns 1 if error
 
-    def geomorphons(self, dem, output, search=50, threshold=0.0, tdist=0, forms=True, callback=None):
+    def geomorphons(self, dem, output, search=50, threshold=0.0, fdist=0, skip=0, forms=True, residuals=False, callback=None):
         """Computes geomorphon patterns.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        search -- Look up distance. 
+        search -- Look up distance (in cells). 
         threshold -- Flatness threshold for the classification function (in degrees). 
-        tdist -- Distance (in cells) to begin reducing the flatness threshold to avoid problems with pseudo-flat lines-of-sight. 
-        forms -- Classify geomorphons into 10 common land morphologies, else, output ternary code. 
+        fdist -- Distance (in cells) to begin reducing the flatness threshold to avoid problems with pseudo-flat lines-of-sight. 
+        skip -- Distance (in cells) to begin calculating lines-of-sight. 
+        forms -- Classify geomorphons into 10 common land morphologies, else output ternary pattern. 
+        residuals -- Convert elevation to residuals of a linear model. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
@@ -3245,8 +3266,10 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         args.append("--search={}".format(search))
         args.append("--threshold={}".format(threshold))
-        args.append("--tdist={}".format(tdist))
+        args.append("--fdist={}".format(fdist))
+        args.append("--skip={}".format(skip))
         if forms: args.append("--forms")
+        if residuals: args.append("--residuals")
         return self.run_tool('geomorphons', args, callback) # returns 1 if error
 
     def hillshade(self, dem, output, azimuth=315.0, altitude=30.0, zfactor=None, callback=None):
@@ -3332,7 +3355,7 @@ Okay, that's it for now.
         hs_weight -- Weight given to hillshade relative to relief (0.0-1.0). 
         brightness -- Brightness factor (0.0-1.0). 
         atmospheric -- Atmospheric effects weight (0.0-1.0). 
-        palette -- Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'. 
+        palette -- Options include 'atlas', 'high_relief', 'arid', 'soft', 'muted', 'purple', 'viridis', 'gn_yl', 'pi_y_g', 'bl_yl_rd', and 'deep'. 
         reverse -- Optional flag indicating whether to use reverse the palette. 
         zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         full_mode -- Optional flag indicating whether to use full 360-degrees of illumination sources. 
@@ -4017,20 +4040,18 @@ Okay, that's it for now.
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('rotor', args, callback) # returns 1 if error
 
-    def ruggedness_index(self, dem, output, zfactor=None, callback=None):
+    def ruggedness_index(self, dem, output, callback=None):
         """Calculates the Riley et al.'s (1999) terrain ruggedness index from an input DEM.
 
         Keyword arguments:
 
         dem -- Input raster DEM file. 
         output -- Output raster file. 
-        zfactor -- Optional multiplier for when the vertical and horizontal units are not the same. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
-        if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         return self.run_tool('ruggedness_index', args, callback) # returns 1 if error
 
     def sediment_transport_index(self, sca, slope, output, sca_exponent=0.4, slope_exponent=1.3, callback=None):
@@ -5261,22 +5282,6 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('num_inflowing_neighbours', args, callback) # returns 1 if error
 
-    def pilesjo_hasan(self, dem, output, exponent=1.0, callback=None):
-        """This tool calculates Pilesjo and Hasan (2014) flow accumulation.
-
-        Keyword arguments:
-
-        dem -- Name of the input DEM raster file; must be depressionless. 
-        output -- Name of the output raster file. 
-        exponent -- Optional exponent parameter; default is 1.0. 
-        callback -- Custom function for handling tool text outputs.
-        """
-        args = []
-        args.append("--dem='{}'".format(dem))
-        args.append("--output='{}'".format(output))
-        args.append("--exponent={}".format(exponent))
-        return self.run_tool('pilesjo_hasan', args, callback) # returns 1 if error
-
     def qin_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=10.0, max_slope=45.0, threshold=None, log=False, clip=False, callback=None):
         """This tool calculates Qin et al. (2007) flow accumulation.
 
@@ -6244,6 +6249,24 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         args.append("--sigma={}".format(sigma))
         return self.run_tool('gaussian_filter', args, callback) # returns 1 if error
+
+    def high_pass_bilateral_filter(self, i, output, sigma_dist=0.75, sigma_int=1.0, callback=None):
+        """Performs a high-pass bilateral filter, by differencing an input image by the bilateral filter by Tomasi and Manduchi (1998).
+
+        Keyword arguments:
+
+        i -- Input raster file. 
+        output -- Output raster file. 
+        sigma_dist -- Standard deviation in distance in pixels. 
+        sigma_int -- Standard deviation in intensity in pixels. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--sigma_dist={}".format(sigma_dist))
+        args.append("--sigma_int={}".format(sigma_int))
+        return self.run_tool('high_pass_bilateral_filter', args, callback) # returns 1 if error
 
     def high_pass_filter(self, i, output, filterx=11, filtery=11, callback=None):
         """Performs a high-pass filter on an input image.
@@ -8742,6 +8765,38 @@ Okay, that's it for now.
         if false is not None: args.append("--false='{}'".format(false))
         args.append("--output='{}'".format(output))
         return self.run_tool('conditional_evaluation', args, callback) # returns 1 if error
+
+    def conditioned_latin_hypercube(self, inputs, output, samples=500, iterations=25000, seed=None, prob=0.5, threshold=None, temp=1.0, temp_decay=0.05, cycle=10, average=False, callback=None):
+        """Implements conditioned Latin Hypercube sampling.
+
+        Keyword arguments:
+
+        inputs -- Name of the input raster file. 
+        output -- Output shapefile. 
+        samples -- Number of sample sites returned. 
+        iterations -- Maximum iterations (if stopping criteria not reached). 
+        seed -- Seed for RNG consistency. 
+        prob -- Probability of random resample or resampling worst strata between [0,1]. 
+        threshold -- Objective function values below the theshold stop the resampling iterations. 
+        temp -- Initial annealing temperature between [0,1]. 
+        temp_decay -- Annealing temperature decay proportion between [0,1]. Reduce temperature by this proportion each annealing cycle. 
+        cycle -- Number of iterations before decaying annealing temperature. 
+        average -- Weight the continuous objective funtion by the 1/N contributing strata. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--inputs='{}'".format(inputs))
+        args.append("--output='{}'".format(output))
+        args.append("--samples={}".format(samples))
+        args.append("--iterations={}".format(iterations))
+        if seed is not None: args.append("--seed='{}'".format(seed))
+        args.append("--prob={}".format(prob))
+        if threshold is not None: args.append("--threshold='{}'".format(threshold))
+        args.append("--temp={}".format(temp))
+        args.append("--temp_decay={}".format(temp_decay))
+        args.append("--cycle={}".format(cycle))
+        if average: args.append("--average")
+        return self.run_tool('conditioned_latin_hypercube', args, callback) # returns 1 if error
 
     def cos(self, i, output, callback=None):
         """Returns the cosine (cos) of each values in a raster.

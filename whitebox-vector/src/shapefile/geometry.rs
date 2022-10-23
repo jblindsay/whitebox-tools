@@ -174,9 +174,6 @@ impl ShapefileGeometry {
 
     /// Adds a part of Point2Ds, measures, and z-values to the ShapefileGeometry.
     pub fn add_partz(&mut self, points: &[Point2D], measures: &[f64], z_values: &[f64]) {
-        if points.len() != measures.len() {
-            panic!("Error adding part to ShapefileGeometry. Points and measures array must be equal length.");
-        }
         if points.len() != z_values.len() {
             panic!(
                 "Error adding part to ShapefileGeometry. Points and z array must be equal length."
@@ -184,11 +181,9 @@ impl ShapefileGeometry {
         }
         self.parts.push(self.points.len() as i32);
         let mut p: Point2D;
-        let mut m: f64;
         let mut z: f64;
         for i in 0..points.len() {
             p = points[i];
-            m = measures[i];
             z = z_values[i];
             self.points.push(p);
             if p.x < self.x_min {
@@ -203,13 +198,7 @@ impl ShapefileGeometry {
             if p.y > self.y_max {
                 self.y_max = p.y;
             }
-            if m < self.m_min {
-                self.m_min = m;
-            }
-            if m > self.m_max {
-                self.m_max = m;
-            }
-            self.m_array.push(m);
+
             if z < self.z_min {
                 self.z_min = z;
             }
@@ -218,6 +207,22 @@ impl ShapefileGeometry {
             }
             self.z_array.push(z);
         }
+
+        if points.len() != measures.len() && measures.len() != 0 {
+            panic!("Error adding part to ShapefileGeometry. Points and measures array must be equal length or measures must be zero-length.");
+        }
+        let mut m: f64;
+        for i in 0..measures.len() {
+            m = measures[i];
+            if m < self.m_min {
+                self.m_min = m;
+            }
+            if m > self.m_max {
+                self.m_max = m;
+            }
+            self.m_array.push(m);
+        }
+
         self.num_points += points.len() as i32;
         self.num_parts += 1i32;
     }
@@ -258,22 +263,13 @@ impl ShapefileGeometry {
                 } else {
                     40 + 16 * self.num_points + 16 + 8 * self.num_points
                 }
-                // 68i32 + self.num_points * 32i32
             }
             ShapeType::PolyLineZ | ShapeType::PolygonZ => {
-                // 44 + 4*NumParts + 16*NumPoints + 16 + 8*NumPoints
                 if self.has_m_data() {
-                    44i32
-                        + 4 * self.num_parts
-                        + 16 * self.num_points
-                        + 16
-                        + 8 * self.num_points
-                        + 16
-                        + 8 * self.num_points
+                    32i32 + 4 + 4 + 4 * self.num_parts + 16 * self.num_points + 16 + 8 * self.num_points + 16 + 8 * self.num_points
                 } else {
-                    44i32 + 4 * self.num_parts + 16 * self.num_points + 16 + 8 * self.num_points
+                    40i32 + 4 * self.num_parts + 16 * self.num_points + 16 + 8 * self.num_points
                 }
-                // 72i32 + self.num_parts * 4i32 + self.num_points * 32i32
             }
         };
 

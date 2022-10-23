@@ -314,7 +314,7 @@ impl WhiteboxTool for TotalCurvature {
                             z12 = input.get_value(row, col);
                             if z12 != nodata {
                                 for n in 0..25 {
-                                    z[n] = input.get_value(row + offsets[n][0], col + offsets[n][1]);
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
                                     if z[n] != nodata {
                                         z[n] *= z_factor;
                                     } else {

@@ -266,11 +266,11 @@ impl WhiteboxTool for LineThinning {
             for a in 0..4 {
                 for row in 0..rows {
                     for col in 0..columns {
-                        z = output[(row, col)];
+                        z = output.get_value(row, col);
                         if z > 0.0 && z != nodata {
                             // fill the neighbours array
                             for i in 0..8 {
-                                neighbours[i] = output[(row + dy[i], col + dx[i])];
+                                neighbours[i] = output.get_value(row + dy[i], col + dx[i]);
                             }
 
                             // scan through element
@@ -282,7 +282,7 @@ impl WhiteboxTool for LineThinning {
                             }
 
                             if pattern_match {
-                                output[(row, col)] = 0.0;
+                                output.set_value(row, col, 0.0);
                                 did_something = true;
                             } else {
                                 pattern_match = true;

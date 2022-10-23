@@ -264,7 +264,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         let rows = input.configs.rows as isize;
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
-        let rgb_nodata = 0f64;
+        // let rgb_nodata = 0f64;
 
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
@@ -296,13 +296,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                             green = (z as u32 >> 8) & 0xFF;
                             blue = (z as u32 >> 16) & 0xFF;
 
-                            min_val = red;
-                            if green < min_val {
-                                min_val = green;
-                            }
-                            if blue < min_val {
-                                min_val = blue;
-                            }
+                            min_val = red.min(green).min(blue);
 
                             r_out = red as f64 - achromatic_factor * min_val as f64;
                             g_out = green as f64 - achromatic_factor * min_val as f64;
@@ -473,39 +467,24 @@ impl WhiteboxTool for DirectDecorrelationStretch {
                 let mut z: f64;
                 let (mut red, mut green, mut blue, mut a): (u32, u32, u32, u32);
                 for row in (0..rows).filter(|row_val| row_val % num_procs == tid) {
-                    let mut data = vec![rgb_nodata; columns as usize];
+                    let mut data = vec![nodata; columns as usize];
                     for col in 0..columns {
                         z = input[(row, col)];
                         if z != nodata {
                             red = red_band[(row, col)] as u32;
-                            if red < stretch_min as u32 {
-                                red = stretch_min as u32;
-                            }
-                            if red > stretch_max as u32 {
-                                red = stretch_max as u32;
-                            }
+                            red = red.clamp(stretch_min as u32, stretch_max as u32);
 
                             green = green_band[(row, col)] as u32;
-                            if green < stretch_min as u32 {
-                                green = stretch_min as u32;
-                            }
-                            if green > stretch_max as u32 {
-                                green = stretch_max as u32;
-                            }
+                            green = green.clamp(stretch_min as u32, stretch_max as u32);
 
                             blue = blue_band[(row, col)] as u32;
-                            if blue < stretch_min as u32 {
-                                blue = stretch_min as u32;
-                            }
-                            if blue > stretch_max as u32 {
-                                blue = stretch_max as u32;
-                            }
+                            blue = blue.clamp(stretch_min as u32, stretch_max as u32);
 
                             red = (((red as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             green =
                                 (((green as f64 - stretch_min) / stretch_range) * 255f64) as u32;
                             blue = (((blue as f64 - stretch_min) / stretch_range) * 255f64) as u32;
-                            a = (z as u32 >> 24) & 0xFF;
+                            a = 255; // (z as u32 >> 24) & 0xFF;
 
                             data[col as usize] =
                                 ((a << 24) | (blue << 16) | (green << 8) | red) as f64;
@@ -517,7 +496,7 @@ impl WhiteboxTool for DirectDecorrelationStretch {
         }
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.nodata = rgb_nodata;
+        output.configs.nodata = nodata;
         output.configs.photometric_interp = PhotometricInterpretation::RGB;
         output.configs.data_type = DataType::RGBA32;
         for row in 0..rows {

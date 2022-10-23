@@ -55,11 +55,15 @@ for more details.
 ******************
 * Release Notes: *
 ******************
-Version 2.X.X (XX-XX-20XX)
+
+Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
 - Added the HeatMap tool for performing kernel density estimation (KDE) from vector points.
 - Added the MultiplyOverlay tool.
 - Added the MaxUpslopeValue tool.
+- Added the ConditionedLatinHypercube tool for stratified random sampling (credit Dr. Dan Newman).
+- Added the HighPassBilateralFilter tool, useful for emphasizing image texture.
+- Fixed a bug with the DirectDecorrelationStretch tool.
 - Fixed a bug in the automatic install of the Whitebox extensions that affected Windows users.
 - Fixed a bug with the persistence of the compress_rasters parameter. Python users were unable to
   turn off the compress flag previously.
@@ -79,7 +83,14 @@ Version 2.X.X (XX-XX-20XX)
 - Fixed a bug with the ConstructVectorTIN tool that resulted in an error when no field data are used.
 - Modified the code for writing to the settings.json file so that rather than issuing an error when
   the app doesn't have write permission, it simply prints a warning and carries on.
-- Fixed bugs in the Geomorphons tool (submitted by Dan Newman).
+- Fixed bugs in the Geomorphons tool (submitted by Dr. Dan Newman).
+- Fixed a bug with the writing of PolyLineZ vectors.
+- Updated the Hillshade, MultidirectionalHillshade, and RelativeAspect tools to use the more robust 
+  5x5 3rd order bivariate polynomial method of Florinsky (2016) for rectangular grid DEMs, and the 
+  3x3 method, also described by Florinsky (2016), for DEMs in geographic coordinates. This is a large 
+  improvement in accuracy for calculating these surface morphology parameters on geographic coordinates
+  compared with the 'z-conversion fudge factor' method used previously.
+- Added support for Apple Silicon; you can now download WhiteboxTools binaries compiled on an M1 Mac.
 
 Version 2.1.0 (30-01-2022)
 - The Geomorphons tool for landform classification is now available.

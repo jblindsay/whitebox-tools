@@ -225,6 +225,7 @@ impl ToolManager {
         tool_names.push("GammaCorrection".to_string());
         tool_names.push("GaussianContrastStretch".to_string());
         tool_names.push("GaussianFilter".to_string());
+        tool_names.push("HighPassBilateralFilter".to_string());
         tool_names.push("HighPassFilter".to_string());
         tool_names.push("HighPassMedianFilter".to_string());
         tool_names.push("HistogramEqualization".to_string());
@@ -781,6 +782,7 @@ impl ToolManager {
                 Some(Box::new(image_analysis::GaussianContrastStretch::new()))
             }
             "gaussianfilter" => Some(Box::new(image_analysis::GaussianFilter::new())),
+            "highpassbilateralfilter" => Some(Box::new(image_analysis::HighPassBilateralFilter::new())),
             "highpassfilter" => Some(Box::new(image_analysis::HighPassFilter::new())),
             "highpassmedianfilter" => Some(Box::new(image_analysis::HighPassMedianFilter::new())),
             "histogramequalization" => Some(Box::new(image_analysis::HistogramEqualization::new())),

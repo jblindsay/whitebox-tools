@@ -431,7 +431,7 @@ Example Usage:
 
 fn license() {
     let license_text = "WhiteboxTools License
-Copyright 2017-2021 John Lindsay
+Copyright 2017-2022 John Lindsay
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the \"Software\"), to deal in the Software without restriction,
@@ -453,7 +453,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2022
+        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2023
 
 WhiteboxTools is an advanced geospatial data analysis platform developed at
 the University of Guelph's Geomorphometry and Hydrogeomatics Research 

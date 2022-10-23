@@ -9,6 +9,10 @@ name = "conditional_evaluation"
 path = "src/conditional_evaluation/main.rs"
 
 [[bin]]
+name = "conditioned_latin_hypercube"
+path = "src/conditioned_latin_hypercube/main.rs"
+
+[[bin]]
 name = "edge_contamination"
 path = "src/edge_contamination/main.rs"
 

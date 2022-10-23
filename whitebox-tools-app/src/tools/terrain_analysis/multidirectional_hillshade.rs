@@ -17,6 +17,10 @@ use std::path;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use whitebox_common::utils::{
+    haversine_distance,
+    vincenty_distance
+};
 
 /// This tool performs a hillshade operation (also called shaded relief) on an input digital elevation model (DEM)
 /// with multiple sources of illumination. The user must specify the  name of the input DEM (`--dem`) and the output
@@ -290,28 +294,22 @@ impl WhiteboxTool for MultidirectionalHillshade {
 
         let start = Instant::now();
 
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+        let resx = input.configs.resolution_x;
+        let resy = input.configs.resolution_y;
+        let res = (resx + resy) / 2.;
+
         altitude = altitude.to_radians();
         let sin_theta = altitude.sin();
         let cos_theta = altitude.cos();
-        let eight_grid_res = input.configs.resolution_x * 8.0;
-
-        if input.is_in_geographic_coordinates() && z_factor < 0.0 {
-            // calculate a new z-conversion factor
-            let mut mid_lat = (input.configs.north - input.configs.south) / 2.0;
-            if mid_lat <= 90.0 && mid_lat >= -90.0 {
-                mid_lat = mid_lat.to_radians();
-                z_factor = 1.0 / (111320.0 * mid_lat.cos());
-            }
-        } else if z_factor < 0.0 {
-            z_factor = 1.0;
-        }
+        // let eight_grid_res = input.configs.resolution_x * 8.0;
 
         let mut configs = input.configs.clone();
         configs.data_type = DataType::I16;
         configs.nodata = -32768f64;
         let mut output = Raster::initialize_using_config(&output_file, &configs);
-        let out_nodata = output.configs.nodata;
-        let rows = input.configs.rows as isize;
 
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
@@ -319,109 +317,389 @@ impl WhiteboxTool for MultidirectionalHillshade {
         if max_procs > 0 && max_procs < num_procs {
             num_procs = max_procs;
         }
+        // let (tx, rx) = mpsc::channel();
+        // for tid in 0..num_procs {
+        //     let input = input.clone();
+        //     let tx1 = tx.clone();
+        //     thread::spawn(move || {
+        //         let nodata = input.configs.nodata;
+        //         let columns = input.configs.columns as isize;
+        //         let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
+        //         let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
+        //         let azimuths = if multidirection360mode {
+        //             vec![
+        //                 (0f64 - 90f64).to_radians(),
+        //                 (45f64 - 90f64).to_radians(),
+        //                 (90f64 - 90f64).to_radians(),
+        //                 (135f64 - 90f64).to_radians(),
+        //                 (180f64 - 90f64).to_radians(),
+        //                 (225f64 - 90f64).to_radians(),
+        //                 (270f64 - 90f64).to_radians(),
+        //                 (315f64 - 90f64).to_radians(),
+        //             ]
+        //         } else {
+        //             vec![
+        //                 (225f64 - 90f64).to_radians(),
+        //                 (270f64 - 90f64).to_radians(),
+        //                 (315f64 - 90f64).to_radians(),
+        //                 (360f64 - 90f64).to_radians(),
+        //             ]
+        //         };
+
+        //         let weights = if multidirection360mode {
+        //             vec![
+        //                 0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
+        //             ]
+        //         } else {
+        //             vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
+        //         };
+        //         let mut n: [f64; 8] = [0.0; 8];
+        //         let mut z: f64;
+        //         let mut azimuth: f64;
+        //         let (mut term1, mut term2, mut term3): (f64, f64, f64);
+        //         let (mut fx, mut fy): (f64, f64);
+        //         let mut tan_slope: f64;
+        //         let mut aspect: f64;
+        //         let half_pi = PI / 2f64;
+        //         for row in (0..rows).filter(|r| r % num_procs == tid) {
+        //             let mut data = vec![out_nodata; columns as usize];
+        //             for col in 0..columns {
+        //                 z = input.get_value(row, col);
+        //                 if z != nodata {
+        //                     z = z * z_factor;
+        //                     for c in 0..8 {
+        //                         n[c] = input.get_value(row + d_y[c], col + d_x[c]);
+        //                         if n[c] != nodata {
+        //                             n[c] = n[c] * z_factor;
+        //                         } else {
+        //                             n[c] = z;
+        //                         }
+        //                     }
+        //                     // calculate slope and aspect
+        //                     fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
+        //                     fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
+        //                     tan_slope = (fx * fx + fy * fy).sqrt();
+        //                     if tan_slope < 0.00017 {
+        //                         tan_slope = 0.00017;
+        //                     }
+        //                     aspect = if fx != 0f64 {
+        //                         PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs())
+        //                     } else {
+        //                         PI
+        //                     };
+        //                     term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+        //                     term2 = sin_theta / tan_slope;
+
+        //                     z = 0f64;
+        //                     for a in 0..azimuths.len() {
+        //                         azimuth = azimuths[a];
+        //                         term3 = cos_theta * (azimuth - aspect).sin();
+        //                         z += term1 * (term2 - term3) * weights[a];
+        //                     }
+        //                     z = z * 32767.0;
+        //                     if z < 0.0 {
+        //                         z = 0.0;
+        //                     }
+        //                     data[col as usize] = z.round();
+        //                 }
+        //             }
+        //             tx1.send((row, data)).unwrap();
+        //         }
+        //     });
+        // }
+
         let (tx, rx) = mpsc::channel();
-        for tid in 0..num_procs {
-            let input = input.clone();
-            let tx1 = tx.clone();
-            thread::spawn(move || {
-                let nodata = input.configs.nodata;
-                let columns = input.configs.columns as isize;
-                let d_x = [1, 1, 1, 0, -1, -1, -1, 0];
-                let d_y = [-1, 0, 1, 1, 1, 0, -1, -1];
-                let azimuths = if multidirection360mode {
-                    vec![
-                        (0f64 - 90f64).to_radians(),
-                        (45f64 - 90f64).to_radians(),
-                        (90f64 - 90f64).to_radians(),
-                        (135f64 - 90f64).to_radians(),
-                        (180f64 - 90f64).to_radians(),
-                        (225f64 - 90f64).to_radians(),
-                        (270f64 - 90f64).to_radians(),
-                        (315f64 - 90f64).to_radians(),
-                    ]
-                } else {
-                    vec![
-                        (225f64 - 90f64).to_radians(),
-                        (270f64 - 90f64).to_radians(),
-                        (315f64 - 90f64).to_radians(),
-                        (360f64 - 90f64).to_radians(),
-                    ]
-                };
-
-                let weights = if multidirection360mode {
-                    vec![
-                        0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
-                    ]
-                } else {
-                    vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
-                };
-                let mut n: [f64; 8] = [0.0; 8];
-                let mut z: f64;
-                let mut azimuth: f64;
-                let (mut term1, mut term2, mut term3): (f64, f64, f64);
-                let (mut fx, mut fy): (f64, f64);
-                let mut tan_slope: f64;
-                let mut aspect: f64;
-                let half_pi = PI / 2f64;
-                for row in (0..rows).filter(|r| r % num_procs == tid) {
-                    let mut data = vec![out_nodata; columns as usize];
-                    for col in 0..columns {
-                        z = input.get_value(row, col);
-                        if z != nodata {
-                            z = z * z_factor;
-                            for c in 0..8 {
-                                n[c] = input.get_value(row + d_y[c], col + d_x[c]);
-                                if n[c] != nodata {
-                                    n[c] = n[c] * z_factor;
-                                } else {
-                                    n[c] = z;
+        if !input.is_in_geographic_coordinates() {
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z12: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    let offsets = [
+                        [-2, -2], [-1, -2], [0, -2], [1, -2], [2, -2], 
+                        [-2, -1], [-1, -1], [0, -1], [1, -1], [2, -1], 
+                        [-2, 0], [-1, 0], [0, 0], [1, 0], [2, 0], 
+                        [-2, 1], [-1, 1], [0, 1], [1, 1], [2, 1], 
+                        [-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2]
+                    ];
+                    let mut z = [0f64; 25];
+                    let mut val: f64;
+                    let (mut term1, mut term2, mut term3): (f64, f64, f64);
+                    let mut tan_slope: f64;
+                    let mut aspect: f64;
+                    let half_pi = PI / 2f64;
+                    let mut azimuth: f64;
+                    let azimuths = if multidirection360mode {
+                        vec![
+                            (0f64 - 90f64).to_radians(),
+                            (45f64 - 90f64).to_radians(),
+                            (90f64 - 90f64).to_radians(),
+                            (135f64 - 90f64).to_radians(),
+                            (180f64 - 90f64).to_radians(),
+                            (225f64 - 90f64).to_radians(),
+                            (270f64 - 90f64).to_radians(),
+                            (315f64 - 90f64).to_radians(),
+                        ]
+                    } else {
+                        vec![
+                            (225f64 - 90f64).to_radians(),
+                            (270f64 - 90f64).to_radians(),
+                            (315f64 - 90f64).to_radians(),
+                            (360f64 - 90f64).to_radians(),
+                        ]
+                    };
+    
+                    let weights = if multidirection360mode {
+                        vec![
+                            0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
+                        ]
+                    } else {
+                        vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
+                    };
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z12 = input.get_value(row, col);
+                            if z12 != nodata {
+                                for n in 0..25 {
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z12 * z_factor;
+                                    }
                                 }
-                            }
-                            // calculate slope and aspect
-                            fy = (n[6] - n[4] + 2.0 * (n[7] - n[3]) + n[0] - n[2]) / eight_grid_res;
-                            fx = (n[2] - n[4] + 2.0 * (n[1] - n[5]) + n[0] - n[6]) / eight_grid_res;
-                            tan_slope = (fx * fx + fy * fy).sqrt();
-                            if tan_slope < 0.00017 {
-                                tan_slope = 0.00017;
-                            }
-                            aspect = if fx != 0f64 {
-                                PI - ((fy / fx).atan()) + half_pi * (fx / (fx).abs())
-                            } else {
-                                PI
-                            };
-                            term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
-                            term2 = sin_theta / tan_slope;
 
-                            z = 0f64;
-                            for a in 0..azimuths.len() {
-                                azimuth = azimuths[a];
-                                term3 = cos_theta * (azimuth - aspect).sin();
-                                z += term1 * (term2 - term3) * weights[a];
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117. 
+                                */
+                                p = -1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
+                                + 5. * (z[9] + z[19] - z[5] - z[15]));
+
+                                q = -1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                    + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
+                                    + 5. * (z[1] + z[3] - z[21] - z[23]));
+
+                                tan_slope = (p * p + q * q).sqrt();
+                                if tan_slope < 0.00017 {
+                                    tan_slope = 0.00017;
+                                }
+                                aspect = if p != 0f64 {
+                                    PI - ((q / p).atan()) + half_pi * (p / (p).abs())
+                                } else {
+                                    PI
+                                };
+                                term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                                term2 = sin_theta / tan_slope;
+
+                                val = 0f64;
+                                for a in 0..azimuths.len() {
+                                    azimuth = azimuths[a];
+                                    term3 = cos_theta * (azimuth - aspect).sin();
+                                    val += term1 * (term2 - term3) * weights[a];
+                                }
+                                val = val * 32767.0;
+                                if val < 0.0 {
+                                    val = 0.0;
+                                }
+                                data[col as usize] = val.round();
                             }
-                            z = z * 32767.0;
-                            if z < 0.0 {
-                                z = 0.0;
-                            }
-                            data[col as usize] = z.round();
                         }
+
+                        tx.send((row, data)).expect("Error sending data to thread.");
                     }
-                    tx1.send((row, data)).unwrap();
-                }
-            });
+                });
+            }
+        } else { // geographic coordinates
+
+            let phi1 = input.get_y_from_row(0);
+            let lambda1 = input.get_x_from_column(0);
+
+            let phi2 = phi1;
+            let lambda2 = input.get_x_from_column(-1);
+
+            let linear_res = vincenty_distance((phi1, lambda1), (phi2, lambda2));
+            let lr2 =  haversine_distance((phi1, lambda1), (phi2, lambda2)); 
+            let diff = 100. * (linear_res - lr2).abs() / linear_res;
+            let use_haversine = diff < 0.5; // if the difference is less than 0.5%, use the faster haversine method to calculate distances.
+
+            for tid in 0..num_procs {
+                let input = input.clone();
+                let tx = tx.clone();
+                thread::spawn(move || {
+                    let mut z4: f64;
+                    let mut p: f64;
+                    let mut q: f64;
+                    let mut a: f64;
+                    let mut b: f64;
+                    let mut c: f64;
+                    let mut d: f64;
+                    let mut e: f64;
+                    let mut phi1: f64;
+                    let mut lambda1: f64;
+                    let mut phi2: f64;
+                    let mut lambda2: f64;
+                    let offsets = [
+                        [-1, -1], [0, -1], [1, -1], 
+                        [-1, 0], [0, 0], [1, 0], 
+                        [-1, 1], [0, 1], [1, 1]
+                    ];
+                    let mut z = [0f64; 25];
+                    let mut val: f64;
+                    let (mut term1, mut term2, mut term3): (f64, f64, f64);
+                    let mut tan_slope: f64;
+                    let mut aspect: f64;
+                    let mut azimuth: f64;
+                    let half_pi = PI / 2f64;
+                    let azimuths = if multidirection360mode {
+                        vec![
+                            (0f64 - 90f64).to_radians(),
+                            (45f64 - 90f64).to_radians(),
+                            (90f64 - 90f64).to_radians(),
+                            (135f64 - 90f64).to_radians(),
+                            (180f64 - 90f64).to_radians(),
+                            (225f64 - 90f64).to_radians(),
+                            (270f64 - 90f64).to_radians(),
+                            (315f64 - 90f64).to_radians(),
+                        ]
+                    } else {
+                        vec![
+                            (225f64 - 90f64).to_radians(),
+                            (270f64 - 90f64).to_radians(),
+                            (315f64 - 90f64).to_radians(),
+                            (360f64 - 90f64).to_radians(),
+                        ]
+                    };
+    
+                    let weights = if multidirection360mode {
+                        vec![
+                            0.15f64, 0.125f64, 0.1f64, 0.05f64, 0.1f64, 0.125f64, 0.15f64, 0.20f64,
+                        ]
+                    } else {
+                        vec![0.1f64, 0.4f64, 0.4f64, 0.1f64]
+                    };
+                    for row in (0..rows).filter(|r| r % num_procs == tid) {
+                        let mut data = vec![nodata; columns as usize];
+                        for col in 0..columns {
+                            z4 = input.get_value(row, col);
+                            if z4 != nodata {
+                                for n in 0..9 {
+                                    z[n] = input.get_value(row + offsets[n][1], col + offsets[n][0]);
+                                    if z[n] != nodata {
+                                        z[n] *= z_factor;
+                                    } else {
+                                        z[n] = z4 * z_factor;
+                                    }
+                                }
+
+                                // Calculate a, b, c, d, and e.
+                                phi1 = input.get_y_from_row(row);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                b = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row+1);
+                                lambda2 = lambda1;
+
+                                d = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi2 = input.get_y_from_row(row-1);
+                                lambda2 = lambda1;
+
+                                e = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row+1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                a = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                phi1 = input.get_y_from_row(row-1);
+                                lambda1 = input.get_x_from_column(col);
+
+                                phi2 = phi1;
+                                lambda2 = input.get_x_from_column(col-1);
+
+                                c = if use_haversine {
+                                    haversine_distance((phi1, lambda1), (phi2, lambda2))
+                                } else {
+                                    vincenty_distance((phi1, lambda1), (phi2, lambda2))
+                                };
+
+                                /* 
+                                The following equations have been taken from Florinsky (2016) Principles and Methods
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
+                                */
+
+                                p = -((a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
+                                / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e))));
+
+                                q = -(1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
+                                * ((d * d * (a.powi(4) + b.powi(4) + b * b * c * c) + c * c * e * e * (a * a - b * b)) * (z[0] + z[2])
+                                - (d * d * (a.powi(4) + c.powi(4) + b * b * c * c) - e * e * (a.powi(4) + c.powi(4) + a * a * b * b)) * (z[3] + z[5])
+                                - (e * e * (b.powi(4) + c.powi(4) + a * a * b * b) - a * a * d * d * (b * b - c * c)) * (z[6] + z[8])
+                                + d * d * (b.powi(4) * (z[1] - 3. * z[4]) + c.powi(4) * (3. * z[1] - z[4]) + (a.powi(4) - 2. * b * b * c * c) * (z[1] - z[4]))
+                                + e * e * (a.powi(4) * (z[4] - 3. * z[7]) + b.powi(4) * (3. * z[4] - z[7]) + (c.powi(4) - 2. * a * a * b * b) * (z[4] - z[7]))
+                                - 2. * (a * a * d * d * (b * b - c * c) * z[7] + c * c * e * e * (a * a - b * b) * z[1])));
+                                
+                                tan_slope = (p * p + q * q).sqrt();
+                                if tan_slope < 0.00017 {
+                                    tan_slope = 0.00017;
+                                }
+                                aspect = if p != 0f64 {
+                                    PI - ((q / p).atan()) + half_pi * (p / (p).abs())
+                                } else {
+                                    PI
+                                };
+                                term1 = tan_slope / (1f64 + tan_slope * tan_slope).sqrt();
+                                term2 = sin_theta / tan_slope;
+                                val = 0f64;
+                                for a in 0..azimuths.len() {
+                                    azimuth = azimuths[a];
+                                    term3 = cos_theta * (azimuth - aspect).sin();
+                                    val += term1 * (term2 - term3) * weights[a];
+                                }
+                                val = val * 32767.0;
+                                if val < 0.0 {
+                                    val = 0.0;
+                                }
+                                data[col as usize] = val.round();
+                            }
+                        }
+
+                        tx.send((row, data)).expect("Error sending data to thread.");
+                    }
+                });
+            }
         }
 
-        let mut histo: [f64; 32768] = [0.0; 32768];
-        let mut num_cells = 0.0;
         for row in 0..rows {
             let data = rx.recv().expect("Error receiving data from thread.");
-            let mut bin: usize;
-            for col in 0..data.1.len() {
-                if data.1[col] != out_nodata {
-                    bin = data.1[col] as usize;
-                    histo[bin] += 1.0;
-                    num_cells += 1.0;
-                }
-            }
             output.set_row_data(data.0, data.1);
 
             if verbose {
@@ -431,33 +709,6 @@ impl WhiteboxTool for MultidirectionalHillshade {
                     old_progress = progress;
                 }
             }
-        }
-
-        let mut new_min = 0;
-        let mut new_max = 0;
-        let clip_percent = 0.01;
-        let target_cell_num = num_cells * clip_percent;
-        let mut sum = 0.0;
-        for c in 0..32768 {
-            sum += histo[c];
-            if sum >= target_cell_num {
-                new_min = c;
-                break;
-            }
-        }
-
-        sum = 0.0;
-        for c in (0..32768).rev() {
-            sum += histo[c];
-            if sum >= target_cell_num {
-                new_max = c;
-                break;
-            }
-        }
-
-        if new_max > new_min {
-            output.configs.display_min = new_min as f64;
-            output.configs.display_max = new_max as f64;
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);

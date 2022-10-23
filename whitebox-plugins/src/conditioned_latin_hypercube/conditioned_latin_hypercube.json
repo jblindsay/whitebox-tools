@@ -1,0 +1,98 @@
+{
+    "tool_name": "ConditionedLatinHypercube",
+    "exe": "conditioned_latin_hypercube",
+    "short_description": "Implements conditioned Latin Hypercube sampling.",
+    "toolbox": "Math and Stats Tools",
+    "license": "MIT",
+    "example": ".*EXE_NAME run -i=Raster1.tif;Raster2.tif --output=sites.shp --samples=500",
+    "parameters": [
+        {
+            "name": "Input Raster",
+            "flags": ["-i", "--inputs"],
+            "description": "Name of the input raster file",
+            "parameter_type": {"FileList":{"ExistingFile":"Raster"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output shapefile",
+            "flags": ["-o", "--output"],
+            "description": "Output shapefile",
+            "parameter_type": {"NewFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Number of sample sites",
+            "flags": ["--samples"],
+            "description": "Number of sample sites returned",
+            "parameter_type": "Integer",
+            "default_value": "500",
+            "optional": true
+        },
+        {
+            "name": "Number of resampling iterations",
+            "flags": ["--iterations"],
+            "description": "Maximum iterations (if stopping criteria not reached).",
+            "parameter_type": "Integer",
+            "default_value": "25000",
+            "optional": true
+        },
+        {
+            "name": "RNG seed",
+            "flags": ["--seed"],
+            "description": "Seed for RNG consistency",
+            "parameter_type": "Integer",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Random resample probability",
+            "flags": ["--prob"],
+            "description": "Probability of random resample or resampling worst strata between [0,1].",
+            "parameter_type": "Float",
+            "default_value": "0.5",
+            "optional": true
+        },
+        {
+            "name": "Objective function threshold.",
+            "flags": ["--threshold"],
+            "description": "Objective function values below the theshold stop the resampling iterations.",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Initial annealing temperature",
+            "flags": ["--temp"],
+            "description": "Initial annealing temperature between [0,1].",
+            "parameter_type": "Float",
+            "default_value": "1.0",
+            "optional": true
+        },
+        {
+            "name": "Temperature decay factor",
+            "flags": ["--temp_decay"],
+            "description": "Annealing temperature decay proportion between [0,1]. Reduce temperature by this proportion each annealing cycle.",
+            "parameter_type": "Float",
+            "default_value": "0.05",
+            "optional": true
+        },
+        {
+            "name": "Annealing cycle duration",
+            "flags": ["--cycle"],
+            "description": "Number of iterations before decaying annealing temperature.",
+            "parameter_type": "Integer",
+            "default_value": "10",
+            "optional": true
+        },
+        {
+            "name": "Average the continuous Obj. Func.",
+            "flags": ["--average"],
+            "description": "Weight the continuous objective funtion by the 1/N contributing strata.",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}

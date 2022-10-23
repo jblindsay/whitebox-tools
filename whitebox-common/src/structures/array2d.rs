@@ -1,9 +1,11 @@
 /////////////////////////////////////////////
 // A generic 2-dimensional array structure //
 /////////////////////////////////////////////
+
 use std::io::Error;
 use std::io::ErrorKind;
 use std::ops::{AddAssign, Index, IndexMut, SubAssign};
+
 
 /// A simple in-memory 2-D raster data structure that is not connected to a file.
 /// Pixel values can contain any data type or structure that implements the Copy,
@@ -211,7 +213,7 @@ where
 
 impl<T: Copy> IndexMut<(isize, isize)> for Array2D<T>
 where
-    T: Copy + AddAssign + SubAssign,
+    T: Copy + AddAssign + SubAssign + PartialEq,
 {
     fn index_mut<'a>(&'a mut self, index: (isize, isize)) -> &'a mut T {
         let row = index.0;
