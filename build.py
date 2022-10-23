@@ -23,8 +23,8 @@ if len(sys.argv) > 1:
         if len(result.stdout) > 0:
             print(result.stdout)
 
-        if os.path.exists(output_dir):
-            rmtree(output_dir)
+if os.path.exists(output_dir):
+    rmtree(output_dir)
 
 print("Compiling...")
 result = subprocess.run(['cargo', 'build', '--release'], stdout=subprocess.PIPE)
@@ -34,7 +34,6 @@ if len(result.stdout) > 0:
 if not os.path.exists(output_plugin_dir):
     os.makedirs(output_plugin_dir)
 
-
 ext = ''
 if platform.system() == 'Windows':
     ext = '.exe'
@@ -43,6 +42,8 @@ if platform.system() == 'Windows':
 exe_file = os.path.join(target_dir, 'whitebox_tools') + ext
 dst = os.path.join(output_dir, 'whitebox_tools') + ext
 copyfile(exe_file, dst)
+if platform.system() != 'Windows':
+    result = subprocess.run(['strip', dst], stdout=subprocess.PIPE)
 os.system("chmod 755 " + dst) # grant executable permission
 
 # Copy the ancillary files
@@ -90,6 +91,25 @@ for plugin in plugins:
         exe_file = os.path.join(target_dir, plugin) + ext
         dst = os.path.join(output_plugin_dir, plugin) + ext
         copyfile(exe_file, dst)
+        if platform.system() != 'Windows':
+            print("Stripping", plugin)
+            result = subprocess.run(['strip', dst], stdout=subprocess.PIPE)
+            # print(result)
+
         os.system("chmod 755 " + dst) # grant executable permission
+
+# Copy the register_license binary into the plugins folder if it is available
+os.chdir(app_dir)
+if os.path.exists('../GeneralToolsetExtension'):
+    # Copy the executable file into the plugins directory
+    exe_file = f"../GeneralToolsetExtension/register_license{ext}"
+    if os.path.exists(exe_file):
+        dst = os.path.join(output_plugin_dir, 'register_license') + ext
+        copyfile(exe_file, dst)
+        os.system("chmod 755 " + dst) # grant executable permission
+    else:
+        print("No register_license file found...")
+else:
+    print("No directory containing the register_license file found...")
 
 print("Done!")
