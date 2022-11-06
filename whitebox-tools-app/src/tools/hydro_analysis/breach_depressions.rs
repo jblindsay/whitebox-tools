@@ -34,13 +34,13 @@ use std::path;
 /// dependent upon the elevation range in the input DEM and is generally a very small elevation value (e.g.
 /// 0.001). It may be necessary to override the default elevation increment value in landscapes where there
 /// are extensive flat areas resulting from depression filling (and along breach channels). Values in the range
-/// 0.00001 to 0.01 are generally appropriate. increment values that are too large can result in obvious artifacts
+/// 0.00001 to 0.01 are generally appropriate. Increment values that are too large can result in obvious artifacts
 /// along flattened sites, which may extend beyond the flats, and values that are too small (i.e. smaller than the
 /// numerical precision) may result in the presence of grid cells with no downslope neighbour in the
-/// output DEM. The output DEM will always use 64-bit floating point values for storing elevations because of
-/// the need to precisely represent small elevation differences along flats. Therefore, if the input DEM is stored
-/// at a lower level of precision (e.g. 32-bit floating point elevations), this may result in a doubling of
-/// the size of the DEM.
+/// output DEM. If a flat increment value isn't specified, the output DEM will use 64-bit floating point values in order
+/// to make sure that the very small elevation increment value determined will be accurately stored. Consequently,
+/// it may double the storage requirements as DEMs are often stored with 32-bit precision. However, if a flat increment
+/// value is specified, the output DEM will keep the same data type as the input assuming the user chose its value wisely.
 ///
 /// In comparison with the `BreachDepressionsLeastCost` tool, this breaching method often provides a less
 /// satisfactory, higher impact, breaching solution and is often less efficient. **It has been provided to users for
@@ -313,9 +313,15 @@ impl WhiteboxTool for BreachDepressions {
         let resy = input.configs.resolution_y;
         let diagres = (resx * resx + resy * resy).sqrt();
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let background_val = (i32::min_value() + 1) as f64;
+        output.reinitialize_values(background_val);
+
         let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let elev_digits = (input.configs.maximum as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((6 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
@@ -361,10 +367,6 @@ impl WhiteboxTool for BreachDepressions {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.data_type = DataType::F64;
-        let background_val = (i32::min_value() + 1) as f64;
-        output.reinitialize_values(background_val);
 
         let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
 

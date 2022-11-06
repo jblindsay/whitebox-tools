@@ -26,6 +26,10 @@ use std::path;
 ///
 /// The user may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
 /// **it is best not to specify this optional value and to let the algorithm determine the most suitable value itself**.
+/// If a flat increment value isn't specified, the output DEM will use 64-bit floating point values in order
+/// to make sure that the very small elevation increment value determined will be accurately stored. Consequently,
+/// it may double the storage requirements as DEMs are often stored with 32-bit precision. However, if a flat increment
+/// value is specified, the output DEM will keep the same data type as the input assuming the user chose its value wisely.
 ///
 /// # Reference
 /// Planchon, O. and Darboux, F., 2002. A fast, simple and versatile algorithm to fill the depressions of digital
@@ -240,9 +244,18 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
+        let nodata_output = -32768.0f64;
+        let large_value = f64::INFINITY;
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.configs.data_type = DataType::F64;
+        output.configs.nodata = nodata_output;
+        output.reinitialize_values(large_value);
+
         let small_num = if fix_flats && !flat_increment.is_nan() {
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else if fix_flats {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let resx = input.configs.resolution_x;
             let resy = input.configs.resolution_y;
             let diagres = (resx * resx + resy * resy).sqrt();
@@ -250,15 +263,10 @@ impl WhiteboxTool for FillDepressionsPlanchonAndDarboux {
             let elev_multiplier = 10.0_f64.powi((15 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         } else {
+            output.configs.data_type = input.configs.data_type;
             0f64
         };
 
-        let nodata_output = -32768.0f64;
-        let large_value = f64::INFINITY;
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.data_type = DataType::F64;
-        output.configs.nodata = nodata_output;
-        output.reinitialize_values(large_value);
 
         /*
         Find the data edges. This is complicated by the fact that DEMs frequently

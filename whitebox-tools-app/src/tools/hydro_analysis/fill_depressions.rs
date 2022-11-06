@@ -35,6 +35,10 @@ use std::thread;
 /// small slope gradient away from outlets (note, more than one outlet cell may exist for each depression). The user
 /// may optionally specify the size of the elevation increment used to solve flats (`--flat_increment`), although
 /// **it is best to not specify this optional value and to let the algorithm determine the most suitable value itself**.
+/// If a flat increment value isn't specified, the output DEM will use 64-bit floating point values in order
+/// to make sure that the very small elevation increment value determined will be accurately stored. Consequently,
+/// it may double the storage requirements as DEMs are often stored with 32-bit precision. However, if a flat increment
+/// value is specified, the output DEM will keep the same data type as the input assuming the user chose its value wisely.
 /// The flat-fixing method applies a small gradient away from outlets using another priority region-growing operation (i.e.
 /// based on a priority queue operation), where priorities are set by the elevations in the input DEM (`--input`). This
 /// in effect ensures a gradient away from outlet cells but also following the natural pre-conditioned topography internal
@@ -284,21 +288,22 @@ impl WhiteboxTool for FillDepressions {
         let resy = input.configs.resolution_y;
         let diagres = (resx * resx + resy * resy).sqrt();
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+        output.set_data_from_raster(&input)?;
+
         let small_num = if fix_flats && !flat_increment.is_nan() {
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else if fix_flats {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let elev_digits = (input.configs.maximum as i64).to_string().len();
             let elev_multiplier = 10.0_f64.powi((9 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         } else {
+            output.configs.data_type = input.configs.data_type;
             0f64
         };
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.set_data_from_raster(&input)?;
-        output.configs.data_type = DataType::F32;
-        output.configs.display_min = input.configs.display_min;
-        output.configs.display_max = input.configs.display_max;
 
         // drop(input); // input is no longer needed.
 
@@ -722,6 +727,8 @@ impl WhiteboxTool for FillDepressions {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
+        output.configs.display_min = input.configs.display_min;
+        output.configs.display_max = input.configs.display_max;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()

@@ -44,11 +44,13 @@ use std::thread;
 /// digging a channel that is more costly than this value will be left unbreached. The flat increment value is used
 /// to ensure that there is a monotonically descending path along breach channels to satisfy the necessary
 /// condition of a downslope gradient for flowpath modelling. It is best for this value to be a small
-/// value. If left unspecified, the tool with determine an appropriate value based on the range of
-/// elevation values in the input DEM, **which should be the case in most applications**. Notice that the need to specify these very small elevation
-/// increment values is one of the reasons why the output DEM will always be of a 64-bit floating-point
-/// data type, which will often double the storage requirements of a DEM (DEMs are often store with 32-bit
-/// precision). Lastly, the user may optionally choose to apply depression filling (`--fill`) on any depressions
+/// value. If left unspecified, the tool will determine an appropriate value based on the range of
+/// elevation values in the input DEM, **which should be the case in most applications**, and will promote the output
+/// DEM to 64-bit floating-point data type. This is to make sure that the very small elevation increment value determined
+/// will always be properly recorded but will also consequently often double the storage requirements as DEMs are often
+/// stored with 32-bit precision. However, if a flat increment value is specified, the output DEM will keep
+/// the same data type as the input assuming the user chose its value wisely.
+/// Lastly, the user may optionally choose to apply depression filling (`--fill`) on any depressions
 /// that remain unresolved by the earlier depression breaching operation. This filling step uses an efficient
 /// filling method based on flooding depressions from their pit cells until outlets are identified and then
 /// raising the elevations of flooded cells back and away from the outlets.
@@ -376,19 +378,18 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
             num_procs = max_procs;
         }
 
+        let mut output = Raster::initialize_using_file(&output_file, &input);
+
         let small_num = if !flat_increment.is_nan() || flat_increment == 0f64 {
+            output.configs.data_type = input.configs.data_type; // Assume the user knows what he's doing
             flat_increment
         } else {
+            output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
             let elev_digits = (input.configs.maximum as i32).to_string().len();
             let elev_multiplier = 10.0_f64.powi((9 - elev_digits) as i32);
             1.0_f64 / elev_multiplier as f64 * diagres.ceil()
         };
-
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        // Even if the input is f32, the output will need to be 64-bit to represent the small elevation differences
-        output.configs.data_type = DataType::F32;
-        let display_min = input.configs.display_min;
-        let display_max = input.configs.display_max;
+        
 
         // Raise pit cells to minimize the depth of breach channels.
         let (tx, rx) = mpsc::channel();
@@ -911,8 +912,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         }
 
         let elapsed_time = get_formatted_elapsed_time(start);
-        output.configs.display_min = display_min;
-        output.configs.display_max = display_max;
+        output.configs.display_min = input.configs.display_min;
+        output.configs.display_max = input.configs.display_max;
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",
             self.get_tool_name()

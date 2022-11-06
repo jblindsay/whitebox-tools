@@ -32,6 +32,12 @@ use std::thread;
 ///
 /// Saunders, W. 1999. Preparation of DEMs for use in environmental modeling analysis, in: ESRI User
 /// Conference. pp. 24-30.
+///
+/// It should be noted that the output DEM will always be of 64-bit floating-point data type,
+/// which will often double the storage requirements as DEMs are often stored with 32-bit precision.
+/// This is because the tool will determine an appropriate small increment value based on the range of
+/// elevation values in the input DEM to ensure that there is a monotonically descending path along breach
+/// channels to satisfy the necessary condition of a downslope gradient for flowpath modelling.
 pub struct FillBurn {
     name: String,
     description: String,
@@ -545,7 +551,7 @@ impl WhiteboxTool for FillBurn {
         }
 
         // Perform the priority flood operation.
-
+        output.configs.data_type = DataType::F64; // Don't take any chances and promote to 64-bit
         let elev_digits = (dem.configs.maximum as i64).to_string().len();
         let elev_multiplier = 10.0_f64.powi((12 - elev_digits) as i32);
         let small_num = 1.0 / elev_multiplier as f64;
