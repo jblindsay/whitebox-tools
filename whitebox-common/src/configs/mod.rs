@@ -4,7 +4,7 @@ use std::fs;
 use std::fs::File;
 use std::io::Error;
 use std::io::prelude::*;
-use std::path;
+// use std::path;
 
 /// A structure to hold environment settings. Backed by settings.json file in same directory
 #[derive(Serialize, Deserialize, Debug)]
@@ -27,14 +27,17 @@ impl Configs {
 }
 
 pub fn get_configs() -> std::result::Result<Configs, Error> {
-    let mut exe_path = std::env::current_dir()?.to_str().unwrap_or("No exe path found.").to_string();
-    let plugin_dir = path::MAIN_SEPARATOR.to_string() + "plugins";
-    if exe_path.ends_with(&plugin_dir) {
-        exe_path = exe_path.replace(&plugin_dir, "");
+    let mut exe_path = std::env::current_exe().unwrap();
+    exe_path.pop();
+    if exe_path.ends_with("plugins") {
+        exe_path.pop();
     }
-    let config_file = exe_path + &path::MAIN_SEPARATOR.to_string() + "settings.json";
-    // let contents = fs::read_to_string(config_file).expect("Failed to open config_file.json file.");
-    // let configs: Configs = serde_json::from_str(&contents).expect("Failed to parse config_file.json file.");
+    if exe_path.ends_with("whitebox_tools") || exe_path.ends_with("whitebox_tools.exe") {
+        exe_path.pop();
+    }
+    let config_file = exe_path.join("settings.json");
+    let config_file = config_file.to_str().unwrap_or("No configs path found.").to_string();
+    
     let configs: Configs = match fs::read_to_string(config_file) {
         Ok(contents) => {
             serde_json::from_str(&contents).expect("Failed to parse config_file.json file.")
@@ -48,17 +51,22 @@ pub fn get_configs() -> std::result::Result<Configs, Error> {
 
 pub fn save_configs<'a>(configs: &Configs) -> std::result::Result<(), Error> {
     let configs_json = serde_json::to_string_pretty(&configs).expect("Error converting Configs object to JSON.");
-    let mut exe_path = std::env::current_dir()?.to_str().unwrap_or("No exe path found.").to_string();
-    let plugin_dir = path::MAIN_SEPARATOR.to_string() + "plugins";
-    if exe_path.ends_with(&plugin_dir) {
-        exe_path = exe_path.replace(&plugin_dir, "");
+    let mut exe_path = std::env::current_exe().unwrap();
+    exe_path.pop();
+    if exe_path.ends_with("plugins") {
+        exe_path.pop();
     }
-    let config_file = exe_path + &path::MAIN_SEPARATOR.to_string() + "settings.json";
+    if exe_path.ends_with("whitebox_tools") || exe_path.ends_with("whitebox_tools.exe") {
+        exe_path.pop();
+    }
+    let config_file = exe_path.join("settings.json");
+    let config_file = config_file.to_str().unwrap_or("No configs path found.").to_string();
     match File::create(config_file) {
         Ok(mut file) => {
             match file.write_all(configs_json.as_bytes()) {
                 Ok(()) => {}, // do nothing
                 Err(_e) => {
+                    println!("I'm here");
                     eprintln!("Error writing to output settings.json file, likely do to a permissions problem. Settings will not be updated.");
                 }
             };

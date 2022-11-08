@@ -90,7 +90,7 @@ impl ExtractValleys {
         let mut parameters = vec![];
         parameters.push(ToolParameter {
             name: "Input DEM File".to_owned(),
-            flags: vec!["-i".to_owned(), "--dem".to_owned()],
+            flags: vec!["--dem".to_owned()],
             description: "Input raster DEM file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,

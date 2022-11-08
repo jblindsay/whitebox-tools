@@ -56,6 +56,10 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 2.3.0 (XX-XX-202X)
+- Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
+  incorrectly leading to very strange outputs.
+
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
 - Added the HeatMap tool for performing kernel density estimation (KDE) from vector points.

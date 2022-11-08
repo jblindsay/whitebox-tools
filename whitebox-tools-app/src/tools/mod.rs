@@ -1280,13 +1280,18 @@ impl ToolManager {
                     let plugin_names = vec![
                         "accumulationcurvature",
                         "assessroute",
+                        "breaklinemapping",
                         "cannyedgedetection", 
+                        "colourizebasedonclass",
+                        "colourizebasedonpointreturns",
+                        "createscanelineinfo",
                         "curvedness",
                         "dbscan",
+                        "depthtowater",
                         "differencecurvature",
                         "evaluatetrainingsites", 
                         "filterlidar",
-                        "fix_danglingarcs",
+                        "fixdanglingarcs",
                         "generalizeclassifiedraster",
                         "generalizewithsimilarity",
                         "generatingfunction",
@@ -1295,24 +1300,26 @@ impl ToolManager {
                         "imagesegmentation",
                         "imageslider",
                         "inversepca", 
-                        "knn_classification",
-                        "knn_regression",
+                        "knnclassification",
+                        "knnregression",
                         "lastolaz",
                         "laztolas",
                         "lidarcontour",
+                        "lidareigenvaluefeatures",
                         "lidarpointreturnanalysis",
                         "lidarsibsoninterpolation", 
                         "lidarsortbytime", 
                         "localhypsometricanalysis",
-                        "logistic_regression",
+                        "logisticregression",
                         "lowpointsonheadwaterdivides",
                         "mindistclassification",
                         "modifylidar",
                         "openness",
                         "parallelepipedclassification",
                         "phicoefficient",
-                        "random_forest_classification",
-                        "random_forest_regression",
+                        "piecewisecontraststretch",
+                        "randomforestclassification",
+                        "randomforestregression",
                         "reconcilemultipleheaders",
                         "recoverflightlineinfo",
                         "recreatepasslines",
@@ -1323,11 +1330,13 @@ impl ToolManager {
                         "rotor",
                         "shadowanimation",
                         "shadowimage",
+                        "shapeindex",
                         "slopevsaspectplot",
                         "smoothvegetationresidual",
+                        "sortlidar",
                         "splitlidar",
-                        "svm_classification",
-                        "svm_regression",
+                        "svmclassification",
+                        "svmregression",
                         "topographicpositionanimation",
                         "unsphericity",
                         "vectorstreamnetworkanalysis",
@@ -1630,14 +1639,15 @@ Example usage:
                 }
                 // let license = self.tool_license(tool_name.clone()).to_lowercase();
                 if !license.contains("proprietary") {
-                    println!("https://github.com/jblindsay/whitebox-tools/blob/master/{}", tool_name);
+                    println!("https://github.com/jblindsay/whitebox-tools/tree/master/whitebox-plugins/src/{}/main.rs", tool_name);
+                    // println!("https://github.com/jblindsay/whitebox-tools/blob/master/{}", tool_name);
                 } else {
                     println!("Source code is unavailable due to proprietary license.");
                 }
-                return Err(Error::new(
-                    ErrorKind::NotFound,
-                    format!("Unrecognized tool name {}.", tool_name),
-                ))
+                // return Err(Error::new(
+                //     ErrorKind::NotFound,
+                //     format!("Unrecognized tool name {}.", tool_name),
+                // ))
             }
         }
 

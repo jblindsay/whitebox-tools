@@ -217,9 +217,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     let mut output = LasFile::initialize_using_file(&output_file, &input);
     let mut pr: LidarPointRecord;
-    let x_shift_transformed = ((x_shift - input.header.x_offset) / input.header.x_scale_factor) as i32;
-    let y_shift_transformed = ((y_shift - input.header.y_offset) / input.header.y_scale_factor) as i32;
-    let z_shift_transformed = ((z_shift - input.header.z_offset) / input.header.z_scale_factor) as i32;
+    let x_shift_transformed = (x_shift / input.header.x_scale_factor) as i32;
+    let y_shift_transformed = (y_shift / input.header.y_scale_factor) as i32;
+    let z_shift_transformed = (z_shift / input.header.z_scale_factor) as i32;
     for p in 0..n_points {
         pr = input.get_record(p);
         let pr2: LidarPointRecord;

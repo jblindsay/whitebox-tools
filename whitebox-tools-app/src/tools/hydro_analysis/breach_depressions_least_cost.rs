@@ -386,7 +386,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         // Even if the input is f32, the output will need to be 64-bit to represent the small elevation differences
-        output.configs.data_type = DataType::F32;
+        output.configs.data_type = DataType::F64;
         let display_min = input.configs.display_min;
         let display_max = input.configs.display_max;
 

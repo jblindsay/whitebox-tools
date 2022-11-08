@@ -7,6 +7,9 @@ from shutil import copyfile, copytree, rmtree
 # python3 build.py do_clean
 #
 # Where 'do_clean' is true or false and determines whether or not to clean existing files first. 
+#
+# You will need Rust installed before running the script. The output will be contained within a
+# folder named 'WBT'.
 
 
 # Set the directory variables
@@ -63,10 +66,13 @@ src = os.path.join(app_dir, 'UserManual.txt')
 dst = os.path.join(output_dir, 'UserManual.txt')
 copyfile(src, dst)
 
-src = os.path.join(app_dir, 'wb_runner.py')
-dst = os.path.join(output_dir, 'wb_runner.py')
-copyfile(src, dst)
-os.system("chmod 755 " + dst) # grant executable permission
+# Copy the Runner app
+exe_file = os.path.join(target_dir, 'whitebox_runner') + ext
+dst = os.path.join(output_dir, 'whitebox_runner') + ext
+copyfile(exe_file, dst)
+if platform.system() != 'Windows':
+    result = subprocess.run(['strip', dst], stdout=subprocess.PIPE)
+os.system("chmod 755 " + dst) # grant executable 
 
 src = os.path.join(app_dir, 'whitebox_tools.py')
 dst = os.path.join(output_dir, 'whitebox_tools.py')

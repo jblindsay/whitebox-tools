@@ -112,6 +112,10 @@ fn run() -> Result<(), Error> {
         return Ok(());
     }
 
+    // for arg in &args {
+    //     println!("{}", arg);
+    // }
+
     let mut configs = whitebox_common::configs::get_configs()?;
     let mut configs_modified = false;
 
@@ -453,7 +457,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.";
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "WhiteboxTools v{} by Dr. John B. Lindsay (c) 2017-2023
+        "WhiteboxTools v{} (c) Dr. John Lindsay 2017-2023
 
 WhiteboxTools is an advanced geospatial data analysis platform developed at
 the University of Guelph's Geomorphometry and Hydrogeomatics Research 

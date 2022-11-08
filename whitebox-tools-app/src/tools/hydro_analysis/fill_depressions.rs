@@ -296,7 +296,7 @@ impl WhiteboxTool for FillDepressions {
 
         let mut output = Raster::initialize_using_file(&output_file, &input);
         output.set_data_from_raster(&input)?;
-        output.configs.data_type = DataType::F32;
+        output.configs.data_type = DataType::F64;
         output.configs.display_min = input.configs.display_min;
         output.configs.display_max = input.configs.display_max;
 
