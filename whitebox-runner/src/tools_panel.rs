@@ -108,7 +108,12 @@ impl MyApp {
                 } else if self.state.show_tool_search {
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
-                            ui.label("Keywords:")
+                            // ui.label("Keywords:")
+                            // .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
+                            ui.label(egui::RichText::new("Keywords:")
+                            .italics()
+                            .strong()
+                            .color(ui.visuals().hyperlink_color))
                             .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
 
                             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -177,7 +182,12 @@ impl MyApp {
                         .auto_shrink([false; 2])
                         .show(ui, |ui| {
                             ui.horizontal(|ui| {
-                                ui.label("Recently used tools:");
+                                // ui.label("Recently used tools:");
+                                ui.label(egui::RichText::new("Recently used tools:")
+                                .italics()
+                                .strong()
+                                .color(ui.visuals().hyperlink_color));
+
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                                     if ui.button("Clear").on_hover_text("Clear recent tools").clicked() {
                                         self.state.most_recent.clear();
@@ -200,7 +210,12 @@ impl MyApp {
 
                             ui.separator();
                             ui.horizontal(|ui| {
-                                ui.label("Most-used tools:");
+                                // ui.label("Most-used tools:");
+                                ui.label(egui::RichText::new("Most-used tools:")
+                                .italics()
+                                .strong()
+                                .color(ui.visuals().hyperlink_color));
+
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                                     if ui.button("Clear").on_hover_text("Clear most-used tools").clicked() {
                                         self.most_used.clear();

@@ -95,7 +95,22 @@ impl MyApp {
             if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
                 slf.state = state;
             } else {
-                eprintln!("Could not locate app state");
+                // eprintln!("Could not locate app state");
+                slf.state.theme = AppTheme::Dark;
+                // self.state.settings_visible: bool,
+                slf.state.body_font_size = 14.0;
+                slf.state.header_font_size = 18.0;
+                // self.state.whitebox_exe: String,
+                slf.state.working_dir = "/".to_string();
+                slf.state.view_tool_output = true;
+                slf.state.max_procs = -1;
+                slf.state.compress_rasters = true;
+                slf.state.textbox_width = 230.0;
+                slf.state.output_command = false;
+                slf.state.show_toolboxes = true;
+                slf.state.show_tool_search = false;
+                slf.state.show_recent_tools = false;
+                slf.state.most_recent = std::collections::VecDeque::new();
             }
         }
         slf.theme_changed = true;
