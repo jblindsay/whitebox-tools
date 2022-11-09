@@ -266,9 +266,9 @@ impl MyApp {
                             let output = std::process::Command::new(register_license)
                                         .args([
                                             "register", 
-                                            &(self.ei.email), 
+                                            &self.ei.email.trim(), 
                                             &format!("{}", self.ei.seat_number), 
-                                            &self.ei.activation_key
+                                            &self.ei.activation_key.trim()
                                         ])
                                         .output()
                                         .expect("failed to execute process");
@@ -294,7 +294,7 @@ impl MyApp {
 
         if install_exit_code == 1 { // 0 means nothing happened...no registration was attempted.
             // refresh to the tools.
-            self.get_tool_info();
+            self.refesh_tools();
             self.ei.text_output.push_str("Registration of Whitebox Extension was successful!\n");
         } else if install_exit_code == 2 {
             self.ei.text_output.push_str("Registration of Whitebox Extension was unsuccessful.\n");

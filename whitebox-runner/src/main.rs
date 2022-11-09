@@ -129,6 +129,20 @@ impl MyApp {
         slf
     }
 
+    fn refesh_tools(&mut self) {
+        // reset the various arrays/hashmaps
+        self.list_of_open_tools.clear();
+        self.open_tools.clear();
+        self.tool_info.clear();
+        self.tool_descriptions.clear();
+        self.tool_order.clear();
+        self.most_used_hm.clear();
+        self.most_used.clear();
+
+        self.get_tool_info();
+        self.get_version();
+    }
+
     // Get the tools and toolboxes
     fn get_tool_info(&mut self) {
         // Start by getting the executable path

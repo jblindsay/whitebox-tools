@@ -156,7 +156,8 @@ impl MyApp {
                     // Refresh tools
                     ui.label("Refresh tools now:");
                     if ui.button("Refresh").clicked() {
-                        self.get_tool_info();
+                        // self.get_tool_info();
+                        self.refesh_tools();
                     }
                     ui.end_row();
 
