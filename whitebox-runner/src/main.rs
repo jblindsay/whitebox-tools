@@ -23,6 +23,17 @@ use egui::FontId;
 use egui::TextStyle::*;
 
 fn main() {
+    // // command line args
+    // let mut clear_state = false;
+    // let args: Vec<String> = std::env::args().collect();
+    // if args.len() > 1 {
+    //     for arg in args {
+    //         if arg.trim().to_lowercase().contains("clear_state") {
+    //             clear_state = true;
+    //         }
+    //     }
+    // }
+
     let mut dir = env::current_exe().unwrap();
     dir.pop();
     // let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
@@ -89,10 +100,7 @@ struct MyApp {
 
 impl MyApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        // Customize egui here with cc.egui_ctx.set_fonts and cc.egui_ctx.set_visuals.
-        // Restore app state using cc.storage (requires the "persistence" feature).
-        // Use the cc.gl (a glow::Context) to create graphics shaders and buffers that you can use
-        // for e.g. egui::PaintCallback.
+        
         let mut slf = Self::default();
 
         #[cfg(feature = "persistence")]
@@ -117,6 +125,7 @@ impl MyApp {
                 slf.state.most_recent = std::collections::VecDeque::new();
             }
         }
+        
         slf.theme_changed = true;
         slf.fonts_changed = true;
         slf.state.whitebox_exe = slf.get_executable_path();
@@ -138,6 +147,7 @@ impl MyApp {
         self.tool_order.clear();
         self.most_used_hm.clear();
         self.most_used.clear();
+        self.state.most_recent.clear();
 
         self.get_tool_info();
         self.get_version();
@@ -296,7 +306,7 @@ impl MyApp {
     }
 
     fn get_executable_path(&self) -> String {
-        if self.state.whitebox_exe.is_empty() {
+        if self.state.whitebox_exe.is_empty() || !std::path::Path::new(&self.state.whitebox_exe).exists() {
             // check the app path for a whitebox executable.
             let ext = if cfg!(target_os = "windows") {
                 ".exe"
@@ -306,6 +316,7 @@ impl MyApp {
             let mut dir = env::current_exe().unwrap();
             dir.pop();
             let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
+
             let exe = format!("{}{}whitebox_tools{}", exe_directory, std::path::MAIN_SEPARATOR.to_string(), ext).replace("\"", "");
             exe
         } else {

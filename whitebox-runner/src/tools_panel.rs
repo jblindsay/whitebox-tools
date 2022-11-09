@@ -90,12 +90,17 @@ impl MyApp {
                                                     let tool_index = *self.tool_order.get(&tree3.label.clone()).unwrap();
 
                                                     // if ui.toggle_value(&mut self.open_tools[tool_index], &format!("🔧 {}", tree3.label))
+                                                    
                                                     if ui.button(&format!("🔧 {}", tree3.label))
                                                     .on_hover_text(self.tool_descriptions.get(&tree3.label).unwrap_or(&String::new()))
                                                     .clicked() {
-                                                        // self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
                                                         clicked_tool = self.tool_info[tool_index].tool_name.clone();
                                                     }
+
+                                                    // if ui.add(egui::Button::new(&format!("🔧 {}", tree3.label)).fill(egui::Color32::from_rgb(224, 240, 255))
+                                                    // ).on_hover_text(self.tool_descriptions.get(&tree3.label).unwrap_or(&String::new())).clicked() {
+                                                    //     clicked_tool = self.tool_info[tool_index].tool_name.clone();
+                                                    // }
                                                 }
                                             });
                                         } else { // it's a tool
@@ -107,6 +112,12 @@ impl MyApp {
                                                 // self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
                                                 clicked_tool = self.tool_info[tool_index].tool_name.clone();
                                             }
+
+                                            // if ui.add(egui::Button::new(&format!("🔧 {}", tree2.label)).fill(egui::Color32::from_rgb(224, 240, 255))
+                                            // ).on_hover_text(self.tool_descriptions.get(&tree2.label).unwrap_or(&String::new()))
+                                            // .clicked() {
+                                            //     clicked_tool = self.tool_info[tool_index].tool_name.clone();
+                                            // }
                                         }
                                     }
                                 });
