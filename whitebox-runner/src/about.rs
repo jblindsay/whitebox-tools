@@ -20,7 +20,6 @@ impl MyApp {
                 if ui.button("Close").clicked() {
                     close_dialog = true;
                 }
-                ui.end_row();
             });
         });
 

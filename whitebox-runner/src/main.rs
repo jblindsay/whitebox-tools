@@ -2,6 +2,7 @@
 
 mod about;
 mod custom_widgets;
+mod extension;
 mod settings_panel;
 mod tool_dialog;
 mod tools_panel;
@@ -9,6 +10,7 @@ mod tree;
 
 pub use custom_widgets::{ toggle };
 pub use tree::Tree;
+use extension::ExtensionInstall;
 use std::collections::{ HashMap, HashSet, VecDeque };
 use std::env;
 use std::process::Command;
@@ -68,6 +70,7 @@ struct MyApp {
     tree: Tree,
     allowed_to_close: bool,
     show_confirmation_dialog: bool,
+    list_of_open_tools: Vec<ToolInfo>,
     open_tools: Vec<bool>,
     tool_info: Vec<ToolInfo>,
     tool_descriptions: HashMap<String, String>,
@@ -78,6 +81,8 @@ struct MyApp {
     wbt_version: String,
     search_words_str: String,
     about_visible: bool,
+    extension_visible: bool,
+    ei: ExtensionInstall,
     most_used_hm: HashMap<String, u16>,
     most_used: Vec<(u16, String)>,
 }
@@ -95,12 +100,11 @@ impl MyApp {
             if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
                 slf.state = state;
             } else {
-                // eprintln!("Could not locate app state");
+                // Initialize state manually
                 slf.state.theme = AppTheme::Dark;
-                // self.state.settings_visible: bool,
+                slf.state.settings_visible = false;
                 slf.state.body_font_size = 14.0;
                 slf.state.header_font_size = 18.0;
-                // self.state.whitebox_exe: String,
                 slf.state.working_dir = "/".to_string();
                 slf.state.view_tool_output = true;
                 slf.state.max_procs = -1;
@@ -121,6 +125,7 @@ impl MyApp {
         }
         slf.get_tool_info();
         slf.get_version();
+        slf.ei = ExtensionInstall::new();
         slf
     }
 
@@ -199,7 +204,7 @@ impl MyApp {
         let mut num_tools = 0;
         for i in 0..tool_list.len() {
             let json_value = self.get_tool_parameters(tool_list[i].0); // Add the tool parameters JSON object to the tool info
-            self.open_tools.push(false);
+            // self.open_tools.push(false);
             self.tool_info.push(ToolInfo::new(tool_list[i].0, json_value));
             self.tool_info[num_tools].update_output_command(self.state.output_command);
             self.tool_info[num_tools].update_verbose_mode(self.state.view_tool_output);
@@ -332,6 +337,12 @@ impl MyApp {
 
         self.most_used = self.most_used_hm.iter().map(|v| (*v.1, v.0.to_string())).collect::<Vec<(u16, String)>>(); // self.most_used_hm.iter().map().collect();
         self.most_used.sort_by(|a, b| b.cmp(a));
+
+        let tool_idx = *self.tool_order.get(tool_name).unwrap();
+        let tool_info = self.tool_info[tool_idx].clone();
+        // tool_info.update_exe_path(&self.state.whitebox_exe);
+        self.list_of_open_tools.push(tool_info);
+        self.open_tools.push(true);
     }
 }
 
@@ -480,10 +491,25 @@ impl eframe::App for MyApp {
                     if self.about_visible {
                         self.about_window(ctx);
                     }
-                    for i in 0..self.open_tools.len() {
+                    if self.extension_visible {
+                        self.install_extension(ctx);
+                    }
+
+                    let mut remove_idx = -1isize;
+                    for i in 0..self.list_of_open_tools.len() {
                         if self.open_tools[i] {
+                            // let tool_nm = &self.list_of_open_tools[i];
+                            // let tool_idx = *self.tool_order.get(tool_nm).unwrap();
+                            // let mut tool_info = self.tool_info[tool_idx].clone();
+                            // tool_info.update_exe_path(&self.state.whitebox_exe);
                             self.tool_dialog(ctx, i);
+                        } else {
+                            remove_idx = i as isize;
                         }
+                    }
+                    if remove_idx >= 0 {
+                        self.list_of_open_tools.remove(remove_idx as usize);
+                        self.open_tools.remove(remove_idx as usize);
                     }
                 });
             });

@@ -57,6 +57,10 @@ for more details.
 ******************
 
 Version 2.3.0 (XX-XX-202X)
+- Added the new Whitebox Runner v2.0. This is a whole new program with many advancements over the
+  previous version of the WbRunner. It is now written in pure Rust (compared with the old Python
+  TkInter app) using the egui user-interface library. It has a more modern feel, is cross-platform,
+  and has no dependencies (including Python). You can now open multiple tools simultaneously. 
 - Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
   incorrectly leading to very strange outputs.
 

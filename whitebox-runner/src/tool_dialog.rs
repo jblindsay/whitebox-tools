@@ -10,7 +10,7 @@ use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
-// use std::sync::mpsc::channel;
+use whitebox_vector::{ShapeType, Shapefile};
 
 fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
     let mut ret = vec![];
@@ -344,7 +344,7 @@ fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
     ret
 }
 
-#[derive(Default, Debug, PartialEq)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum ParameterType {
     Boolean,
     #[default]
@@ -362,7 +362,7 @@ pub enum ParameterType {
     OptionList,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum ParameterFileType {
     #[default]
     Any,
@@ -377,7 +377,7 @@ pub enum ParameterFileType {
 }
 
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub enum VectorGeometryType {
     #[default]
     Any,
@@ -387,7 +387,7 @@ pub enum VectorGeometryType {
     LineOrPolygon,
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct ToolParameter {
     pub name: String,
     pub flags: Vec<String>,
@@ -404,7 +404,7 @@ pub struct ToolParameter {
     geometry_type: VectorGeometryType,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct ToolInfo {
     pub tool_name: String,
     pub parameters: Vec<ToolParameter>,
@@ -677,7 +677,6 @@ impl ToolInfo {
         }
         
 
-
         if self.verbose_mode {
             param_str.push_str(" -v=true");
             args.push("-v=true".to_string());
@@ -815,8 +814,6 @@ impl ToolInfo {
                 let _last = do_read();
             }
 
-            // println!("{}", child.try_wait().unwrap().unwrap());
-
             // make sure we try at least one more read in case there's new data in the pipe after the child exited
             last = 1;
 
@@ -898,15 +895,16 @@ impl ToolInfo {
 
 impl MyApp {
 
-    pub fn tool_dialog(&mut self, ctx: &egui::Context, i: usize) {
+    pub fn tool_dialog(&mut self, ctx: &egui::Context, tool_idx: usize) {
         let mut close_dialog = false;
-        self.get_tool_parameters(&self.tool_info[i].tool_name);
-        egui::Window::new(&format!("{}", &self.tool_info[i].tool_name))
-        .open(&mut self.open_tools[i])
+        self.get_tool_parameters(&self.list_of_open_tools[tool_idx].tool_name);
+        egui::Window::new(&format!("{}", &self.list_of_open_tools[tool_idx].tool_name))
+        .id(egui::Id::new(format!("{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx)))
+        .open(&mut self.open_tools[tool_idx])
         .resizable(true)
         .vscroll(true)
         .show(ctx, |ui| {
-            egui::Grid::new("my_grid")
+            egui::Grid::new(&format!("grid{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
             .num_columns(2)
             .spacing([10.0, 6.0])
             .striped(true)
@@ -915,13 +913,13 @@ impl MyApp {
                 ui.label("Tool Parameters:");
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("⟲").on_hover_text("Reset parameters").clicked() {
-                        self.tool_info[i].reset();
+                        self.list_of_open_tools[tool_idx].reset();
                     }
                 });
                 ui.end_row();
             
 
-                for parameter in &mut (self.tool_info[i].parameters) {
+                for parameter in &mut (self.list_of_open_tools[tool_idx].parameters) {
                     let suffix = if parameter.optional { "*".to_string() } else { "".to_string() };
                     let parameter_label = if parameter.name.len() + suffix.len() < 25 {
                         format!("{}{}", &parameter.name, suffix)
@@ -975,6 +973,63 @@ impl MyApp {
                                 .set_directory(std::path::Path::new(&self.state.working_dir))
                                 .pick_file() {
                                     parameter.str_value = path.display().to_string();
+                                    
+                                    if parameter.file_type == ParameterFileType::Vector && 
+                                    parameter.geometry_type != VectorGeometryType::Any {
+                                        // Read the file and make sure that it is the right geometry type.
+                                        match Shapefile::read(&parameter.str_value) {
+                                            Ok(vector_data) => {
+                                                let base_shape_type = vector_data.header.shape_type.base_shape_type();
+                                                // make sure the input vector file is of the right shape type
+                                                let err_found = match parameter.geometry_type {
+                                                    VectorGeometryType::Point => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::Point {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::Line => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::PolyLine {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::Polygon => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::Polygon {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::LineOrPolygon => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::PolyLine && base_shape_type != ShapeType::Polygon {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    _ => { false }
+                                                };
+                                                if err_found {
+                                                    if rfd::MessageDialog::new()
+                                                    .set_level(rfd::MessageLevel::Warning)
+                                                    .set_title("Wrong Vector Geometry Type")
+                                                    .set_description("The specified file does not have the correct vector geometry type for this parameter. Do you want to continue?")
+                                                    .set_buttons(rfd::MessageButtons::YesNo)
+                                                    .show() {
+                                                        // do nothing
+                                                    } else {
+                                                        // Reset the parameter string value.
+                                                        parameter.str_value = "".to_string();
+                                                    }
+                                                }
+                                            },
+                                            Err(_) => {} // do nothing
+                                        }
+                                    }
+
                                     // update the working directory
                                     path.pop();
                                     self.state.working_dir = path.display().to_string();
@@ -987,6 +1042,63 @@ impl MyApp {
                                 .set_directory(std::path::Path::new(&self.state.working_dir))
                                 .pick_file() {
                                     parameter.str_value = path.display().to_string();
+
+                                    if parameter.file_type == ParameterFileType::Vector && 
+                                    parameter.geometry_type != VectorGeometryType::Any {
+                                        // Read the file and make sure that it is the right geometry type.
+                                        match Shapefile::read(&parameter.str_value) {
+                                            Ok(vector_data) => {
+                                                let base_shape_type = vector_data.header.shape_type.base_shape_type();
+                                                // make sure the input vector file is of the right shape type
+                                                let err_found = match parameter.geometry_type {
+                                                    VectorGeometryType::Point => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::Point {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::Line => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::PolyLine {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::Polygon => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::Polygon {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    VectorGeometryType::LineOrPolygon => {
+                                                        let mut ret = false;
+                                                        if base_shape_type != ShapeType::PolyLine && base_shape_type != ShapeType::Polygon {
+                                                            ret = true;
+                                                        }
+                                                        ret
+                                                    },
+                                                    _ => { false }
+                                                };
+                                                if err_found {
+                                                    if rfd::MessageDialog::new()
+                                                    .set_level(rfd::MessageLevel::Warning)
+                                                    .set_title("Wrong Vector Geometry Type")
+                                                    .set_description("The specified file does not have the correct vector geometry type for this parameter. Do you want to continue?")
+                                                    .set_buttons(rfd::MessageButtons::YesNo)
+                                                    .show() {
+                                                        // do nothing
+                                                    } else {
+                                                        // Reset the parameter string value.
+                                                        parameter.str_value = "".to_string();
+                                                    }
+                                                }
+                                            },
+                                            Err(_) => {} // do nothing
+                                        }
+                                    }
+
                                     // update the working directory
                                     path.pop();
                                     self.state.working_dir = path.display().to_string();
@@ -1139,24 +1251,25 @@ impl MyApp {
                     ui.label("Tool Output:");
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui.button("Clear").on_hover_text("Clear tool output").clicked() {
-                            let mut tool_output = self.tool_info[i].tool_output.lock().unwrap();
+                            let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
                             *tool_output = "".to_string();
                         }
                     });
                 });
-                // ui.label("Tool Output:");
 
                 egui::ScrollArea::vertical().show(ui, |ui| {
-                    let mut tool_output = self.tool_info[i].tool_output.lock().unwrap();
+                    let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
                     ui.add(
                         egui::TextEdit::multiline(&mut *tool_output)
+                            .id_source(&format!("out_{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
                             .cursor_at_end(true)
                             .font(egui::TextStyle::Monospace)
                             .desired_rows(10)
                             .lock_focus(true)
                             .desired_width(f32::INFINITY)
                     );
-                    let cm = self.tool_info[i].continuous_mode.lock().unwrap();
+                    
+                    let cm = self.list_of_open_tools[tool_idx].continuous_mode.lock().unwrap();
                     if *cm {
                         ui.scroll_to_cursor(Some(egui::Align::BOTTOM));
                     }
@@ -1167,30 +1280,25 @@ impl MyApp {
 
             ui.horizontal(|ui| {
                 if ui.button("Run").clicked() {
-                    self.tool_info[i].update_working_dir(&self.state.working_dir);
-                    self.tool_info[i].run();
-                    // let runner = Arc::new(self.tool_info[i]);
-                    // std::thread::spawn(move || {
-                    //     self.tool_info[i].run();
-                    // });
+                    self.list_of_open_tools[tool_idx].update_working_dir(&self.state.working_dir);
+                    self.list_of_open_tools[tool_idx].update_exe_path(&self.state.whitebox_exe);
+                    self.list_of_open_tools[tool_idx].run();
                 }
                 if ui.button("Cancel").clicked() {
-                    self.tool_info[i].cancel();
+                    self.list_of_open_tools[tool_idx].cancel();
                 }
                 if ui.button("Help").clicked() {
-                    // println!("Help for {}...", self.tool_info[i].tool_name);
-                    let help_str = self.tool_info[i].get_tool_help();
+                    let help_str = self.list_of_open_tools[tool_idx].get_tool_help();
                     if help_str.is_some() {
-                        // println!("{}", help_str.unwrap());
-                        let mut tool_output = self.tool_info[i].tool_output.lock().unwrap();
+                        let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
                         *tool_output = help_str.unwrap_or("".to_string());
                     }
                 }
                 if ui.button("Close").clicked() {
                     close_dialog = true;
                 }
-                let progress = *(self.tool_info[i].progress).lock().unwrap();
-                let progress_label = &*(self.tool_info[i].progress_label).lock().unwrap();
+                let progress = *(self.list_of_open_tools[tool_idx].progress).lock().unwrap();
+                let progress_label = &*(self.list_of_open_tools[tool_idx].progress_label).lock().unwrap();
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     ui.add(egui::ProgressBar::new(progress)
                     .desired_width(100.0)
@@ -1200,14 +1308,14 @@ impl MyApp {
                 })
             });
 
-            let cm = self.tool_info[i].continuous_mode.lock().unwrap();
+            let cm = self.list_of_open_tools[tool_idx].continuous_mode.lock().unwrap();
             if *cm {
                 ctx.request_repaint();
             }
         });
 
         if close_dialog {
-            self.open_tools[i] = false;
+            self.open_tools[tool_idx] = false;
         }
     }
 }

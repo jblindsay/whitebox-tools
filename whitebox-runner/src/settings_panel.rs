@@ -244,7 +244,7 @@ impl MyApp {
 
                         ui.label("");
                         if ui.button("Install Whitebox Extension").clicked() {
-                            println!("Insalling extension...");
+                            self.extension_visible = true;
                         }
                         ui.end_row();
                     // }
