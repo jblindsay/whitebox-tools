@@ -260,24 +260,24 @@ impl MyApp {
                             // check that it exists.
                             if !register_license.exists() {
                                 self.ei.text_output.push_str("Error: register_license file does not exist in plugins directory. Could not register license.\n");
+                                install_successful = false;
                             }
                             let output = std::process::Command::new(register_license)
-                                                        .args([
-                                                            "register", 
-                                                            &(self.ei.email), 
-                                                            &format!("{}", self.ei.seat_number), 
-                                                            &self.ei.activation_key
-                                                        ])
-                                                        .output()
-                                                        .expect("failed to execute process");
+                                        .args([
+                                            "register", 
+                                            &(self.ei.email), 
+                                            &format!("{}", self.ei.seat_number), 
+                                            &self.ei.activation_key
+                                        ])
+                                        .output()
+                                        .expect("failed to execute process");
                                             
-                                            if !output.status.success() {
-                                                self.ei.text_output.push_str("Error registering the extension license. Possible invalid extension key.\n");
-                                                self.ei.text_output.push_str(&format!("{:?}\n", output.stderr));
-                                            }
+                            if !output.status.success() {
+                                self.ei.text_output.push_str("Error registering the extension license. Possible invalid extension key.\n");
+                                self.ei.text_output.push_str(&format!("{:?}\n", String::from_utf8_lossy(&output.stderr)));
+                                install_successful = false;
+                            }
 
-
-                            install_successful = true;
                         } else {
                             self.ei.text_output.push_str("Your system OS/Architecture are currently unsupported.\nAborting install...\n")
                         }
@@ -294,6 +294,8 @@ impl MyApp {
             // refresh to the tools.
             self.get_tool_info();
             self.ei.text_output.push_str("Registration of Whitebox Extension was successful!\n");
+        } else {
+            self.ei.text_output.push_str("Registration of Whitebox Extension was unsuccessful.\n");
         }
         
 
