@@ -33,7 +33,7 @@ impl MyApp {
 
     pub fn install_extension(&mut self, ctx: &egui::Context) {
         let mut close_dialog = false;
-        let mut install_successful = false;
+        let mut install_exit_code = 0;
         egui::Window::new("Install a Whitebox Extension Product")
         .open(&mut self.extension_visible)
         .resizable(false)
@@ -138,6 +138,7 @@ impl MyApp {
                     }
                     
                     if qa_qc_passed {
+                        install_exit_code = 1;
                         let ext_name = self.ei.product_list[self.ei.product_index].clone();
                         let os = std::env::consts::OS.to_string();
                         let arch = std::env::consts::ARCH.to_string();
@@ -260,7 +261,7 @@ impl MyApp {
                             // check that it exists.
                             if !register_license.exists() {
                                 self.ei.text_output.push_str("Error: register_license file does not exist in plugins directory. Could not register license.\n");
-                                install_successful = false;
+                                install_exit_code = 2;
                             }
                             let output = std::process::Command::new(register_license)
                                         .args([
@@ -275,11 +276,12 @@ impl MyApp {
                             if !output.status.success() {
                                 self.ei.text_output.push_str("Error registering the extension license. Possible invalid extension key.\n");
                                 self.ei.text_output.push_str(&format!("{:?}\n", String::from_utf8_lossy(&output.stderr)));
-                                install_successful = false;
+                                install_exit_code = 2;
                             }
 
                         } else {
-                            self.ei.text_output.push_str("Your system OS/Architecture are currently unsupported.\nAborting install...\n")
+                            self.ei.text_output.push_str("Your system OS/Architecture are currently unsupported.\nAborting install...\n");
+                            install_exit_code = 2;
                         }
                     }
                 }
@@ -290,11 +292,11 @@ impl MyApp {
             });
         });
 
-        if install_successful {
+        if install_exit_code == 1 { // 0 means nothing happened...no registration was attempted.
             // refresh to the tools.
             self.get_tool_info();
             self.ei.text_output.push_str("Registration of Whitebox Extension was successful!\n");
-        } else {
+        } else if install_exit_code == 2 {
             self.ei.text_output.push_str("Registration of Whitebox Extension was unsuccessful.\n");
         }
         
