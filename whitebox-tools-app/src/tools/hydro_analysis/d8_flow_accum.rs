@@ -289,7 +289,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             println!("Reading data...")
         };
 
-        let input = Arc::new(Raster::new(&input_file, "r")?);
+        let input = Arc::new(Raster::new(&input_file, "r")?); // Memory: 8 bytes per grid cell.
 
         let start = Instant::now();
         let rows = input.configs.rows as isize;
@@ -300,7 +300,7 @@ impl WhiteboxTool for D8FlowAccumulation {
         let cell_size_y = input.configs.resolution_y;
         let diag_cell_size = (cell_size_x * cell_size_x + cell_size_y * cell_size_y).sqrt();
         // -2 indicates NoData, -1 indicates no downslope neighbour, 0-7 indicate flow to one neighbour.
-        let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?;
+        let mut flow_dir: Array2D<i8> = Array2D::new(rows, columns, -2, -2)?; // Memory: +1 byte = 9 bytes per pixel.
         let mut interior_pit_found = false;
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
@@ -469,17 +469,17 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
+        let mut output = Raster::initialize_using_file(&output_file, &input); // Memory: +8 bytes per grid cell = 17 bytes per grid cell
         let out_nodata = -32768f64;
         output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
         output.configs.data_type = DataType::F32;
         output.reinitialize_values(1.0);
-        drop(input);
+        drop(input); // Memory: -8 bytes per pixel = 9 bytes per grid cell
 
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);
-        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
+        let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?; // Memory: +1 byte per grid cell = 10 bytes per grid cell
 
         let (tx, rx) = mpsc::channel();
         for tid in 0..num_procs {
