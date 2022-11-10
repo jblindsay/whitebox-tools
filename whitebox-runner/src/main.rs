@@ -22,29 +22,33 @@ use egui::FontFamily::Proportional;
 use egui::FontId;
 use egui::TextStyle::*;
 
+static mut CLEAR_STATE: bool = false;
+
 fn main() {
-    // // command line args
-    // let mut clear_state = false;
-    // let args: Vec<String> = std::env::args().collect();
-    // if args.len() > 1 {
-    //     for arg in args {
-    //         if arg.trim().to_lowercase().contains("clear_state") {
-    //             clear_state = true;
-    //         }
-    //     }
-    // }
+    // command line args
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        for arg in args {
+            if arg.trim().to_lowercase().contains("clear_state") {
+                unsafe {
+                    CLEAR_STATE = true;
+                }
+            }
+        }
+    }
 
     let mut dir = env::current_exe().unwrap();
     dir.pop();
     // let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
     let img_directory = dir.join("img");
-    let icon_file = img_directory.join("WBT_icon.png").to_str().unwrap_or("No exe path found.").replace("\"", ""); // &format!("{}{}WBT_icon.png", exe_directory, std::path::MAIN_SEPARATOR.to_string()).replace("\"", "");
+    let icon_file = img_directory.join("WBT_icon.png").to_str().unwrap_or("No exe path found.").replace("\"", "");
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::Vec2::new(1000.0, 700.0)),
         drag_and_drop_support: true,
         icon_data: Some(load_icon(&icon_file)),
         ..Default::default()
     };
+
     eframe::run_native(
         "Whitebox Runner",
         options,
@@ -100,29 +104,51 @@ struct MyApp {
 
 impl MyApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        
         let mut slf = Self::default();
 
-        #[cfg(feature = "persistence")]
-        if let Some(storage) = cc.storage {
-            if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
-                slf.state = state;
-            } else {
-                // Initialize state manually
-                slf.state.theme = AppTheme::Dark;
-                slf.state.settings_visible = false;
-                slf.state.body_font_size = 14.0;
-                slf.state.header_font_size = 18.0;
-                slf.state.working_dir = "/".to_string();
-                slf.state.view_tool_output = true;
-                slf.state.max_procs = -1;
-                slf.state.compress_rasters = true;
-                slf.state.textbox_width = 230.0;
-                slf.state.output_command = false;
-                slf.state.show_toolboxes = true;
-                slf.state.show_tool_search = false;
-                slf.state.show_recent_tools = false;
-                slf.state.most_recent = std::collections::VecDeque::new();
+        let clear_state: bool;
+        unsafe {
+            clear_state = CLEAR_STATE;
+        }
+
+        if clear_state {
+            // Initialize state manually
+            slf.state.theme = AppTheme::Dark;
+            slf.state.settings_visible = false;
+            slf.state.body_font_size = 14.0;
+            slf.state.header_font_size = 18.0;
+            slf.state.working_dir = "/".to_string();
+            slf.state.view_tool_output = true;
+            slf.state.max_procs = -1;
+            slf.state.compress_rasters = true;
+            slf.state.textbox_width = 230.0;
+            slf.state.output_command = false;
+            slf.state.show_toolboxes = true;
+            slf.state.show_tool_search = false;
+            slf.state.show_recent_tools = false;
+            slf.state.most_recent = std::collections::VecDeque::new();
+        } else {
+            #[cfg(feature = "persistence")]
+            if let Some(storage) = cc.storage {
+                if let Some(state) = eframe::get_value(storage, eframe::APP_KEY) {
+                    slf.state = state;
+                } else {
+                    // Initialize state manually
+                    slf.state.theme = AppTheme::Dark;
+                    slf.state.settings_visible = false;
+                    slf.state.body_font_size = 14.0;
+                    slf.state.header_font_size = 18.0;
+                    slf.state.working_dir = "/".to_string();
+                    slf.state.view_tool_output = true;
+                    slf.state.max_procs = -1;
+                    slf.state.compress_rasters = true;
+                    slf.state.textbox_width = 230.0;
+                    slf.state.output_command = false;
+                    slf.state.show_toolboxes = true;
+                    slf.state.show_tool_search = false;
+                    slf.state.show_recent_tools = false;
+                    slf.state.most_recent = std::collections::VecDeque::new();
+                }
             }
         }
         

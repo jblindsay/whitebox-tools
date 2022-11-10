@@ -13,6 +13,7 @@ persistence = [
 ]
 
 [dependencies]
+anyhow = "1.0.66"
 egui = "0.19.0"
 eframe = "0.19.0"
 image = "0.24.2"
