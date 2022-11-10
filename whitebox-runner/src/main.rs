@@ -390,8 +390,8 @@ impl MyApp {
         self.most_used.sort_by(|a, b| b.cmp(a));
 
         let tool_idx = *self.tool_order.get(tool_name).unwrap();
-        let tool_info = self.tool_info[tool_idx].clone();
-        // tool_info.update_exe_path(&self.state.whitebox_exe);
+        let mut tool_info = self.tool_info[tool_idx].clone();
+        tool_info.update_exe_path(&self.state.whitebox_exe);
         self.list_of_open_tools.push(tool_info);
         self.open_tools.push(true);
     }
