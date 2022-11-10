@@ -206,35 +206,41 @@ impl MyApp {
                     .color(ui.visuals().hyperlink_color));
                     ui.end_row();
 
-                    ui.label("Installed extensions");
-                    ui.horizontal(|ui| {
-                        // ui.add_enabled_ui(false, |ui| {ui.toggle_value(&mut self.installed_extensions.gte, "GTE")});
-                        // ui.add_enabled_ui(false, |ui| {ui.toggle_value(&mut self.installed_extensions.dem, "DEM")});
-                        // ui.add_enabled_ui(false, |ui| {ui.toggle_value(&mut self.installed_extensions.lidar, "LiDAR")});
-                        // ui.add_enabled_ui(false, |ui| {ui.toggle_value(&mut self.installed_extensions.agriculture, "Prec. Ag.")});
-                        if self.installed_extensions.gte {
-                            ui.label("☑ GTE");
-                            // ui.add(egui::Label::new(egui::RichText::new("☑ GTE")
-                            // .strong()
-                            // .background_color(ui.visuals().hyperlink_color)));
-                        } else {
-                            ui.label("☐ GTE");
-                        }
-                        if self.installed_extensions.dem {
-                            ui.label("☑ DEM & Hydro");
-                        } else {
-                            ui.label("☐ DEM & Hydro");
-                        }
-                        if self.installed_extensions.lidar {
-                            ui.label("☑ LiDAR & RS");
-                        } else {
-                            ui.label("☐ LiDAR & RS");
-                        }
-                        if self.installed_extensions.agriculture {
-                            ui.label("☑ Agri.");
-                        } else {
-                            ui.label("☐ Agri.");
-                        }
+                    ui.label("Installed extensions:");
+                    ui.vertical(|ui| {
+                        ui.horizontal(|ui| {
+                            if self.installed_extensions.gte {
+                                ui.label("☑ GTE");
+                            } else {
+                                ui.label("☐ GTE");
+                            }
+                            if self.installed_extensions.lidar {
+                                ui.label("☑ LiDAR & Remote Sensing");
+                            } else {
+                                ui.label("☐ LiDAR & Remote Sensing");
+                            }
+                            
+                        });
+                        ui.horizontal(|ui| {
+                            if self.installed_extensions.dem {
+                                ui.label("☑ DEM & Hydrology");
+                            } else {
+                                ui.label("☐ DEM & Hydrology");
+                            }
+                            if self.installed_extensions.agriculture {
+                                ui.label("☑ Agriculture");
+                            } else {
+                                ui.label("☐ Agriculture");
+                            }
+                            if !self.installed_extensions.gte && 
+                            !self.installed_extensions.dem &&
+                            !self.installed_extensions.lidar &&
+                            !self.installed_extensions.agriculture {
+                                ui.label("☑ None");
+                            } else {
+                                ui.label("☐ None");
+                            }
+                        });
                     });
                     ui.end_row();
                     
