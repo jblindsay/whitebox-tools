@@ -1,5 +1,3 @@
-#![windows_subsystem = "windows"] // hide console window (Windows only)
-
 mod about;
 mod custom_widgets;
 mod extension;
@@ -10,9 +8,10 @@ mod tree;
 
 pub use custom_widgets::{ toggle };
 pub use tree::Tree;
+use anyhow::{bail, Result};
 use extension::ExtensionInstall;
 use std::collections::{ HashMap, HashSet, VecDeque };
-use std::env;
+use std::{env, path::Path};
 use std::process::Command;
 use serde_json::Value;
 use tool_dialog::ToolInfo;
@@ -25,27 +24,36 @@ use egui::TextStyle::*;
 static mut CLEAR_STATE: bool = false;
 
 fn main() {
-    // command line args
+    // command-line args
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         for arg in args {
             if arg.trim().to_lowercase().contains("clear_state") {
                 unsafe {
+                    // This is the only way that I can see to pass command-line args to the eframe app.
                     CLEAR_STATE = true;
                 }
             }
         }
     }
 
-    let mut dir = env::current_exe().unwrap();
+    let mut dir = env::current_exe().unwrap_or(Path::new("").to_path_buf());
     dir.pop();
-    // let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
     let img_directory = dir.join("img");
-    let icon_file = img_directory.join("WBT_icon.png").to_str().unwrap_or("No exe path found.").replace("\"", "");
+    let icon_file = img_directory.join("WBT_icon.png");
+    let icon_data = if icon_file.exists() {
+        // Some(load_icon(&icon_file.to_str().unwrap_or("No exe path found.").replace("\"", "")))
+        match load_icon(&icon_file.to_str().unwrap_or("No exe path found.").replace("\"", "")) {
+            Ok(v) => Some(v),
+            Err(_) => None
+        }
+    } else {
+        None
+    };
     let options = eframe::NativeOptions {
         initial_window_size: Some(egui::Vec2::new(1000.0, 700.0)),
         drag_and_drop_support: true,
-        icon_data: Some(load_icon(&icon_file)),
+        icon_data: icon_data,
         ..Default::default()
     };
 
@@ -154,12 +162,12 @@ impl MyApp {
         
         slf.theme_changed = true;
         slf.fonts_changed = true;
-        slf.state.whitebox_exe = slf.get_executable_path();
+        slf.state.whitebox_exe = slf.get_executable_path().unwrap_or("".to_string());
         if slf.state.working_dir.is_empty() {
             slf.state.working_dir = "/".to_owned();
         }
-        slf.get_tool_info();
-        slf.get_version();
+        _ = slf.get_tool_info();
+        _ = slf.get_version();
         slf.ei = ExtensionInstall::new();
         slf
     }
@@ -175,27 +183,23 @@ impl MyApp {
         self.most_used.clear();
         self.state.most_recent.clear();
 
-        self.get_tool_info();
-        self.get_version();
+        _ = self.get_tool_info();
+        _ = self.get_version();
     }
 
     // Get the tools and toolboxes
-    fn get_tool_info(&mut self) {
+    fn get_tool_info(&mut self) -> Result<()> {
         // Start by getting the executable path
-        let exe = self.get_executable_path();
+        let exe = self.get_executable_path().unwrap_or("".to_string());
         
         let output = Command::new(&exe)
                 .args(["--toolbox"])
-                .output()
-                .expect("Could not execute the WhiteboxTools binary");
+                .output()?;
 
         let mut tool_list = vec![];
         let mut toolboxes = HashSet::new();
         if output.status.success() {
-            let s = match std::str::from_utf8(&(output.stdout)) {
-                Ok(v) => v,
-                Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-            };
+            let s = std::str::from_utf8(&(output.stdout))?;
             let tool_data = s.split("\n").collect::<Vec<&str>>();
             for tool in tool_data {
                 if !tool.trim().is_empty() {
@@ -205,7 +209,7 @@ impl MyApp {
                 }
             }
         } else {
-            panic!("Could not execute the WhiteboxTools binary");
+            bail!("Could not execute the WhiteboxTools binary");
         }
 
         let mut tb: Vec<_> = toolboxes.into_iter().collect();
@@ -226,15 +230,11 @@ impl MyApp {
         // Get the tool descriptions
         let output = Command::new(exe)
                 .args(["--listtools"])
-                .output()
-                .expect("Could not execute the WhiteboxTools binary");
+                .output()?;
 
         let mut tool_descriptions = HashMap::new();
         if output.status.success() {
-            let s = match std::str::from_utf8(&(output.stdout)) {
-                Ok(v) => v,
-                Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-            };
+            let s = std::str::from_utf8(&(output.stdout))?;
             let tool_data = s.split("\n").collect::<Vec<&str>>();
             for tool in tool_data {
                 if !tool.trim().is_empty() {
@@ -243,7 +243,7 @@ impl MyApp {
                 }
             }
         } else {
-            panic!("Could not execute the WhiteboxTools binary");
+            bail!("Could not execute the WhiteboxTools binary");
         }
 
         let mut tool_order = HashMap::new();
@@ -253,9 +253,9 @@ impl MyApp {
 
         let mut num_tools = 0;
         for i in 0..tool_list.len() {
-            let json_value = self.get_tool_parameters(tool_list[i].0); // Add the tool parameters JSON object to the tool info
+            let json_value = self.get_tool_parameters(tool_list[i].0)?; // Add the tool parameters JSON object to the tool info
             // self.open_tools.push(false);
-            self.tool_info.push(ToolInfo::new(tool_list[i].0, json_value));
+            self.tool_info.push(ToolInfo::new(tool_list[i].0, tool_list[i].1, json_value));
             self.tool_info[num_tools].update_output_command(self.state.output_command);
             self.tool_info[num_tools].update_verbose_mode(self.state.view_tool_output);
             self.tool_info[num_tools].update_compress_rasters(self.state.compress_rasters);
@@ -283,93 +283,87 @@ impl MyApp {
         self.installed_extensions = installed_extensions;
         self.most_used_hm = HashMap::new(); // just to initialize
         self.most_used = vec![]; // just to initialize
+
+        Ok(())
     }
 
-    fn get_version(&mut self) {
+    fn get_version(&mut self) -> Result<()> {
         // Start by getting the executable path
-        let exe = self.get_executable_path();
-        
-        let output = Command::new(&exe)
+        if let Some(exe) = self.get_executable_path() {
+            let output = Command::new(&exe)
                 .args(["--version"])
-                .output()
-                .expect("Could not execute the WhiteboxTools binary");
+                .output()?;
         
-        if output.status.success() {
-            let s = match std::str::from_utf8(&(output.stdout)) {
-                Ok(v) => v,
-                Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-            };
-            let version_data = s.split("\n").collect::<Vec<&str>>();
-            self.wbt_version = version_data[0].to_string();
+            if output.status.success() {
+                let s = std::str::from_utf8(&(output.stdout))?;
+                let version_data = s.split("\n").collect::<Vec<&str>>();
+                self.wbt_version = version_data[0].to_string();
+                return Ok(());
+            } else {
+                println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("No message"));
+                println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("No message"));
+                bail!("Could not execute the WhiteboxTools binary");
+            }
         } else {
-            println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap());
-            println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap());
-            panic!("Could not execute the WhiteboxTools binary");
+            self.wbt_version = "Unknown version".to_string();
         }
+
+        Ok(())
     }
 
-    fn get_tool_parameters(&self, tool_name: &str) -> Value {
-        let exe = self.get_executable_path();
+    fn get_tool_parameters(&self, tool_name: &str) -> Result<Value> {
+        let exe = self.get_executable_path().unwrap_or("".to_string());
         let output = Command::new(&exe)
-                .args([&format!("--toolparameters={}", tool_name)])
-                .output()
-                .expect("Could not execute the WhiteboxTools binary");
-        
+            .args([&format!("--toolparameters={}", tool_name)])
+            .output()?;
+    
         let ret: Value;
         if output.status.success() {
-            let s = match std::str::from_utf8(&(output.stdout)) {
-                Ok(v) => v,
-                Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-            };
+            let s = std::str::from_utf8(&(output.stdout))?;
             ret = serde_json::from_str(s).unwrap_or(Value::Null);
         } else {
-            println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap());
-            println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap());
-            panic!("Could not execute the WhiteboxTools binary");
+            println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("No message"));
+            println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("No message"));
+            bail!("Error running toolparameters command");
         }
-
-        ret
+        Ok(ret)
     }
 
-    fn get_executable_path(&self) -> String {
-        if self.state.whitebox_exe.is_empty() || !std::path::Path::new(&self.state.whitebox_exe).exists() {
-            // check the app path for a whitebox executable.
-            let ext = if cfg!(target_os = "windows") {
-                ".exe"
-            } else {
-                ""
-            };
-            let mut dir = env::current_exe().unwrap();
+    fn get_executable_path(&self) -> Option<String> {
+        if self.state.whitebox_exe.is_empty() || !Path::new(&self.state.whitebox_exe).exists() {
+
+            let mut dir = env::current_exe().unwrap_or(Path::new("").to_path_buf());
             dir.pop();
-            let exe_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
 
-            let exe = format!("{}{}whitebox_tools{}", exe_directory, std::path::MAIN_SEPARATOR.to_string(), ext).replace("\"", "");
-            exe
+            let exe = dir.join(&format!("whitebox_tools{}", env::consts::EXE_SUFFIX));
+
+            // check that it exists.
+            if !exe.exists() {
+                // bail!("Could not locate a local whitebox_tools executable in the Whitebox Runner directory.");
+                return None;
+            }
+
+            Some(exe.to_str().unwrap_or("").to_string())
         } else {
-            self.state.whitebox_exe.clone()
+            Some(self.state.whitebox_exe.clone())
         }
     }
 
-    fn set_max_procs(&mut self) {
+    fn set_max_procs(&mut self) -> Result<()> {
         // Start by getting the executable path
-        let exe = self.get_executable_path();
-        
-        let output = Command::new(&exe)
+        if let Some(exe) = self.get_executable_path() {
+            let output = Command::new(&exe)
                 .args([&format!("--max_procs={}", self.state.max_procs)])
-                .output()
-                .expect("Could not execute the WhiteboxTools binary");
+                .output()?;
         
-        if !output.status.success() {
-            // let s = match std::str::from_utf8(&(output.stdout)) {
-            //     Ok(v) => v,
-            //     Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
-            // };
-            // println!("Output: {}", s);
-        // } else {
-            println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap());
-            println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap());
-            panic!("Could not execute the WhiteboxTools binary");
+            if !output.status.success() {
+                println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("No message"));
+                println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("No message"));
+                bail!("Error running --max_procs");
+            }
         }
+
+        Ok(())
     }
 
     fn update_recent_tools(&mut self, tool_name: &str) {
@@ -389,11 +383,13 @@ impl MyApp {
         self.most_used = self.most_used_hm.iter().map(|v| (*v.1, v.0.to_string())).collect::<Vec<(u16, String)>>(); // self.most_used_hm.iter().map().collect();
         self.most_used.sort_by(|a, b| b.cmp(a));
 
-        let tool_idx = *self.tool_order.get(tool_name).unwrap();
-        let mut tool_info = self.tool_info[tool_idx].clone();
-        tool_info.update_exe_path(&self.state.whitebox_exe);
-        self.list_of_open_tools.push(tool_info);
-        self.open_tools.push(true);
+        if self.tool_order.get(tool_name).is_some() {
+            let tool_idx = *self.tool_order.get(tool_name).unwrap();
+            let mut tool_info = self.tool_info[tool_idx].clone();
+            tool_info.update_exe_path(&self.state.whitebox_exe);
+            self.list_of_open_tools.push(tool_info);
+            self.open_tools.push(true);
+        }
     }
 }
 
@@ -507,7 +503,7 @@ impl eframe::App for MyApp {
                             //     self.about_visible = true;
                             // }
                             
-                            ui.toggle_value(&mut self.state.settings_visible, "⚙")
+                            ui.toggle_value(&mut self.state.settings_visible, "⛭") // ⚙
                             .on_hover_text("View settings");
                             // .clicked() {
                             //     self.state.settings_visible = !self.state.settings_visible;
@@ -549,10 +545,6 @@ impl eframe::App for MyApp {
                     let mut remove_idx = -1isize;
                     for i in 0..self.list_of_open_tools.len() {
                         if self.open_tools[i] {
-                            // let tool_nm = &self.list_of_open_tools[i];
-                            // let tool_idx = *self.tool_order.get(tool_nm).unwrap();
-                            // let mut tool_info = self.tool_info[tool_idx].clone();
-                            // tool_info.update_exe_path(&self.state.whitebox_exe);
                             self.tool_dialog(ctx, i);
                         } else {
                             remove_idx = i as isize;
@@ -629,19 +621,17 @@ struct InstalledExtensions {
     agriculture: bool,
 }
 
-fn load_icon(path: &str) -> eframe::IconData {
+fn load_icon(path: &str) -> Result<eframe::IconData> {
     let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path)
-            .expect("Failed to open icon path")
-            .into_rgba8();
+        let image = image::open(path)?.into_rgba8();
         let (width, height) = image.dimensions();
         let rgba = image.into_raw();
         (rgba, width, height)
     };
 
-    eframe::IconData {
+    Ok(eframe::IconData {
         rgba: icon_rgba,
         width: icon_width,
         height: icon_height,
-    }
+    })
 }

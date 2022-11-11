@@ -1120,7 +1120,7 @@ class WbRunner(tk.Frame):
     def update_toolbox_icon(self, event):
         curItem = self.tool_tree.focus()
         dict = self.tool_tree.item(curItem)    #retrieve the toolbox name
-        self.toolbox_name = dict.get('text'). replace("  ", "")    #delete the space between the icon and text
+        self.toolbox_name = dict.get('text').replace("  ", "")    #delete the space between the icon and text
         self.toolbox_open = dict.get('open')    #retrieve whether the toolbox is open or not
         if self.toolbox_open == True:    #set image accordingly
             self.tool_tree.item(self.toolbox_name, image = self.open_toolbox_icon)

@@ -8,7 +8,7 @@ use crate::AppTheme;
 impl MyApp {
     pub fn settings_panel(&mut self, ctx: &egui::Context) {
         egui::SidePanel::right("settings_panel").show(ctx, |ui| {
-            ui.heading("⚙ Settings");
+            ui.heading("⛭ Settings"); // ⚙
             egui::Grid::new("my_grid")
                 .num_columns(2)
                 .spacing([10.0, 6.0])
@@ -108,7 +108,7 @@ impl MyApp {
 
                     // Reset button
                     ui.label("Reset settings:");
-                    if ui.button("⟲ Reset").on_hover_text("Reset Whitebox Runner settings").clicked() {
+                    if ui.button("🔃 Reset").on_hover_text("Reset Whitebox Runner settings").clicked() {
                         self.state.theme = AppTheme::Dark;
                         // self.state.settings_visible: bool,
                         self.state.body_font_size = 14.0;
@@ -147,7 +147,7 @@ impl MyApp {
                         if ui.button("…").clicked() {
                             if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.whitebox_exe)).pick_file() {
                                 self.state.whitebox_exe = path.display().to_string();
-                                self.get_tool_info();
+                                _ = self.get_tool_info();
                             }
                         }
                     });
@@ -155,7 +155,7 @@ impl MyApp {
 
                     // Refresh tools
                     ui.label("Refresh tools now:");
-                    if ui.button("Refresh").clicked() {
+                    if ui.button("🛠 Refresh").clicked() {
                         // self.get_tool_info();
                         self.refesh_tools();
                     }
@@ -172,7 +172,7 @@ impl MyApp {
                     // ui.add(egui::Slider::new(&mut self.max_procs_str, 0.0..=360.0));
                     ui.horizontal(|ui| {
                         if ui.add(egui::DragValue::new(&mut self.state.max_procs).speed(0)).lost_focus() {
-                            self.set_max_procs();
+                            _ = self.set_max_procs();
                         }
                         ui.label("(-1 indicates all available processors)");
                     });

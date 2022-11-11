@@ -1,6 +1,7 @@
 use serde_json::Value;
 use crate::MyApp;
 use crate::toggle;
+use case::CaseExt;
 // use duct;
 use std::f32;
 // use std::io::prelude::*;
@@ -46,34 +47,32 @@ fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
             let s = parameter_type.as_str().unwrap_or("").to_lowercase();
             if s == "boolean" {
                 if default_value.is_some() {
-                    bool_value = default_value.clone().unwrap().trim().to_lowercase().parse().unwrap_or(false);
+                    bool_value = default_value.clone().unwrap_or("false".to_string()).trim().to_lowercase().parse().unwrap_or(false);
                 }
                 ParameterType::Boolean
             } else if s == "float" {
                 if default_value.is_some() {
-                    // float_value = default_value.clone().unwrap().trim().to_lowercase().parse().unwrap_or(0f32);
-                    str_value = default_value.clone().unwrap().trim().to_owned();
+                    str_value = default_value.clone().unwrap_or("".to_string()).trim().to_owned();
                 }
                 ParameterType::Float
             } else if s == "integer" {
                 if default_value.is_some() {
-                    // int_value = default_value.clone().unwrap().trim().to_lowercase().parse().unwrap_or(0usize);
-                    str_value = default_value.clone().unwrap().trim().to_owned();
+                    str_value = default_value.clone().unwrap_or("".to_string()).trim().to_owned();
                 }
                 ParameterType::Integer
             } else if s == "string" {
                 if default_value.is_some() {
-                    str_value = default_value.clone().unwrap();
+                    str_value = default_value.clone().unwrap_or("".to_string());
                 }
                 ParameterType::String
             } else if s == "directory" {
                 if default_value.is_some() {
-                    str_value = default_value.clone().unwrap();
+                    str_value = default_value.clone().unwrap_or("".to_string());
                 }
                 ParameterType::Directory
             } else if s == "stringornumber" {
                 if default_value.is_some() {
-                    str_value = default_value.clone().unwrap();
+                    str_value = default_value.clone().unwrap_or("".to_string());
                 }
                 ParameterType::StringOrNumber
             } else {
@@ -199,7 +198,7 @@ fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
                 .map(|v| v.as_str().unwrap_or("").to_owned())
                 .collect();
                 if default_value.is_some() {
-                    str_value = default_value.clone().unwrap();
+                    str_value = default_value.clone().unwrap_or("".to_string());
                 }
                 ParameterType::OptionList
             } else if !parameter_type["FileList"].is_null() {
@@ -407,6 +406,7 @@ pub struct ToolParameter {
 #[derive(Default, Clone)]
 pub struct ToolInfo {
     pub tool_name: String,
+    pub toolbox: String,
     pub parameters: Vec<ToolParameter>,
     json_parameters: Value,
     cancel: Arc<Mutex<bool>>,
@@ -422,10 +422,11 @@ pub struct ToolInfo {
 }
 
 impl ToolInfo {
-    pub fn new(tool_name: &str, parameters: Value) -> Self {
+    pub fn new(tool_name: &str, toolbox: &str, parameters: Value) -> Self {
         let parameter_values = parse_parameters(&parameters);
         ToolInfo {
             tool_name: tool_name.to_owned(),
+            toolbox: toolbox.to_owned(),
             parameters: parameter_values,
             json_parameters: parameters,
             cancel: Arc::new(Mutex::new(false)),
@@ -436,15 +437,16 @@ impl ToolInfo {
             verbose_mode: false,
             compress_rasters: false,
             progress: Arc::new(Mutex::new(0.0)),
-            progress_label: Arc::new(Mutex::new("Progress:".to_string())),
+            progress_label: Arc::new(Mutex::new("Progress".to_string())),
             continuous_mode: Arc::new(Mutex::new(false)),
         }
     }
 
     pub fn run(&mut self) {
-        let mut cancel = self.cancel.lock().unwrap();
-        *cancel = false;
-
+        if let Ok(mut cancel) = self.cancel.lock() {
+            *cancel = false;
+        };
+        
         // self.animate_progress = true;
         if self.exe_path.trim().is_empty() {
             // we have an unspecified non-optional param
@@ -694,56 +696,24 @@ impl ToolInfo {
         }
 
         let continuous_mode = Arc::clone(&self.continuous_mode);
-        let mut cm = continuous_mode.lock().unwrap();
-        *cm = true;
-
-        let tool_output = Arc::clone(&self.tool_output);
-        let mut to = tool_output.lock().unwrap();
-
-        // to.push_str(&format!("Running {}...\n", self.tool_name));
-        // // to.push_str(&param_str);
-
-        if self.output_command {
-            to.push_str(
-                &format!(
-                    "{} -r={} --wd=\"{}\" {}\n", 
-                    &self.exe_path, 
-                    self.tool_name, 
-                    self.working_dir, 
-                    param_str
-                )
-            );
+        if let Ok(mut cm) = continuous_mode.lock() {
+            *cm = true;
         }
 
-        // // this works with stdout but not with the gui.
-        // let cmd = duct::cmd(&self.exe_path, &args);
-        // let reader = cmd.stderr_to_stdout().reader().unwrap();
-        // let mut lines = BufReader::new(reader).lines();
-        // while let Some(line) = lines.next() {
-        //     // match line.unwrap() {
-        //     //     Some(line) => {
-        //     //         println!("{line}");
-        //     //         self.tool_output.push_str(&format!("{}\n",line));
-        //     //     },
-        //     //     None => {
-        //     //         println!("Error")
-        //     //         self.tool_output.push_str("Error");
-        //     //         break;
-        //     //     }
-        //     // }
-        //     println!("{:?}", line);
-        //     self.tool_output.push_str(&format!("{:?}\n", line));
-        // }
-
-
-        // let output = Command::new(&self.exe_path)
-        //     .args(&args)
-        //     .stdout(Stdio::piped())
-        //     .output().unwrap();
-
-        // println!("status: {}", output.status);
-        // std::io::stdout().write_all(&output.stdout).unwrap();
-        // std::io::stdout().write_all(&output.stderr).unwrap();
+        let tool_output = Arc::clone(&self.tool_output);
+        if let Ok(mut to) = tool_output.lock() {
+            if self.output_command {
+                to.push_str(
+                    &format!(
+                        "{} -r={} --wd=\"{}\" {}\n", 
+                        &self.exe_path, 
+                        self.tool_name, 
+                        self.working_dir, 
+                        param_str
+                    )
+                );
+            }
+        }
 
         let exe_path = Arc::new(self.exe_path.clone());
         let exe = Arc::clone(&exe_path);
@@ -762,36 +732,22 @@ impl ToolInfo {
 
             let mut buf = [0u8; 200];
             let mut do_read = || -> usize {
-                let read = stdout.read(&mut buf).unwrap();
-                let line = std::str::from_utf8(&buf[0..read]).unwrap();
-                let mut to = tool_output.lock().unwrap();
+                let read = stdout.read(&mut buf).unwrap_or(0);
+                let line = std::str::from_utf8(&buf[0..read]).unwrap_or("");
+                if let Ok(mut to) = tool_output.lock() {
+                    if line.contains("%") {
+                        let val1: Vec<&str> = line.split(":").collect::<Vec<&str>>();
+                        let percent_val = val1[1].replace("%", "").trim().parse::<f32>().unwrap_or(0.0);
+                        if let Ok(mut val) = pcnt.lock() {
+                            *val = percent_val / 100.0;
+                        }
 
-                if line.contains("%") {
-                    let val1: Vec<&str> = line.split(":").collect::<Vec<&str>>();
-                    let percent_val = val1[1].replace("%", "").trim().parse::<f32>().unwrap_or(0.0);
-                    // println!("{percent_val}");
-                    let mut val = pcnt.lock().unwrap();
-                    *val = percent_val / 100.0;
-                    let mut val2 = progress_label.lock().unwrap();
-                    *val2 = val1[0].to_string();
+                        if let Ok(mut val2) = progress_label.lock() {
+                            *val2 = val1[0].to_string();
+                        }
+                    }
+                    to.push_str(&format!("{line}"));
                 }
-                to.push_str(&format!("{line}"));
-
-                // let str_data = std::str::from_utf8(&buf[0..read]).unwrap();
-                // let lines = str_data.split("\n").collect::<Vec<&str>>();
-                // for line in &lines {
-                //     if line.contains("%") {
-                //         let val1: Vec<&str> = line.split(":").collect::<Vec<&str>>();
-                //         let percent_val = val1[1].replace("%", "").trim().parse::<f32>().unwrap_or(0.0);
-                //         // println!("{percent_val}");
-                //         let mut val = pcnt.lock().unwrap();
-                //         *val = percent_val / 100.0;
-                //         let mut val2 = progress_label.lock().unwrap();
-                //         *val2 = val1[0].to_string();
-                //     } else {
-                //         to.push_str(&format!("{line}\n"));
-                //     }
-                // }
                 
                 std::io::stdout().flush().unwrap();
                 read
@@ -799,16 +755,23 @@ impl ToolInfo {
 
             let mut last;
             while child.try_wait().unwrap().is_none() {
-                let mut cancel2 = cancel.lock().unwrap();
-                if *cancel2 {
-                    // cancel the process
-                    let mut to = tool_output.lock().unwrap();
-                    to.push_str("\nCancelling process...\n");
+                if let Ok(mut cancel2) = cancel.lock() {
+                    if *cancel2 {
+                        // cancel the process
+                        if let Ok(mut to) = tool_output.lock() {
+                            to.push_str("\nCancelling process...\n");
 
-                    child.kill().expect("Error encountered while killing process");
-                    *cancel2 = false; // reset the cancel.
-
-                    to.push_str("\nProcess cancelled\n");
+                            match child.kill() {
+                                Ok(_) => {
+                                    *cancel2 = false; // reset the cancel.
+                                    to.push_str("\nProcess cancelled\n");
+                                },
+                                Err(_) => {
+                                    to.push_str("\nError encountered while killing process\n");
+                                }
+                            }
+                        }
+                    }
                 }
 
                 let _last = do_read();
@@ -821,38 +784,45 @@ impl ToolInfo {
                 last = do_read();
             }
 
-            let mut val = pcnt.lock().unwrap();
-            *val = 0.0;
+            if let Ok(mut val) = pcnt.lock() {
+                *val = 0.0;
+            }
 
-            let mut val2 = progress_label.lock().unwrap();
-            *val2 = "Progress".to_string();
+            if let Ok(mut val2) = progress_label.lock() {
+                *val2 = "Progress".to_string();
+            }
 
-            let mut cm = continuous_mode.lock().unwrap();
-            *cm = false;
+            if let Ok(mut cm) = continuous_mode.lock() {
+                *cm = false;
+            }
         });
 
         // self.animate_progress = false;
     }
 
     pub fn cancel(&mut self) {
-        // self.cancel = true;
-        // println!("Cancelling {} ({})", self.tool_name, self.cancel);
-        let mut cancel = self.cancel.lock().unwrap();
-        *cancel = true;
+        if let Ok(mut cancel) = self.cancel.lock() {
+            *cancel = true;
+        }
     }
 
     pub fn reset(&mut self) {
         self.parameters = parse_parameters(&self.json_parameters);
-        let mut cancel = self.cancel.lock().unwrap();
-        *cancel = false;
-        let mut tool_output = self.tool_output.lock().unwrap();
-        *tool_output = String::new();
-        
-        let mut val = self.progress.lock().unwrap();
-        *val = 0.0;
+        if let Ok(mut cancel) = self.cancel.lock() {
+            *cancel = false;
+        }
 
-        let mut val2 = self.progress_label.lock().unwrap();
-        *val2 = "Progress".to_string();
+        if let Ok(mut tool_output) = self.tool_output.lock() {
+            *tool_output = String::new();
+        }
+        
+        if let Ok(mut val) = self.progress.lock() {
+            *val = 0.0;
+        }
+
+        if let Ok(mut val2) = self.progress_label.lock() {
+            *val2 = "Progress".to_string();
+        }
     }
 
     pub fn update_exe_path(&mut self, exe_path: &str) {
@@ -884,12 +854,11 @@ impl ToolInfo {
         if output.status.success() {
             let s = match std::str::from_utf8(&(output.stdout)) {
                 Ok(v) => v,
-                Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+                Err(_) => return Some("https://www.whiteboxgeo.com/manual/wbt_book/intro.html".to_string()),
             };
             return Some(s.to_string());
-        } else {
-            panic!("Could not execute the WhiteboxTools binary");
         }
+        Some("https://www.whiteboxgeo.com/manual/wbt_book/intro.html".to_string())
     }
 }
 
@@ -897,26 +866,43 @@ impl MyApp {
 
     pub fn tool_dialog(&mut self, ctx: &egui::Context, tool_idx: usize) {
         let mut close_dialog = false;
-        self.get_tool_parameters(&self.list_of_open_tools[tool_idx].tool_name);
+        _ = self.get_tool_parameters(&self.list_of_open_tools[tool_idx].tool_name);
         egui::Window::new(&format!("{}", &self.list_of_open_tools[tool_idx].tool_name))
         .id(egui::Id::new(format!("{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx)))
         .open(&mut self.open_tools[tool_idx])
         .resizable(true)
-        .vscroll(true)
+        .vscroll(false)
         .show(ctx, |ui| {
+
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("Tool Parameters:").strong());
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    if ui.button("🔃").on_hover_text("Reset parameters").clicked() { // ⟲
+                        self.list_of_open_tools[tool_idx].reset();
+                    }
+                });
+            });
+            // ui.separator();
+
+            egui::ScrollArea::vertical()
+                .min_scrolled_height(50.)
+                .max_height(150.0)
+                .auto_shrink([true; 2])
+                .show(ui, |ui| {
+
             egui::Grid::new(&format!("grid{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
             .num_columns(2)
             .spacing([10.0, 6.0])
             .striped(true)
             .show(ui, |ui| {
 
-                ui.label("Tool Parameters:");
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("⟲").on_hover_text("Reset parameters").clicked() {
-                        self.list_of_open_tools[tool_idx].reset();
-                    }
-                });
-                ui.end_row();
+                // ui.label(egui::RichText::new("Tool Parameters:").strong());
+                // ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                //     if ui.button("⟲").on_hover_text("Reset parameters").clicked() {
+                //         self.list_of_open_tools[tool_idx].reset();
+                //     }
+                // });
+                // ui.end_row();
             
 
                 for parameter in &mut (self.list_of_open_tools[tool_idx].parameters) {
@@ -1243,38 +1229,62 @@ impl MyApp {
                     ui.end_row();
                 }
             });
+        
+            });
 
-            ui.separator();
-            ui.vertical(|ui| {
-                ui.set_height(170.);
-                ui.horizontal(|ui| {
-                    ui.label("Tool Output:");
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("Clear").on_hover_text("Clear tool output").clicked() {
-                            let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
-                            *tool_output = "".to_string();
+            if self.state.view_tool_output {
+                ui.separator();
+                ui.vertical(|ui| {
+                    ui.set_height(145.);
+                    ui.horizontal(|ui| {
+                        ui.label(egui::RichText::new("Tool Output:").strong());
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if ui.button("✖").on_hover_text("Clear tool output").clicked() {
+                                if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                                    *tool_output = "".to_string();
+                                }
+                            }
+                        });
+                    });
+
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                            ui.add(
+                                egui::TextEdit::multiline(&mut *tool_output)
+                                    .id_source(&format!("out_{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
+                                    .cursor_at_end(true)
+                                    .font(egui::TextStyle::Monospace)
+                                    .desired_rows(8)
+                                    .lock_focus(true)
+                                    .desired_width(f32::INFINITY)
+                            );
+
+                            if let Ok(cm) = self.list_of_open_tools[tool_idx].continuous_mode.lock() {
+                                if *cm {
+                                    ui.scroll_to_cursor(Some(egui::Align::BOTTOM));
+                                }
+                            }
                         }
                     });
                 });
 
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
-                    ui.add(
-                        egui::TextEdit::multiline(&mut *tool_output)
-                            .id_source(&format!("out_{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
-                            .cursor_at_end(true)
-                            .font(egui::TextStyle::Monospace)
-                            .desired_rows(10)
-                            .lock_focus(true)
-                            .desired_width(f32::INFINITY)
-                    );
-                    
-                    let cm = self.list_of_open_tools[tool_idx].continuous_mode.lock().unwrap();
-                    if *cm {
-                        ui.scroll_to_cursor(Some(egui::Align::BOTTOM));
-                    }
+                ui.horizontal(|ui| {
+                    ui.vertical(|ui| {
+                        // ui.small(""); // just to add some vertical distance between it and the output text box.
+                        if let Ok(progress) = self.list_of_open_tools[tool_idx].progress.lock() {
+                            if let Ok(progress_label) = self.list_of_open_tools[tool_idx].progress_label.lock() {
+                                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                    ui.add(egui::ProgressBar::new(*progress)
+                                    .desired_width(100.0)
+                                    .show_percentage());
+
+                                    ui.label(&*progress_label);
+                                });
+                            }
+                        }
+                    });
                 });
-            });
+            }
 
             ui.separator();
 
@@ -1288,29 +1298,77 @@ impl MyApp {
                     self.list_of_open_tools[tool_idx].cancel();
                 }
                 if ui.button("Help").clicked() {
-                    let help_str = self.list_of_open_tools[tool_idx].get_tool_help();
-                    if help_str.is_some() {
-                        let mut tool_output = self.list_of_open_tools[tool_idx].tool_output.lock().unwrap();
-                        *tool_output = help_str.unwrap_or("".to_string());
+                    let toolbox = self.list_of_open_tools[tool_idx]
+                    .toolbox
+                    .replace("GIS", "Gis")
+                    .replace("TIN", "Tin")
+                    .replace("LiDAR", "Lidar")
+                    .replace("/", "")
+                    .replace(" ", "")
+                    .to_snake();
+
+                    let tool_name = self.list_of_open_tools[tool_idx]
+                    .tool_name
+                    .replace("GIS", "Gis")
+                    .replace("TIN", "Tin")
+                    .replace("LiDAR", "Lidar")
+                    .replace("/", "")
+                    .replace(" ", "");
+                    let url = format!("https://www.whiteboxgeo.com/manual/wbt_book/available_tools/{}.html#{}", toolbox, tool_name);
+                    println!("URL: {url}");
+                    if !webbrowser::open(&url).is_ok() {
+                        if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                            tool_output.push_str("Could not navigate to help link in browser.\n");
+
+                            let help_str = self.list_of_open_tools[tool_idx].get_tool_help();
+                            if help_str.is_some() {
+                                *tool_output = help_str.unwrap_or("".to_string());
+                            }
+                        }
+                    }
+
+                }
+                if ui.button("View Code").clicked() {
+                    // let url = self.view_code(&(self.list_of_open_tools[tool_idx].tool_name));
+                    let output = std::process::Command::new(&self.state.whitebox_exe)
+                            .args([&format!("--viewcode={}", self.list_of_open_tools[tool_idx].tool_name)])
+                            .output()
+                            .expect("Could not execute the WhiteboxTools binary");
+                    
+                    if output.status.success() {
+                        let url = match std::str::from_utf8(&(output.stdout)) {
+                            Ok(v) => v.to_string(),
+                            Err(_) => "https://github.com/jblindsay/whitebox-tools".to_string(),
+                        };
+                        if !webbrowser::open(&url).is_ok() {
+                            if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                                tool_output.push_str("Could not navigate to code link in browser.\n");
+                            }
+                        }
+                    } else {
+                        println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("None"));
+                        println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("None"));
                     }
                 }
                 if ui.button("Close").clicked() {
                     close_dialog = true;
                 }
-                let progress = *(self.list_of_open_tools[tool_idx].progress).lock().unwrap();
-                let progress_label = &*(self.list_of_open_tools[tool_idx].progress_label).lock().unwrap();
-                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    ui.add(egui::ProgressBar::new(progress)
-                    .desired_width(100.0)
-                    .show_percentage());
 
-                    ui.label(progress_label);
-                })
+                // let progress = *(self.list_of_open_tools[tool_idx].progress).lock().unwrap_or(0.);
+                // let progress_label = &*(self.list_of_open_tools[tool_idx].progress_label).lock().unwrap_or("Progress");
+                // ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                //     ui.add(egui::ProgressBar::new(progress)
+                //     .desired_width(100.0)
+                //     .show_percentage());
+
+                //     ui.label(progress_label);
+                // });
             });
 
-            let cm = self.list_of_open_tools[tool_idx].continuous_mode.lock().unwrap();
-            if *cm {
-                ctx.request_repaint();
+            if let Ok(cm) = self.list_of_open_tools[tool_idx].continuous_mode.lock() {
+                if *cm {
+                    ctx.request_repaint();
+                }
             }
         });
 

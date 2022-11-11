@@ -6,7 +6,7 @@ impl MyApp {
         // Tool tree side panel
         egui::SidePanel::left("tool_panel").show(ctx, |ui| {
             ui.vertical_centered(|ui| {
-                ui.label(" ");
+                ui.small(" "); // just to put some vertical space between the header and the top.
                 ui.heading(&format!("🛠 {} Available Tools", self.num_tools));
             });
             ui.separator();
@@ -33,6 +33,7 @@ impl MyApp {
                     self.state.show_tool_search = false;
                     self.state.show_recent_tools = true;
                 }
+                // ui.label("          "); // to make the panel wide enough for some of the longer names.
             });
             ui.separator();
                     
@@ -144,19 +145,25 @@ impl MyApp {
                             )
                             .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
 
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                if ui.button("Clear").on_hover_text("Clear search keywords").clicked() {
-                                    self.search_words_str = "".to_string();
-                                }
-                            });
+                            // ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            //     if ui.button("Clear").on_hover_text("Clear search keywords").clicked() {
+                            //         self.search_words_str = "".to_string();
+                            //     }
+                            // });
                         });
                         
-                        ui.add(
-                            egui::TextEdit::singleline(&mut self.search_words_str)
-                            .desired_width(self.state.textbox_width)
-                            
-                            // .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
-                        );
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::TextEdit::singleline(&mut self.search_words_str)
+                                .desired_width(self.state.textbox_width)
+                                
+                                // .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
+                            );
+
+                            if ui.button("✖").on_hover_text("Clear search keywords").clicked() {
+                                self.search_words_str = "".to_string();
+                            }
+                        });
 
                         ui.separator();
                         
@@ -227,7 +234,7 @@ impl MyApp {
                                 );
 
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                    if ui.button("Clear").on_hover_text("Clear recent tools").clicked() {
+                                    if ui.button("🔃").on_hover_text("Reset recent tools").clicked() {
                                         self.state.most_recent.clear();
                                     }
                                 });
@@ -263,7 +270,7 @@ impl MyApp {
                                 );
 
                                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                    if ui.button("Clear").on_hover_text("Clear most-used tools").clicked() {
+                                    if ui.button("🔃").on_hover_text("Reset most-used tools").clicked() {
                                         self.most_used.clear();
                                         self.most_used_hm.clear();
                                     }
