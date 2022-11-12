@@ -1030,23 +1030,27 @@ impl MyApp {
                                             let mut files: Vec<String> = vec![];
                                             if let Ok(paths) = fs::read_dir(&self.state.working_dir) {
                                                 for path in paths {
-                                                    let p = path.unwrap().path();
-                                                    if p.is_file() {
-                                                        if !extensions.is_empty() {
-                                                            if let Some(exe) = p.extension() {
-                                                                let ext_str = exe.to_str().unwrap_or("").to_lowercase();
-                                                                for e in &extensions {
-                                                                    if e.to_lowercase() == ext_str {
-                                                                        let short_fn = p.file_name().unwrap().to_str().unwrap_or("").to_string();
-                                                                        files.push(short_fn);
-                                                                        break;
+                                                    if let Ok(dir_entry) = path {
+                                                        let p = dir_entry.path();
+                                                        if p.is_file() {
+                                                            if !extensions.is_empty() {
+                                                                if let Some(exe) = p.extension() {
+                                                                    let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                    for e in &extensions {
+                                                                        if e.to_lowercase() == ext_str {
+                                                                            if let Some(short_fn) = p.file_name() {
+                                                                                files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                                break;
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
-                                                            }
-                                                        } else {
-                                                            let short_fn = p.file_name().unwrap().to_str().unwrap_or("").to_string();
-                                                            files.push(short_fn);
-                                                        }                                        
+                                                            } else {
+                                                                if let Some(short_fn) = p.file_name() {
+                                                                    files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                }
+                                                            }                                        
+                                                        }
                                                     }
                                                 }
                                             }
