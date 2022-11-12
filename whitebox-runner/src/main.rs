@@ -8,6 +8,7 @@ mod tree;
 
 pub use custom_widgets::{ toggle };
 pub use tree::Tree;
+use about::WbLogo;
 use anyhow::{bail, Result};
 use extension::ExtensionInstall;
 use std::collections::{ HashMap, HashSet, VecDeque };
@@ -105,9 +106,12 @@ struct MyApp {
     search_words_str: String,
     about_visible: bool,
     extension_visible: bool,
+    case_sensitive_search: bool,
+    num_search_hits: usize,
     ei: ExtensionInstall,
     most_used_hm: HashMap<String, u16>,
     most_used: Vec<(u16, String)>,
+    wb_logo: WbLogo,
 }
 
 impl MyApp {

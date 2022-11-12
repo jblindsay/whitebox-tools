@@ -36,7 +36,7 @@ impl SplitColourComposite {
         let name = "SplitColourComposite".to_string();
         let toolbox = "Image Processing Tools".to_string();
         let description =
-            "This tool splits an RGB colour composite image into separate multispectral images."
+            "Splits an RGB colour composite image into separate multispectral images."
                 .to_string();
 
         let mut parameters = vec![];

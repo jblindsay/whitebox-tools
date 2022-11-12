@@ -1,7 +1,7 @@
 {
     "tool_name": "GaussianScaleSpace",
     "exe": "gaussian_scale_space",
-    "short_description": "This tool uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.",
+    "short_description": "Uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.",
     "toolbox": "Geomorphometric Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=GaussianScaleSpace --dem=DEM.tif --output=slope.tif --output_zscore=slope_z.tif --output_scale=slope_scale.tif --sigma=0.5 --step=1.0 --num_steps=100 --lsp='Slope'",

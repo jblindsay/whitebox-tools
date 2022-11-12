@@ -1,7 +1,7 @@
 {
     "tool_name": "HeatMap",
     "exe": "heat_map",
-    "short_description": "This tool calculates a heat map, or kernel density estimation (KDE), for an input point set.",
+    "short_description": "Calculates a heat map, or kernel density estimation (KDE), for an input point set.",
     "toolbox": "GIS Analysis",
     "license": "Proprietary",
     "example": ">> .*EXE_NAME -r=HeatMap -i=points.shp -o=density.tif --bandwidth=1000.0 --kernel='quartic' --cell_size=10.0",

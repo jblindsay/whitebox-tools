@@ -35,7 +35,7 @@ impl PolygonLongAxis {
         let name = "PolygonLongAxis".to_string();
         let toolbox = "GIS Analysis".to_string();
         let description =
-            "This tool can be used to map the long axis of polygon features.".to_string();
+            "Used to map the long axis of polygon features.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

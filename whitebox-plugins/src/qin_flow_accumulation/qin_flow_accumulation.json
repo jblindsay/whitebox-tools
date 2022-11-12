@@ -1,7 +1,7 @@
 {
     "tool_name": "QinFlowAccumulation",
     "exe": "qin_flow_accumulation",
-    "short_description": "This tool calculates Qin et al. (2007) flow accumulation.",
+    "short_description": "Calculates Qin et al. (2007) flow accumulation.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=QinFlowAccumulation --dem=DEM.tif --output=QinMFD.tif --out_type='specific contributing area' --exponent=15.0 --max_slope=30.0 --threshold=10000",

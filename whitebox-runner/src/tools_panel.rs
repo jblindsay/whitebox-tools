@@ -143,7 +143,7 @@ impl MyApp {
                                 .strong()
                                 // .color(ui.visuals().hyperlink_color)
                             )
-                            .on_hover_text("Search for keywords (separated by commas) in tool names or descriptions");
+                            .on_hover_text("Search for keywords in tool names or descriptions. Keywords should be separated by spaces (AND) or commas (OR). AND (&) and OR (|) operators are also valid to combine search words.");
 
                             // ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             //     if ui.button("Clear").on_hover_text("Clear search keywords").clicked() {
@@ -165,6 +165,19 @@ impl MyApp {
                             }
                         });
 
+                        ui.small(""); // just a vertical spacer
+
+                        ui.horizontal(|ui| {
+                            if self.num_search_hits != 1 {
+                                ui.label(&format!("Found {} tools", self.num_search_hits));
+                            } else {
+                                ui.label(&format!("Found {} tool", self.num_search_hits));
+                            }
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                ui.checkbox(&mut self.case_sensitive_search, "Case sensitive");
+                            });
+                        });
+
                         ui.separator();
                         
                         if !self.search_words_str.trim().is_empty() {
@@ -173,38 +186,71 @@ impl MyApp {
                             .auto_shrink([false; 2])
                             .show(ui, |ui| {
                                 // Perform the search...
-                                let search_words = self.search_words_str.split(",").collect::<Vec<&str>>();
+                                let mut found: bool;
+                                let search_words_str = self.search_words_str
+                                                        .replace("||", ",").replace("|", ",")
+                                                        .replace(" OR ", ",").replace(" or ", ",")
+                                                        .replace(" AND ", "&").replace(" and ", "&")
+                                                        .replace(" & ", "&").replace(" ", "&");
+                                let search_words = search_words_str.split(",").collect::<Vec<&str>>();
                                 let mut hs = std::collections::HashSet::new();
                                 for k in 0..search_words.len() {
-                                    let sw = search_words[k].trim().to_lowercase();
+                                    let mut sw_raw = search_words[k].trim().replace("AND", "&");
+                                    if !self.case_sensitive_search {
+                                        sw_raw = sw_raw.to_lowercase();
+                                    }
+                                    let sw_list = sw_raw.split("&").collect::<Vec<&str>>();
                                     for tool_info in &self.tool_info {
-                                        let tn = tool_info.tool_name.to_string();
-                                        let desc = self.tool_descriptions.get(&tn).unwrap_or(&String::new()).to_lowercase();
-                                        if tn.to_lowercase().contains(&sw) || desc.to_lowercase().contains(&sw) {
-                                            hs.insert(tn);
+                                        let mut tn = tool_info.tool_name.to_string();
+                                        let mut desc = self.tool_descriptions.get(&tn).unwrap_or(&String::new()).clone();
+                                        if !self.case_sensitive_search {
+                                            tn = tn.to_lowercase();
                                         }
+                                        if !self.case_sensitive_search {
+                                            desc = desc.to_lowercase();
+                                        }
+                                        found = true;
+                                        for sw in &sw_list {
+                                            // if !self.case_sensitive_search {
+                                            //     if tn.contains(sw) {
+                                            //         println!("{} {} {} {}", tn, sw, tn.contains(sw), sw_list.len());
+                                            //     }
+                                            // }
+                                            if !tn.contains(sw) && !desc.contains(sw) {
+                                                // At least one of the compound search words is not 
+                                                // in this tool name/description.
+                                                found = false;
+                                                break;
+                                            }
+                                        }
+                                        if found { hs.insert(tool_info.tool_name.to_string()); }
                                     }
                                 }
 
-                                let mut tools: Vec<_> = hs.into_iter().collect();
-                                tools.sort();
+                                self.num_search_hits = hs.len();
 
-                                for tool in tools {
-                                    // ui.label(format!("{}", tool));
-                                    let tool_index = *self.tool_order.get(&tool).unwrap();
-                                    // if ui.toggle_value(&mut self.open_tools[tool_index], &tool)
-                                    // .on_hover_text(self.tool_descriptions.get(&tool).unwrap_or(&String::new()))
-                                    // .clicked() {
-                                    //     self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
-                                    //     // let tn = self.tool_info[tool_index].tool_name.clone();
-                                    //     // self.update_recent_tools(&tn);
-                                    //     clicked_tool = self.tool_info[tool_index].tool_name.clone();
-                                    // }
-                                    if ui.button(&tool)
-                                    .on_hover_text(self.tool_descriptions.get(&tool).unwrap_or(&String::new()))
-                                    .clicked() {
-                                        // self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
-                                        clicked_tool = self.tool_info[tool_index].tool_name.clone();
+                                if !hs.is_empty() {
+                                    let mut tools: Vec<_> = hs.into_iter().collect();
+                                    tools.sort();
+
+                                    for tool in tools {
+                                        // ui.label(format!("{}", tool));
+                                        if let Some(tool_index) = self.tool_order.get(&tool) {
+                                            // if ui.toggle_value(&mut self.open_tools[tool_index], &tool)
+                                            // .on_hover_text(self.tool_descriptions.get(&tool).unwrap_or(&String::new()))
+                                            // .clicked() {
+                                            //     self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
+                                            //     // let tn = self.tool_info[tool_index].tool_name.clone();
+                                            //     // self.update_recent_tools(&tn);
+                                            //     clicked_tool = self.tool_info[tool_index].tool_name.clone();
+                                            // }
+                                            if ui.button(&tool)
+                                            .on_hover_text(self.tool_descriptions.get(&tool).unwrap_or(&String::new()))
+                                            .clicked() {
+                                                // self.tool_info[tool_index].update_exe_path(&self.state.whitebox_exe);
+                                                clicked_tool = self.tool_info[*tool_index].tool_name.clone();
+                                            }
+                                        }
                                     }
                                 }
 
@@ -215,7 +261,10 @@ impl MyApp {
                                 // (current_scroll2, max_scroll2)
                             })
                             .inner;
+                        } else if self.num_search_hits > 0 {
+                            self.num_search_hits = 0;
                         }
+
                     });
                 } else if self.state.show_recent_tools {
                     ui.vertical(|ui| {

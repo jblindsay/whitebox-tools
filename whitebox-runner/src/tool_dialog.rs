@@ -3,7 +3,7 @@ use crate::MyApp;
 use crate::toggle;
 use case::CaseExt;
 // use duct;
-use std::f32;
+use std::{f32, fs, path};
 // use std::io::prelude::*;
 // use std::io::BufReader;
 // use std::process::{Command, Stdio};
@@ -312,6 +312,12 @@ fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
                 }
                 ParameterType::ExistingFileOrFloat
             } else if !parameter_type["VectorAttributeField"].is_null() {
+                str_vec_value = parameter_type["VectorAttributeField"]
+                .as_array()
+                .unwrap_or(&empty_arr)
+                .iter()
+                .map(|v| v.as_str().unwrap_or("").to_owned())
+                .collect();
                 ParameterType::VectorAttributeField
             } else {
                 println!("Object: {:?}", parameter_type);
@@ -890,209 +896,279 @@ impl MyApp {
                 .auto_shrink([true; 2])
                 .show(ui, |ui| {
 
-            egui::Grid::new(&format!("grid{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
-            .num_columns(2)
-            .spacing([10.0, 6.0])
-            .striped(true)
-            .show(ui, |ui| {
+                egui::Grid::new(&format!("grid{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
+                .num_columns(2)
+                .spacing([10.0, 6.0])
+                .striped(true)
+                .show(ui, |ui| {
 
-                // ui.label(egui::RichText::new("Tool Parameters:").strong());
-                // ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                //     if ui.button("⟲").on_hover_text("Reset parameters").clicked() {
-                //         self.list_of_open_tools[tool_idx].reset();
-                //     }
-                // });
-                // ui.end_row();
-            
-
-                for parameter in &mut (self.list_of_open_tools[tool_idx].parameters) {
-                    let suffix = if parameter.optional { "*".to_string() } else { "".to_string() };
-                    let parameter_label = if parameter.name.len() + suffix.len() < 25 {
-                        format!("{}{}", &parameter.name, suffix)
-                    } else {
-                        format!("{}...{}", &parameter.name[0..(22-suffix.len())], suffix)
-                    };
-                    let param_nm = if !parameter.optional { parameter.name.clone() } else { format!("{} [Optional]", parameter.name) };
-                    let hover_text = match parameter.file_type {
-                        ParameterFileType::Vector | ParameterFileType::RasterAndVector => {
-                            format!("{}:  {} (Geometry Type={:?})", param_nm, parameter.description, parameter.geometry_type)
-                        },
-                        _ => {
-                            format!("{}:  {}", param_nm, parameter.description)
+                    // The following is used for ParameterType::VectorAttributeField. The hints for this widget
+                    // need to be able to retrieve the value of it's parent ParameterType::ExistingFile, which
+                    // it cannot do within the loop simply by referencing self.list_of_open_tools[tool_idx].parameters
+                    // directly, due to a double mut borrow error. So this does a pre-pass looking for these
+                    // widgets and cloning values.
+                    let mut flagged_parameter = Vec::with_capacity(self.list_of_open_tools[tool_idx].parameters.len() - 1); // self.list_of_open_tools[tool_idx].parameters[0].clone();
+                    for m in 0..self.list_of_open_tools[tool_idx].parameters.len() {
+                        if self.list_of_open_tools[tool_idx].parameters[m].parameter_type == ParameterType::VectorAttributeField {
+                            let flag = self.list_of_open_tools[tool_idx].parameters[m].str_vec_value[1].clone();
+                            for n in 0..self.list_of_open_tools[tool_idx].parameters.len() {
+                                for f in &self.list_of_open_tools[tool_idx].parameters[n].flags {
+                                    if f.to_string() == flag {
+                                        flagged_parameter.push(self.list_of_open_tools[tool_idx].parameters[n].str_value.clone());
+                                    }
+                                }
+                            }
                         }
-                    };
-                    ui.label(&parameter_label)
-                    .on_hover_text(&hover_text);
+                    }
+                    let mut flagged_parameter_idx = 0;
+                    for parameter in &mut (self.list_of_open_tools[tool_idx].parameters) {
+                        let suffix = if parameter.optional { "*".to_string() } else { "".to_string() };
+                        let parameter_label = if parameter.name.len() + suffix.len() < 25 {
+                            format!("{}{}", &parameter.name, suffix)
+                        } else {
+                            format!("{}...{}", &parameter.name[0..(22-suffix.len())], suffix)
+                        };
+                        let param_nm = if !parameter.optional { parameter.name.clone() } else { format!("{} [Optional]", parameter.name) };
+                        let hover_text = match parameter.file_type {
+                            ParameterFileType::Vector | ParameterFileType::RasterAndVector => {
+                                format!("{}:  {} (Geometry Type={:?})", param_nm, parameter.description, parameter.geometry_type)
+                            },
+                            _ => {
+                                format!("{}:  {}", param_nm, parameter.description)
+                            }
+                        };
+                        ui.label(&parameter_label)
+                        .on_hover_text(&hover_text);
 
-                    match parameter.parameter_type {
-                        ParameterType::Boolean => {
-                            ui.add(toggle(&mut parameter.bool_value));
-                        },
-                        ParameterType::Directory => {
-                            if ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            ).double_clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(mut path) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_file() {
-                                    parameter.str_value = path.display().to_string();
-                                    // update the working directory
-                                    path.pop();
-                                    self.state.working_dir = path.display().to_string();
+                        match parameter.parameter_type {
+                            ParameterType::Boolean => {
+                                ui.add(toggle(&mut parameter.bool_value));
+                            },
+                            ParameterType::Directory => {
+                                if ui.add(
+                                    egui::TextEdit::singleline(&mut parameter.str_value)
+                                    .desired_width(self.state.textbox_width)
+                                ).double_clicked() {
+                                    let fdialog = get_file_dialog(&parameter.file_type); 
+                                    if let Some(mut path) = fdialog
+                                    .set_directory(std::path::Path::new(&self.state.working_dir))
+                                    .pick_file() {
+                                        parameter.str_value = path.display().to_string();
+                                        // update the working directory
+                                        path.pop();
+                                        self.state.working_dir = path.display().to_string();
+                                    }
                                 }
-                            }
-                            if ui.button("…").clicked() {
-                                if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.working_dir)).pick_folder() {
-                                    parameter.str_value = path.display().to_string();
+                                if ui.button("…").clicked() {
+                                    if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.working_dir)).pick_folder() {
+                                        parameter.str_value = path.display().to_string();
+                                    }
                                 }
-                            }
-                        },
-                        ParameterType::ExistingFile => {
-                            if ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            ).double_clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(mut path) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_file() {
-                                    parameter.str_value = path.display().to_string();
+                            },
+                            ParameterType::ExistingFile => {
+                                ui.horizontal(|ui| {
                                     
-                                    if parameter.file_type == ParameterFileType::Vector && 
-                                    parameter.geometry_type != VectorGeometryType::Any {
-                                        // Read the file and make sure that it is the right geometry type.
-                                        match Shapefile::read(&parameter.str_value) {
-                                            Ok(vector_data) => {
-                                                let base_shape_type = vector_data.header.shape_type.base_shape_type();
-                                                // make sure the input vector file is of the right shape type
-                                                let err_found = match parameter.geometry_type {
-                                                    VectorGeometryType::Point => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::Point {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::Line => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::PolyLine {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::Polygon => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::Polygon {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::LineOrPolygon => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::PolyLine && base_shape_type != ShapeType::Polygon {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    _ => { false }
-                                                };
-                                                if err_found {
-                                                    if rfd::MessageDialog::new()
-                                                    .set_level(rfd::MessageLevel::Warning)
-                                                    .set_title("Wrong Vector Geometry Type")
-                                                    .set_description("The specified file does not have the correct vector geometry type for this parameter. Do you want to continue?")
-                                                    .set_buttons(rfd::MessageButtons::YesNo)
-                                                    .show() {
-                                                        // do nothing
-                                                    } else {
-                                                        // Reset the parameter string value.
-                                                        parameter.str_value = "".to_string();
+                                    let resp = ui.add(
+                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        .desired_width(self.state.textbox_width - 22.0)
+                                    );
+                                    if resp.lost_focus() {
+                                        if !parameter.str_value.is_empty() && !path::Path::new(&parameter.str_value).exists() {
+                                            // prepend the working directory and see if that file exists.
+                                            let f = path::Path::new(&self.state.working_dir).join(&parameter.str_value);
+                                            if f.exists() {
+                                                parameter.str_value = f.to_str().unwrap_or("").to_string();
+                                            } else {
+                                                if rfd::MessageDialog::new()
+                                                .set_level(rfd::MessageLevel::Warning)
+                                                .set_title("File does not exist")
+                                                .set_description("The specified file does not exist in the current working directory. Do you want to continue?")
+                                                .set_buttons(rfd::MessageButtons::YesNo)
+                                                .show() {
+                                                    // do nothing
+                                                } else {
+                                                    // Reset the parameter string value.
+                                                    parameter.str_value = "".to_string();
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if resp.double_clicked() {
+                                        let fdialog = get_file_dialog(&parameter.file_type); 
+                                        if let Some(mut path) = fdialog
+                                        .set_directory(std::path::Path::new(&self.state.working_dir))
+                                        .pick_file() {
+                                            parameter.str_value = path.display().to_string();
+                                            
+                                            if parameter.file_type == ParameterFileType::Vector && 
+                                            parameter.geometry_type != VectorGeometryType::Any {
+                                                check_geometry_type(parameter, &self.state.working_dir);
+                                            }
+
+                                            // update the working directory
+                                            path.pop();
+                                            self.state.working_dir = path.display().to_string();
+                                        }
+                                    }
+                                    
+                                    ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
+
+                                    let response = ui.button("⏷");
+                                    let popup_id = ui.make_persistent_id(&format!("{}", parameter.name));
+                                    if response.clicked() {
+                                        ui.memory().toggle_popup(popup_id);
+                                    }
+                                    egui::popup::popup_below_widget(ui, popup_id, &response, |ui| {
+                                        let bg_clr = ui.style().visuals.extreme_bg_color; // .widgets.inactive.bg_fill;
+                                        ui.set_min_width(self.state.textbox_width);
+                                        egui::ScrollArea::both()
+                                        .max_height(400.0)
+                                        .auto_shrink([true; 2])
+                                        .show(ui, |ui| {
+                                            // Find all the files in the working directory that match the parameter file type
+                                            let extensions = get_file_extensions(&parameter.file_type);
+                                            let mut files: Vec<String> = vec![];
+                                            if let Ok(paths) = fs::read_dir(&self.state.working_dir) {
+                                                for path in paths {
+                                                    let p = path.unwrap().path();
+                                                    if p.is_file() {
+                                                        if !extensions.is_empty() {
+                                                            if let Some(exe) = p.extension() {
+                                                                let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                for e in &extensions {
+                                                                    if e.to_lowercase() == ext_str {
+                                                                        let short_fn = p.file_name().unwrap().to_str().unwrap_or("").to_string();
+                                                                        files.push(short_fn);
+                                                                        break;
+                                                                    }
+                                                                }
+                                                            }
+                                                        } else {
+                                                            let short_fn = p.file_name().unwrap().to_str().unwrap_or("").to_string();
+                                                            files.push(short_fn);
+                                                        }                                        
                                                     }
                                                 }
-                                            },
-                                            Err(_) => {} // do nothing
+                                            }
+
+                                            files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                                            for file in &files {
+                                                if ui.add(egui::Button::new(file).fill(bg_clr)).clicked() {
+                                                    parameter.str_value = format!("{}{}{}", self.state.working_dir, std::path::MAIN_SEPARATOR, file.clone());
+                                                    
+                                                    if parameter.file_type == ParameterFileType::Vector && 
+                                                    parameter.geometry_type != VectorGeometryType::Any {
+                                                        check_geometry_type(parameter, &self.state.working_dir);
+                                                    }
+                                                }
+                                            }
+                                        });
+                                    });
+                                });
+
+                                if ui.button("…").clicked() {
+                                    let fdialog = get_file_dialog(&parameter.file_type); 
+                                    if let Some(mut path) = fdialog
+                                    .set_directory(std::path::Path::new(&self.state.working_dir))
+                                    .pick_file() {
+                                        parameter.str_value = path.display().to_string();
+
+                                        if parameter.file_type == ParameterFileType::Vector && 
+                                        parameter.geometry_type != VectorGeometryType::Any {
+                                            check_geometry_type(parameter, &self.state.working_dir);
+                                        }
+
+                                        // update the working directory
+                                        path.pop();
+                                        self.state.working_dir = path.display().to_string();
+                                    }
+                                }
+                            },
+                            ParameterType::ExistingFileOrFloat => {
+                                ui.horizontal(|ui| {
+                                    if ui.add(
+                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        .desired_width(self.state.textbox_width)
+                                    ).double_clicked() {
+                                        let fdialog = get_file_dialog(&parameter.file_type); 
+                                        if let Some(mut path) = fdialog
+                                        .set_directory(std::path::Path::new(&self.state.working_dir))
+                                        .pick_file() {
+                                            parameter.str_value = path.display().to_string();
+                                            // update the working directory
+                                            path.pop();
+                                            self.state.working_dir = path.display().to_string();
+                                        }
+                                    }
+                                    if ui.button("…").clicked() {
+                                        let fdialog = get_file_dialog(&parameter.file_type); 
+                                        if let Some(mut path) = fdialog
+                                        .set_directory(std::path::Path::new(&self.state.working_dir))
+                                        .pick_file() {
+                                            parameter.str_value = path.display().to_string();
+                                            // update the working directory
+                                            path.pop();
+                                            self.state.working_dir = path.display().to_string();
                                         }
                                     }
 
-                                    // update the working directory
-                                    path.pop();
-                                    self.state.working_dir = path.display().to_string();
-                                }
-                            }
-
-                            if ui.button("…").clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(mut path) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_file() {
-                                    parameter.str_value = path.display().to_string();
-
-                                    if parameter.file_type == ParameterFileType::Vector && 
-                                    parameter.geometry_type != VectorGeometryType::Any {
-                                        // Read the file and make sure that it is the right geometry type.
-                                        match Shapefile::read(&parameter.str_value) {
-                                            Ok(vector_data) => {
-                                                let base_shape_type = vector_data.header.shape_type.base_shape_type();
-                                                // make sure the input vector file is of the right shape type
-                                                let err_found = match parameter.geometry_type {
-                                                    VectorGeometryType::Point => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::Point {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::Line => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::PolyLine {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::Polygon => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::Polygon {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    VectorGeometryType::LineOrPolygon => {
-                                                        let mut ret = false;
-                                                        if base_shape_type != ShapeType::PolyLine && base_shape_type != ShapeType::Polygon {
-                                                            ret = true;
-                                                        }
-                                                        ret
-                                                    },
-                                                    _ => { false }
-                                                };
-                                                if err_found {
-                                                    if rfd::MessageDialog::new()
-                                                    .set_level(rfd::MessageLevel::Warning)
-                                                    .set_title("Wrong Vector Geometry Type")
-                                                    .set_description("The specified file does not have the correct vector geometry type for this parameter. Do you want to continue?")
-                                                    .set_buttons(rfd::MessageButtons::YesNo)
-                                                    .show() {
-                                                        // do nothing
-                                                    } else {
-                                                        // Reset the parameter string value.
-                                                        parameter.str_value = "".to_string();
-                                                    }
-                                                }
-                                            },
-                                            Err(_) => {} // do nothing
-                                        }
+                                    ui.label("OR");
+                                    
+                                    ui.add(
+                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        .desired_width(50.0)
+                                    );
+                                });
+                            },
+                            ParameterType::FileList => {
+                                if ui.add(
+                                    egui::TextEdit::multiline(&mut parameter.str_value)
+                                    .desired_width(self.state.textbox_width)
+                                ).double_clicked() {
+                                    let fdialog = get_file_dialog(&parameter.file_type); 
+                                    if let Some(mut path) = fdialog
+                                    .set_directory(std::path::Path::new(&self.state.working_dir))
+                                    .pick_file() {
+                                        parameter.str_value = path.display().to_string();
+                                        // update the working directory
+                                        path.pop();
+                                        self.state.working_dir = path.display().to_string();
                                     }
+                                }
+                                if ui.button("…").clicked() {
+                                    let fdialog = get_file_dialog(&parameter.file_type);
 
-                                    // update the working directory
-                                    path.pop();
-                                    self.state.working_dir = path.display().to_string();
+                                    if let Some(mut paths) = fdialog
+                                    .set_directory(std::path::Path::new(&self.state.working_dir))
+                                    .pick_files() {
+                                        // let s = String::new();
+                                        for path in &paths {
+                                            parameter.str_value.push_str(&format!("{}\n", path.display().to_string()));
+                                        }
+                                        
+                                        // update the working directory
+                                        paths[0].pop();
+                                        self.state.working_dir = paths[0].display().to_string();
+                                    }
                                 }
                             }
-                        },
-                        ParameterType::ExistingFileOrFloat => {
-                            ui.horizontal(|ui| {
+                            ParameterType::Float | ParameterType::Integer => {
+                                // ui.add(egui::DragValue::new(&mut parameter.float_value).speed(0).max_decimals(5));
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut parameter.str_value)
+                                    .desired_width(50.0) //self.state.textbox_width)
+                                );
+
+                                // let text_edit = egui::TextEdit::singleline(&mut parameter.str_value)
+                                // .desired_width(50.0);
+                                // let output = text_edit.show(ui);
+                                // if output.response.double_clicked() {
+                                //     // What to do here?
+                                // }
+
+                            },
+                            ParameterType::NewFile => {
+                                // ui.text_edit_singleline(&mut parameter.str_value);
                                 if ui.add(
                                     egui::TextEdit::singleline(&mut parameter.str_value)
                                     .desired_width(self.state.textbox_width)
@@ -1109,127 +1185,90 @@ impl MyApp {
                                 }
                                 if ui.button("…").clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(mut path) = fdialog
-                                    .set_directory(std::path::Path::new(&self.state.working_dir))
-                                    .pick_file() {
+                                    if let Some(path) = fdialog.set_directory(std::path::Path::new(&self.state.working_dir)).save_file() {
                                         parameter.str_value = path.display().to_string();
-                                        // update the working directory
-                                        path.pop();
-                                        self.state.working_dir = path.display().to_string();
                                     }
                                 }
-
-                                ui.label("OR");
-                                
+                            },
+                            ParameterType::OptionList => {
+                                let alternatives = parameter.str_vec_value.clone();
+                                egui::ComboBox::from_id_source(&parameter.name).show_index(
+                                    ui,
+                                    &mut parameter.int_value,
+                                    alternatives.len(),
+                                    |i| alternatives[i].to_owned()
+                                );
+                            }
+                            ParameterType::String => {
                                 ui.add(
                                     egui::TextEdit::singleline(&mut parameter.str_value)
-                                    .desired_width(50.0)
+                                    .desired_width(self.state.textbox_width)
                                 );
-                            });
-                        },
-                        ParameterType::FileList => {
-                            if ui.add(
-                                egui::TextEdit::multiline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            ).double_clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(mut path) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_file() {
-                                    parameter.str_value = path.display().to_string();
-                                    // update the working directory
-                                    path.pop();
-                                    self.state.working_dir = path.display().to_string();
-                                }
-                            }
-                            if ui.button("…").clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type);
+                            },
+                            ParameterType::StringOrNumber => {
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut parameter.str_value)
+                                    .desired_width(self.state.textbox_width)
+                                );
+                            },
+                            ParameterType::VectorAttributeField => {
+                                ui.horizontal(|ui| {
+                                    ui.add(
+                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        .desired_width(self.state.textbox_width - 22.0)
+                                    );
+                                    ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
 
-                                if let Some(mut paths) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_files() {
-                                    // let s = String::new();
-                                    for path in &paths {
-                                        parameter.str_value.push_str(&format!("{}\n", path.display().to_string()));
-                                    }
+                                    let response = ui.button("⏷");
                                     
-                                    // update the working directory
-                                    paths[0].pop();
-                                    self.state.working_dir = paths[0].display().to_string();
-                                }
-                            }
-                        }
-                        ParameterType::Float | ParameterType::Integer => {
-                            // ui.add(egui::DragValue::new(&mut parameter.float_value).speed(0).max_decimals(5));
-                            ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(50.0) //self.state.textbox_width)
-                            );
+                                    let popup_id2 = ui.make_persistent_id(&format!("{}", parameter.name));
+                                    if response.clicked() {
+                                        ui.memory().toggle_popup(popup_id2);
+                                    }
+                                    egui::popup::popup_below_widget(ui, popup_id2, &response, |ui| {
+                                        let bg_clr = ui.style().visuals.extreme_bg_color; // .widgets.inactive.bg_fill;
+                                        ui.set_min_width(150.0);
+                                        egui::ScrollArea::both()
+                                        .max_height(200.0)
+                                        .auto_shrink([true; 2])
+                                        .show(ui, |ui| {
+                                            let mut file_name = flagged_parameter[flagged_parameter_idx].clone();
+                                            let mut file_path = path::PathBuf::new();
+                                            file_path.push(&file_name);
+                                            if !file_path.exists() {
+                                                // prepend the working directory and see if that file exists.
+                                                let mut file_path = path::PathBuf::new();
+                                                file_path.push(&self.state.working_dir);
+                                                file_path = file_path.join(&file_name);
+                                                // file_path = path::PathBuf::new(&self.state.working_dir).join(&file_name);
+                                                if file_path.exists() {
+                                                    file_name = file_path.to_str().unwrap_or("").to_string();
+                                                }
+                                            }
+                                            if file_path.exists() {
+                                                if let Ok(shape) = Shapefile::read(&file_name) {
+                                                    for att in &shape.attributes.fields {
+                                                        if ui.add(egui::Button::new(&att.name).fill(bg_clr)).clicked() {
+                                                            parameter.str_value = att.name.clone();
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                if ui.add(egui::Button::new("No attribute hints are available: The parent vector file must first be specified").fill(bg_clr)).clicked() {
+                                                    // do nothing
+                                                }
+                                            }
+                                        });
+                                    });
+                                });
 
-                            // let text_edit = egui::TextEdit::singleline(&mut parameter.str_value)
-                            // .desired_width(50.0);
-                            // let output = text_edit.show(ui);
-                            // if output.response.double_clicked() {
-                            //     // What to do here?
-                            // }
-
-                        },
-                        ParameterType::NewFile => {
-                            // ui.text_edit_singleline(&mut parameter.str_value);
-                            if ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            ).double_clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(mut path) = fdialog
-                                .set_directory(std::path::Path::new(&self.state.working_dir))
-                                .pick_file() {
-                                    parameter.str_value = path.display().to_string();
-                                    // update the working directory
-                                    path.pop();
-                                    self.state.working_dir = path.display().to_string();
-                                }
-                            }
-                            if ui.button("…").clicked() {
-                                let fdialog = get_file_dialog(&parameter.file_type); 
-                                if let Some(path) = fdialog.set_directory(std::path::Path::new(&self.state.working_dir)).save_file() {
-                                    parameter.str_value = path.display().to_string();
-                                }
-                            }
-                        },
-                        ParameterType::OptionList => {
-                            let alternatives = parameter.str_vec_value.clone();
-                            egui::ComboBox::from_id_source(&parameter.name).show_index(
-                                ui,
-                                &mut parameter.int_value,
-                                alternatives.len(),
-                                |i| alternatives[i].to_owned()
-                            );
+                                flagged_parameter_idx += 1;
+                            },
                         }
-                        ParameterType::String => {
-                            ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            );
-                        },
-                        ParameterType::StringOrNumber => {
-                            ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            );
-                        },
-                        ParameterType::VectorAttributeField => {
-                            ui.add(
-                                egui::TextEdit::singleline(&mut parameter.str_value)
-                                .desired_width(self.state.textbox_width)
-                            );
-                        },
+                        
+                        ui.end_row();
                     }
-                    
-                    ui.end_row();
-                }
-            });
-        
+                });
             });
 
             if self.state.view_tool_output {
@@ -1378,6 +1417,99 @@ impl MyApp {
     }
 }
 
+fn check_geometry_type(parameter: &mut ToolParameter, working_dir: &str) {
+    if !path::Path::new(&parameter.str_value).exists() {
+        // prepend the working directory and see if that file exists.
+        let f = path::Path::new(working_dir).join(&parameter.str_value);
+        if f.exists() {
+            parameter.str_value = f.to_str().unwrap_or("").to_string();
+        }
+    }
+    // Read the file and make sure that it is the right geometry type.
+    match Shapefile::read(&parameter.str_value) {
+        Ok(vector_data) => {
+            let base_shape_type = vector_data.header.shape_type.base_shape_type();
+            // make sure the input vector file is of the right shape type
+            let err_found = match parameter.geometry_type {
+                VectorGeometryType::Point => {
+                    let mut ret = false;
+                    if base_shape_type != ShapeType::Point {
+                        ret = true;
+                    }
+                    ret
+                },
+                VectorGeometryType::Line => {
+                    let mut ret = false;
+                    if base_shape_type != ShapeType::PolyLine {
+                        ret = true;
+                    }
+                    ret
+                },
+                VectorGeometryType::Polygon => {
+                    let mut ret = false;
+                    if base_shape_type != ShapeType::Polygon {
+                        ret = true;
+                    }
+                    ret
+                },
+                VectorGeometryType::LineOrPolygon => {
+                    let mut ret = false;
+                    if base_shape_type != ShapeType::PolyLine && base_shape_type != ShapeType::Polygon {
+                        ret = true;
+                    }
+                    ret
+                },
+                _ => { false }
+            };
+            if err_found {
+                if rfd::MessageDialog::new()
+                .set_level(rfd::MessageLevel::Warning)
+                .set_title("Wrong Vector Geometry Type")
+                .set_description("The specified file does not have the correct vector geometry type for this parameter. Do you want to continue?")
+                .set_buttons(rfd::MessageButtons::YesNo)
+                .show() {
+                    // do nothing
+                } else {
+                    // Reset the parameter string value.
+                    parameter.str_value = "".to_string();
+                }
+            }
+        },
+        Err(_) => {} // do nothing
+    }
+}
+
+fn get_file_extensions(pft: &ParameterFileType) -> Vec<&str> {
+    match pft {
+        ParameterFileType::Lidar => {
+            vec!["las", "laz", "zLidar"]
+        },
+        ParameterFileType::Raster => {
+            vec!["tif", "tiff", "bil", "hdr", "flt", "sdat", "sgrd", "rdc", "rst", "grd", "txt", "asc", "tas", "dep"]
+        },
+        ParameterFileType::Vector => {
+            vec!["shp"]
+        },
+        ParameterFileType::RasterAndVector => {
+            vec!["shp", "tif", "tiff", "bil", "hdr", "flt", "sdat", "sgrd", "rdc", "rst", "grd", "txt", "asc", "tas", "dep"]
+        },
+        ParameterFileType::Text => {
+            vec!["txt"]
+        },
+        ParameterFileType::Html => {
+            vec!["html"]
+        },
+        ParameterFileType::Csv => {
+            vec!["csv"]
+        },
+        ParameterFileType::Dat => {
+            vec!["dat"]
+        },
+        _ => { 
+            vec![]
+        }
+    }
+}
 
 fn get_file_dialog(pft: &ParameterFileType) -> rfd::FileDialog {
     match pft {

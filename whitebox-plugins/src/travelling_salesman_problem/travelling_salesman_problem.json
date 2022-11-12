@@ -1,7 +1,7 @@
 {
     "tool_name": "TravellingSalesmanProblem",
     "exe": "travelling_salesman_problem",
-    "short_description": "This tool finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.",
+    "short_description": "Finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.",
     "toolbox": "GIS Analysis",
     "license": "MIT",
     "example": ">> .*EXE_NAME -r=TravellingSalesmanProblem -i=input.shp -o=route.shp --duration=120",

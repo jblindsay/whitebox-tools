@@ -1,7 +1,7 @@
 {
     "tool_name": "LocalQuadraticRegression",
     "exe": "local_quadratic_regression",
-    "short_description": "This tool is an implementation of the constrained quadratic regression algorithm using a flexible window size described in Wood (1996).",
+    "short_description": "An implementation of the constrained quadratic regression algorithm using a flexible window size described in Wood (1996).",
     "toolbox": "Geomorphometric Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=LocalQuadraticRegression --dem=DEM.tif --output=out_ras.tif --filter=15",

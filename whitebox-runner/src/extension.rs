@@ -81,7 +81,7 @@ impl MyApp {
                 ui.horizontal(|ui| {
                     ui.label("Output:");
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if ui.button("Clear").on_hover_text("Clear tool output").clicked() {
+                        if ui.button("✖").on_hover_text("Clear tool output").clicked() {
                             self.ei.text_output = "".to_string();
                         }
                     });

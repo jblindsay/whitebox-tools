@@ -155,14 +155,14 @@ impl MyApp {
 
                     // Refresh tools
                     ui.label("Refresh tools now:");
-                    if ui.button("🛠 Refresh").clicked() {
+                    if ui.button("🔧 Refresh").clicked() {
                         // self.get_tool_info();
                         self.refesh_tools();
                     }
                     ui.end_row();
 
                     // Version
-                    ui.label("WhiteboxTools Version:");
+                    ui.label("WhiteboxTools version:");
                     ui.label(&self.wbt_version.replace("by Dr. John B. Lindsay (c)", "(c) J. Lindsay").replace("(c) Dr. John Lindsay", "(c) J. Lindsay")); // too long
                     ui.end_row();
                     

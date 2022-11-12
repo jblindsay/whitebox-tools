@@ -1,7 +1,7 @@
 {
     "tool_name": "Rho8FlowAccumulation",
     "exe": "rho8_flow_accumulation",
-    "short_description": "This tool calculates Fairfield and Leymarie (1991) flow accumulation.",
+    "short_description": "Calculates Fairfield and Leymarie (1991) flow accumulation.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=Rho8FlowAccumulation --dem=DEM.tif --output=Rho8.tif --out_type='specific contributing area'",

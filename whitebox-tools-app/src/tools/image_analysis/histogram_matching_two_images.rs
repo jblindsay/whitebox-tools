@@ -53,7 +53,7 @@ impl HistogramMatchingTwoImages {
         // public constructor
         let name = "HistogramMatchingTwoImages".to_string();
         let toolbox = "Image Processing Tools/Image Enhancement".to_string();
-        let description = "This tool alters the cumulative distribution function of a raster image to that of another image."
+        let description = "Alters the cumulative distribution function of a raster image to that of another image."
             .to_string();
 
         let mut parameters = vec![];

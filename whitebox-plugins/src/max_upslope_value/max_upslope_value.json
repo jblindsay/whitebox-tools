@@ -1,7 +1,7 @@
 {
     "tool_name": "MaxUpslopeValue",
     "exe": "max_upslope_value",
-    "short_description": "This tool calculates the maximum upslope value from an input values raster along flowpaths.",
+    "short_description": "Calculates the maximum upslope value from an input values raster along flowpaths.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=MaxUpslopeValue --dem=DEM.tif --values=values.tif --output=out.tif",

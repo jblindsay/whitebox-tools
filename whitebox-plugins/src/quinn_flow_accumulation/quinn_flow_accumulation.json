@@ -1,7 +1,7 @@
 {
     "tool_name": "QuinnFlowAccumulation",
     "exe": "quinn_flow_accumulation",
-    "short_description": "This tool calculates Quinn et al. (1995) flow accumulation.",
+    "short_description": "Calculates Quinn et al. (1995) flow accumulation.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=QuinnFlowAccumulation --dem=DEM.tif --output=QMFD.tif --out_type='specific contributing area' --exponent=1.1 --threshold=10000",

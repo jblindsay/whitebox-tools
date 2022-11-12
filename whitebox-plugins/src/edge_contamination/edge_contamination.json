@@ -1,7 +1,7 @@
 {
     "tool_name": "EdgeContamination",
     "exe": "edge_contamination",
-    "short_description": "This tool identifies grid cells within an input DEM that may be impacted by edge contamination for hydrological applications.",
+    "short_description": "Identifies grid cells within an input DEM that may be impacted by edge contamination for hydrological applications.",
     "toolbox": "Hydrological Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=EdgeContamination --dem=DEM.tif --output=edge_cont.tif --flow_type='dinf'",

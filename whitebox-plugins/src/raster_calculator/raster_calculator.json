@@ -1,7 +1,7 @@
 {
     "tool_name": "RasterCalculator",
     "exe": "raster_calculator",
-    "short_description": "This tool performs a complex mathematical operations on one or more input raster images on a cell-to-cell basis.",
+    "short_description": "Performs a complex mathematical operations on one or more input raster images on a cell-to-cell basis.",
     "toolbox": "Math and Stats Tools",
     "license": "MIT",
     "example": ".*EXE_NAME -r=ConditionalEvaluation -i=DEM.tif --statement='value > 2500.0' --true=2500.0 --false=DEM.tif --output=onlyLowPlaces.tif",

@@ -1,7 +1,7 @@
 {
     "tool_name": "ExposureTowardsWindFlux",
     "exe": "exposure_towards_wind_flux",
-    "short_description": "This tool evaluates hydrologic connectivity within a DEM",
+    "short_description": "Evaluates hydrologic connectivity within a DEM",
     "toolbox": "Geomorphometric Analysis",
     "license": "MIT",
     "example": ".*EXE_NAME -r=ExposureTowardsWindFlux -dem=input.tif -o=exposure.tif --azimuth=35.0 --max_dist=500.0",
