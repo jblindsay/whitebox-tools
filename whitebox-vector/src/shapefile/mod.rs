@@ -563,7 +563,7 @@ impl Shapefile {
                     self.projection.push_str(&format!("{}\n", line_unwrapped));
                 }
             }
-            Err(_) => println!("Warning: Projection file not located."),
+            Err(_) => {}, //println!("Warning: Projection file not located."),
         }
 
         ///////////////////////////////

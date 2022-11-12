@@ -3,11 +3,19 @@ mod custom_widgets;
 mod extension;
 mod settings_panel;
 mod tool_dialog;
+mod tool_info;
 mod tools_panel;
 mod tree;
 
 pub use custom_widgets::{ toggle };
 pub use tree::Tree;
+pub use tool_info::{
+    ParameterFileType,
+    ParameterType,
+    ToolInfo,
+    ToolParameter,
+    VectorGeometryType,
+};
 use about::WbLogo;
 use anyhow::{bail, Result};
 use extension::ExtensionInstall;
@@ -15,7 +23,6 @@ use std::collections::{ HashMap, HashSet, VecDeque };
 use std::{env, path::Path};
 use std::process::Command;
 use serde_json::Value;
-use tool_dialog::ToolInfo;
 use eframe::egui;
 use egui::CentralPanel;
 use egui::FontFamily::Proportional;
@@ -336,18 +343,63 @@ impl MyApp {
     fn get_executable_path(&self) -> Option<String> {
         if self.state.whitebox_exe.is_empty() || !Path::new(&self.state.whitebox_exe).exists() {
 
+            // First, check the path of the WbRunner executable.
             let mut dir = env::current_exe().unwrap_or(Path::new("").to_path_buf());
             dir.pop();
 
             let exe = dir.join(&format!("whitebox_tools{}", env::consts::EXE_SUFFIX));
 
             // check that it exists.
-            if !exe.exists() {
-                // bail!("Could not locate a local whitebox_tools executable in the Whitebox Runner directory.");
-                return None;
+            if exe.exists() {
+                return Some(exe.to_str().unwrap_or("").to_string())
             }
 
-            Some(exe.to_str().unwrap_or("").to_string())
+            // Perhaps WBT has been installed to PATH, in which case we will find it via the
+            // whereis command on unix-like OSs.
+            if cfg!(unix) {
+                if let Ok(output) = Command::new("whereis")
+                .arg("whitebox_tools")
+                .output() {
+                    if output.status.success() {
+                        if let Ok(s) = std::str::from_utf8(&(output.stdout)) {
+                            let exe = s.replace("whitebox_tools: ", "").replace("\"", "").replace("\n", "").trim().to_string();
+                            if Path::new(&exe).exists() {
+                                println!("Found whitebox_tools in: {exe}");
+                                return Some(exe)
+                            }
+                        }
+                    }
+                }
+            // } else if cfg!(windows) {
+            //     // Not sure that there is an equivalent on Windows.
+            }
+
+            // Prompt the user to locate the whitebox_tools executable
+            let msg = if cfg!(unix) {
+                "Please locate the `whitebox_tools` executable file before continuing."
+            } else {
+                "Please locate the `whitebox_tools.exe` executable file before continuing."
+            };
+
+            if rfd::MessageDialog::new()
+            .set_level(rfd::MessageLevel::Warning)
+            .set_title("WhiteboxTools Executable File")
+            .set_description(msg)
+            .set_buttons(rfd::MessageButtons::Ok)
+            .show() {
+                // do nothing
+            }
+
+            if let Some(file) = rfd::FileDialog::new()
+            .set_title("Please locate the WhiteboxTools executable file")
+            .set_directory("/")
+            .pick_file() {
+                if file.exists() {
+                    return Some(file.to_str().unwrap_or("").to_string());
+                }
+            }
+
+            None // Nothing left to do.
         } else {
             Some(self.state.whitebox_exe.clone())
         }
