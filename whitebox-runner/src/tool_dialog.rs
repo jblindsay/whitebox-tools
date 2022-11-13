@@ -783,10 +783,10 @@ fn get_file_dialog(pft: &ParameterFileType) -> rfd::FileDialog {
     match pft {
         ParameterFileType::Lidar => {
             rfd::FileDialog::new()
+            .add_filter("Lidar Files", &["las", "laz", "zLidar"])
             .add_filter("LAS Files", &["las"])
             .add_filter("LAZ Files", &["laz"])
             .add_filter("zLidar Files", &["zLidar"])
-            .add_filter("Lidar Files", &["las", "laz", "zLidar"])
         },
         ParameterFileType::Raster => {
             rfd::FileDialog::new()
