@@ -1,7 +1,7 @@
 use crate::MyApp;
 use crate::toggle;
 use case::CaseExt;
-use std::{f32, fs, path};
+use std::{f32, fs, path, path::Path};
 use whitebox_vector::{ShapeType, Shapefile};
 use crate::tool_info::{
     ParameterFileType,
@@ -14,6 +14,7 @@ impl MyApp {
 
     pub fn tool_dialog(&mut self, ctx: &egui::Context, tool_idx: usize) {
         let mut close_dialog = false;
+        let mut wk_dir = String::new();
         _ = self.get_tool_parameters(&self.list_of_open_tools[tool_idx].tool_name);
         egui::Window::new(&format!("{}", &self.list_of_open_tools[tool_idx].tool_name))
         .id(egui::Id::new(format!("{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx)))
@@ -92,13 +93,14 @@ impl MyApp {
                                     .desired_width(self.state.textbox_width)
                                 ).double_clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(mut path) = fdialog
+                                    if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
                                     .pick_file() {
                                         parameter.str_value = path.display().to_string();
                                         // update the working directory
-                                        path.pop();
-                                        self.state.working_dir = path.display().to_string();
+                                        // path.pop();
+                                        // self.state.working_dir = path.display().to_string();
+                                        wk_dir = path.display().to_string();
                                     }
                                 }
                                 if ui.button("…").clicked() {
@@ -137,7 +139,7 @@ impl MyApp {
                                     }
                                     if resp.double_clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
-                                        if let Some(mut path) = fdialog
+                                        if let Some(path) = fdialog
                                         .set_directory(std::path::Path::new(&self.state.working_dir))
                                         .pick_file() {
                                             parameter.str_value = path.display().to_string();
@@ -148,73 +150,175 @@ impl MyApp {
                                             }
 
                                             // update the working directory
-                                            path.pop();
-                                            self.state.working_dir = path.display().to_string();
+                                            // path.pop();
+                                            // self.state.working_dir = path.display().to_string();
+                                            // self.update_working_dir(&path.display().to_string());
+                                            wk_dir = path.display().to_string();
                                         }
                                     }
                                     
                                     ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
 
-                                    let response = ui.button("⏷");
-                                    let popup_id = ui.make_persistent_id(&format!("{}", parameter.name));
-                                    if response.clicked() {
-                                        ui.memory().toggle_popup(popup_id);
-                                    }
-                                    egui::popup::popup_below_widget(ui, popup_id, &response, |ui| {
-                                        let bg_clr = ui.style().visuals.extreme_bg_color; // .widgets.inactive.bg_fill;
-                                        ui.set_min_width(self.state.textbox_width);
-                                        egui::ScrollArea::both()
-                                        .max_height(400.0)
-                                        .auto_shrink([true; 2])
-                                        .show(ui, |ui| {
-                                            // Find all the files in the working directory that match the parameter file type
-                                            let extensions = get_file_extensions(&parameter.file_type);
-                                            let mut files: Vec<String> = vec![];
-                                            if let Ok(paths) = fs::read_dir(&self.state.working_dir) {
-                                                for path in paths {
-                                                    if let Ok(dir_entry) = path {
-                                                        let p = dir_entry.path();
-                                                        if p.is_file() {
-                                                            if !extensions.is_empty() {
-                                                                if let Some(exe) = p.extension() {
-                                                                    let ext_str = exe.to_str().unwrap_or("").to_lowercase();
-                                                                    for e in &extensions {
-                                                                        if e.to_lowercase() == ext_str {
+
+                                    ui.menu_button("⏷", |ui| {
+                                        ui.set_min_width(150.);
+                                        ui.set_max_width(250.);
+                                        if self.state.recent_working_dirs.len() == 0 {
+                                            if ui.button("The current working directory is not set. Press `...` to choose a new directory instead.").clicked() {
+                                                ui.close_menu();
+                                            }
+                                        } else {
+                                            egui::ScrollArea::both()
+                                            .max_height(400.0)
+                                            .auto_shrink([true, true])
+                                            .show(ui, |ui| {
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    ui.label(egui::RichText::new("Recent Directories:")
+                                                    .italics()
+                                                    .strong()
+                                                    .color(ui.visuals().hyperlink_color));
+                                                }
+                                                // first find all the files in each of the recent directories, except the most recent.
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    for q in (0..self.state.recent_working_dirs.len()-1).rev() { // The '-1' excludes the most recent dir.
+                                                        let extensions = get_file_extensions(&parameter.file_type);
+                                                        let dir = &self.state.recent_working_dirs[q];
+            
+                                                        let mut files: Vec<String> = vec![];
+                                                        if let Ok(paths) = fs::read_dir(dir) {
+                                                            for path in paths {
+                                                                if let Ok(dir_entry) = path {
+                                                                    let p = dir_entry.path();
+                                                                    if p.is_file() {
+                                                                        if !extensions.is_empty() {
+                                                                            if let Some(exe) = p.extension() {
+                                                                                let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                                for e in &extensions {
+                                                                                    if e.to_lowercase() == ext_str {
+                                                                                        if let Some(short_fn) = p.file_name() {
+                                                                                            files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        } else {
                                                                             if let Some(short_fn) = p.file_name() {
                                                                                 files.push(short_fn.to_str().unwrap_or("").to_string());
-                                                                                break;
                                                                             }
-                                                                        }
+                                                                        }                                        
                                                                     }
                                                                 }
-                                                            } else {
-                                                                if let Some(short_fn) = p.file_name() {
-                                                                    files.push(short_fn.to_str().unwrap_or("").to_string());
-                                                                }
-                                                            }                                        
+                                                            }
+                                                        }
+            
+                                                        if files.len() > 0 {
+                                                            files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                                                            if let Some(lbl) = Path::new(dir).file_name() {
+                                                                let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                                ui.menu_button(&lbl_str, |ui| {
+                                                                    ui.set_min_width(150.);
+                                                                    ui.set_max_width(250.);
+
+                                                                    egui::ScrollArea::both()
+                                                                    .max_height(400.0)
+                                                                    .auto_shrink([true; 2])
+                                                                    .show(ui, |ui| {
+                                                                        for file in &files {
+                                                                            if ui.add(egui::Button::new(file)).clicked() {
+                                                                                parameter.str_value = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file.clone());
+            
+                                                                                if parameter.file_type == ParameterFileType::Vector && 
+                                                                                parameter.geometry_type != VectorGeometryType::Any {
+                                                                                    check_geometry_type(parameter, &dir);
+                                                                                }
+            
+                                                                                wk_dir = parameter.str_value.clone();
+                                                                                ui.close_menu();
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                });
+                                                                ui.add_space(1.);
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
 
-                                            files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
-                                            for file in &files {
-                                                if ui.add(egui::Button::new(file).fill(bg_clr)).clicked() {
-                                                    parameter.str_value = format!("{}{}{}", self.state.working_dir, std::path::MAIN_SEPARATOR, file.clone());
-                                                    
-                                                    if parameter.file_type == ParameterFileType::Vector && 
-                                                    parameter.geometry_type != VectorGeometryType::Any {
-                                                        check_geometry_type(parameter, &self.state.working_dir);
+                                                // now do the current working directory
+                                                let extensions = get_file_extensions(&parameter.file_type);
+                                                let dir = &self.state.recent_working_dirs[self.state.recent_working_dirs.len()-1];
+    
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    ui.separator();
+                                                }
+
+                                                if let Some(lbl) = Path::new(dir).file_name() {
+                                                    let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                    ui.label(egui::RichText::new(&format!("Files in {lbl_str}:"))
+                                                    .italics()
+                                                    .strong()
+                                                    .color(ui.visuals().hyperlink_color));
+                                                }
+
+                                                let mut files: Vec<String> = vec![];
+                                                if let Ok(paths) = fs::read_dir(dir) {
+                                                    for path in paths {
+                                                        if let Ok(dir_entry) = path {
+                                                            let p = dir_entry.path();
+                                                            if p.is_file() {
+                                                                if !extensions.is_empty() {
+                                                                    if let Some(exe) = p.extension() {
+                                                                        let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                        for e in &extensions {
+                                                                            if e.to_lowercase() == ext_str {
+                                                                                if let Some(short_fn) = p.file_name() {
+                                                                                    files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                } else {
+                                                                    if let Some(short_fn) = p.file_name() {
+                                                                        files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                    }
+                                                                }                                        
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        });
+    
+                                                if files.len() > 0 {
+                                                    files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                                                    for file in &files {
+                                                        if ui.add(egui::Button::new(file)).clicked() {
+                                                            parameter.str_value = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file.clone());
+
+                                                            if parameter.file_type == ParameterFileType::Vector && 
+                                                            parameter.geometry_type != VectorGeometryType::Any {
+                                                                check_geometry_type(parameter, &dir);
+                                                            }
+
+                                                            wk_dir = parameter.str_value.clone();
+                                                            ui.close_menu();
+                                                        }
+                                                    }
+                                                } else {
+                                                    if ui.button("No file of the required type are within the current working directory. Press `...` to choose a new directory instead.").clicked() {
+                                                        ui.close_menu();
+                                                    }
+                                                }
+                                            });
+
+                                        }
+                                        
                                     });
                                 });
 
                                 if ui.button("…").clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(mut path) = fdialog
+                                    if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
                                     .pick_file() {
                                         parameter.str_value = path.display().to_string();
@@ -225,8 +329,10 @@ impl MyApp {
                                         }
 
                                         // update the working directory
-                                        path.pop();
-                                        self.state.working_dir = path.display().to_string();
+                                        // path.pop();
+                                        // self.state.working_dir = path.display().to_string();
+                                        // self.update_working_dir(&path.display().to_string());
+                                        wk_dir = path.display().to_string();
                                     }
                                 }
                             },
@@ -237,24 +343,28 @@ impl MyApp {
                                         .desired_width(self.state.textbox_width)
                                     ).double_clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
-                                        if let Some(mut path) = fdialog
+                                        if let Some(path) = fdialog
                                         .set_directory(std::path::Path::new(&self.state.working_dir))
                                         .pick_file() {
                                             parameter.str_value = path.display().to_string();
                                             // update the working directory
-                                            path.pop();
-                                            self.state.working_dir = path.display().to_string();
+                                            // path.pop();
+                                            // self.state.working_dir = path.display().to_string();
+                                            // self.update_working_dir(&path.display().to_string());
+                                            wk_dir = path.display().to_string();
                                         }
                                     }
                                     if ui.button("…").clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
-                                        if let Some(mut path) = fdialog
+                                        if let Some(path) = fdialog
                                         .set_directory(std::path::Path::new(&self.state.working_dir))
                                         .pick_file() {
                                             parameter.str_value = path.display().to_string();
                                             // update the working directory
-                                            path.pop();
-                                            self.state.working_dir = path.display().to_string();
+                                            // path.pop();
+                                            // self.state.working_dir = path.display().to_string();
+                                            // self.update_working_dir(&path.display().to_string());
+                                            wk_dir = path.display().to_string();
                                         }
                                     }
 
@@ -272,19 +382,21 @@ impl MyApp {
                                     .desired_width(self.state.textbox_width)
                                 ).double_clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(mut path) = fdialog
+                                    if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
                                     .pick_file() {
                                         parameter.str_value = path.display().to_string();
                                         // update the working directory
-                                        path.pop();
-                                        self.state.working_dir = path.display().to_string();
+                                        // path.pop();
+                                        // self.state.working_dir = path.display().to_string();
+                                        // self.update_working_dir(&path.display().to_string());
+                                        wk_dir = path.display().to_string();
                                     }
                                 }
                                 if ui.button("…").clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type);
 
-                                    if let Some(mut paths) = fdialog
+                                    if let Some(paths) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
                                     .pick_files() {
                                         // let s = String::new();
@@ -293,8 +405,10 @@ impl MyApp {
                                         }
                                         
                                         // update the working directory
-                                        paths[0].pop();
-                                        self.state.working_dir = paths[0].display().to_string();
+                                        // paths[0].pop();
+                                        // self.state.working_dir = paths[0].display().to_string();
+                                        // self.update_working_dir(&paths[0].display().to_string());
+                                        wk_dir = paths[0].display().to_string();
                                     }
                                 }
                             }
@@ -320,19 +434,23 @@ impl MyApp {
                                     .desired_width(self.state.textbox_width)
                                 ).double_clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(mut path) = fdialog
+                                    if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
                                     .pick_file() {
                                         parameter.str_value = path.display().to_string();
                                         // update the working directory
-                                        path.pop();
-                                        self.state.working_dir = path.display().to_string();
+                                        // path.pop();
+                                        // self.state.working_dir = path.display().to_string();
+                                        // self.update_working_dir(&path.display().to_string());
+                                        wk_dir = path.display().to_string();
                                     }
                                 }
                                 if ui.button("…").clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
                                     if let Some(path) = fdialog.set_directory(std::path::Path::new(&self.state.working_dir)).save_file() {
                                         parameter.str_value = path.display().to_string();
+                                        // self.update_working_dir(&path.display().to_string());
+                                        wk_dir = path.display().to_string();
                                     }
                                 }
                             },
@@ -556,6 +674,10 @@ impl MyApp {
                 }
             }
         });
+
+        if wk_dir.len() > 0 {
+            self.update_working_dir(&wk_dir);
+        }
 
         if close_dialog {
             self.open_tools[tool_idx] = false;

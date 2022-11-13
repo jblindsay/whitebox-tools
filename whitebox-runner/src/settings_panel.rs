@@ -103,6 +103,19 @@ impl MyApp {
                         for i in 0..self.tool_info.len() {
                             self.tool_info[i].update_output_command(self.state.output_command);
                         }
+                        for i in 0..self.list_of_open_tools.len() {
+                            self.list_of_open_tools[i].update_output_command(self.state.output_command);
+                        }
+                    }
+                    ui.end_row();
+
+                    self.state.num_recent_dirs = self.state.num_recent_dirs.clamp(1, 15);
+                    ui.label("Num. of recent directories:");
+                    if ui.add(egui::DragValue::new(&mut self.state.num_recent_dirs).speed(0)).lost_focus() {
+                        self.state.num_recent_dirs = self.state.num_recent_dirs.clamp(1, 15);
+                        while self.state.recent_working_dirs.len()-1 > self.state.num_recent_dirs {
+                            self.state.recent_working_dirs.remove(0);
+                        }
                     }
                     ui.end_row();
 
@@ -115,6 +128,8 @@ impl MyApp {
                         self.state.header_font_size = 18.0;
                         // self.state.whitebox_exe: String,
                         self.state.working_dir = "/".to_string();
+                        self.state.recent_working_dirs.clear();
+                        self.state.num_recent_dirs = 5;
                         self.state.view_tool_output = true;
                         self.state.max_procs = -1;
                         self.state.compress_rasters = true;
@@ -178,12 +193,16 @@ impl MyApp {
                     });
                     ui.end_row();
 
-                    // Compress rasters
+                    // Verbose mode
                     ui.label("Print tool output (Verbose mode)?");
                     let resp = ui.add(toggle(&mut self.state.view_tool_output));
                     if resp.clicked() {
                         for i in 0..self.tool_info.len() {
                             self.tool_info[i].update_verbose_mode(self.state.view_tool_output);
+                        }
+
+                        for i in 0..self.list_of_open_tools.len() {
+                            self.list_of_open_tools[i].update_verbose_mode(self.state.view_tool_output);
                         }
                     }
                     ui.end_row();
@@ -194,6 +213,10 @@ impl MyApp {
                     if resp.clicked() {
                         for i in 0..self.tool_info.len() {
                             self.tool_info[i].update_compress_rasters(self.state.compress_rasters);
+                        }
+
+                        for i in 0..self.list_of_open_tools.len() {
+                            self.list_of_open_tools[i].update_compress_rasters(self.state.compress_rasters);
                         }
                     }
                     ui.end_row();

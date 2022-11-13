@@ -20,7 +20,7 @@ use about::WbLogo;
 use anyhow::{bail, Result};
 use extension::ExtensionInstall;
 use std::collections::{ HashMap, HashSet, VecDeque };
-use std::{env, path::Path};
+use std::{env, path::Path, path::PathBuf };
 use std::process::Command;
 use serde_json::Value;
 use eframe::egui;
@@ -83,6 +83,8 @@ pub struct AppState {
     header_font_size: f32,
     whitebox_exe: String,
     working_dir: String,
+    recent_working_dirs: Vec<String>,
+    num_recent_dirs: usize,
     view_tool_output: bool,
     max_procs: isize,
     compress_rasters: bool,
@@ -137,6 +139,8 @@ impl MyApp {
             slf.state.body_font_size = 14.0;
             slf.state.header_font_size = 18.0;
             slf.state.working_dir = "/".to_string();
+            slf.state.recent_working_dirs.clear();
+            slf.state.num_recent_dirs = 5;
             slf.state.view_tool_output = true;
             slf.state.max_procs = -1;
             slf.state.compress_rasters = true;
@@ -158,6 +162,8 @@ impl MyApp {
                     slf.state.body_font_size = 14.0;
                     slf.state.header_font_size = 18.0;
                     slf.state.working_dir = "/".to_string();
+                    slf.state.recent_working_dirs.clear();
+                    slf.state.num_recent_dirs = 5;
                     slf.state.view_tool_output = true;
                     slf.state.max_procs = -1;
                     slf.state.compress_rasters = true;
@@ -445,6 +451,48 @@ impl MyApp {
             tool_info.update_exe_path(&self.state.whitebox_exe);
             self.list_of_open_tools.push(tool_info);
             self.open_tools.push(true);
+        }
+    }
+
+    fn update_working_dir(&mut self, working_dir: &str) {
+        if working_dir == self.state.working_dir {
+            return; // no need to update
+        }
+
+        let mut path = PathBuf::new();
+        path.push(working_dir);
+        if path.is_relative() {
+            return; // This is a relative path, meaning it is likely just a file not a dir.
+        }
+        
+        // Is working_dir a directory or a file? If a file, pop the file_name 
+        // and work with the directory.
+        if path.is_file() {
+            path.pop();
+        }
+
+        if let Some(path_str) = path.to_str() {
+            self.state.working_dir = path_str.to_string();
+
+            if !self.state.recent_working_dirs.contains(&self.state.working_dir) {
+                if self.state.recent_working_dirs.len() <= self.state.num_recent_dirs {
+                    self.state.recent_working_dirs.push(self.state.working_dir.clone());
+                } else {
+                    self.state.recent_working_dirs.remove(0);
+                    self.state.recent_working_dirs.push(self.state.working_dir.clone());
+                }   
+            } else {
+                // first find the index of the existing one
+                let mut idx = 0;
+                for i in 0..self.state.recent_working_dirs.len() {
+                    if self.state.recent_working_dirs[i] == self.state.working_dir {
+                        idx = i;
+                        break;
+                    }
+                }
+                self.state.recent_working_dirs.remove(idx);
+                self.state.recent_working_dirs.push(self.state.working_dir.clone());
+            }
         }
     }
 }
