@@ -24,7 +24,7 @@ impl MyApp {
         .show(ctx, |ui| {
 
             ui.horizontal(|ui| {
-                ui.label(egui::RichText::new("Tool Parameters:").strong());
+                ui.label(egui::RichText::new("Tool parameters:").strong());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     if ui.button("🔃").on_hover_text("Reset parameters").clicked() { // ⟲
                         self.list_of_open_tools[tool_idx].reset();
@@ -41,7 +41,7 @@ impl MyApp {
 
                 egui::Grid::new(&format!("grid{}-{}", &self.list_of_open_tools[tool_idx].tool_name, tool_idx))
                 .num_columns(2)
-                .spacing([10.0, 6.0])
+                .spacing([10.0, 8.0])
                 .striped(true)
                 .show(ui, |ui| {
 
@@ -88,21 +88,52 @@ impl MyApp {
                                 ui.add(toggle(&mut parameter.bool_value));
                             },
                             ParameterType::Directory => {
-                                if ui.add(
-                                    egui::TextEdit::singleline(&mut parameter.str_value)
-                                    .desired_width(self.state.textbox_width)
-                                ).double_clicked() {
-                                    let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(path) = fdialog
-                                    .set_directory(std::path::Path::new(&self.state.working_dir))
-                                    .pick_file() {
-                                        parameter.str_value = path.display().to_string();
-                                        // update the working directory
-                                        // path.pop();
-                                        // self.state.working_dir = path.display().to_string();
-                                        wk_dir = path.display().to_string();
+                                ui.horizontal(|ui| {
+                                    if ui.add(
+                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        .desired_width(self.state.textbox_width - 22.0)
+                                    ).double_clicked() {
+                                        let fdialog = get_file_dialog(&parameter.file_type); 
+                                        if let Some(path) = fdialog
+                                        .set_directory(std::path::Path::new(&self.state.working_dir))
+                                        .pick_file() {
+                                            parameter.str_value = path.display().to_string();
+                                            // update the working directory
+                                            // path.pop();
+                                            // self.state.working_dir = path.display().to_string();
+                                            wk_dir = path.display().to_string();
+                                        }
                                     }
-                                }
+    
+                                    ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
+    
+                                    ui.menu_button("⏷", |ui| {
+                                        ui.set_min_width(150.);
+                                        ui.set_max_width(250.);
+                                        egui::ScrollArea::both()
+                                        .max_height(400.0)
+                                        .auto_shrink([true, true])
+                                        .show(ui, |ui| {
+                                            if self.state.recent_working_dirs.len() > 0 {
+                                                for q in (0..self.state.recent_working_dirs.len()).rev() {
+                                                    if let Some(lbl) = Path::new(&self.state.recent_working_dirs[q]).file_name() {
+                                                        let lbl_str = lbl.to_str().unwrap_or(&self.state.recent_working_dirs[q]).to_string();
+                                                        if ui.button(&lbl_str).clicked() {
+                                                            parameter.str_value = self.state.recent_working_dirs[q].clone();
+                                                            ui.close_menu();
+                                                        }
+                                                    }
+                                                }
+                                            } else {
+                                                if ui.button("There are no recent working directories available. Please press `...` to select one.").clicked() {
+                                                    ui.close_menu();
+                                                }
+                                            }
+    
+                                        });
+                                    });    
+                                });
+                                
                                 if ui.button("…").clicked() {
                                     if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.working_dir)).pick_folder() {
                                         parameter.str_value = path.display().to_string();
@@ -159,7 +190,6 @@ impl MyApp {
                                     
                                     ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
 
-
                                     ui.menu_button("⏷", |ui| {
                                         ui.set_min_width(150.);
                                         ui.set_max_width(250.);
@@ -173,7 +203,7 @@ impl MyApp {
                                             .auto_shrink([true, true])
                                             .show(ui, |ui| {
                                                 if self.state.recent_working_dirs.len() > 1 {
-                                                    ui.label(egui::RichText::new("Recent Directories:")
+                                                    ui.label(egui::RichText::new("Recent directories:")
                                                     .italics()
                                                     .strong()
                                                     .color(ui.visuals().hyperlink_color));
@@ -224,6 +254,14 @@ impl MyApp {
                                                                     .max_height(400.0)
                                                                     .auto_shrink([true; 2])
                                                                     .show(ui, |ui| {
+                                                                        if let Some(lbl) = Path::new(dir).file_name() {
+                                                                            let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                                            ui.label(egui::RichText::new(&format!("Files in {lbl_str}:"))
+                                                                            .italics()
+                                                                            .strong()
+                                                                            .color(ui.visuals().hyperlink_color));
+                                                                        }
+
                                                                         for file in &files {
                                                                             if ui.add(egui::Button::new(file)).clicked() {
                                                                                 parameter.str_value = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file.clone());
@@ -340,20 +378,182 @@ impl MyApp {
                                 ui.horizontal(|ui| {
                                     if ui.add(
                                         egui::TextEdit::singleline(&mut parameter.str_value)
-                                        .desired_width(self.state.textbox_width)
+                                        .desired_width(self.state.textbox_width - 22.0)
                                     ).double_clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
                                         if let Some(path) = fdialog
                                         .set_directory(std::path::Path::new(&self.state.working_dir))
                                         .pick_file() {
                                             parameter.str_value = path.display().to_string();
-                                            // update the working directory
-                                            // path.pop();
-                                            // self.state.working_dir = path.display().to_string();
-                                            // self.update_working_dir(&path.display().to_string());
                                             wk_dir = path.display().to_string();
                                         }
                                     }
+
+                                    ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
+
+                                    ui.menu_button("⏷", |ui| {
+                                        ui.set_min_width(150.);
+                                        ui.set_max_width(250.);
+                                        if self.state.recent_working_dirs.len() == 0 {
+                                            if ui.button("The current working directory is not set. Press `...` to choose a new directory instead.").clicked() {
+                                                ui.close_menu();
+                                            }
+                                        } else {
+                                            egui::ScrollArea::both()
+                                            .max_height(400.0)
+                                            .auto_shrink([true, true])
+                                            .show(ui, |ui| {
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    ui.label(egui::RichText::new("Recent directories:")
+                                                    .italics()
+                                                    .strong()
+                                                    .color(ui.visuals().hyperlink_color));
+                                                }
+                                                // first find all the files in each of the recent directories, except the most recent.
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    for q in (0..self.state.recent_working_dirs.len()-1).rev() { // The '-1' excludes the most recent dir.
+                                                        let extensions = get_file_extensions(&parameter.file_type);
+                                                        let dir = &self.state.recent_working_dirs[q];
+            
+                                                        let mut files: Vec<String> = vec![];
+                                                        if let Ok(paths) = fs::read_dir(dir) {
+                                                            for path in paths {
+                                                                if let Ok(dir_entry) = path {
+                                                                    let p = dir_entry.path();
+                                                                    if p.is_file() {
+                                                                        if !extensions.is_empty() {
+                                                                            if let Some(exe) = p.extension() {
+                                                                                let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                                for e in &extensions {
+                                                                                    if e.to_lowercase() == ext_str {
+                                                                                        if let Some(short_fn) = p.file_name() {
+                                                                                            files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                                            break;
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        } else {
+                                                                            if let Some(short_fn) = p.file_name() {
+                                                                                files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                            }
+                                                                        }                                        
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+            
+                                                        if files.len() > 0 {
+                                                            files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                                                            if let Some(lbl) = Path::new(dir).file_name() {
+                                                                let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                                ui.menu_button(&lbl_str, |ui| {
+                                                                    ui.set_min_width(150.);
+                                                                    ui.set_max_width(250.);
+
+                                                                    egui::ScrollArea::both()
+                                                                    .max_height(400.0)
+                                                                    .auto_shrink([true; 2])
+                                                                    .show(ui, |ui| {
+                                                                        if let Some(lbl) = Path::new(dir).file_name() {
+                                                                            let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                                            ui.label(egui::RichText::new(&format!("Files in {lbl_str}:"))
+                                                                            .italics()
+                                                                            .strong()
+                                                                            .color(ui.visuals().hyperlink_color));
+                                                                        }
+                                                                        
+                                                                        for file in &files {
+                                                                            if ui.add(egui::Button::new(file)).clicked() {
+                                                                                parameter.str_value = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file.clone());
+            
+                                                                                if parameter.file_type == ParameterFileType::Vector && 
+                                                                                parameter.geometry_type != VectorGeometryType::Any {
+                                                                                    check_geometry_type(parameter, &dir);
+                                                                                }
+            
+                                                                                wk_dir = parameter.str_value.clone();
+                                                                                ui.close_menu();
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                });
+                                                                ui.add_space(1.);
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                // now do the current working directory
+                                                let extensions = get_file_extensions(&parameter.file_type);
+                                                let dir = &self.state.recent_working_dirs[self.state.recent_working_dirs.len()-1];
+    
+                                                if self.state.recent_working_dirs.len() > 1 {
+                                                    ui.separator();
+                                                }
+
+                                                if let Some(lbl) = Path::new(dir).file_name() {
+                                                    let lbl_str = lbl.to_str().unwrap_or(dir).to_string();
+                                                    ui.label(egui::RichText::new(&format!("Files in {lbl_str}:"))
+                                                    .italics()
+                                                    .strong()
+                                                    .color(ui.visuals().hyperlink_color));
+                                                }
+
+                                                let mut files: Vec<String> = vec![];
+                                                if let Ok(paths) = fs::read_dir(dir) {
+                                                    for path in paths {
+                                                        if let Ok(dir_entry) = path {
+                                                            let p = dir_entry.path();
+                                                            if p.is_file() {
+                                                                if !extensions.is_empty() {
+                                                                    if let Some(exe) = p.extension() {
+                                                                        let ext_str = exe.to_str().unwrap_or("").to_lowercase();
+                                                                        for e in &extensions {
+                                                                            if e.to_lowercase() == ext_str {
+                                                                                if let Some(short_fn) = p.file_name() {
+                                                                                    files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                } else {
+                                                                    if let Some(short_fn) = p.file_name() {
+                                                                        files.push(short_fn.to_str().unwrap_or("").to_string());
+                                                                    }
+                                                                }                                        
+                                                            }
+                                                        }
+                                                    }
+                                                }
+    
+                                                if files.len() > 0 {
+                                                    files.sort_by(|a, b| a.to_lowercase().cmp(&b.to_lowercase()));
+                                                    for file in &files {
+                                                        if ui.add(egui::Button::new(file)).clicked() {
+                                                            parameter.str_value = format!("{}{}{}", dir, std::path::MAIN_SEPARATOR, file.clone());
+
+                                                            if parameter.file_type == ParameterFileType::Vector && 
+                                                            parameter.geometry_type != VectorGeometryType::Any {
+                                                                check_geometry_type(parameter, &dir);
+                                                            }
+
+                                                            wk_dir = parameter.str_value.clone();
+                                                            ui.close_menu();
+                                                        }
+                                                    }
+                                                } else {
+                                                    if ui.button("No file of the required type are within the current working directory. Press `...` to choose a new directory instead.").clicked() {
+                                                        ui.close_menu();
+                                                    }
+                                                }
+                                            });
+
+                                        }
+                                        
+                                    });
+
                                     if ui.button("…").clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
                                         if let Some(path) = fdialog
@@ -371,7 +571,7 @@ impl MyApp {
                                     ui.label("OR");
                                     
                                     ui.add(
-                                        egui::TextEdit::singleline(&mut parameter.str_value)
+                                        egui::TextEdit::singleline(&mut parameter.str_vec_value[0])
                                         .desired_width(50.0)
                                     );
                                 });
@@ -483,47 +683,53 @@ impl MyApp {
                                     );
                                     ui.add_space(-(ui.style().spacing.item_spacing[0])+2.);
 
-                                    let response = ui.button("⏷");
-                                    
-                                    let popup_id2 = ui.make_persistent_id(&format!("{}", parameter.name));
-                                    if response.clicked() {
-                                        ui.memory().toggle_popup(popup_id2);
-                                    }
-                                    egui::popup::popup_below_widget(ui, popup_id2, &response, |ui| {
-                                        let bg_clr = ui.style().visuals.extreme_bg_color; // .widgets.inactive.bg_fill;
-                                        ui.set_min_width(150.0);
+                                    if ui.menu_button("⏷", |ui| {
                                         egui::ScrollArea::both()
                                         .max_height(200.0)
                                         .auto_shrink([true; 2])
                                         .show(ui, |ui| {
-                                            let mut file_name = flagged_parameter[flagged_parameter_idx].clone();
-                                            let mut file_path = path::PathBuf::new();
-                                            file_path.push(&file_name);
-                                            if !file_path.exists() {
-                                                // prepend the working directory and see if that file exists.
-                                                let mut file_path = path::PathBuf::new();
-                                                file_path.push(&self.state.working_dir);
-                                                file_path = file_path.join(&file_name);
-                                                // file_path = path::PathBuf::new(&self.state.working_dir).join(&file_name);
-                                                if file_path.exists() {
-                                                    file_name = file_path.to_str().unwrap_or("").to_string();
-                                                }
-                                            }
-                                            if file_path.exists() {
-                                                if let Ok(shape) = Shapefile::read(&file_name) {
-                                                    for att in &shape.attributes.fields {
-                                                        if ui.add(egui::Button::new(&att.name).fill(bg_clr)).clicked() {
-                                                            parameter.str_value = att.name.clone();
-                                                        }
+                                            if parameter.str_vec_value.len() > 2 {
+                                                for k in 2..parameter.str_vec_value.len() {
+                                                    let att = &parameter.str_vec_value[k];
+                                                    if ui.button(att).clicked() {
+                                                        parameter.str_value = att.clone();
+                                                        ui.close_menu();
                                                     }
                                                 }
                                             } else {
-                                                if ui.add(egui::Button::new("No attribute hints are available: The parent vector file must first be specified").fill(bg_clr)).clicked() {
-                                                    // do nothing
+                                                if ui.button("No attribute hints are available: The parent vector file must first be specified").clicked() {
+                                                    ui.close_menu();
                                                 }
                                             }
                                         });
-                                    });
+                                    }).response.clicked() {
+                                        if parameter.str_vec_value.len() > 2 {
+                                            while parameter.str_vec_value.len() > 2 {
+                                                parameter.str_vec_value.pop();
+                                            }
+                                        }
+                                        let mut file_name = flagged_parameter[flagged_parameter_idx].clone();
+                                        let mut file_path = path::PathBuf::new();
+                                        file_path.push(&file_name);
+                                        if !file_path.exists() {
+                                            // prepend the working directory and see if that file exists.
+                                            let mut file_path = path::PathBuf::new();
+                                            file_path.push(&self.state.working_dir);
+                                            file_path = file_path.join(&file_name);
+                                            // file_path = path::PathBuf::new(&self.state.working_dir).join(&file_name);
+                                            if file_path.exists() {
+                                                file_name = file_path.to_str().unwrap_or("").to_string();
+                                            }
+                                        }
+                                        if file_path.exists() {
+                                            if let Ok(shape) = Shapefile::read(&file_name) {
+                                                for att in &shape.attributes.fields {
+                                                    parameter.str_vec_value.push(att.name.clone());
+                                                }
+                                            }
+                                        }
+                                    }
+
                                 });
 
                                 flagged_parameter_idx += 1;
@@ -540,7 +746,7 @@ impl MyApp {
                 ui.vertical(|ui| {
                     ui.set_height(145.);
                     ui.horizontal(|ui| {
-                        ui.label(egui::RichText::new("Tool Output:").strong());
+                        ui.label(egui::RichText::new("Tool output:").strong());
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui.button("✖").on_hover_text("Clear tool output").clicked() {
                                 if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {

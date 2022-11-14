@@ -230,6 +230,15 @@ impl MyApp {
         // let's download the file now...
         self.ei.text_output.push_str(&format!("Downloading extension file from:\n{}\nPlease be patient...\n", url));
 
+        if rfd::MessageDialog::new()
+            .set_level(rfd::MessageLevel::Info)
+            .set_title("Downloading Whitebox Extension")
+            .set_description("Downloading extension file. This may take a while and WbRunner may freeze while it is downloading.\n\nPLEASE BE PATIENT...")
+            .set_buttons(rfd::MessageButtons::Ok)
+            .show() {
+                // do nothing
+            }
+
         let client = reqwest::blocking::Client::builder()
             .timeout(time::Duration::from_secs(90))
             .build()?;

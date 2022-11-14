@@ -1,8 +1,6 @@
 use serde_json::Value;
 // use duct;
 use std::f32;
-// use std::io::prelude::*;
-// use std::io::BufReader;
 use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
@@ -185,6 +183,22 @@ impl ToolInfo {
                     if !parameter.str_value.trim().is_empty() {
                         param_str.push_str(&format!(" {flag}='{}'", parameter.str_value));
                         args.push(format!("{flag}='{}'", parameter.str_value));
+                    } else if !parameter.str_vec_value[0].trim().is_empty() {
+                        match parameter.str_vec_value[0].trim().parse::<f32>() {
+                            Ok(_) => {
+                                param_str.push_str(&format!(" {flag}='{}'", parameter.str_vec_value[0]));
+                                args.push(format!("{flag}='{}'", parameter.str_vec_value[0]));
+                            },
+                            Err(_) => {
+                                // we had an error parsing the user intput in a number.
+                                rfd::MessageDialog::new()
+                                .set_level(rfd::MessageLevel::Warning).set_title("Error Parsing Parameter")
+                                .set_description(&format!("Error parsing a non-optional parameter {}.", parameter.name))
+                                .set_buttons(rfd::MessageButtons::Ok)
+                                .show();
+                                return;
+                            }
+                        }
                     } else if !parameter.optional {
                         // we have an unspecified non-optional param
                         rfd::MessageDialog::new()
@@ -772,6 +786,7 @@ fn parse_parameters(parameters: &Value) -> Vec<ToolParameter> {
                 }
                 ParameterType::FileList
             } else if !parameter_type["ExistingFileOrFloat"].is_null() {
+                str_vec_value = vec!["".to_string()];
                 if parameter_type["ExistingFileOrFloat"].is_string() {
                     let s = parameter_type["ExistingFileOrFloat"].as_str().unwrap_or("").trim().to_lowercase();
                     if s == "lidar" {
