@@ -29,6 +29,10 @@ name = "heat_map"
 path = "src/heat_map/main.rs"
 
 [[bin]]
+name = "launch_wb_runner"
+path = "src/launch_wb_runner/main.rs"
+
+[[bin]]
 name = "lidar_shift"
 path = "src/lidar_shift/main.rs"
 

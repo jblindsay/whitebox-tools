@@ -61,6 +61,9 @@ Version 2.3.0 (XX-XX-202X)
   previous version of the WbRunner. It is now written in pure Rust (compared with the old Python
   TkInter app) using the egui user-interface library. It has a more modern feel, is cross-platform,
   and has no dependencies (including Python). You can now open multiple tools simultaneously. 
+- Added the LaunchWbRunner tool so that the Whitebox Runner will be more accessible from other
+  Whitebox frontends. This way users will always have a good fall-back if the frontend is not
+  up-to-date with the WBT backend, since WbRunner is always current with the installed version of WBT.
 - Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
   incorrectly leading to very strange outputs.
 

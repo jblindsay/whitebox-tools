@@ -1,0 +1,18 @@
+{
+    "tool_name": "LaunchWbRunner",
+    "exe": "launch_wb_runner",
+    "short_description": "Opens the Whitebox Runner application.",
+    "toolbox": "Whitebox Utilities",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=LaunchWbRunner",
+    "parameters": [
+        {
+            "name": "Clear the application state memory?",
+            "flags": ["--clear_app_state"],
+            "description": "Clear the application state memory?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}
