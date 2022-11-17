@@ -92,10 +92,15 @@ impl ToolInfo {
                 // ParameterType::StringList => { param_str.push_str(&format!("{flag}={:?}", parameter.str_vec_value); },
                 ParameterType::Integer | ParameterType::Float => { 
                     if !parameter.str_value.trim().is_empty() {
-                        if (parameter.parameter_type == ParameterType::Integer && parameter.str_value.trim().parse::<usize>().is_ok()) || 
-                        (parameter.parameter_type == ParameterType::Float && parameter.str_value.trim().parse::<f32>().is_ok()){
-                            param_str.push_str(&format!(" {flag}={}", parameter.str_value));
-                            args.push(format!("{flag}={}", parameter.str_value));
+                        // if (parameter.parameter_type == ParameterType::Integer && parameter.str_value.trim().parse::<usize>().is_ok()) || 
+                        // (parameter.parameter_type == ParameterType::Float && parameter.str_value.trim().parse::<f32>().is_ok()) {
+                        if parameter.str_value.trim().parse::<f32>().is_ok() {
+                            let mut arg = parameter.str_value.clone();
+                            if parameter.parameter_type == ParameterType::Integer && arg.trim().contains(".") {
+                                arg = arg.split(".").collect::<Vec<&str>>()[0].trim().to_string();
+                            }
+                            param_str.push_str(&format!(" {flag}={}", arg));
+                            args.push(format!("{flag}={}", arg));
                         } else {
                             // we had an error parsing the user intput in a number.
                             rfd::MessageDialog::new()
@@ -228,18 +233,18 @@ impl ToolInfo {
                 ParameterType::FileList => { 
                     if !parameter.str_value.trim().is_empty() {
                         let files: Vec<&str> = parameter.str_value.split("\n").collect();
-                        let mut s = String::from("[");
+                        let mut s = String::from("\"");
                         for i in 0..files.len() {
                             let file = files[i].trim();
                             if !file.is_empty() && std::path::Path::new(file).exists() {
                                 if i > 0 {
-                                    s.push_str(&format!(",'{}'", file));
+                                    s.push_str(&format!(";{}", file));
                                 } else {
-                                    s.push_str(&format!("'{}'", file));
+                                    s.push_str(&format!("{}", file));
                                 }
                             }
                         }
-                        s.push_str("]");
+                        s.push_str("\"");
                         param_str.push_str(&format!(" {flag}={}", s)); 
                         args.push(format!("{flag}={}", s));
                     } else if !parameter.optional {
@@ -350,22 +355,57 @@ impl ToolInfo {
             let mut stdout = child.stdout.take().unwrap();
 
             let mut buf = [0u8; 200];
+            let mut out_str = String::new();
             let mut do_read = || -> usize {
                 let read = stdout.read(&mut buf).unwrap_or(0);
                 let line = std::str::from_utf8(&buf[0..read]).unwrap_or("");
                 if let Ok(mut to) = tool_output.lock() {
-                    if line.contains("%") {
-                        let val1: Vec<&str> = line.split(":").collect::<Vec<&str>>();
-                        let percent_val = val1[1].replace("%", "").trim().parse::<f32>().unwrap_or(0.0);
-                        if let Ok(mut val) = pcnt.lock() {
-                            *val = percent_val / 100.0;
+                    if line.contains("\n") {
+                        let a = line.split("\n").collect::<Vec<&str>>();
+
+                        for m in 0..a.len()-1 {
+                            out_str.push_str(&format!("{}\n", a[m]));
+                        
+                            if out_str.contains("%") {
+                                let val1: Vec<&str> = out_str.split(":").collect::<Vec<&str>>();
+                                let percent_val = val1[1].replace("%", "").replace("\n", "").trim().parse::<f32>().unwrap_or(0.0);
+                                if let Ok(mut val) = pcnt.lock() {
+                                    *val = percent_val / 100.0;
+                                }
+        
+                                if let Ok(mut val2) = progress_label.lock() {
+                                    *val2 = val1[0].replace("\n", "").to_string();
+                                }
+                            } else {
+                                if to.len() >= 10000 {
+                                    to.clear();
+                                }
+                                to.push_str(&format!("{out_str}"));
+                            }
+
+                            out_str = "".to_string();
                         }
 
-                        if let Ok(mut val2) = progress_label.lock() {
-                            *val2 = val1[0].to_string();
-                        }
+                        out_str.push_str(&format!("{}\n", a[a.len()-1]));
+                    } else {
+                        out_str.push_str(&format!("{line}"));
                     }
-                    to.push_str(&format!("{line}"));
+
+                    // if line.contains("%") {
+                    //     let val1: Vec<&str> = line.split(":").collect::<Vec<&str>>();
+                    //     let percent_val = val1[1].replace("%", "").trim().parse::<f32>().unwrap_or(0.0);
+                    //     if let Ok(mut val) = pcnt.lock() {
+                    //         *val = percent_val / 100.0;
+                    //     }
+
+                    //     if let Ok(mut val2) = progress_label.lock() {
+                    //         *val2 = val1[0].to_string();
+                    //     }
+                    // }
+                    // if to.len() > 10000 {
+                    //     to.clear();
+                    // }
+                    // to.push_str(&format!("{line}"));
                 }
                 
                 std::io::stdout().flush().unwrap();

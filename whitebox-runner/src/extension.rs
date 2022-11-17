@@ -5,12 +5,12 @@ use anyhow::{bail, Result};
 
 #[derive(Default)]
 pub struct ExtensionInstall {
-    product_index: usize,
-    product_list: Vec<String>,
-    email: String,
-    seat_number: usize,
-    activation_key: String,
-    text_output: String,
+    pub product_index: usize,
+    pub product_list: Vec<String>,
+    pub email: String,
+    pub seat_number: usize,
+    pub activation_key: String,
+    pub text_output: String,
 }
 
 impl ExtensionInstall {

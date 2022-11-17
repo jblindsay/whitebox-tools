@@ -9,6 +9,7 @@ License: MIT
 use whitebox_raster::*;
 use crate::tools::*;
 use num_cpus;
+use whitebox_common::structures::Array2D;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
@@ -25,6 +26,12 @@ use std::thread;
 /// blue, green, and red colour components of the colour composite output (`--output`) raster. The image lightness value
 /// (`--lightness`) controls the overall brightness of the output image, as depending on the topography and scale ranges,
 /// these images can appear relatively dark. Higher values result in brighter, more colourful output images.
+/// 
+/// The user may optionally specify a hillshade image. When specified, the hillshade will be used to provide a shaded-relief
+/// overlaid on top of the coloured multi-scale information, providing a very effective visualization. Any hillshade image
+/// may be used for this purpose, but we have found that multi-directional hillshade (`MultidirectionalHillshade`), and 
+/// specifically those derived using the 360-degree option, can be most effective for this application. However, 
+/// experimentation is likely needed to find the optimal for each unique data set.
 ///
 /// The output images can take some training to interpret correctly and a detailed explanation can be found in Lindsay et al.
 /// (2015). Sites within the landscape that occupy prominent topographic positions, either
@@ -81,6 +88,15 @@ impl MultiscaleTopographicPositionImage {
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Optional Hillshade File".to_owned(),
+            flags: vec!["--hillshade".to_owned()],
+            description: "Input optional hillshade raster file. Note: a multi-directional (360-degree option) hillshade tends to work best in this application.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
         });
 
         parameters.push(ToolParameter {
@@ -170,6 +186,8 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         let mut input1_file = String::new();
         let mut input2_file = String::new();
         let mut input3_file = String::new();
+        let mut hs_file = String::new();
+        let mut hs_specified = false;
         let mut output_file = String::new();
         let mut cutoff = 1.2f64;
         if args.len() == 0 {
@@ -206,6 +224,13 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
                 } else {
                     input3_file = args[i + 1].to_string();
                 }
+            } else if flag_val == "-hillshade" {
+                if keyval {
+                    hs_file = vec[1].to_string();
+                } else {
+                    hs_file = args[i + 1].to_string();
+                }
+                hs_specified = true;
             } else if flag_val == "-o" || flag_val == "-output" {
                 if keyval {
                     output_file = vec[1].to_string();
@@ -252,6 +277,9 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         if !input3_file.contains(&sep) && input3_file.contains("/") {
             input3_file = format!("{}{}", working_directory, input3_file);
         }
+        if hs_specified && !hs_file.contains(&sep) && hs_file.contains("/") {
+            hs_file = format!("{}{}", working_directory, hs_file);
+        }
         if !output_file.contains(&sep) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
         }
@@ -260,6 +288,10 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             println!("Reading broad-scale DEV data...")
         };
         let input_r = Arc::new(Raster::new(&input1_file, "r")?);
+
+        let rows = input_r.configs.rows as isize;
+        let columns = input_r.configs.columns as isize;
+        
         if verbose {
             println!("Reading meso-scale DEV data...")
         };
@@ -269,8 +301,21 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
         };
         let input_b = Arc::new(Raster::new(&input3_file, "r")?);
 
-        let rows = input_r.configs.rows as isize;
-        let columns = input_r.configs.columns as isize;
+        if hs_specified && verbose {
+            println!("Preparing hillshade data...")
+        };
+        let (hs, hs_min, hs_range) = if hs_specified {
+            let hs = Raster::new(&hs_file, "r")?;
+            let min = hs.configs.minimum;
+            let max = hs.configs.maximum;
+            (hs.get_data_as_f32_array2d(), min, (max - min))
+        } else {
+            let hs: Array2D<f32> = Array2D::new(2, 2, 1.0f32, -1.0f32)?;
+            (hs, 0f64, 1f64) // just place holders, they won't be used
+        };
+
+        let hs = Arc::new(hs);
+
         let nodata_r = input_r.configs.nodata;
         let nodata_g = input_g.configs.nodata;
         let nodata_b = input_b.configs.nodata;
@@ -301,6 +346,15 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             ));
         }
 
+        if hs_specified && input_r.configs.rows as isize != hs.rows
+            || input_r.configs.columns as isize != hs.columns
+        {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "The input files must have the same number of rows and columns and spatial extent.",
+            ));
+        }
+
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;
         let max_procs = configs.max_procs;
@@ -312,6 +366,7 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             let input_r = input_r.clone();
             let input_g = input_g.clone();
             let input_b = input_b.clone();
+            let hs = hs.clone();
             let tx = tx.clone();
             thread::spawn(move || {
                 let mut red_val: f64;
@@ -334,6 +389,12 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
                             blue_val = (512f64 / (1f64 + (-cutoff * (blue_val).abs()).exp()))
                                 .floor()
                                 - 256f64;
+
+                            if hs_specified {
+                                red_val *= (hs.get_value(row, col) as f64 - hs_min) / hs_range;
+                                green_val *= (hs.get_value(row, col) as f64 - hs_min) / hs_range;
+                                blue_val *= (hs.get_value(row, col) as f64 - hs_min) / hs_range;
+                            }
 
                             if red_val < 0f64 {
                                 red_val = 0f64;

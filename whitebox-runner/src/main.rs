@@ -1,6 +1,7 @@
 mod about;
 mod custom_widgets;
 mod extension;
+mod deactivate_extension;
 mod settings_panel;
 mod tool_dialog;
 mod tool_info;
@@ -109,12 +110,14 @@ struct MyApp {
     tool_descriptions: HashMap<String, String>,
     tool_order: HashMap<String, usize>,
     installed_extensions: InstalledExtensions,
+    deactivatation_output: String,
     theme_changed: bool,
     fonts_changed: bool,
     wbt_version: String,
     search_words_str: String,
     about_visible: bool,
     extension_visible: bool,
+    deactivate_extension_visible: bool,
     case_sensitive_search: bool,
     num_search_hits: usize,
     ei: ExtensionInstall,
@@ -644,6 +647,10 @@ impl eframe::App for MyApp {
                     }
                     if self.extension_visible {
                         self.install_extension(ctx);
+                    }
+
+                    if self.deactivate_extension_visible {
+                        self.deactivate_extension(ctx);
                     }
 
                     let mut remove_idx = -1isize;

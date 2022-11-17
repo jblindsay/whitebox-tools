@@ -291,6 +291,17 @@ impl MyApp {
                             }
                             ui.end_row();
                         // }
+
+                        if self.installed_extensions.gte || 
+                        self.installed_extensions.dem ||
+                        self.installed_extensions.lidar ||
+                        self.installed_extensions.agriculture {
+                            ui.label("");
+                            if ui.button("Deactivate Extension").clicked() {
+                                self.deactivate_extension_visible = true;
+                            }
+                            ui.end_row();
+                        }
                     });
             // });
         });

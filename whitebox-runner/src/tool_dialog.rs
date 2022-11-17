@@ -577,22 +577,25 @@ impl MyApp {
                                 });
                             },
                             ParameterType::FileList => {
-                                if ui.add(
-                                    egui::TextEdit::multiline(&mut parameter.str_value)
-                                    .desired_width(self.state.textbox_width)
-                                ).double_clicked() {
-                                    let fdialog = get_file_dialog(&parameter.file_type); 
-                                    if let Some(path) = fdialog
-                                    .set_directory(std::path::Path::new(&self.state.working_dir))
-                                    .pick_file() {
-                                        parameter.str_value = path.display().to_string();
-                                        // update the working directory
-                                        // path.pop();
-                                        // self.state.working_dir = path.display().to_string();
-                                        // self.update_working_dir(&path.display().to_string());
-                                        wk_dir = path.display().to_string();
+                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                    if ui.add(
+                                        egui::TextEdit::multiline(&mut parameter.str_value)
+                                        .desired_width(self.state.textbox_width)
+                                        .desired_rows(4)
+                                    ).double_clicked() {
+                                        let fdialog = get_file_dialog(&parameter.file_type); 
+                                        if let Some(path) = fdialog
+                                        .set_directory(std::path::Path::new(&self.state.working_dir))
+                                        .pick_file() {
+                                            parameter.str_value = path.display().to_string();
+                                            // update the working directory
+                                            // path.pop();
+                                            // self.state.working_dir = path.display().to_string();
+                                            // self.update_working_dir(&path.display().to_string());
+                                            wk_dir = path.display().to_string();
+                                        }
                                     }
-                                }
+                                });
                                 if ui.button("…").clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type);
 
