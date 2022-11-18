@@ -469,13 +469,14 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let mut output = Raster::initialize_using_file(&output_file, &input); // Memory: +8 bytes per grid cell = 17 bytes per grid cell
+        let input_configs = input.configs.clone(); // Memory: -8 bytes per pixel = 1 bytes per pixel
+        drop(input);
+        let mut output = Raster::initialize_using_config(&output_file, &input_configs); // Memory: +8 bytes per grid cell = 9 bytes per grid cell
         let out_nodata = -32768f64;
         output.configs.nodata = out_nodata;
         output.configs.photometric_interp = PhotometricInterpretation::Continuous; // if the input is a pointer, this may not be the case by default.
         output.configs.data_type = DataType::F32;
         output.reinitialize_values(1.0);
-        drop(input); // Memory: -8 bytes per pixel = 9 bytes per grid cell
 
         // calculate the number of inflowing cells
         let flow_dir = Arc::new(flow_dir);

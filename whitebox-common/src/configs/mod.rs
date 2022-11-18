@@ -66,7 +66,6 @@ pub fn save_configs<'a>(configs: &Configs) -> std::result::Result<(), Error> {
             match file.write_all(configs_json.as_bytes()) {
                 Ok(()) => {}, // do nothing
                 Err(_e) => {
-                    println!("I'm here");
                     eprintln!("Error writing to output settings.json file, likely do to a permissions problem. Settings will not be updated.");
                 }
             };

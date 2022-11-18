@@ -67,6 +67,7 @@ Version 2.3.0 (XX-XX-202X)
 - Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
   incorrectly leading to very strange outputs.
 - The MultiscaleTopographicPositionImage tool now takes an optional hillshade image as input.
+- Lowered the peak memory requirement of the D8FlowAccumulation tool.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
