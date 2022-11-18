@@ -73,11 +73,10 @@ To build the image do:
 
 4. Depending on your system, the build process may take several minutes. When completed, new image called `whitebox-tool` will be created.
 
-To use container it is necessary to bind mount data directory into container as `/data` and then pass required command-line arguments, like below
+To use container it is necessary to bind mount data directory into container as `/data` and then pass required command-line arguments, like below:
 
-```
 docker run --rm -it -v "/path/to/data/directory/":/data whitebox-tools --run=IntegralImage -i=dem.tif -o=out.tif
-```
+
 
 ## 4 Getting help
 
