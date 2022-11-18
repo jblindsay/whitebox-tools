@@ -47,37 +47,6 @@ Depending on your system, the compilation may take several minutes. Also dependi
 
 Be sure to follow the instructions for installing Rust carefully. In particular, if you are installing on MS Windows, you must have a linker installed prior to installing the Rust compiler (rustc). The Rust webpage recommends either the **MS Visual C++ 2015 Build Tools** or the GNU equivalent and offers details for each installation approach. You should also consider using **RustUp** to install the Rust compiler.
 
-### Using Docker image
-
-For these who don't want to build from sources or can not use pre-build binaries there is also a Docker container that runs Whitebox Tools.
-
-To build the image do:
-
-1. clone Whitebox Tools repository to your local system or download code archive from the GitHub
-
-    ```
-    git clone https://github.com/jblindsay/whitebox-tools.git
-    ```
-
-2. Open a terminal (command prompt) window and change the working directory to the whitebox-tools folder
-
-    ```
-    cd /path/to/folder/whitebox-tools/
-    ```
-
-3. Build container
-
-    ```
-    docker build -t whitebox-tools -f docker/whitebox-tools.dockerfile .
-    ```
-
-4. Depending on your system, the build process may take several minutes. When completed, new image called `whitebox-tool` will be created.
-
-To use container it is necessary to bind mount data directory into container as `/data` and then pass required command-line arguments, like below:
-
-docker run --rm -it -v "/path/to/data/directory/":/data whitebox-tools --run=IntegralImage -i=dem.tif -o=out.tif
-
-
 ## 4 Getting help
 
 WhiteboxToos possesses extensive help documentation. Users are referred to the [User Manual](https://www.whiteboxgeo.com/manual/wbw-user-manual/book/first-script.html) located on www.whiteboxgeo.com.
