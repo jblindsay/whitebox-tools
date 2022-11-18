@@ -68,6 +68,9 @@ Version 2.3.0 (XX-XX-202X)
   incorrectly leading to very strange outputs.
 - The MultiscaleTopographicPositionImage tool now takes an optional hillshade image as input.
 - Lowered the peak memory requirement of the D8FlowAccumulation tool.
+- Fixed a bug with the location of the settings.json file when running plugin tools, that sometimes
+  led to the file being located in a top-level directory, and therefore sometimes yielding a 
+  permissions error when running on systems without admin rights.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.
