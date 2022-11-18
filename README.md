@@ -18,7 +18,7 @@ The official WhiteboxTools User Manual can be found [at this link](https://white
 
 ## 2 Getting help
 
-WhiteboxToos possesses extensive help documentation. Users are referred to the [User Manual](https://www.whiteboxgeo.com/manual/wbw-user-manual/book/preface.html) located on www.whiteboxgeo.com.
+WhiteboxToos possesses extensive help documentation. Users are referred to the [User Manual](https://www.whiteboxgeo.com/manual/wbt_book/) located on www.whiteboxgeo.com.
 
 ## 3 Pre-compiled binaries
 
