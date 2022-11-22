@@ -169,6 +169,7 @@ impl MyApp {
                                 if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.whitebox_exe)).pick_file() {
                                     self.state.whitebox_exe = path.display().to_string();
                                     _ = self.get_tool_info();
+                                    self.refesh_tools();
                                 }
                             }
                         });

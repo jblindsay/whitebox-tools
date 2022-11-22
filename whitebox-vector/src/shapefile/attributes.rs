@@ -300,14 +300,14 @@ impl ShapefileAttributes {
     }
 
     pub fn get_field_info(&self, index: usize) -> AttributeField {
-        if index >= self.header.num_records as usize {
+        if index >= self.fields.len() {
             panic!("Error: Specified field is greater than the number of fields.");
         }
         self.fields[index].clone()
     }
 
     pub fn is_field_numeric(&self, index: usize) -> bool {
-        if index >= self.header.num_records as usize {
+        if index >= self.fields.len() {
             panic!("Error: Specified field is greater than the number of fields.");
         }
         match self.fields[index].field_type {

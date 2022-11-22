@@ -350,9 +350,11 @@ impl ToolInfo {
             let mut child = Command::new(&*exe)
                 .args(&args)
                 .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
                 .spawn().unwrap();
 
             let mut stdout = child.stdout.take().unwrap();
+            let mut stderr = child.stderr.take().unwrap();
 
             let mut buf = [0u8; 200];
             let mut out_str = String::new();
@@ -386,7 +388,7 @@ impl ToolInfo {
                             out_str = "".to_string();
                         }
 
-                        out_str.push_str(&format!("{}\n", a[a.len()-1]));
+                        out_str.push_str(&format!("{}", a[a.len()-1]));
                     } else {
                         out_str.push_str(&format!("{line}"));
                     }
@@ -441,6 +443,16 @@ impl ToolInfo {
 
             while last > 0 {
                 last = do_read();
+            }
+
+            // Was anything written to stderr?
+            let mut s = String::new();
+            let read = stderr.read_to_string(&mut s).unwrap_or(0);
+            if read > 0 {
+                println!("Error: {s}");
+                if let Ok(mut to) = tool_output.lock() {
+                    to.push_str(&s);
+                }
             }
 
             if let Ok(mut val) = pcnt.lock() {

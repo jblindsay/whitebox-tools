@@ -639,11 +639,8 @@ impl MyApp {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
                                     if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
-                                    .pick_file() {
+                                    .save_file() {
                                         parameter.str_value = path.display().to_string();
-                                        // update the working directory
-                                        // path.pop();
-                                        // self.state.working_dir = path.display().to_string();
                                         // self.update_working_dir(&path.display().to_string());
                                         wk_dir = path.display().to_string();
                                     }

@@ -20,8 +20,7 @@ impl ExtensionInstall {
             product_list: vec![
                 "General Toolset Extension".to_string(),
                 "DEM & Spatial Hydrology Extension".to_string(),
-                "Lidar & Remote Sensing Extension".to_string(),
-                "Agriculture Extension".to_string()
+                "Lidar & Remote Sensing Extension".to_string()
                 ],
             email: String::new(),
             seat_number: 0,
