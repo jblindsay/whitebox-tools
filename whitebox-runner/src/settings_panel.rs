@@ -1,6 +1,8 @@
 use crate::MyApp;
 use crate::toggle;
 use crate::AppTheme;
+
+use std::env;
 // use egui::FontFamily::Proportional;
 // use egui::FontId;
 // use egui::TextStyle::*;
@@ -168,6 +170,10 @@ impl MyApp {
                             if ui.button("…").clicked() {
                                 if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.whitebox_exe)).pick_file() {
                                     self.state.whitebox_exe = path.display().to_string();
+                                    // Just a QA check. People sometimes select the similarly named whitebox_runner exe rather than the whitebox_tools exe.
+                                    if self.state.whitebox_exe.ends_with(&format!("whitebox_runner{}", env::consts::EXE_SUFFIX)) {
+                                        self.state.whitebox_exe = self.state.whitebox_exe.replace(&format!("whitebox_runner{}", env::consts::EXE_SUFFIX), &format!("whitebox_tools{}", env::consts::EXE_SUFFIX));
+                                    }
                                     _ = self.get_tool_info();
                                     self.refesh_tools();
                                 }

@@ -1,0 +1,18 @@
+{
+    "tool_name": "InstallWbExtension",
+    "exe": "install_wb_extension",
+    "short_description": "Use to install a Whitebox extension product.",
+    "toolbox": "Whitebox Utilities",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=LaunchWbRunner",
+    "parameters": [
+        {
+            "name": "Whitebox Extension Product Name",
+            "flags": ["--install_extension"],
+            "description": "Name of the extension product to install. Options include: 'General Toolset Extension', 'DEM & Spatial Hydrology Extension', 'Lidar & Remote Sensing Extension', and 'Agriculture Extension'",
+            "parameter_type": {"OptionList": ["General Toolset Extension", "DEM & Spatial Hydrology Extension", "Lidar & Remote Sensing Extension", "Agriculture Extension"]},
+            "default_value": "General Toolset Extension",
+            "optional": false
+        }
+    ]
+}

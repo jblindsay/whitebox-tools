@@ -61,9 +61,10 @@ Version 2.3.0 (XX-XX-202X)
   previous version of the WbRunner. It is now written in pure Rust (compared with the old Python
   TkInter app) using the egui user-interface library. It has a more modern feel, is cross-platform,
   and has no dependencies (including Python). You can now open multiple tools simultaneously. 
-- Added the LaunchWbRunner tool so that the Whitebox Runner will be more accessible from other
-  Whitebox frontends. This way users will always have a good fall-back if the frontend is not
-  up-to-date with the WBT backend, since WbRunner is always current with the installed version of WBT.
+- Added the LaunchWbRunner and InstallWbExtension tools so that the Whitebox Runner will be more 
+  accessible from other Whitebox frontends. This way users will always have a good fall-back if the 
+  frontend is not up-to-date with the WBT backend, since WbRunner is always current with the installed 
+  version of WBT. Also, the WbRunner is the preferred way now for installing Whitebox extensions.
 - Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
   incorrectly leading to very strange outputs.
 - The MultiscaleTopographicPositionImage tool now takes an optional hillshade image as input.
@@ -71,6 +72,8 @@ Version 2.3.0 (XX-XX-202X)
 - Fixed a bug with the location of the settings.json file when running plugin tools, that sometimes
   led to the file being located in a top-level directory, and therefore sometimes yielding a 
   permissions error when running on systems without admin rights.
+- Fixed a bug with the vector attribute table reader that caused issue with the VectorPolygonsToRaster 
+  tool.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.

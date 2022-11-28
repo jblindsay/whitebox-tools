@@ -10,7 +10,6 @@ use std::{
     path, 
     path::Path,
     process::Command,
-    // thread,
 };
 
 /// This tool can be used to launch the Whitebox Runner application from within other Whitebox front-ends.
@@ -48,9 +47,9 @@ fn help() {
     let exe_name = &format!("launch_wb_runner{}", ext);
     let sep: String = path::MAIN_SEPARATOR.to_string();
     let s = r#"
-    launch_wb_runner Help
+    install_wb_extension Help
 
-    This tool is used launch the Whitebox Runner application.
+    This tool is to install a Whitebox extension product.
 
     The following commands are recognized:
     help       Prints help information.
@@ -58,7 +57,7 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    --clear_state  Boolean flag determines whether to clear previous app state.
+    --install_extension      Name of the Whitebox extension product to install: 'General Toolset Extension', 'DEM & Spatial Hydrology Extension', 'Lidar & Remote Sensing Extension', and 'Agriculture Extension'
     
     Input/output file names can be fully qualified, or can rely on the working directory contained in 
     the WhiteboxTools settings.json file.
@@ -72,18 +71,18 @@ fn help() {
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "launch_wb_runner v{} by Dr. John B. Lindsay (c) 2022.",
+        "install_wb_extension v{} by Dr. John B. Lindsay (c) 2022.",
         VERSION.unwrap_or("Unknown version")
     );
 }
 
 pub fn get_tool_name() -> String {
-    String::from("LaunchWbRunner") // This should be camel case and is a reference to the tool name.
+    String::from("InstallWbExtension") // This should be camel case and is a reference to the tool name.
 }
 
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     // read the arguments
-    let mut clear_app_state: bool = false;
+    let mut extension_name = "General Toolset Extension".to_string();
 
     if args.len() <= 1 {
         return Err(Error::new(
@@ -96,15 +95,17 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         arg = arg.replace("\'", "");
         let cmd = arg.split("="); // in case an equals sign was used
         let vec = cmd.collect::<Vec<&str>>();
-        // let mut keyval = false;
-        // if vec.len() > 1 {
-        //     keyval = true;
-        // }
+        let mut keyval = false;
+        if vec.len() > 1 {
+            keyval = true;
+        }
         let flag_val = vec[0].to_lowercase().replace("--", "-");
-        if flag_val == "-clear_app_state" {
-            if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
-                clear_app_state = true;
-            }
+        if flag_val == "-install_extension" {
+            extension_name = if keyval {
+                vec[1].to_lowercase()
+            } else {
+                args[i + 1].to_lowercase()
+            };
         }
     }
 
@@ -118,21 +119,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     // check that it exists.
     if exe.exists() {
-        if !clear_app_state {
-            // thread::spawn(move || {
-                let _output = Command::new(exe.to_str().unwrap_or(""))
-                    .output()
-                    .expect("Failed to execute process");
-            // });
-
-        } else {
-            // thread::spawn(move || {
-                let _output = Command::new(&exe)
-                    .args(["clear_state"])
-                    .output()
-                    .expect("Failed to execute process");
-            // });
-        }
+        let _output = Command::new(&exe)
+                .args([&format!("install_extension={}", extension_name)])
+                .output()
+                .expect("Failed to execute process");
     } else {
         println!("The Whitebox Runner app does not appear to be located within the WBT folder.");
     }

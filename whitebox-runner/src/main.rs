@@ -31,16 +31,48 @@ use egui::FontId;
 use egui::TextStyle::*;
 
 static mut CLEAR_STATE: bool = false;
+static mut INSTALL_EXTENSION: bool = false;
+static mut EXTENSION_NAME: usize = 0;
 
 fn main() {
     // command-line args
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
-        for arg in args {
+        for i in 0..args.len() {
+            let arg = args[i].replace("\"", "");
             if arg.trim().to_lowercase().contains("clear_state") {
                 unsafe {
                     // This is the only way that I can see to pass command-line args to the eframe app.
                     CLEAR_STATE = true;
+                }
+            } else if arg.trim().to_lowercase().contains("install_extension") {
+                unsafe {
+                    // This is the only way that I can see to pass command-line args to the eframe app.
+                    INSTALL_EXTENSION = true;
+                }
+
+                let mut arg = args[i].replace("\"", "");
+                arg = arg.replace("\'", "");
+                let cmd = arg.split("="); // in case an equals sign was used
+                let vec = cmd.collect::<Vec<&str>>();
+                let keyval = vec.len() > 1;
+                let extension_name = if keyval {
+                    vec[1].to_lowercase()
+                } else if args.len() > i + 1 {
+                    args[i + 1].to_lowercase()
+                } else {
+                    "".to_string()
+                };
+                unsafe {
+                    if extension_name.to_lowercase().contains("general") || extension_name.to_lowercase().contains("gte") {
+                        EXTENSION_NAME = 0;
+                    } else if extension_name.to_lowercase().contains("agri") {
+                        EXTENSION_NAME = 3;
+                    } else if extension_name.to_lowercase().contains("dem") {
+                        EXTENSION_NAME = 1;
+                    } else if extension_name.to_lowercase().contains("lidar") {
+                        EXTENSION_NAME = 2;
+                    }
                 }
             }
         }
@@ -179,6 +211,16 @@ impl MyApp {
                 }
             }
         }
+
+        slf.ei = ExtensionInstall::new();
+        unsafe {
+            if INSTALL_EXTENSION {
+                slf.state.settings_visible = true;
+                slf.extension_visible = true;
+            }
+
+            slf.ei.product_index = EXTENSION_NAME;
+        }
         
         slf.theme_changed = true;
         slf.fonts_changed = true;
@@ -188,7 +230,6 @@ impl MyApp {
         }
         _ = slf.get_tool_info();
         _ = slf.get_version();
-        slf.ei = ExtensionInstall::new();
         slf
     }
 

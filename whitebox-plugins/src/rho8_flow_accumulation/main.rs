@@ -275,7 +275,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                                 z_n = input[(row + d_y[i], col + d_x[i])];
                                 if z_n != nodata {
                                     slope = match i {
-                                        1 | 3 | 5 | 7 => (z - z_n),
+                                        1 | 3 | 5 | 7 => z - z_n,
                                         _ => (z - z_n) / (2f64 - rng.gen_range(0f64, 1f64)), //between.ind_sample(&mut rng)),
                                     };
                                     if slope > max_slope && slope > 0f64 {

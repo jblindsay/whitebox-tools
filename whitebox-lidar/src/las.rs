@@ -1326,7 +1326,6 @@ impl LasFile {
             let mut rgb: ColourData;
             let mut wfp: WaveformPacket;
                     
-
             for wrapped_point in reader.points() {
                 let point = wrapped_point.unwrap();
                 let raw_point = point.into_raw(&transforms).unwrap();
@@ -1409,7 +1408,6 @@ impl LasFile {
                     self.waveform_data.push(wfp);
                 }
             }
-
         }
 
         drop(raw);

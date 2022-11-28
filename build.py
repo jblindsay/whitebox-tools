@@ -85,7 +85,7 @@ copytree(src, dst)
 
 plugins = os.listdir(plugins_dir)
 for plugin in plugins:
-    if ".DS" not in plugin:
+    if ".DS" not in plugin and "._" not in plugin:
         print(f'Copying plugin: {plugin}')
 
         # Copy the json file into the plugins directory

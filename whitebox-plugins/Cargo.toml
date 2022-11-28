@@ -29,6 +29,10 @@ name = "heat_map"
 path = "src/heat_map/main.rs"
 
 [[bin]]
+name = "install_wb_extension"
+path = "src/install_wb_extension/main.rs"
+
+[[bin]]
 name = "launch_wb_runner"
 path = "src/launch_wb_runner/main.rs"
 
