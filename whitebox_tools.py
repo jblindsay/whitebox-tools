@@ -726,6 +726,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -1047,6 +1048,24 @@ Okay, that's it for now.
         args.append("--input='{}'".format(i))
         args.append("--output='{}'".format(output))
         return self.run_tool('remove_polygon_holes', args, callback) # returns 1 if error
+
+    def remove_raster_polygon_holes(self, i, output, threshold=3, use_diagonals=True, callback=None):
+        """Removes polygon holes, or 'donut-holes', from raster polygons.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output raster file. 
+        threshold -- Maximum size of removed holes, in grid cells. Blank for no threshold, i.e. remove all holes. 
+        use_diagonals -- Use diagonal neighbours during clumping operation. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--threshold={}".format(threshold))
+        if use_diagonals: args.append("--use_diagonals")
+        return self.run_tool('remove_raster_polygon_holes', args, callback) # returns 1 if error
 
     def set_nodata_value(self, i, output, back_value=0.0, callback=None):
         """Assign a specified value in an input image to the NoData value.
@@ -1665,7 +1684,7 @@ Okay, that's it for now.
         return self.run_tool('polygon_area', args, callback) # returns 1 if error
 
     def polygon_long_axis(self, i, output, callback=None):
-        """This tool can be used to map the long axis of polygon features.
+        """Used to map the long axis of polygon features.
 
         Keyword arguments:
 
@@ -1691,7 +1710,7 @@ Okay, that's it for now.
         return self.run_tool('polygon_perimeter', args, callback) # returns 1 if error
 
     def polygon_short_axis(self, i, output, callback=None):
-        """This tool can be used to map the short axis of polygon features.
+        """Used to map the short axis of polygon features.
 
         Keyword arguments:
 
@@ -3792,7 +3811,7 @@ Okay, that's it for now.
         args.append("--step_nonlinearity={}".format(step_nonlinearity))
         return self.run_tool('multiscale_std_dev_normals_signature', args, callback) # returns 1 if error
 
-    def multiscale_topographic_position_image(self, local, meso, broad, output, lightness=1.2, callback=None):
+    def multiscale_topographic_position_image(self, local, meso, broad, output, hillshade=None, lightness=1.2, callback=None):
         """Creates a multiscale topographic position image from three DEVmax rasters of differing spatial scale ranges.
 
         Keyword arguments:
@@ -3800,6 +3819,7 @@ Okay, that's it for now.
         local -- Input local-scale topographic position (DEVmax) raster file. 
         meso -- Input meso-scale topographic position (DEVmax) raster file. 
         broad -- Input broad-scale topographic position (DEVmax) raster file. 
+        hillshade -- Input optional hillshade raster file. Note: a multi-directional (360-degree option) hillshade tends to work best in this application. 
         output -- Output raster file. 
         lightness -- Image lightness value (default is 1.2). 
         callback -- Custom function for handling tool text outputs.
@@ -3808,6 +3828,7 @@ Okay, that's it for now.
         args.append("--local='{}'".format(local))
         args.append("--meso='{}'".format(meso))
         args.append("--broad='{}'".format(broad))
+        if hillshade is not None: args.append("--hillshade='{}'".format(hillshade))
         args.append("--output='{}'".format(output))
         args.append("--lightness={}".format(lightness))
         return self.run_tool('multiscale_topographic_position_image', args, callback) # returns 1 if error
@@ -5392,6 +5413,24 @@ Okay, that's it for now.
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('rho8_pointer', args, callback) # returns 1 if error
 
+    def river_centerlines(self, i, output, min_length=3, radius=4, callback=None):
+        """Maps river centerlines from an input water raster.
+
+        Keyword arguments:
+
+        i -- Name of the input raster image file. 
+        output -- Name of the output vector lines file. 
+        min_length -- Minimum line length, in grid cells. 
+        radius -- Search radius for joining distant endnodes, in grid cells. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--min_length={}".format(min_length))
+        args.append("--radius={}".format(radius))
+        return self.run_tool('river_centerlines', args, callback) # returns 1 if error
+
     def sink(self, i, output, zero_background=False, callback=None):
         """Identifies the depressions in a DEM, giving each feature a unique identifier.
 
@@ -5865,7 +5904,7 @@ Okay, that's it for now.
         return self.run_tool('rgb_to_ihs', args, callback) # returns 1 if error
 
     def split_colour_composite(self, i, red=None, green=None, blue=None, callback=None):
-        """This tool splits an RGB colour composite image into separate multispectral images.
+        """Splits an RGB colour composite image into separate multispectral images.
 
         Keyword arguments:
 
@@ -6817,7 +6856,7 @@ Okay, that's it for now.
         return self.run_tool('histogram_matching', args, callback) # returns 1 if error
 
     def histogram_matching_two_images(self, input1, input2, output, callback=None):
-        """This tool alters the cumulative distribution function of a raster image to that of another image.
+        """Alters the cumulative distribution function of a raster image to that of another image.
 
         Keyword arguments:
 
@@ -10491,3 +10530,31 @@ Okay, that's it for now.
         args.append("--cutting_height={}".format(cutting_height))
         args.append("--snap={}".format(snap))
         return self.run_tool('vector_stream_network_analysis', args, callback) # returns 1 if error
+
+    ######################
+    # Whitebox Utilities #
+    ######################
+
+    def install_wb_extension(self, install_extension="General Toolset Extension", callback=None):
+        """Use to install a Whitebox extension product.
+
+        Keyword arguments:
+
+        install_extension -- Name of the extension product to install. Options include: 'General Toolset Extension', 'DEM & Spatial Hydrology Extension', 'Lidar & Remote Sensing Extension', and 'Agriculture Extension'. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--install_extension={}".format(install_extension))
+        return self.run_tool('install_wb_extension', args, callback) # returns 1 if error
+
+    def launch_wb_runner(self, clear_app_state=False, callback=None):
+        """Opens the Whitebox Runner application.
+
+        Keyword arguments:
+
+        clear_app_state -- Clear the application state memory?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if clear_app_state: args.append("--clear_app_state")
+        return self.run_tool('launch_wb_runner', args, callback) # returns 1 if error

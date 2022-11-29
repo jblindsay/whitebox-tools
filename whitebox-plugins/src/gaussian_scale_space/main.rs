@@ -656,7 +656,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         let buffer = if sigma < 3f64 { // not fast gaussian, no buffer
             0isize
         } else { // is fast gaussian, buffer by upper window lenght
-                filter_size+1//(filter_size as f64 / 2f64).floor() as isize + 1
+            filter_size + 1 // (filter_size as f64 / 2f64).floor() as isize + 1
         };
 
         // Step 2: Calculate LSP on smoothed DEM
