@@ -2,6 +2,7 @@ mod about;
 mod custom_widgets;
 mod extension;
 mod deactivate_extension;
+mod update_extension;
 mod settings_panel;
 mod tool_dialog;
 mod tool_info;
@@ -127,6 +128,7 @@ pub struct AppState {
     show_tool_search: bool,
     show_recent_tools: bool,
     most_recent: VecDeque<String>,
+    check_wbt_updates: bool,
 }
 
 #[derive(Default)]
@@ -150,6 +152,10 @@ struct MyApp {
     about_visible: bool,
     extension_visible: bool,
     deactivate_extension_visible: bool,
+    update_extension_msg_visible: bool,
+    update_extension_visible: bool,
+    extensions_outdated: bool,
+    update_wbt_visible: bool,
     case_sensitive_search: bool,
     num_search_hits: usize,
     ei: ExtensionInstall,
@@ -184,6 +190,7 @@ impl MyApp {
             slf.state.show_toolboxes = true;
             slf.state.show_tool_search = false;
             slf.state.show_recent_tools = false;
+            slf.state.check_wbt_updates = true;
             slf.state.most_recent = std::collections::VecDeque::new();
         } else {
             #[cfg(feature = "persistence")]
@@ -207,6 +214,7 @@ impl MyApp {
                     slf.state.show_toolboxes = true;
                     slf.state.show_tool_search = false;
                     slf.state.show_recent_tools = false;
+                    slf.state.check_wbt_updates = true;
                     slf.state.most_recent = std::collections::VecDeque::new();
                 }
             }
@@ -230,6 +238,117 @@ impl MyApp {
         }
         _ = slf.get_tool_info();
         _ = slf.get_version();
+
+        if slf.state.check_wbt_updates {
+            // see if the WBT version is lower than the published version
+            let url = "http://www.whiteboxgeo.com/versioning_info/versioning_info.json";
+            match reqwest::blocking::Client::builder()
+                .timeout(std::time::Duration::from_secs(10))
+                .build() {
+                Ok(client) => {
+                    match client.get(url).build() {
+                        Ok(req) => {
+                            match client.execute(req) {
+                                Ok(resp) => {
+                                    let ret = resp.text().unwrap_or("".to_string());
+                                    match serde_json::from_str::<serde_json::Value>(&ret) {
+                                        Ok(v) => {
+                                            let version_string = v["wbtVersion"].as_str();
+                                            if version_string.is_some() {
+                                                let current_version = version_string.unwrap_or("").split(".").collect::<Vec<&str>>();
+                                                let version_array = slf.wbt_version.split(" ").collect::<Vec<&str>>();
+                                                for s in &version_array {
+                                                    if s.contains("v") {
+                                                        let used_version = s.replace("v", "");
+                                                        let used_version = used_version.split(".").collect::<Vec<&str>>();
+                                                        if current_version.len() == 3 && used_version.len() == 3 {
+                                                            let mut flag = false;
+                                                            for i in 0..3 {
+                                                                let used = used_version[i].parse::<isize>().unwrap_or(0);
+                                                                let cur = current_version[i].parse::<isize>().unwrap_or(0);
+                                                                if used < cur {
+                                                                    flag = true;
+                                                                }
+                                                            }
+                                                            if flag {
+                                                                slf.update_wbt_visible = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // Are there any extensions installed?
+                                            if slf.installed_extensions.gte {
+                                                if v["gteTools"].is_array() {
+                                                    let tools_list = v["gteTools"].as_array().unwrap();
+                                                    for tool in tools_list {
+                                                        if tool.is_string() {
+                                                            if !slf.tool_order.contains_key(tool.as_str().unwrap()) {
+                                                                slf.update_extension_msg_visible = true;
+                                                                slf.extensions_outdated = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            } else if slf.installed_extensions.dem {
+                                                if v["demTools"].is_array() {
+                                                    let tools_list = v["demTools"].as_array().unwrap();
+                                                    for tool in tools_list {
+                                                        if tool.is_string() {
+                                                            if !slf.tool_order.contains_key(tool.as_str().unwrap()) {
+                                                                slf.update_extension_msg_visible = true;
+                                                                slf.extensions_outdated = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            } else if slf.installed_extensions.lidar {
+                                                if v["lidarTools"].is_array() {
+                                                    let tools_list = v["lidarTools"].as_array().unwrap();
+                                                    for tool in tools_list {
+                                                        if tool.is_string() {
+                                                            if !slf.tool_order.contains_key(tool.as_str().unwrap()) {
+                                                                slf.update_extension_msg_visible = true;
+                                                                slf.extensions_outdated = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            } else if slf.installed_extensions.agriculture {
+                                                if v["agTools"].is_array() {
+                                                    let tools_list = v["agTools"].as_array().unwrap();
+                                                    for tool in tools_list {
+                                                        if tool.is_string() {
+                                                            if !slf.tool_order.contains_key(tool.as_str().unwrap()) {
+                                                                slf.update_extension_msg_visible = true;
+                                                                slf.extensions_outdated = true;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Err(_e) => {
+                                            // Do nothing.
+                                        }
+                                    }
+                                },
+                                Err(_e) => { 
+                                    // Do nothing.
+                                }
+                            }
+                        },
+                        Err(_e) => { 
+                            // Do nothing.
+                        }
+                    }
+                },
+                Err(_e) => { 
+                    // Do nothing.
+                }
+            }
+        }
         slf
     }
 
@@ -686,8 +805,13 @@ impl eframe::App for MyApp {
                     if self.about_visible {
                         self.about_window(ctx);
                     }
+                    
                     if self.extension_visible {
                         self.install_extension(ctx);
+                    }
+
+                    if self.update_extension_visible {
+                        self.update_extension(ctx);
                     }
 
                     if self.deactivate_extension_visible {
@@ -710,24 +834,49 @@ impl eframe::App for MyApp {
             });
         });
 
+        if self.update_wbt_visible {
+            // Show update wbt dialog:
+            egui::Window::new("WhiteboxTools Version")
+                .collapsible(false)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.vertical(|ui| {
+                        ui.label("");
+                        ui.label("A newer version of WhiteboxTools is available. Visit,");
+                        // ui.label("");
+                        let url = "https://www.whiteboxgeo.com/download-whiteboxtools/";
+                        ui.hyperlink_to(url, url);
+                        // ui.label("");
+                        ui.label("to download and install the latest version today.");
+                        ui.label("");
+                        if ui.button("Ok").clicked() {
+                            self.update_wbt_visible = false;
+                        }
+                    });
+                });
+        }
+
+        if self.update_extension_msg_visible {
+            // Show update wbt dialog:
+            egui::Window::new("Whitebox Extension Needs Updating")
+                .collapsible(false)
+                .resizable(false)
+                .show(ctx, |ui| {
+                    ui.vertical(|ui| {
+                        ui.label("");
+                        ui.label("A newer version of an installed Whitebox Extension product");
+                        ui.label("needs updating. Select 'Update Extension' in the WbRunner");
+                        ui.label("settings to install the latest version.");
+                        ui.label("");
+                        if ui.button("Ok").clicked() {
+                            self.update_extension_msg_visible = false;
+                        }
+                    });
+                });
+        }
+
         // close the window?
         if self.show_confirmation_dialog {
-            // Show confirmation dialog:
-            // egui::Window::new("Do you want to quit?")
-            //     .collapsible(false)
-            //     .resizable(false)
-            //     .show(ctx, |ui| {
-            //         ui.horizontal(|ui| {
-            //             if ui.button("Cancel").clicked() {
-            //                 self.show_confirmation_dialog = false;
-            //             }
-
-            //             if ui.button("Yes").clicked() {
-            //                 self.allowed_to_close = true;
-            //                 frame.close();
-            //             }
-            //         });
-            //     });
             if rfd::MessageDialog::new()
             .set_level(rfd::MessageLevel::Warning)
             .set_title("Closing Whitebox Runner")

@@ -117,6 +117,7 @@ impl MyApp {
                         }
                         ui.end_row();
 
+                        // Number of recent directories stored
                         self.state.num_recent_dirs = self.state.num_recent_dirs.clamp(1, 15);
                         ui.label("Num. of recent directories:");
                         if ui.add(egui::DragValue::new(&mut self.state.num_recent_dirs).speed(0)).lost_focus() {
@@ -126,6 +127,12 @@ impl MyApp {
                             }
                         }
                         ui.end_row();
+
+                        // Check for updates
+                        ui.label("Automatically check for updates?");
+                        ui.add(toggle(&mut self.state.check_wbt_updates));
+                        ui.end_row();
+
 
                         // Reset button
                         ui.label("Reset settings:");
@@ -146,6 +153,7 @@ impl MyApp {
                             self.state.show_toolboxes = true;
                             self.state.show_tool_search = false;
                             self.state.show_recent_tools = false;
+                            self.state.check_wbt_updates = true;
                             self.state.most_recent = std::collections::VecDeque::new();
                         }
                         ui.end_row();
@@ -286,18 +294,26 @@ impl MyApp {
                             // });
                         });
                         ui.end_row();
-                        
+
                         // if !self.installed_extensions.gte {
                             ui.label("Purchase activation keys at:");
                             ui.hyperlink("https://www.whiteboxgeo.com/");
                             ui.end_row();
+                        // }
 
+                        ui.label("");
+                        if ui.button("Install Whitebox Extension").clicked() {
+                            self.extension_visible = true;
+                        }
+                        ui.end_row();
+
+                        if self.extensions_outdated {
                             ui.label("");
-                            if ui.button("Install Whitebox Extension").clicked() {
-                                self.extension_visible = true;
+                            if ui.button("Update Extension").clicked() {
+                                self.update_extension_visible = true;
                             }
                             ui.end_row();
-                        // }
+                        }
 
                         if self.installed_extensions.gte || 
                         self.installed_extensions.dem ||
