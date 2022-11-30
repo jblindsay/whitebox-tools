@@ -803,8 +803,10 @@ impl MyApp {
                     self.list_of_open_tools[tool_idx].update_exe_path(&self.state.whitebox_exe);
                     self.list_of_open_tools[tool_idx].run();
                 }
-                if ui.button("Cancel").clicked() {
-                    self.list_of_open_tools[tool_idx].cancel();
+                if !self.extension_tools_list.contains(&self.list_of_open_tools[tool_idx].tool_name) {
+                    if ui.button("Cancel").clicked() {
+                        self.list_of_open_tools[tool_idx].cancel();
+                    }
                 }
                 if ui.button("Help").clicked() {
                     let toolbox = self.list_of_open_tools[tool_idx]
