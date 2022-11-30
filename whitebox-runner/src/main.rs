@@ -162,6 +162,7 @@ struct MyApp {
     most_used_hm: HashMap<String, u16>,
     most_used: Vec<(u16, String)>,
     wb_logo: WbLogo,
+    extension_tools_list: Vec<String>,
 }
 
 impl MyApp {
@@ -274,6 +275,15 @@ impl MyApp {
                                                                 slf.update_wbt_visible = true;
                                                             }
                                                         }
+                                                    }
+                                                }
+                                            }
+
+                                            if v["gteTools"].is_array() {
+                                                let tools_list = v["gteTools"].as_array().unwrap();
+                                                for tool in tools_list {
+                                                    if tool.is_string() {
+                                                        slf.extension_tools_list.push(tool.as_str().unwrap().to_string());
                                                     }
                                                 }
                                             }

@@ -837,28 +837,32 @@ impl MyApp {
                     }
 
                 }
-                if ui.button("View Code").clicked() {
-                    // let url = self.view_code(&(self.list_of_open_tools[tool_idx].tool_name));
-                    let output = std::process::Command::new(&self.state.whitebox_exe)
-                            .args([&format!("--viewcode={}", self.list_of_open_tools[tool_idx].tool_name)])
-                            .output()
-                            .expect("Could not execute the WhiteboxTools binary");
-                    
-                    if output.status.success() {
-                        let url = match std::str::from_utf8(&(output.stdout)) {
-                            Ok(v) => v.to_string(),
-                            Err(_) => "https://github.com/jblindsay/whitebox-tools".to_string(),
-                        };
-                        if !webbrowser::open(&url).is_ok() {
-                            if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
-                                tool_output.push_str("Could not navigate to code link in browser.\n");
+
+                if !self.extension_tools_list.contains(&self.list_of_open_tools[tool_idx].tool_name) {
+                    if ui.button("View Code").clicked() {
+                        // let url = self.view_code(&(self.list_of_open_tools[tool_idx].tool_name));
+                        let output = std::process::Command::new(&self.state.whitebox_exe)
+                                .args([&format!("--viewcode={}", self.list_of_open_tools[tool_idx].tool_name)])
+                                .output()
+                                .expect("Could not execute the WhiteboxTools binary");
+                        
+                        if output.status.success() {
+                            let url = match std::str::from_utf8(&(output.stdout)) {
+                                Ok(v) => v.to_string(),
+                                Err(_) => "https://github.com/jblindsay/whitebox-tools".to_string(),
+                            };
+                            if !webbrowser::open(&url).is_ok() {
+                                if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                                    tool_output.push_str("Could not navigate to code link in browser.\n");
+                                }
                             }
+                        } else {
+                            println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("None"));
+                            println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("None"));
                         }
-                    } else {
-                        println!("stdout: {}", std::str::from_utf8(output.stdout.as_slice()).unwrap_or("None"));
-                        println!("stderr: {}", std::str::from_utf8(output.stderr.as_slice()).unwrap_or("None"));
                     }
                 }
+                
                 if ui.button("Close").clicked() {
                     close_dialog = true;
                 }
