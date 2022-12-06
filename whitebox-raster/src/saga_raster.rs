@@ -24,6 +24,8 @@ pub fn read_saga(
     let mut data_file_offset = 0u64;
     let mut top_to_bottom = false;
     let mut z_factor = 1.0;
+    let mut position_xmin: f64 = f64::NEG_INFINITY;
+    let mut position_ymin: f64 = f64::NEG_INFINITY;
     for line in f.lines() {
         let line_unwrapped = line.unwrap();
         //let line_split = line_unwrapped.split("\t");
@@ -86,14 +88,14 @@ pub fn read_saga(
                 configs.endian = Endianness::BigEndian;
             }
         } else if vec[0].to_lowercase().contains("position_xmin") {
-            configs.west = vec[1]
+            position_xmin = vec[1]
                 .replace("=", "")
                 .trim()
                 .to_string()
                 .parse::<f64>()
                 .unwrap();
         } else if vec[0].to_lowercase().contains("position_ymin") {
-            configs.south = vec[1]
+            position_ymin = vec[1]
                 .replace("=", "")
                 .trim()
                 .to_string()
@@ -145,8 +147,10 @@ pub fn read_saga(
         }
     }
 
-    configs.north = configs.south + configs.resolution_y * configs.rows as f64;
+    configs.west = position_xmin - (0.5 * configs.resolution_x);
+    configs.south = position_ymin - (0.5 * configs.resolution_y);
     configs.east = configs.west + configs.resolution_x * configs.columns as f64;
+    configs.north = configs.south + configs.resolution_y * configs.rows as f64;
 
     if z_factor < 0.0 && (configs.data_type == DataType::F32 || configs.data_type == DataType::F64)
     {
@@ -496,9 +500,9 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
         writer.write_all("BYTEORDER_BIG\t= TRUE\n".as_bytes())?;
     }
 
-    writer.write_all(format!("POSITION_XMIN\t= {}\n", r.configs.west).as_bytes())?;
+    writer.write_all(format!("POSITION_XMIN\t= {}\n", r.configs.west + (0.5 * r.configs.resolution_x)).as_bytes())?;
 
-    writer.write_all(format!("POSITION_YMIN\t= {}\n", r.configs.south).as_bytes())?;
+    writer.write_all(format!("POSITION_YMIN\t= {}\n", r.configs.south + (0.5 * r.configs.resolution_y)).as_bytes())?;
 
     writer.write_all(format!("CELLCOUNT_X\t= {}\n", r.configs.columns).as_bytes())?;
 
@@ -611,7 +615,7 @@ pub fn write_saga<'a>(r: &'a mut Raster) -> Result<(), Error> {
     // Write the projection file //
     ///////////////////////////////
 
-    if !r.configs.projection.is_empty() {
+    if r.configs.projection != "not specified" {
         let prj_file = Path::new(&r.file_name)
             .with_extension("prj")
             .into_os_string()
