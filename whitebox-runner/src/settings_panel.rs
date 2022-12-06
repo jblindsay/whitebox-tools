@@ -40,7 +40,8 @@ impl MyApp {
                             );
                             if ui.button("…").clicked() {
                                 if let Some(path) = rfd::FileDialog::new().set_directory(std::path::Path::new(&self.state.working_dir)).pick_folder() {
-                                    self.state.working_dir = path.display().to_string();
+                                    // self.state.working_dir = path.display().to_string();
+                                    self.update_working_dir(&path.display().to_string());
                                 }
                             }
                         });

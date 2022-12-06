@@ -442,6 +442,10 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
             }
 
             let filter_size = midpoint * 2 + 1;
+            if filter_size > rows || filter_size > columns {
+                println!("Warning: Operation exited early as a tested scale exceeded the raster extent.");
+                break;
+            }
 
             ////////////////////////////////////////
             // Smooth the DEM using Gaussian blur //

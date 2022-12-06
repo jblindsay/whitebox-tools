@@ -628,22 +628,24 @@ impl MyApp {
     }
 
     fn update_working_dir(&mut self, working_dir: &str) {
-        if working_dir == self.state.working_dir {
-            return; // no need to update
-        }
-
         let mut path = PathBuf::new();
         path.push(working_dir);
-        if path.is_relative() {
-            return; // This is a relative path, meaning it is likely just a file not a dir.
-        }
         
         // Is working_dir a directory or a file? If a file, pop the file_name 
         // and work with the directory.
         if path.is_file() {
+            // path = path.parent().unwrap(); //.pop();
             path.pop();
         }
 
+        if working_dir == self.state.working_dir {
+            return; // no need to update
+        }
+
+        if path.is_relative() {
+            return; // This is a relative path, meaning it is likely just a file not a dir.
+        }
+        
         if let Some(path_str) = path.to_str() {
             self.state.working_dir = path_str.to_string();
 

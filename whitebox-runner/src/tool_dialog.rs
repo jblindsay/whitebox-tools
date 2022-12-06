@@ -142,10 +142,10 @@ impl MyApp {
                             },
                             ParameterType::ExistingFile => {
                                 ui.horizontal(|ui| {
-                                    
                                     let resp = ui.add(
                                         egui::TextEdit::singleline(&mut parameter.str_value)
                                         .desired_width(self.state.textbox_width - 22.0)
+                                        .id_source(&parameter.name)
                                     );
                                     if resp.lost_focus() {
                                         if !parameter.str_value.is_empty() && !path::Path::new(&parameter.str_value).exists() {
@@ -632,10 +632,36 @@ impl MyApp {
                             },
                             ParameterType::NewFile => {
                                 // ui.text_edit_singleline(&mut parameter.str_value);
-                                if ui.add(
+
+                                let resp = ui.add(
                                     egui::TextEdit::singleline(&mut parameter.str_value)
                                     .desired_width(self.state.textbox_width)
-                                ).double_clicked() {
+                                    .id_source(&parameter.name)
+                                );
+
+                                if resp.lost_focus() {
+                                    if !parameter.str_value.is_empty() && !path::Path::new(&parameter.str_value).exists() {
+                                        // prepend the working directory and see if that file exists.
+                                        let f = path::Path::new(&self.state.working_dir).join(&parameter.str_value);
+                                        if !f.exists() {
+                                            parameter.str_value = f.to_str().unwrap_or("").to_string();
+                                        } else {
+                                            if rfd::MessageDialog::new()
+                                            .set_level(rfd::MessageLevel::Warning)
+                                            .set_title("File exists")
+                                            .set_description("The specified file already exists in the current working directory. Do you want to overwrite the file?")
+                                            .set_buttons(rfd::MessageButtons::YesNo)
+                                            .show() {
+                                                parameter.str_value = f.to_str().unwrap_or("").to_string();
+                                            } else {
+                                                // Reset the parameter string value.
+                                                parameter.str_value = "".to_string();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if resp.double_clicked() {
                                     let fdialog = get_file_dialog(&parameter.file_type); 
                                     if let Some(path) = fdialog
                                     .set_directory(std::path::Path::new(&self.state.working_dir))
