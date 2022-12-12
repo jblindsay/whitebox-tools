@@ -165,7 +165,7 @@ impl WhiteboxTool for RelativeAspect {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut azimuth = 0.0f64;
-        let mut z_factor = -1f64;
+        let mut z_factor = 1f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -314,11 +314,11 @@ impl WhiteboxTool for RelativeAspect {
                                 hillslopes have aspects that face the appropriate direction, you need to reverse their 
                                 signs of p and q.
                                 */
-                                p = -1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
+                                p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                 + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))
                                 + 5. * (z[9] + z[19] - z[5] - z[15]));
 
-                                q = -1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
+                                q = 1. / (420. * res) * (44. * (z[5] + z[9] - z[15] - z[19]) + 31. * (z[20] + z[24] - z[0] - z[4]
                                     + 2. * (z[6] + z[8] - z[16] - z[18])) + 17. * (z[2] - z[22] + 4. * (z[7] - z[17]))
                                     + 5. * (z[1] + z[3] - z[21] - z[23]));
 
@@ -450,10 +450,10 @@ impl WhiteboxTool for RelativeAspect {
                                 of Digital Terrain Modelling, Chapter 4, pg. 117.
                                 */
 
-                                p = -((a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
+                                p = ((a * a * c * d * (d + e) * (z[2] - z[0]) + b * (a * a * d * d + c * c * e * e) * (z[5] - z[3]) + a * c * c * e * (d + e) * (z[8] - z[6]))
                                 / (2. * (a * a * c * c * (d + e).powi(2) + b * b * (a * a * d * d + c * c * e * e))));
 
-                                q = -(1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
+                                q = (1. / (3. * d * e * (d + e) * (a.powi(4) + b.powi(4) + c.powi(4))) 
                                 * ((d * d * (a.powi(4) + b.powi(4) + b * b * c * c) + c * c * e * e * (a * a - b * b)) * (z[0] + z[2])
                                 - (d * d * (a.powi(4) + c.powi(4) + b * b * c * c) - e * e * (a.powi(4) + c.powi(4) + a * a * b * b)) * (z[3] + z[5])
                                 - (e * e * (b.powi(4) + c.powi(4) + a * a * b * b) - a * a * d * d * (b * b - c * c)) * (z[6] + z[8])
