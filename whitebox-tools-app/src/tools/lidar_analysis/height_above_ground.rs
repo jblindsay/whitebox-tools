@@ -423,8 +423,6 @@ impl WhiteboxTool for HeightAboveGround {
             }
         }
 
-        let elapsed_time = get_formatted_elapsed_time(start);
-
         if verbose {
             println!("Writing output LAS file...");
         }
@@ -436,6 +434,8 @@ impl WhiteboxTool for HeightAboveGround {
             }
             Err(e) => println!("error while writing: {:?}", e),
         };
+
+        let elapsed_time = get_formatted_elapsed_time(start);
 
         if verbose {
             println!(
