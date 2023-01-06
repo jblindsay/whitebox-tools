@@ -19,10 +19,10 @@ use std::path;
 /// specify the name of a flow pointer grid (`--d8_pntr`) derived using the D8 flow algorithm (`D8Pointer`).
 /// This grid should be derived from a digital elevation model (DEM) that has been pre-processed to remove
 /// artifact topographic depressions and flat areas (`BreachDepressions`, `FillDepressions`). The user may also
-/// optionally provide watershed (`--watersheds`) and weights (`--weights`) images. The optional watershed
-/// image can be used to define one or more irregular-shaped watershed boundaries. Flowpath lengths are
-/// measured within each watershed in the watershed image (each defined by a unique identifying number) as
-/// the flowpath length to the watershed's outlet cell.
+/// optionally provide watershed (`--watersheds`) and weights as a raster file (`--weights_file`) or as a single
+/// value (`--weight_val`). The optional watershed image can be used to define one or more irregular-shaped
+/// watershed boundaries. Flowpath lengths are measured within each watershed in the watershed image (each defined
+/// by a unique identifying number) as the flowpath length to the watershed's outlet cell.
 ///
 /// The optional weight image is multiplied by the flow-length through each grid cell. This can be useful
 /// when there is a need to convert the units of the output image. For example, the default unit of
@@ -74,9 +74,18 @@ impl DownslopeFlowpathLength {
 
         parameters.push(ToolParameter {
             name: "Input Weights File (optional)".to_owned(),
-            flags: vec!["--weights".to_owned()],
+            flags: vec!["--weights_file".to_owned()],
             description: "Optional input weights raster file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            default_value: None,
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Input Weight Value (optional)".to_owned(),
+            flags: vec!["--weight_val".to_owned()],
+            description: "Optional input weight value.".to_owned(),
+            parameter_type: ParameterType::Float,
             default_value: None,
             optional: true,
         });
@@ -162,6 +171,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let mut d8_file = String::new();
         let mut watersheds_file = String::new();
         let mut weights_file = String::new();
+        let mut weight_val = f32::NAN;
         let mut output_file = String::new();
         let mut esri_style = false;
 
@@ -193,11 +203,23 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-weights" {
+            } else if flag_val == "-weights_file" {
                 weights_file = if keyval {
                     vec[1].to_string()
                 } else {
                     args[i + 1].to_string()
+                };
+            } else if flag_val == "-weight_val" {
+                weight_val = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f32>()
+                        .expect(&format!("Error parsing {}", flag_val))
                 };
             } else if flag_val == "-o" || flag_val == "-output" {
                 output_file = if keyval {
@@ -210,6 +232,13 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                     esri_style = true;
                 }
             }
+        }
+
+
+        // Make sure that only one type of weights was provided if any
+        if !weights_file.is_empty() & !weight_val.is_nan() {
+            return Err(Error::new(ErrorKind::InvalidInput,
+                "Two types of weights were provided instead of only one or none at all."));
         }
 
         if verbose {
@@ -243,15 +272,16 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         } else {
             use_watersheds = false;
         }
-        let use_weights: bool;
+        let use_weights_file: bool;
         if !weights_file.is_empty() {
-            use_weights = true;
+            use_weights_file = true;
             if !weights_file.contains(&sep) {
                 weights_file = format!("{}{}", working_directory, weights_file);
             }
         } else {
-            use_weights = false
+            use_weights_file = false
         }
+        let use_weight_val = !weight_val.is_nan();
 
         if verbose {
             println!("Reading pointer data...")
@@ -284,18 +314,19 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if verbose {
             println!("Initializing weights data...")
         };
-        let weights: Array2D<f32> = match use_weights {
-            false => Array2D::new(1, 1, 1f32, 1f32)?,
-            true => {
-                // if verbose { println!("Reading weights data...") };
+        let weights: Array2D<f32> =
+            if use_weights_file {
                 let r = Raster::new(&weights_file, "r")?;
                 if r.configs.rows != rows as usize || r.configs.columns != columns as usize {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                         "The input files must have the same number of rows and columns and spatial extent."));
                 }
                 r.get_data_as_f32_array2d()
-            }
-        };
+            } else if use_weight_val {
+                Array2D::new(1, 1, weight_val, weight_val)?
+            } else {
+                Array2D::new(1, 1, 1f32, 1f32)?
+            };
 
         let start = Instant::now();
 
@@ -433,8 +464,11 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if use_watersheds {
             output.add_metadata_entry(format!("Input watersheds file: {}", watersheds_file));
         }
-        if use_weights {
+        if use_weights_file {
             output.add_metadata_entry(format!("Input weights file: {}", weights_file));
+        }
+        if use_weight_val {
+            output.add_metadata_entry(format!("Input weight value: {}", weight_val));
         }
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
