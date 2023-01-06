@@ -62,8 +62,8 @@ impl HeightAboveGround {
         parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file (including extension).".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            description: "Output LiDAR file (including extension).".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
             optional: true,
         });
@@ -82,7 +82,7 @@ impl HeightAboveGround {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.tif",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" -i=file.las -o=outfile.las",
             short_exe, name
         )
         .replace("*", &sep);
