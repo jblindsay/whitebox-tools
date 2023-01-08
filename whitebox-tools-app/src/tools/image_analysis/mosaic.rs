@@ -20,7 +20,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool will create an image mosaic from one or more input image files using
+/// This tool will create an image mosaic from two or more single band input image files using
 /// one of three resampling methods including, nearest neighbour, bilinear interpolation,
 /// and cubic convolution. The order of the input source image files is important. Grid
 /// cells in the output image will be assigned the corresponding value determined from the
@@ -320,6 +320,16 @@ impl WhiteboxTool for Mosaic {
                 if res.is_ok() {
                     inputs.push(res.unwrap()); //Raster::new(&input_file, "r")?).expect(&format!("Error reading file: {}", value)));
                     nodata_vals.push(inputs[i].configs.nodata);
+                    
+                    if inputs[i].configs.data_type != inputs[0].configs.data_type {
+                        return Err(Error::new(ErrorKind::InvalidInput,
+                            "There is something incorrect about the input files. All inputs must be of the same data type."));
+                    }
+
+                    if inputs[i].configs.bands > 1 {
+                        return Err(Error::new(ErrorKind::InvalidInput,
+                            "There is something incorrect about the input files. All inputs must be single band."));
+                    }
 
                     if i == 0 {
                         if inputs[i].configs.north < inputs[i].configs.south {
