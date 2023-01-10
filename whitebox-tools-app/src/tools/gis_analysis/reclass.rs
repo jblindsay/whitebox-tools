@@ -32,6 +32,7 @@ use std::thread;
 ///
 /// Here, 0.0 is assigned to input grid cell values of 1.0 and 1.0 is output for all input cells with a value of 2.0. Users
 /// may add the text strings *min* and *max* in the class definitions to stand in for the raster's minimum and maximum values.
+/// Using *max* in a class triplet will change this class from *To Just Less Than* to *To Less Or Equal Than*.
 /// For example:
 ///
 /// > --reclass_vals='0.0;min;1.0;1.0;1.0;max'
@@ -255,7 +256,9 @@ impl WhiteboxTool for Reclass {
                 if s.to_lowercase().contains("min") {
                     min_val
                 } else if s.to_lowercase().contains("max") {
-                    max_val
+                    max_val + 0.1f64
+                } else if s.to_lowercase().contains("nodata") {
+                    nodata
                 } else {
                     s.trim().parse().unwrap()
                 }
