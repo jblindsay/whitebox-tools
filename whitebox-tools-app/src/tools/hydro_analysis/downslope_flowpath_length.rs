@@ -360,14 +360,15 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                         // find its downslope neighbour
                         dir = pntr.get_value(y, x);
                         if dir > 0f64 && dir != nodata {
-                            if dir > 128f64 || pntr_matches[dir as usize] == 999 {
-                                return Err(Error::new(ErrorKind::InvalidInput,
-                                    "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
-                            }
-                            // move x and y accordingly
+                             // move x and y accordingly
                             c = pntr_matches[dir as usize];
                             x += dx[c];
                             y += dy[c];
+
+                            if dir > 128f64 || c == 999 || pntr.get_value(y, x) == nodata {
+                                return Err(Error::new(ErrorKind::InvalidInput,
+                                    "An unexpected value has been identified in the pointer image. This tool requires a pointer grid that has been created using either the D8 or Rho8 tools."));
+                            }
 
                             dist += grid_lengths[c] * weights.get_value(y, x) as f64;
 
