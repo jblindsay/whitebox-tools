@@ -360,7 +360,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
                         // find its downslope neighbour
                         dir = pntr.get_value(y, x);
                         if dir > 0f64 && dir != nodata {
-                             // move x and y accordingly
+                            // move x and y accordingly
                             c = pntr_matches[dir as usize];
                             x += dx[c];
                             y += dy[c];
