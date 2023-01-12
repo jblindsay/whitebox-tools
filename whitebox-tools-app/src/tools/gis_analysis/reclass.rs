@@ -250,13 +250,21 @@ impl WhiteboxTool for Reclass {
                 }
             }
         }
+
         let reclass_vals: Vec<f64> = v
             .iter()
-            .map(|s| {
+            .enumerate()
+            .map(|(idx, s)| {
                 if s.to_lowercase().contains("min") {
                     min_val
                 } else if s.to_lowercase().contains("max") {
-                    max_val + 0.1f64
+                    // Trick in order to consider the max value as included
+                    // in the last class instead of excluded like with the other classes
+                    if !assign_mode && idx % 3 != 0 {
+                        max_val + 1f64
+                    } else {
+                        max_val
+                    }
                 } else if s.to_lowercase().contains("nodata") {
                     nodata
                 } else {
@@ -264,6 +272,7 @@ impl WhiteboxTool for Reclass {
                 }
             })
             .collect();
+
         if reclass_vals.len() % 3 != 0 && !assign_mode {
             return Err(Error::new(ErrorKind::InvalidInput,
                 "The reclass values string must include triplet values (new value; from value; to less than), e.g. '0.0;0.0;1.0;1.0;1.0;2.0'"));
