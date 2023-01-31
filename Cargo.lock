@@ -612,6 +612,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b1d1d91c932ef41c0f2663aa8b0ca0342d444d842c06914aa0a7e352d0bada6"
+dependencies = [
+ "libc",
+ "redox_users",
+ "winapi",
+]
+
+[[package]]
 name = "dirs-sys-next"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3340,11 +3360,14 @@ dependencies = [
 
 [[package]]
 name = "webbrowser"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a0cc7962b5aaa0dfcebaeef0161eec6edf5f4606c12e6777fd7d392f52033a5"
+checksum = "aa61ff77f695a94d9c8558e0bb5c362a8fd1f27c74663770fbc633acbafedbb6"
 dependencies = [
+ "core-foundation",
+ "dirs",
  "jni 0.20.0",
+ "log",
  "ndk-context",
  "objc",
  "raw-window-handle 0.5.0",
@@ -3432,7 +3455,7 @@ dependencies = [
  "rfd",
  "serde",
  "serde_json",
- "webbrowser 0.8.2",
+ "webbrowser 0.8.3",
  "whitebox_vector",
  "zip-extract",
 ]
