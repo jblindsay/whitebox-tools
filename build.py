@@ -17,7 +17,10 @@ app_dir = os.path.dirname(os.path.abspath(__file__))
 output_dir = os.path.join(app_dir, 'WBT')
 output_plugin_dir = os.path.join(app_dir, 'WBT/plugins')
 plugins_dir = os.path.join(app_dir, 'whitebox-plugins/src')
+
 target_dir = os.path.join(app_dir, 'target/release')
+if platform.system() == "Linux":
+    target_dir = os.path.join(app_dir, 'target/x86_64-unknown-linux-musl/release')
 
 if len(sys.argv) > 1:
     if "t" in sys.argv[1].lower():
@@ -30,9 +33,18 @@ if os.path.exists(output_dir):
     rmtree(output_dir)
 
 print("Compiling...")
-result = subprocess.run(['cargo', 'build', '--release'], stdout=subprocess.PIPE)
-if len(result.stdout) > 0:
-    print(result.stdout)
+if platform.system() != 'Linux':
+    result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
+    if len(result.stdout) > 0:
+        print(result.stdout)
+else:
+    print("Compiling for musl target...")
+    result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
+    if len(result.stdout) > 0:
+        print(result.stdout)
+# result = subprocess.run(['cargo', 'build', '--release'], stdout=subprocess.PIPE)
+# if len(result.stdout) > 0:
+#     print(result.stdout)
 
 if not os.path.exists(output_plugin_dir):
     os.makedirs(output_plugin_dir)

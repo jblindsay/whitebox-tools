@@ -493,6 +493,7 @@ impl WhiteboxTool for ElevPercentile {
         let elapsed_time = get_formatted_elapsed_time(start);
         output.configs.display_min = 0.0;
         output.configs.display_max = 100.0;
+        output.configs.nodata = -32768.0;
         output.configs.palette = "blue_white_red.plt".to_string();
         output.add_metadata_entry(format!(
             "Created by whitebox_tools\' {} tool",

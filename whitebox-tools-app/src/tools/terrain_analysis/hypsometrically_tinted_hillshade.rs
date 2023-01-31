@@ -575,7 +575,7 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Performing analysis: {}% (Loop 1 of 2)", progress);
                     old_progress = progress;
                 }
             }
@@ -1284,7 +1284,7 @@ impl WhiteboxTool for HypsometricallyTintedHillshade {
             if verbose {
                 progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Performing analysis: {}%", progress);
+                    println!("Performing analysis: {}%  (Loop 2 of 2)", progress);
                     old_progress = progress;
                 }
             }

@@ -192,6 +192,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     .parse::<f32>()
                     .expect(&format!("Error parsing {}", flag_val))
             };
+            azimuth = azimuth % 360f32;
         } else if flag_val == "-max_dist" {
             if keyval {
                 max_dist = vec[1]

@@ -250,7 +250,6 @@ impl MyApp {
         let num_bytes = bytes.len();
         self.ei.text_output.push_str(&format!("{} bytes downloaded.\n", num_bytes));
 
-        
         // let mut out = fs::File::create("/Users/johnlindsay/Downloads/temp.zip")?;
         // io::copy(&mut archive, &mut out)?;
 

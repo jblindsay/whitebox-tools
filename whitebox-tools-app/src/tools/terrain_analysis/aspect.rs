@@ -274,8 +274,7 @@ impl WhiteboxTool for Aspect {
 
                                 /* 
                                 The following equations have been taken from Florinsky (2016) Principles and Methods
-                                of Digital Terrain Modelling, Chapter 4, pg. 117. I can't figure out why, but this 
-                                only works if you change the sign of q below.
+                                of Digital Terrain Modelling, Chapter 4, pg. 117.
                                 */
                                 p = 1. / (420. * res) * (44. * (z[3] + z[23] - z[1] - z[21]) + 31. * (z[0] + z[20] - z[4] - z[24]
                                     + 2. * (z[8] + z[18] - z[6] - z[16])) + 17. * (z[14] - z[10] + 4. * (z[13] - z[11]))

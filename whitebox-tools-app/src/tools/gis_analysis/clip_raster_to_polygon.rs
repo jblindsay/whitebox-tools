@@ -258,7 +258,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
 
                 let mut part_num = 1;
                 for part in 0..record.num_parts as usize {
-                    if !record.is_hole(part as i32) {
+                    if !record.is_hole(part as i32) || part == 0 {
                         // Add these cells in
 
                         start_point_in_part = record.parts[part] as usize;
@@ -323,7 +323,7 @@ impl WhiteboxTool for ClipRasterToPolygon {
                 }
 
                 for part in 0..record.num_parts as usize {
-                    if record.is_hole(part as i32) {
+                    if record.is_hole(part as i32) && part > 0 {
                         // Erase these cells
 
                         start_point_in_part = record.parts[part] as usize;

@@ -215,6 +215,7 @@ impl WhiteboxTool for HorizonAngle {
                         .parse::<f32>()
                         .expect(&format!("Error parsing {}", flag_val));
                 }
+                azimuth = azimuth % 360f32;
             } else if flag_val == "-max_dist" {
                 max_dist = if keyval {
                     vec[1]

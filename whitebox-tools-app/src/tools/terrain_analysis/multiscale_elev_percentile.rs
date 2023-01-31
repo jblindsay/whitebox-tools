@@ -429,6 +429,7 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
         let mut output_mag = Raster::initialize_using_config(&output_mag_file, &configs); // Memory requirements: 4.0X
         let mut output_scale = Raster::initialize_using_config(&output_scale_file, &configs); // Memory requirements: 6.0X
         output_mag.configs.data_type = DataType::F32;
+        output_mag.configs.nodata = -32768.0;
 
         output_scale.configs.data_type = DataType::I16;
         output_scale.configs.nodata = std::i16::MIN as f64;
@@ -444,6 +445,14 @@ impl WhiteboxTool for MultiscaleElevationPercentile {
             let midpoint = min_scale
                 + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
             let filter_size = midpoint * 2 + 1;
+
+            if filter_size > columns.max(rows) { 
+                if verbose {
+                    println!("{}", &format!("Warning: The number of steps resulted in filter sizes that \nexceeded the raster extent. As a result, the simulation was cut \nshort after {} steps.", s - min_scale));
+                }
+                break;
+            }
+
             println!(
                 "Loop {} / {} ({}x{})",
                 s - min_scale + 1,

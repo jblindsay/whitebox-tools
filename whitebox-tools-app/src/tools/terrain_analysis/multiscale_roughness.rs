@@ -424,7 +424,25 @@ impl WhiteboxTool for MultiscaleRoughness {
             // .step_by(step) { once step_by is stabilized
             // loop_num += 1;
 
-            println!("Loop {} / {}", midpoint - min_scale, max_scale - min_scale);
+            // println!("Loop {} / {}", midpoint - min_scale, max_scale - min_scale);
+
+            if midpoint*2+1 > columns.max(rows) { 
+                if verbose {
+                    println!("{}", &format!("Warning: The number of steps resulted in filter sizes that \nexceeded the raster extent. As a result, the simulation was cut \nshort after {} steps.", midpoint - min_scale));
+                }
+                break;
+            }
+
+            if verbose {
+                println!(
+                    "Loop {} / {} ({}x{})",
+                    midpoint - min_scale,
+                    max_scale - min_scale,
+                    midpoint*2+1,
+                    midpoint*2+1
+                );
+            }
+
 
             ////////////////////////////////////////////////////////////////////////////
             // Use the integral image to smooth the DEM at a scale of the filter size //

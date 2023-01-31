@@ -74,6 +74,7 @@ Version 2.3.0 (XX-XX-202X)
   permissions error when running on systems without admin rights.
 - Fixed a bug with the vector attribute table reader that caused issue with the VectorPolygonsToRaster 
   tool.
+- Fixed a bugs in the HorizonAngle and ExposureTowardsWindFlux tools.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.

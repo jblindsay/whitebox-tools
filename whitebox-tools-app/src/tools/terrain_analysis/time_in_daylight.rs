@@ -483,7 +483,7 @@ impl WhiteboxTool for TimeInDaylight {
             panic!("The az_fraction parameter must be larger than zero.");
         }
 
-        if az_fraction >= 3600f32 {
+        if az_fraction >= 360f32 {
             panic!("The az_fraction parameter must smaller than 360.");
         }
 

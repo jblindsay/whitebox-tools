@@ -437,16 +437,23 @@ impl WhiteboxTool for MultiscaleStdDevNormals {
         for s in min_scale..(min_scale + num_steps) {
             let midpoint = min_scale
                 + (((step * (s - min_scale)) as f32).powf(step_nonlinearity)).floor() as isize;
-            if verbose {
-                println!("Loop {} / {}", s - min_scale + 1, num_steps);
-            }
-
+            
             let filter_size = midpoint * 2 + 1;
             if filter_size > rows || filter_size > columns {
                 println!("Warning: Operation exited early as a tested scale exceeded the raster extent.");
                 break;
             }
 
+            if verbose {
+                println!(
+                    "Loop {} / {} ({}x{})",
+                    s - min_scale + 1,
+                    num_steps,
+                    filter_size,
+                    filter_size
+                );
+            }
+            
             ////////////////////////////////////////
             // Smooth the DEM using Gaussian blur //
             ////////////////////////////////////////

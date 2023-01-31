@@ -3,3 +3,4 @@ members = ["whitebox-common", "whitebox-lidar", "whitebox-plugins", "whitebox-ra
 
 [profile.release]
 incremental = true
+strip = "debuginfo"
