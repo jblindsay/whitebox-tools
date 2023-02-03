@@ -4798,7 +4798,7 @@ Okay, that's it for now.
 
         d8_pntr -- Input D8 pointer raster file. 
         watersheds -- Optional input watershed raster file. 
-        weights -- Optional input weights raster file. 
+        weights -- Optional input weights raster file or constant value. 
         output -- Output raster file. 
         esri_pntr -- D8 pointer uses the ESRI style scheme. 
         callback -- Custom function for handling tool text outputs.
