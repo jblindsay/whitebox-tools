@@ -51,7 +51,7 @@ impl ListUniqueValues {
         parameters.push(ToolParameter {
             name: "Input File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input raster file.".to_owned(),
+            description: "Input vector file.".to_owned(),
             parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
                 VectorGeometryType::Any,
             )),

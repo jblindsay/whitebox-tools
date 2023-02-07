@@ -75,6 +75,7 @@ Version 2.3.0 (XX-XX-202X)
 - Fixed a bug with the vector attribute table reader that caused issue with the VectorPolygonsToRaster 
   tool.
 - Fixed a bugs in the HorizonAngle and ExposureTowardsWindFlux tools.
+- Added a point time interpolation parameter to the LidarNearestNeighbourGridding tool.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.

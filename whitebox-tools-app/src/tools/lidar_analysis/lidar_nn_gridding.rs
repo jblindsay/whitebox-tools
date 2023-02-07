@@ -108,7 +108,7 @@ impl LidarNearestNeighbourGridding {
         parameters.push(ToolParameter{
             name: "Interpolation Parameter".to_owned(), 
             flags: vec!["--parameter".to_owned()], 
-            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'.".to_owned(),
+            description: "Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data', 'time'.".to_owned(),
             parameter_type: ParameterType::OptionList(
                 vec![
                     "elevation".to_owned(), 
@@ -118,7 +118,8 @@ impl LidarNearestNeighbourGridding {
                     "number_of_returns".to_owned(), 
                     "scan angle".to_owned(), 
                     "rgb".to_owned(),
-                    "user data".to_owned()
+                    "user data".to_owned(),
+                    "time".to_owned()
                 ]
             ),
             default_value: Some("elevation".to_owned()),
@@ -795,6 +796,36 @@ impl WhiteboxTool for LidarNearestNeighbourGridding {
                                             progress = (100.0_f64 * i as f64 / num_points) as i32;
                                             if progress != old_progress {
                                                 println!("Reading points: {}%", progress);
+                                                old_progress = progress;
+                                            }
+                                        }
+                                    }
+                                }
+                                "time" => {
+                                    let mut time: f64;
+                                    for i in 0..n_points {
+                                        let pd: PointData = input[i];
+                                        let p = input.get_transformed_coords(i);
+                                        if !pd.withheld() {
+                                            if all_returns
+                                                || (pd.is_late_return() & late_returns)
+                                                || (pd.is_early_return() & early_returns)
+                                            {
+                                                if include_class_vals[pd.classification() as usize] {
+                                                    if bb.is_point_in_box(p.x, p.y)
+                                                        && p.z >= min_z
+                                                        && p.z <= max_z
+                                                    {
+                                                        time = input.get_gps_time(i).unwrap_or(0f64);
+                                                        frs.insert(p.x, p.y, time);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if verbose && inputs.len() == 1 {
+                                            progress = (100.0_f64 * i as f64 / num_points) as i32;
+                                            if progress != old_progress {
+                                                println!("Binning points: {}%", progress);
                                                 old_progress = progress;
                                             }
                                         }

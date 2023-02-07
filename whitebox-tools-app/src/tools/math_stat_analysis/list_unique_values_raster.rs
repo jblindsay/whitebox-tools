@@ -2,14 +2,14 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 12/10/2018
+Last Modified: 13/10/2018
 License: MIT
 */
 
 use whitebox_common::rendering::html::*;
-use whitebox_common::rendering::Histogram;
 use crate::tools::*;
 use whitebox_vector::{FieldData, Shapefile};
+use std::collections::HashMap;
 use std::env;
 use std::f64;
 use std::fs::File;
@@ -19,17 +19,18 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::process::Command;
 
-/// This tool can be used to create a histogram, which is a graph displaying the frequency
-/// distribution of data, for the values contained in a field of an input vector's attribute
-/// table. The user must specify the name of an input vector (`--input`) and the name of one
-/// of the fields (`--field`) contained in the associated attribute table. The tool output
-/// (`--output`) is an HTML formatted histogram analysis report. If the specified field
-/// is non-numerical, the tool will produce a bar-chart of class frequency, similar to the
-/// tabular output of the `ListUniqueValues` tool.
+/// This tool can be used to list each of the unique values contained within a categorical field
+/// of an input vector file's attribute table. The tool outputs an HTML formatted report (`--output`)
+/// containing a table of the unique values and their frequency of occurrence within the data. The user must
+/// specify the name of an input shapefile (`--input`) and the name of one of the fields (`--field`)
+/// contained in the associated attribute table. The specified field *should not contained floating-point
+/// numerical data*, since the number of categories will likely equal the number of records, which may be
+/// quite large. The tool effectively provides tabular output that is similar to the graphical output
+/// provided by the `AttributeHistogram` tool, which, however, can be applied to continuous data.
 ///
 /// # See Also
-/// `ListUniqueValues`, `RasterHistogram`
-pub struct AttributeHistogram {
+/// `AttributeHistogram`
+pub struct ListUniqueValuesRaster {
     name: String,
     description: String,
     toolbox: String,
@@ -37,13 +38,14 @@ pub struct AttributeHistogram {
     example_usage: String,
 }
 
-impl AttributeHistogram {
-    pub fn new() -> AttributeHistogram {
+impl ListUniqueValuesRaster {
+    pub fn new() -> ListUniqueValuesRaster {
         // public constructor
-        let name = "AttributeHistogram".to_string();
+        let name = "ListUniqueValuesRaster".to_string();
         let toolbox = "Math and Stats Tools".to_string();
         let description =
-            "Creates a histogram for the field values of a vector's attribute table.".to_string();
+            "Lists the unique values contained in a field within a vector's attribute table."
+                .to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -62,7 +64,7 @@ impl AttributeHistogram {
             flags: vec!["--field".to_owned()],
             description: "Input field name in attribute table.".to_owned(),
             parameter_type: ParameterType::VectorAttributeField(
-                AttributeType::Number,
+                AttributeType::Any,
                 "--input".to_string(),
             ),
             default_value: None,
@@ -99,7 +101,7 @@ impl AttributeHistogram {
         )
         .replace("*", &sep);
 
-        AttributeHistogram {
+        ListUniqueValues {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -109,7 +111,7 @@ impl AttributeHistogram {
     }
 }
 
-impl WhiteboxTool for AttributeHistogram {
+impl WhiteboxTool for ListUniqueValues {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -219,98 +221,38 @@ impl WhiteboxTool for AttributeHistogram {
         if verbose {
             println!("Reading vector data...")
         };
+
         let vector_data = Shapefile::read(&input_file)?;
 
-        // What is the index of the field to be analyzed?
-        let field_index = match vector_data.attributes.get_field_num(&field_name) {
-            Some(i) => i,
-            None => {
-                return Err(Error::new(
-                    ErrorKind::InvalidInput,
-                    "The specified field name does not exist in input shapefile.",
-                ))
-            }
-        };
-
-        // Is the field numeric?
-        if !vector_data.attributes.is_field_numeric(field_index) {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "The specified attribute field is non-numeric.",
-            ));
-        }
-
-        // Find the min and max values of the field
-        let mut min = f64::INFINITY;
-        let mut max = f64::NEG_INFINITY;
+        let mut freq_data = HashMap::new();
+        let mut key: String;
         for record_num in 0..vector_data.num_records {
-            match vector_data.attributes.get_value(record_num, &field_name) {
-                FieldData::Int(val) => {
-                    let valf64 = val as f64;
-                    if valf64 < min {
-                        min = valf64;
-                    }
-                    if valf64 > max {
-                        max = valf64;
-                    }
-                }
-                FieldData::Real(val) => {
-                    if val < min {
-                        min = val;
-                    }
-                    if val > max {
-                        max = val;
-                    }
-                }
-                _ => {
-                    // do nothing, likely a null field
-                }
-            }
+            key = match vector_data.attributes.get_value(record_num, &field_name) {
+                FieldData::Int(val) => val.to_string(),
+                FieldData::Real(val) => val.to_string(),
+                FieldData::Text(val) => val.to_string(),
+                FieldData::Date(val) => val.to_string(),
+                FieldData::Bool(val) => val.to_string(),
+                FieldData::Null => "null".to_string(),
+            };
+            // if key != "null" {
+            let count = freq_data.entry(key).or_insert(0);
+            *count += 1;
+            // }
 
             if verbose {
                 progress =
                     (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
                 if progress != old_progress {
-                    println!("Finding min and max: {}%", progress);
+                    println!("Reading attribute data: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        let range = max - min + 0.00001f64;
-        let num_bins = (vector_data.num_records as f64).log2().ceil() as usize + 1;
-        let bin_width = range / num_bins as f64;
-        let mut freq_data = vec![0usize; num_bins];
-
-        let mut bin: usize;
-        for record_num in 0..vector_data.num_records {
-            match vector_data.attributes.get_value(record_num, &field_name) {
-                FieldData::Int(val) => {
-                    let valf64 = val as f64;
-                    bin = ((valf64 - min) / bin_width).floor() as usize;
-                    freq_data[bin] += 1;
-                }
-                // FieldData::Int64(val) => {
-                //     let valf64 = val as f64;
-                //     bin = ((valf64 - min) / bin_width).floor() as usize;
-                //     freq_data[bin] += 1;
-                // },
-                FieldData::Real(val) => {
-                    bin = ((val - min) / bin_width).floor() as usize;
-                    freq_data[bin] += 1;
-                }
-                _ => {
-                    // do nothing, likely a null field
-                }
-            }
-
+        if freq_data.len() > 250 {
             if verbose {
-                progress =
-                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
-                if progress != old_progress {
-                    println!("Binning data: {}%", progress);
-                    old_progress = progress;
-                }
+                println!("Warning: There are a large number of categories. A continuous attribute variable may have been input incorrectly.");
             }
         }
 
@@ -329,7 +271,7 @@ impl WhiteboxTool for AttributeHistogram {
         writer.write_all(&r#"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
         <head>
             <meta content=\"text/html; charset=UTF-8\" http-equiv=\"content-type\">
-            <title>Histogram Analysis</title>"#.as_bytes())?;
+            <title>List Unique Values</title>"#.as_bytes())?;
 
         // get the style sheet
         writer.write_all(&get_css().as_bytes())?;
@@ -337,7 +279,7 @@ impl WhiteboxTool for AttributeHistogram {
         writer.write_all(
             &r#"</head>
         <body>
-            <h1>Histogram Analysis</h1>"#
+            <h1>List Unique Values</h1>"#
                 .as_bytes(),
         )?;
 
@@ -348,26 +290,50 @@ impl WhiteboxTool for AttributeHistogram {
             &format!("<p><strong>Field Name</strong>: {}</p>", field_name.clone()).as_bytes(),
         )?;
 
-        let histo = Histogram {
-            parent_id: "histo".to_owned(),
-            width: 700f64,
-            height: 500f64,
-            freq_data: freq_data.clone(),
-            min_bin_val: min,
-            bin_width: bin_width,
-            x_axis_label: field_name.to_owned(),
-            cumulative: false,
-        };
+        // The output table
+        let mut s = "<p><table>
+        <caption>Category Data</caption>
+        <tr>
+            <th class=\"headerCell\">Category</th>
+            <th class=\"headerCell\">Frequency</th>
+        </tr>";
+        writer.write_all(s.as_bytes())?;
 
-        writer.write_all(
-            &format!("<div id='histo' align=\"center\">{}</div>", histo.get_svg()).as_bytes(),
-        )?;
+        if freq_data.contains_key("null") {
+            match freq_data.get("null") {
+                Some(count) => {
+                    let s1 = &format!(
+                        "<tr>
+                        <td>null</td>
+                    <td class=\"numberCell\">{}</td>
+                        </tr>\n",
+                        count
+                    );
+                    writer.write_all(s1.as_bytes())?;
+                }
+                None => {}
+            }
+        }
+
+        for (category, count) in &freq_data {
+            if category != "null" {
+                let s1 = &format!(
+                    "<tr>
+                    <td>{}</td>
+                    <td class=\"numberCell\">{}</td>
+                </tr>\n",
+                    category, count
+                );
+                writer.write_all(s1.as_bytes())?;
+            }
+        }
+
+        s = "</table></p>";
+        writer.write_all(s.as_bytes())?;
 
         writer.write_all("</body>".as_bytes())?;
 
         let _ = writer.flush();
-
-        // println!("freq. data: {:?}", freq_data);
 
         if verbose {
             if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
