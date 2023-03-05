@@ -2,25 +2,24 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 13/10/2018
+Last Modified: 09/02/2023
 License: MIT
 */
 
-use whitebox_common::rendering::html::*;
 use crate::tools::*;
-use whitebox_vector::{FieldData, Shapefile};
+use whitebox_raster::*;
 use std::collections::HashMap;
 use std::env;
 use std::f64;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufWriter;
 use std::io::{Error, ErrorKind};
 use std::path;
-use std::process::Command;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::thread;
+use num_cpus;
 
-/// This tool can be used to list each of the unique values contained within a categorical field
-/// of an input vector file's attribute table. The tool outputs an HTML formatted report (`--output`)
+/// This tool can be used to list each of the unique values contained within a categorical raster (`input`). The tool 
+/// outputs an HTML formatted report (`--output`)
 /// containing a table of the unique values and their frequency of occurrence within the data. The user must
 /// specify the name of an input shapefile (`--input`) and the name of one of the fields (`--field`)
 /// contained in the associated attribute table. The specified field *should not contained floating-point
@@ -29,7 +28,7 @@ use std::process::Command;
 /// provided by the `AttributeHistogram` tool, which, however, can be applied to continuous data.
 ///
 /// # See Also
-/// `AttributeHistogram`
+/// `ListUniqueValues`
 pub struct ListUniqueValuesRaster {
     name: String,
     description: String,
@@ -59,29 +58,6 @@ impl ListUniqueValuesRaster {
             optional: false,
         });
 
-        parameters.push(ToolParameter {
-            name: "Field Name".to_owned(),
-            flags: vec!["--field".to_owned()],
-            description: "Input field name in attribute table.".to_owned(),
-            parameter_type: ParameterType::VectorAttributeField(
-                AttributeType::Any,
-                "--input".to_string(),
-            ),
-            default_value: None,
-            optional: false,
-        });
-
-        parameters.push(ToolParameter {
-            name: "Output HTML File".to_owned(),
-            flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description:
-                "Output HTML file (default name will be based on input file if unspecified)."
-                    .to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Html),
-            default_value: None,
-            optional: false,
-        });
-
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -101,7 +77,7 @@ impl ListUniqueValuesRaster {
         )
         .replace("*", &sep);
 
-        ListUniqueValues {
+        ListUniqueValuesRaster {
             name: name,
             description: description,
             toolbox: toolbox,
@@ -111,7 +87,7 @@ impl ListUniqueValuesRaster {
     }
 }
 
-impl WhiteboxTool for ListUniqueValues {
+impl WhiteboxTool for ListUniqueValuesRaster {
     fn get_source_file(&self) -> String {
         String::from(file!())
     }
@@ -153,8 +129,6 @@ impl WhiteboxTool for ListUniqueValues {
         verbose: bool,
     ) -> Result<(), Error> {
         let mut input_file = String::new();
-        let mut field_name = String::new();
-        let mut output_file = String::new();
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -178,18 +152,6 @@ impl WhiteboxTool for ListUniqueValues {
                 } else {
                     args[i + 1].to_string()
                 };
-            } else if flag_val == "-field" {
-                field_name = if keyval {
-                    vec[1].to_string()
-                } else {
-                    args[i + 1].to_string()
-                };
-            } else if flag_val == "-o" || flag_val == "-output" {
-                output_file = if keyval {
-                    vec[1].to_string()
-                } else {
-                    args[i + 1].to_string()
-                };
             }
         }
 
@@ -209,159 +171,91 @@ impl WhiteboxTool for ListUniqueValues {
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
-        let start = Instant::now();
-
         if !input_file.contains(&sep) && !input_file.contains("/") {
             input_file = format!("{}{}", working_directory, input_file);
-        }
-        if !output_file.contains(&sep) && !output_file.contains("/") {
-            output_file = format!("{}{}", working_directory, output_file);
         }
 
         if verbose {
             println!("Reading vector data...")
         };
 
-        let vector_data = Shapefile::read(&input_file)?;
+        let input = Arc::new(Raster::new(&input_file, "r")?);
+        let start = Instant::now();
+        let rows = input.configs.rows as isize;
+        let columns = input.configs.columns as isize;
+        let nodata = input.configs.nodata;
+
+        let mut num_procs = num_cpus::get() as isize;
+        let configs = whitebox_common::configs::get_configs()?;
+        let max_procs = configs.max_procs;
+        if max_procs > 0 && max_procs < num_procs {
+            num_procs = max_procs;
+        }
+
+        let (tx, rx) = mpsc::channel();
+        for tid in 0..num_procs {
+            let input = input.clone();
+            let tx1 = tx.clone();
+            thread::spawn(move || {
+                let mut freq_data = HashMap::new();
+                let mut z: f64;
+                for row in (0..rows).filter(|r| r % num_procs == tid) {
+                    for col in 0..columns {
+                        z = input.get_value(row, col);
+                        if z != nodata {
+                            let count = freq_data.entry(z as usize).or_insert(0);
+                            *count += 1;
+                        }
+                    }
+                }
+
+                tx1.send(freq_data).unwrap();
+            });
+        }
 
         let mut freq_data = HashMap::new();
-        let mut key: String;
-        for record_num in 0..vector_data.num_records {
-            key = match vector_data.attributes.get_value(record_num, &field_name) {
-                FieldData::Int(val) => val.to_string(),
-                FieldData::Real(val) => val.to_string(),
-                FieldData::Text(val) => val.to_string(),
-                FieldData::Date(val) => val.to_string(),
-                FieldData::Bool(val) => val.to_string(),
-                FieldData::Null => "null".to_string(),
-            };
-            // if key != "null" {
-            let count = freq_data.entry(key).or_insert(0);
-            *count += 1;
-            // }
+        for n in 0..num_procs {
+            let data = rx.recv().expect("Error receiving data from thread.");
+            for (category, count) in &data {
+                let overall_count = freq_data.entry(*category).or_insert(0);
+                *overall_count += *count;
+            }
 
             if verbose {
-                progress =
-                    (100.0_f64 * record_num as f64 / (vector_data.num_records - 1) as f64) as usize;
+                progress = (100.0_f64 * (n + 1) as f64 / num_procs as f64) as usize;
                 if progress != old_progress {
-                    println!("Reading attribute data: {}%", progress);
+                    println!("Progress: {}%", progress);
                     old_progress = progress;
                 }
             }
         }
 
-        if freq_data.len() > 250 {
+        let mut freq_data_vec = vec![];
+        for (category, count) in &freq_data {
+            freq_data_vec.push((category, *count as usize));
+        }
+
+        if freq_data.len() > 500 {
             if verbose {
                 println!("Warning: There are a large number of categories. A continuous attribute variable may have been input incorrectly.");
             }
         }
 
-        let elapsed_time = get_formatted_elapsed_time(start);
+        freq_data_vec.sort();
 
+        let mut ret_str = String::from("Category,Frequency\n");
+        for i in 0..freq_data_vec.len() {
+            ret_str.push_str(&format!("{},{}\n", freq_data_vec[i].0, freq_data_vec[i].1));
+        }
+
+        println!("{ret_str}");
+
+        let elapsed_time = get_formatted_elapsed_time(start);
         if verbose {
             println!(
-                "\n{}",
+                "{}",
                 &format!("Elapsed Time (excluding I/O): {}", elapsed_time)
             );
-        }
-
-        let f = File::create(output_file.clone())?;
-        let mut writer = BufWriter::new(f);
-
-        writer.write_all(&r#"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">
-        <head>
-            <meta content=\"text/html; charset=UTF-8\" http-equiv=\"content-type\">
-            <title>List Unique Values</title>"#.as_bytes())?;
-
-        // get the style sheet
-        writer.write_all(&get_css().as_bytes())?;
-
-        writer.write_all(
-            &r#"</head>
-        <body>
-            <h1>List Unique Values</h1>"#
-                .as_bytes(),
-        )?;
-
-        writer.write_all(
-            &format!("<p><strong>Input</strong>: {}</p>", input_file.clone()).as_bytes(),
-        )?;
-        writer.write_all(
-            &format!("<p><strong>Field Name</strong>: {}</p>", field_name.clone()).as_bytes(),
-        )?;
-
-        // The output table
-        let mut s = "<p><table>
-        <caption>Category Data</caption>
-        <tr>
-            <th class=\"headerCell\">Category</th>
-            <th class=\"headerCell\">Frequency</th>
-        </tr>";
-        writer.write_all(s.as_bytes())?;
-
-        if freq_data.contains_key("null") {
-            match freq_data.get("null") {
-                Some(count) => {
-                    let s1 = &format!(
-                        "<tr>
-                        <td>null</td>
-                    <td class=\"numberCell\">{}</td>
-                        </tr>\n",
-                        count
-                    );
-                    writer.write_all(s1.as_bytes())?;
-                }
-                None => {}
-            }
-        }
-
-        for (category, count) in &freq_data {
-            if category != "null" {
-                let s1 = &format!(
-                    "<tr>
-                    <td>{}</td>
-                    <td class=\"numberCell\">{}</td>
-                </tr>\n",
-                    category, count
-                );
-                writer.write_all(s1.as_bytes())?;
-            }
-        }
-
-        s = "</table></p>";
-        writer.write_all(s.as_bytes())?;
-
-        writer.write_all("</body>".as_bytes())?;
-
-        let _ = writer.flush();
-
-        if verbose {
-            if cfg!(target_os = "macos") || cfg!(target_os = "ios") {
-                let output = Command::new("open")
-                    .arg(output_file.clone())
-                    .output()
-                    .expect("failed to execute process");
-
-                let _ = output.stdout;
-            } else if cfg!(target_os = "windows") {
-                // let output = Command::new("cmd /c start")
-                let output = Command::new("explorer.exe")
-                    .arg(output_file.clone())
-                    .output()
-                    .expect("failed to execute process");
-
-                let _ = output.stdout;
-            } else if cfg!(target_os = "linux") {
-                let output = Command::new("xdg-open")
-                    .arg(output_file.clone())
-                    .output()
-                    .expect("failed to execute process");
-
-                let _ = output.stdout;
-            }
-            if verbose {
-                println!("Complete! Please see {} for output.", output_file);
-            }
         }
 
         Ok(())

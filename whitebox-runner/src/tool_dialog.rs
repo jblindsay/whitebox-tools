@@ -577,11 +577,12 @@ impl MyApp {
                                 });
                             },
                             ParameterType::FileList => {
-                                egui::ScrollArea::vertical().show(ui, |ui| {
+                                egui::ScrollArea::vertical().id_source(&parameter.name).show(ui, |ui| {
                                     if ui.add(
                                         egui::TextEdit::multiline(&mut parameter.str_value)
                                         .desired_width(self.state.textbox_width)
                                         .desired_rows(4)
+                                        .id_source(&parameter.name)
                                     ).double_clicked() {
                                         let fdialog = get_file_dialog(&parameter.file_type); 
                                         if let Some(path) = fdialog
@@ -918,6 +919,9 @@ impl MyApp {
         }
 
         if close_dialog {
+            if let Ok(mut tool_output) = self.list_of_open_tools[tool_idx].tool_output.lock() {
+                *tool_output = "".to_string();
+            }
             self.open_tools[tool_idx] = false;
         }
     }

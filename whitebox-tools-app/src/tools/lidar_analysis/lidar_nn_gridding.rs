@@ -41,7 +41,7 @@ use std::thread;
 ///
 /// The output grid can be based on any of the stored LiDAR point parameters (`--parameter`), including elevation
 /// (in which case the output grid is a digital elevation model, DEM), intensity, class, return number, number of
-/// returns, scan angle, RGB (colour) values, and user data values. Similarly, the user may specify which point
+/// returns, scan angle, RGB (colour) values, time, and user data values. Similarly, the user may specify which point
 /// return values (`--returns`) to include in the interpolation, including all points, last returns (including single
 /// return points), and first returns (including single return points).
 ///

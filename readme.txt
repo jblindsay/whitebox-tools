@@ -61,6 +61,8 @@ Version 2.3.0 (XX-XX-202X)
   previous version of the WbRunner. It is now written in pure Rust (compared with the old Python
   TkInter app) using the egui user-interface library. It has a more modern feel, is cross-platform,
   and has no dependencies (including Python). You can now open multiple tools simultaneously. 
+- Added the IndividualTreeDetection tool for intentifying points in a LiDAR point cloud that are associated 
+  with the tops of individual trees.
 - Added the LaunchWbRunner and InstallWbExtension tools so that the Whitebox Runner will be more 
   accessible from other Whitebox frontends. This way users will always have a good fall-back if the 
   frontend is not up-to-date with the WBT backend, since WbRunner is always current with the installed 
@@ -76,6 +78,7 @@ Version 2.3.0 (XX-XX-202X)
   tool.
 - Fixed a bugs in the HorizonAngle and ExposureTowardsWindFlux tools.
 - Added a point time interpolation parameter to the LidarNearestNeighbourGridding tool.
+- Added the ListUniqueValuesRaster tool.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.

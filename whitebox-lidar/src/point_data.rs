@@ -449,6 +449,12 @@ impl PointData {
         }
     }
 
+    /// Returns `true` if the point is classifed as either low, medium or high vegetation.
+    pub fn is_classified_vegetation(&self) -> bool {
+        let class = self.classification();
+        class == 3 || class == 4 || class == 5
+    }
+
     /// Returns `true` if the point is synthetic, `false` otherwise
     pub fn synthetic(&self) -> bool {
         if !self.is_64bit {

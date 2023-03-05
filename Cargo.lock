@@ -1457,7 +1457,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ae4f4af33b7d5c128b3f989401075175e18b5de122891060556e048df5f07ca"
 dependencies = [
  "num-traits",
- "ordered-float",
+ "ordered-float 2.10.0",
+ "paste",
+ "pdqselect",
+ "rayon",
+ "typenum",
+]
+
+[[package]]
+name = "kd-tree"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f54287107c30b23cf7a32e394c68b9472220a090c897d916dfdf467caef88864"
+dependencies = [
+ "num-traits",
+ "ordered-float 3.4.0",
  "paste",
  "pdqselect",
  "typenum",
@@ -1889,9 +1903,9 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
-version = "0.2.14"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+checksum = "578ede34cf02f8924ab9447f50c28075b4d3e5b269972345e7e0372b38c6cdcd"
 dependencies = [
  "autocfg 1.0.1",
  "libm",
@@ -2018,6 +2032,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ordered-float"
+version = "3.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "osmesa-sys"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2072,15 +2095,15 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.6"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
+checksum = "d01a5bd0424d00070b0098dd17ebca6f961a959dead1dbcbbbc1d1cd8d3deeba"
 
 [[package]]
 name = "pdqselect"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ec91767ecc0a0bbe558ce8c9da33c068066c57ecc8bb8477ef8c1ad3ef77c27"
+checksum = "7778906d9321dd56cde1d1ffa69a73e59dcf5fda6d366f62727adf2bd4193aee"
 
 [[package]]
 name = "percent-encoding"
@@ -3393,7 +3416,7 @@ name = "whitebox_plugins"
 version = "2.0.0"
 dependencies = [
  "fasteval",
- "kd-tree",
+ "kd-tree 0.4.1",
  "nalgebra",
  "num_cpus",
  "rand 0.7.3",
@@ -3443,7 +3466,7 @@ version = "2.2.0"
 dependencies = [
  "byteorder",
  "chrono",
- "kd-tree",
+ "kd-tree 0.5.1",
  "kdtree",
  "miniz_oxide 0.3.7",
  "nalgebra",

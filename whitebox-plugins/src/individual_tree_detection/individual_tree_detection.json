@@ -1,0 +1,66 @@
+{
+    "tool_name": "IndividualTreeDetection",
+    "exe": "individual_tree_detection",
+    "short_description": "Identifies points in a LiDAR point cloud that are associated with the tops of individual trees.",
+    "toolbox": "LiDAR Tools",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=IndividualTreeDetection -i=points.laz -o=tree_tops.shp --min_search_radius=1.5 --min_height=2.0 --max_search_radius=8.0 --max_height=30.0 --only_use_veg",
+    "parameters": [
+        {
+            "name": "Input LiDAR File",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input LiDAR file.",
+            "parameter_type": {"ExistingFile":"Lidar"},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Vector",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output vector points file.",
+            "parameter_type": {"NewFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Min. Search Radius",
+            "flags": ["--min_search_radius"],
+            "description": "Minimum search radius (m).",
+            "parameter_type": "Float",
+            "default_value": "1.0",
+            "optional": false
+        },
+        {
+            "name": "Min. Height",
+            "flags": ["--min_height"],
+            "description": "Minimum height (m).",
+            "parameter_type": "Float",
+            "default_value": "0.0",
+            "optional": false
+        },
+        {
+            "name": "Max. Search Radius",
+            "flags": ["--max_search_radius"],
+            "description": "Maximum search radius (m).",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "Max. Height",
+            "flags": ["--max_height"],
+            "description": "Maximum height (m).",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        },
+        {
+            "name": "Only use veg. class points?",
+            "flags": ["--only_use_veg"],
+            "description": "Only use veg. class points?",
+            "parameter_type": "Boolean",
+            "default_value": "false",
+            "optional": true
+        }
+    ]
+}

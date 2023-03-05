@@ -788,6 +788,18 @@ impl eframe::App for MyApp {
                             //     self.state.settings_visible = !self.state.settings_visible;
                             // }
 
+                            if ui.button("✖").on_hover_text("Close all open tool dialogs").clicked() {
+                                for i in (0..self.list_of_open_tools.len()).rev() {
+                                    if let Ok(mut tool_output) = self.list_of_open_tools[i].tool_output.lock() {
+                                        *tool_output = "".to_string();
+                                    }
+                                    if self.open_tools[i] {
+                                        self.open_tools.remove(i);
+                                        self.list_of_open_tools.remove(i);
+                                    }
+                                }
+                            }
+
                             if ui.visuals().dark_mode {
                                 ui.horizontal(|ui| {
                                     if ui.button("☀").on_hover_text("Switch to light mode").clicked() {
@@ -836,6 +848,9 @@ impl eframe::App for MyApp {
                             self.tool_dialog(ctx, i);
                         } else {
                             remove_idx = i as isize;
+                            if let Ok(mut tool_output) = self.list_of_open_tools[i].tool_output.lock() {
+                                *tool_output = "".to_string();
+                            }
                         }
                     }
                     if remove_idx >= 0 {

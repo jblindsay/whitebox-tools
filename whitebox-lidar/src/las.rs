@@ -2886,6 +2886,7 @@ impl LasFile {
 
         if !self.file_name.to_lowercase().ends_with(".zip")
             && !self.file_name.to_lowercase().ends_with(".zlidar")
+            && !self.file_name.to_lowercase().ends_with(".las")
         {
             let f = File::create(&self.file_name)?;
             let mut writer = BufWriter::new(f);
@@ -3409,7 +3410,7 @@ impl LasFile {
 
         // let mut reader = Reader::from_path(&input_file).expect("Error reading LAS file.");
         // let in_header = reader.header();
-        let mut builder = Builder::from((1, 3));
+        let mut builder = Builder::from((1, 4));
         // let mut format = in_header.point_format().clone();
 
         let mut format = las::point::Format::new(self.header.point_format).unwrap();

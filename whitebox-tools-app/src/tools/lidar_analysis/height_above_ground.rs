@@ -62,8 +62,8 @@ impl HeightAboveGround {
         parameters.push(ToolParameter {
             name: "Output File".to_owned(),
             flags: vec!["-o".to_owned(), "--output".to_owned()],
-            description: "Output raster file (including extension).".to_owned(),
-            parameter_type: ParameterType::NewFile(ParameterFileType::Raster),
+            description: "Output lidar file (including extension).".to_owned(),
+            parameter_type: ParameterType::NewFile(ParameterFileType::Lidar),
             default_value: None,
             optional: true,
         });

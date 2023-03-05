@@ -29,6 +29,10 @@ name = "heat_map"
 path = "src/heat_map/main.rs"
 
 [[bin]]
+name = "individual_tree_detection"
+path = "src/individual_tree_detection/main.rs"
+
+[[bin]]
 name = "install_wb_extension"
 path = "src/install_wb_extension/main.rs"
 
@@ -74,7 +78,7 @@ path = "src/travelling_salesman_problem/main.rs"
 
 [dependencies]
 fasteval = "0.2.4"
-kd-tree = "0.4.1"
+kd-tree = { version = "0.4.1", features = ["rayon"] }
 nalgebra = "0.18.0"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }

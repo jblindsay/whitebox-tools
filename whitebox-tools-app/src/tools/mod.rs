@@ -371,6 +371,7 @@ impl ToolManager {
         tool_names.push("KsTestForNormality".to_string());
         tool_names.push("LessThan".to_string());
         tool_names.push("ListUniqueValues".to_string());
+        tool_names.push("ListUniqueValuesRaster".to_string());
         tool_names.push("Log10".to_string());
         tool_names.push("Log2".to_string());
         tool_names.push("Ln".to_string());
@@ -978,6 +979,7 @@ impl ToolManager {
             "kstestfornormality" => Some(Box::new(math_stat_analysis::KsTestForNormality::new())),
             "lessthan" => Some(Box::new(math_stat_analysis::LessThan::new())),
             "listuniquevalues" => Some(Box::new(math_stat_analysis::ListUniqueValues::new())),
+            "listuniquevaluesraster" => Some(Box::new(math_stat_analysis::ListUniqueValuesRaster::new())),
             "log10" => Some(Box::new(math_stat_analysis::Log10::new())),
             "log2" => Some(Box::new(math_stat_analysis::Log2::new())),
             "ln" => Some(Box::new(math_stat_analysis::Ln::new())),
