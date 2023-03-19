@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 19/04/2018
-Last Modified: 18/10/2019
+Last Modified: 19/04/2023
 License: MIT
 */
 
@@ -30,7 +30,7 @@ use std::path;
 /// north, south, east, west) and row and column count will be the same as the base file.
 ///
 /// In the case that multiple points are contained within a single grid cell, the output can be
-/// assigned (`--assign`) the first, last (default), min, max, sum, or number of the contained points.
+/// assigned (`--assign`) the first, last (default), min, max, sum, mean, or number of the contained points.
 ///
 /// # See Also
 /// `VectorPolygonsToRaster`, `VectorLinesToRaster`
@@ -553,6 +553,45 @@ impl WhiteboxTool for VectorPointsToRaster {
                             progress
                         );
                         old_progress = progress;
+                    }
+                }
+            }
+        } else if assign_op.contains("mean") || assign_op.contains("average") {
+            let mut n = Raster::initialize_using_config("", &output.configs);
+            n.reinitialize_values(0.0);
+            for record_num in 0..vector_data.num_records {
+                let record = vector_data.get_record(record_num);
+                for i in 0..record.num_points as usize {
+                    x = record.points[i].x;
+                    y = record.points[i].y;
+                    row = output.get_row_from_y(y);
+                    col = output.get_column_from_x(x);
+                    z = output.get_value(row, col);
+                    if z == background_val || z == nodata {
+                        output.set_value(row, col, attribute_data[record_num]);
+                    } else {
+                        output.set_value(row, col, z + attribute_data[record_num]);
+                    }
+                    n.increment(row, col, 1.0);
+                }
+                if verbose {
+                    progress = (100.0_f64 * (record_num + 1) as f64 / num_records as f64) as usize;
+                    if progress != old_progress {
+                        println!(
+                            "Rasterizing {} of {}: {}%",
+                            record_num + 1,
+                            num_records,
+                            progress
+                        );
+                        old_progress = progress;
+                    }
+                }
+            }
+
+            for row in 0..output.configs.rows as isize {
+                for col in 0..output.configs.columns as isize {
+                    if n.get_value(row, col) > 0.0 {
+                        output.set_value(row, col, output.get_value(row, col) / n.get_value(row, col));
                     }
                 }
             }

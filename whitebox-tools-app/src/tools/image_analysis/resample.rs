@@ -380,7 +380,7 @@ impl WhiteboxTool for Resample {
 
         let mut y: Vec<f64> = Vec::with_capacity(rows as usize);
         for row in 0..rows {
-            y.push(output.get_y_from_row(row));
+            y.push(output.get_y_from_row(row)); //+ output.configs.resolution_y * 0.5);
         }
 
         let x = Arc::new(x);

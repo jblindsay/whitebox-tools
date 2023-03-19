@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 10/09/2017
-Last Modified: 24/01/2019
+Last Modified: 14/03/2023
 License: MIT
 */
 
@@ -32,6 +32,10 @@ use std::thread;
 /// header, without modifying pixel values. The `ModifyNoDataValue` tool will update the value in the header,
 /// and then modify each existing NoData pixel to contain this new value. Also, `SetNodataValue` does not
 /// overwrite the input file, while the `ModifyNoDataValue` tool does.
+/// 
+/// This tool may result in a change in the data type of the output image compared with the input image, if 
+/// the background value is set to a negative value and the input image data type is an unsigned integer. In
+/// some cases, this may result in a doubling of the storage size of the output image.
 ///
 /// # See Also
 /// `ModifyNoDataValue`, `ConvertNodataToZero`, `IsNoData`
@@ -49,7 +53,7 @@ impl SetNodataValue {
         let name = "SetNodataValue".to_string();
         let toolbox = "Data Tools".to_string();
         let description =
-            "Assign a specified value in an input image to the NoData value.".to_string();
+            "Assign the NoData value for an input image.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
@@ -213,8 +217,28 @@ impl WhiteboxTool for SetNodataValue {
         let columns = input.configs.columns as isize;
         let nodata = input.configs.nodata;
 
-        let mut output = Raster::initialize_using_file(&output_file, &input);
-        output.configs.nodata = back_value;
+        let mut out_configs = input.configs.clone();
+        out_configs.nodata = back_value;
+        if back_value < 0.0 {
+            match out_configs.data_type {
+                DataType::U64 => {
+                    out_configs.data_type = DataType::I64;
+                },
+                DataType::U32 => {
+                    out_configs.data_type = DataType::I64;
+                },
+                DataType::U16 => {
+                    out_configs.data_type = DataType::I32;
+                },
+                DataType::U8 => {
+                    out_configs.data_type = DataType::I16;
+                },
+                _ => {} // do nothing
+            }
+        } 
+
+        let mut output = Raster::initialize_using_config(&output_file, &out_configs);
+        
 
         let mut num_procs = num_cpus::get() as isize;
         let configs = whitebox_common::configs::get_configs()?;

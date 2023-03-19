@@ -2886,7 +2886,7 @@ impl LasFile {
 
         if !self.file_name.to_lowercase().ends_with(".zip")
             && !self.file_name.to_lowercase().ends_with(".zlidar")
-            && !self.file_name.to_lowercase().ends_with(".las")
+            && !self.file_name.to_lowercase().ends_with(".laz")
         {
             let f = File::create(&self.file_name)?;
             let mut writer = BufWriter::new(f);

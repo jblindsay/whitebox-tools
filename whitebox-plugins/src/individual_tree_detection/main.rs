@@ -24,14 +24,14 @@ use std::thread;
 
 /// This tool can be used to identify points in a LiDAR point cloud that are associated with the tops of individual trees. The
 /// tool takes a LiDAR point cloud as an input (`input_lidar`) and it is best if the input file has been normalized using the
-/// `lidar_tophat_transform` function, such that points record height above the ground surface. Note that the `input_file` 
+/// `lidar_tophat_transform` function, such that points record height above the ground surface. Note that the `input` 
 /// parameter is optional and if left unspecified the tool will search for all valid LiDAR (*.las, *.laz, *.zlidar) files 
 /// contained within the current working directory. This 'batch mode' operation is common among many of the LiDAR processing 
 /// tools. Output vectors are saved to disc automatically for each processed LiDAR file when operating in batch mode.
 /// 
 /// The tool will evaluate the points within a local neighbourhood around each point in the input point cloud and determine
 /// if it is the highest point within the neighbourhood. If a point is the highest local point, it will be entered into the
-/// output vector file (`output_file`). The neighbourhood size can vary, with higher canopy positions generally associated with larger
+/// output vector file (`output`). The neighbourhood size can vary, with higher canopy positions generally associated with larger
 /// neighbourhoods. The user specifies the `min_search_radius` and `min_height` parameters, which default to 1 m and 0 m 
 /// respectively. If the `min_height` parameter is greater than zero, all points that are less than this value above the 
 /// ground (assuming the input point cloud measures this height parameter) are ignored, which can be a useful mechanism
@@ -88,8 +88,8 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    -i, --input_file     Name of the input LiDAR file.
-    -o, --output_file    Name of the output vector points file.
+    -i, --input          Name of the input LiDAR file.
+    -o, --output         Name of the output vector points file.
     --min_search_radius  Minimum search radius (m).
     --min_height         Minimum height (m).
     --max_search_radius  Maximum search radius (m).

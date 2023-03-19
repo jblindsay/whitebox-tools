@@ -16,7 +16,9 @@ use std::path;
 /// This tool can be used to modify the value of pixels containing the NoData value for an input raster image.
 /// This operation differs from the `SetNodataValue` tool, which sets the NoData value for an image in the
 /// image header without actually modifying pixel values. Also, `SetNodataValue` does not
-/// overwrite the input file, while the `ModifyNoDataValue` tool does.
+/// overwrite the input file, while the `ModifyNoDataValue` tool does. This tool cannot modify the
+/// input image data type, which is important to note since it may cause an unexpected behaviour if the
+/// new NoData value is negative and the input image data type is an unsigned integer type.
 ///
 /// # See Also
 /// `SetNodataValue`, `ConvertNodataToZero`
@@ -33,7 +35,7 @@ impl ModifyNoDataValue {
         // public constructor
         let name = "ModifyNoDataValue".to_string();
         let toolbox = "Data Tools".to_string();
-        let description = "Converts nodata values in a raster to zero.".to_string();
+        let description = "Modifies nodata values in a raster.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {

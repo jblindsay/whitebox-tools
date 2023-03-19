@@ -323,10 +323,10 @@ impl WhiteboxTool for FlightlineOverlap {
                 println!("Performing analysis...");
             }
 
-            // Make sure that the input LAS file have GPS time data?
-            if input.header.point_format == 0u8 || input.header.point_format == 2u8 {
-                panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
-            }
+            // // Make sure that the input LAS file have GPS time data?
+            // if input.header.point_format == 0u8 || input.header.point_format == 2u8 {
+            //     panic!("The input file has a Point Format that does not include GPS time, which is required for the operation of this tool.");
+            // }
 
             let n_points = input.header.number_of_points as usize;
 

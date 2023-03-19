@@ -63,6 +63,8 @@ Version 2.3.0 (XX-XX-202X)
   and has no dependencies (including Python). You can now open multiple tools simultaneously. 
 - Added the IndividualTreeDetection tool for intentifying points in a LiDAR point cloud that are associated 
   with the tops of individual trees.
+- Added the NormalizeLidar tool for normalizing LiDAR point clouds, i.e., converting their z-values 
+  from elevation to height-above-ground.
 - Added the LaunchWbRunner and InstallWbExtension tools so that the Whitebox Runner will be more 
   accessible from other Whitebox frontends. This way users will always have a good fall-back if the 
   frontend is not up-to-date with the WBT backend, since WbRunner is always current with the installed 
@@ -79,6 +81,9 @@ Version 2.3.0 (XX-XX-202X)
 - Fixed a bugs in the HorizonAngle and ExposureTowardsWindFlux tools.
 - Added a point time interpolation parameter to the LidarNearestNeighbourGridding tool.
 - Added the ListUniqueValuesRaster tool.
+- Fixed a bug with the SetNodataValue tool, where the raster data type is updated to a signed integer
+  if the background value is negative and the input image has an unsigned data type.
+- Added a 'mean' option to the VectorPointsToRaster tool.
 
 Version 2.2.0 (23-10-2022)
 - Added the TravellingSalesmanProblem tool for identifying short routes connecting multiple locations.

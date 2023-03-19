@@ -53,6 +53,10 @@ name = "max_upslope_value"
 path = "src/max_upslope_value/main.rs"
 
 [[bin]]
+name = "normalize_lidar"
+path = "src/normalize_lidar/main.rs"
+
+[[bin]]
 name = "qin_flow_accumulation"
 path = "src/qin_flow_accumulation/main.rs"
 

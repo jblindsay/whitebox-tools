@@ -1,0 +1,34 @@
+{
+    "tool_name": "NormalizeLidar",
+    "exe": "normalize_lidar",
+    "short_description": "Normalizes a LiDAR point cloud.",
+    "toolbox": "LiDAR Tools",
+    "license": "Proprietary",
+    "example": ">> .*EXE_NAME -r=NormalizeLidar -i=points.laz -o=normalized.laz --dtm=dtm.tif",
+    "parameters": [
+        {
+            "name": "Input LiDAR File",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input LiDAR file.",
+            "parameter_type": {"ExistingFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Lidar File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output LiDAR file.",
+            "parameter_type": {"NewFile":"Lidar"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Input DTM Raster File",
+            "flags": ["--dtm"],
+            "description": "Name of the input digital terrain model (DTM) raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

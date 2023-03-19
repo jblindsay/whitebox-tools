@@ -253,8 +253,8 @@ impl WhiteboxTool for TimeInDaylight {
         let mut utc_offset = 0f64;
         let mut start_day = 1u32;
         let mut end_day = 365u32;
-        let mut start_time = NaiveTime::from_hms(0, 0, 0); // midnight
-        let mut end_time = NaiveTime::from_hms(23, 59, 59); // the second before midnight
+        let mut start_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap(); // midnight
+        let mut end_time = NaiveTime::from_hms_opt(23, 59, 59).unwrap(); // the second before midnight
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -413,7 +413,7 @@ impl WhiteboxTool for TimeInDaylight {
                         0i32
                     };
                     if hr >= 0 && hr < 24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 {
-                        start_time = NaiveTime::from_hms(hr as u32, min as u32, sec as u32);
+                        start_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
                     } else {
                         panic!("Invalid start time.");
                     }
@@ -447,7 +447,7 @@ impl WhiteboxTool for TimeInDaylight {
                         0i32
                     };
                     if hr >= 0 && hr < 24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 {
-                        end_time = NaiveTime::from_hms(hr as u32, min as u32, sec as u32);
+                        end_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
                     } else {
                         panic!("Invalid end time.");
                     }
@@ -568,7 +568,7 @@ impl WhiteboxTool for TimeInDaylight {
         let mut azimuth = 0f32;
         // altitudes_and_durations key: altitude, duration, time (as NaiveTime), day (as ordinal)
         let mut altitudes_and_durations =
-            vec![(0f32, 0f64, NaiveTime::from_hms(0, 0, 0), 0u32); 365];
+            vec![(0f32, 0f64, NaiveTime::from_hms_opt(0, 0, 0).unwrap(), 0u32); 365];
         let mut horizon_angle: Array2D<f32> =
             Array2D::new(rows, columns, 0f32, nodata_f32).expect("Error creating Array2D");
         let mut total_daylight = 0f64;
@@ -910,11 +910,11 @@ fn generate_almanac(
     // let doy = 1; //233;
     for doy in 1..=366 {
         let midnight = if utc_offset < 0f64 {
-            FixedOffset::west((utc_offset.abs() * hour_sec) as i32)
+            FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
                 .yo(2020, doy as u32)
                 .and_hms(0, 0, 0)
         } else {
-            FixedOffset::east((utc_offset * hour_sec) as i32)
+            FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
                 .yo(2020, doy as u32)
                 .and_hms(0, 0, 0)
         };
@@ -933,13 +933,13 @@ fn generate_almanac(
             for minute in 0..60 {
                 for sec in (0..=45).step_by(seconds_interval) {
                     let dt = if utc_offset < 0f64 {
-                        FixedOffset::west((utc_offset.abs() * hour_sec) as i32)
+                        FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
                             .yo(2020, doy as u32)
-                            .and_hms(hr, minute, sec)
+                            .and_hms_opt(hr, minute, sec).unwrap()
                     } else {
-                        FixedOffset::east((utc_offset * hour_sec) as i32)
+                        FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
                             .yo(2020, doy as u32)
-                            .and_hms(hr, minute, sec)
+                            .and_hms_opt(hr, minute, sec).unwrap()
                     };
                     let unixtime = dt.timestamp() * 1000 + dt.timestamp_subsec_millis() as i64;
                     let pos = pos(unixtime, latitude, longitude);
@@ -1021,7 +1021,7 @@ impl PositionTime {
             azimuth: 0f64,
             actual_azimuth: 0f64,
             altitude: 0f64,
-            time: NaiveTime::from_hms(0, 0, 0),
+            time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
             diff: 360f64,
             duration: 0f64,
         }
