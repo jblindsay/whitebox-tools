@@ -10,7 +10,7 @@ chrono = "0.4.15"
 kdtree = "0.6.0"
 kd-tree = "0.5.1"
 miniz_oxide = "0.3.6"
-nalgebra = "0.18.0"
+nalgebra = "0.27.1"
 num_cpus = "1.6.2"
 rand = { version = "0.7", features = ["small_rng"] }
 rand_distr = "0.2.1"
