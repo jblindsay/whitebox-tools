@@ -496,6 +496,7 @@ impl ToolManager {
         tool_names.push("RemoveOffTerrainObjects".to_string());
         tool_names.push("RuggednessIndex".to_string());
         tool_names.push("TimeInDaylight".to_string());
+        tool_names.push("TopographicHachures".to_string());
         tool_names.push("SedimentTransportIndex".to_string());
         tool_names.push("Slope".to_string());
         tool_names.push("SlopeVsElevationPlot".to_string());
@@ -1188,6 +1189,7 @@ impl ToolManager {
             }
             "surfacearearatio" => Some(Box::new(terrain_analysis::SurfaceAreaRatio::new())),
             "tangentialcurvature" => Some(Box::new(terrain_analysis::TangentialCurvature::new())),
+            "topographichachures" => Some(Box::new(terrain_analysis::TopographicHachures::new())),
             "totalcurvature" => Some(Box::new(terrain_analysis::TotalCurvature::new())),
             "viewshed" => Some(Box::new(terrain_analysis::Viewshed::new())),
             "visibilityindex" => Some(Box::new(terrain_analysis::VisibilityIndex::new())),
