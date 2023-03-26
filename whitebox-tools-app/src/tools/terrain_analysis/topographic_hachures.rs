@@ -6,7 +6,7 @@ Last Modified: 04/03/2020
 License: MIT
 */
 
-use whitebox_raster::Raster;
+use whitebox_raster::{Raster, RasterConfigs};
 use whitebox_common::structures::{Array2D, Point2D};
 use crate::tools::*;
 use whitebox_vector::*;
@@ -14,7 +14,7 @@ use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
-const EPSILON: f64 = std::f64::EPSILON;
+const EPSILON: f64 = f64::EPSILON;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use num_cpus;
@@ -108,9 +108,9 @@ impl TopographicHachures {
         });
 
         parameters.push(ToolParameter {
-            name: "Flowline seed distance".to_owned(),
-            flags: vec!["--distance".to_owned()],
-            description: "Distance between seed points of hachures (in cells)."
+            name: "Flowline seed separation".to_owned(),
+            flags: vec!["--separation".to_owned()],
+            description: "Separation distance between seed points of hachures (in cells)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2.0".to_owned()),
@@ -203,6 +203,8 @@ impl WhiteboxTool for TopographicHachures {
         let mut base_contour = 0f64;
         let mut deflection_tolerance = 10f64;
         let mut filter_size = 9;
+        let mut separation = 2f64;
+        let mut discretization = 0.5f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -293,6 +295,30 @@ impl WhiteboxTool for TopographicHachures {
                     // must be an odd integer.
                     filter_size += 1;
                 }
+            } else if flag_val == "-separation" {
+                separation = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+            } else if flag_val == "-discretization" {
+                discretization = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 
@@ -336,6 +362,7 @@ impl WhiteboxTool for TopographicHachures {
         let nodata = input.configs.nodata;
         let res_x = input.configs.resolution_x;
         let res_y = input.configs.resolution_y;
+        let res_xy = 0.5f64 * (res_x + res_y);
         let half_res_x = res_x / 2f64;
         let half_res_y = res_y / 2f64;
         let west = input.configs.west;
@@ -344,16 +371,19 @@ impl WhiteboxTool for TopographicHachures {
         let get_x_from_column = |col| -> f64 { west + half_res_x + col as f64 * res_x };
         let get_y_from_row = |row| -> f64 { north - half_res_y - row as f64 * res_y };
 
-        let mut output = Shapefile::new(&output_file, ShapeType::PolyLine)
+        let mut output = Shapefile::new(&output_file, ShapeType::MultiPoint)
             .expect("Error creating output vector.");
 
         // set the projection information
         output.projection = input.configs.coordinate_ref_system_wkt.clone();
 
         // add the attributes
-        output
-            .attributes
-            .add_field(&AttributeField::new("FID", FieldDataType::Int, 10u8, 0u8));
+        output.attributes.add_field(&AttributeField::new(
+            "FID",
+            FieldDataType::Int,
+            10u8,
+            0u8
+        ));
         output.attributes.add_field(&AttributeField::new(
             "HEIGHT",
             FieldDataType::Real,
@@ -709,7 +739,7 @@ impl WhiteboxTool for TopographicHachures {
                             }
                         }
 
-                        let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                        let mut sfg = ShapefileGeometry::new(ShapeType::MultiPoint);
                         sfg.add_part(&points);
                         output.add_record(sfg);
                         output.attributes.add_record(
@@ -913,7 +943,7 @@ impl WhiteboxTool for TopographicHachures {
                     }
 
                     if (max_x - min_x) > res_x || (max_y - min_y) > res_y {
-                        let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                        let mut sfg = ShapefileGeometry::new(ShapeType::MultiPoint);
                         sfg.add_part(&points);
                         output.add_record(sfg);
                         output.attributes.add_record(
@@ -999,4 +1029,105 @@ pub fn path_deflection(previous: Point2D, current: Point2D, next: Point2D) -> f6
     let p1 = current - previous;
     let p2 = next - current;
     ((p1 * p2) / (p1.magnitude() * p2.magnitude())).abs()
+}
+
+#[derive(Default, Clone)]
+struct RasterCoverage {
+    pub configs: RasterConfigs,
+
+    // bilinear interpolation coefficients
+    a00: Vec<f64>,
+    a01: Vec<f64>,
+    a10: Vec<f64>,
+    a11: Vec<f64>,
+}
+
+impl RasterCoverage {
+    pub fn new<'a>(raster: &'a Raster) -> RasterCoverage {
+
+        let rows = raster.configs.rows as isize;
+        let columns = raster.configs.columns as isize;
+        let npixels = (rows * columns) as usize;
+
+        let mut output = RasterCoverage {
+            configs: raster.configs.clone(),
+            a00: vec![0f64; npixels],
+            a01: vec![0f64; npixels],
+            a10: vec![0f64; npixels],
+            a11: vec![0f64; npixels]
+        };
+
+        for row in 0..rows {
+            for col in 0..columns {
+                let z00 = raster.get_value(row, col);
+                let z01 = raster.get_value(row, col + 1);
+                let z10 = raster.get_value(row + 1, col);
+                let z11 = raster.get_value(row + 1, col + 1);
+
+                let idx= (row * columns + col) as usize;
+
+                output.a00[idx] = z00;
+                output.a01[idx] = z01 - z00;
+                output.a10[idx] = z10 - z00;
+                output.a11[idx] = z00 + z11 - z01 - z10;
+            }
+        }
+
+        output
+
+    }
+
+    pub fn get_column_from_x(&self, x: f64) -> isize {
+        ((x - self.configs.west) / self.configs.resolution_x).floor() as isize
+    }
+
+    pub fn get_row_from_y(&self, y: f64) -> isize {
+        ((self.configs.north - y) / self.configs.resolution_y).floor() as isize
+    }
+
+    pub fn get_x_from_column(&self, column: isize) -> f64 {
+        // self.configs.west - self.configs.resolution_x / 2f64 +
+        // column as f64 * self.configs.resolution_x
+        // Not sure why it must be + 1/2 resolution rather than minus
+        self.configs.west
+            + self.configs.resolution_x / 2f64
+            + column as f64 * self.configs.resolution_x
+    }
+
+    pub fn get_y_from_row(&self, row: isize) -> f64 {
+        self.configs.north
+            - self.configs.resolution_y / 2f64
+            - row as f64 * self.configs.resolution_y
+    }
+
+    pub fn get_cell_coords(&self, x: f64, y: f64) -> (usize, f64, f64) {
+        let row = self.get_row_from_y(y);
+        let col = self.get_column_from_x(x);
+        let xcol = self.get_x_from_column(col);
+        let yrow = self.get_y_from_row(row);
+
+        let idx= (row * self.configs.columns as isize + col) as usize;
+
+        let xcell = (x - xcol) / self.configs.resolution_x;
+        let ycell = (yrow - y) / self.configs.resolution_y;
+
+        (idx, xcell, ycell)
+    }
+
+    pub fn get_value(&self, x: f64, y: f64) -> f64 {
+        let (idx, xcell, ycell) = self.get_cell_coords(x, y);
+
+        self.a00[idx] + self.a10[idx] * xcell +
+            self.a01[idx] * ycell + self.a11[idx] * xcell * ycell
+    }
+
+    pub fn get_gradient(&self, x: f64, y: f64) -> [f64; 2] {
+        let (idx, xcell, ycell) = self.get_cell_coords(x, y);
+        [
+            self.a10[idx] + self.a11[idx] * ycell,
+            self.a01[idx] + self.a11[idx] * xcell,
+        ]
+    }
+
+
 }
