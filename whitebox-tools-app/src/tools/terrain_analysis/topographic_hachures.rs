@@ -1,8 +1,8 @@
 /*
 This tool is part of the WhiteboxTools geospatial analysis library.
-Authors: Dr. John Lindsay, Dr. Timofey Samsonov
-Created: 22/02/2020
-Last Modified: 04/03/2020
+Authors: Dr. Timofey Samsonov, Dr. John Lindsay
+Created: 25/03/2023
+Last Modified: 26/03/2023
 License: MIT
 */
 
@@ -354,6 +354,7 @@ impl WhiteboxTool for TopographicHachures {
         };
 
         let input = Arc::new(Raster::new(&input_file, "r").expect("Error reading input raster."));
+        let cov = RasterCoverage::new(&input);
         // let input = Raster::new(&input_file, "r").expect("Error reading input raster.");
 
         let start = Instant::now();
@@ -371,7 +372,7 @@ impl WhiteboxTool for TopographicHachures {
         let get_x_from_column = |col| -> f64 { west + half_res_x + col as f64 * res_x };
         let get_y_from_row = |row| -> f64 { north - half_res_y - row as f64 * res_y };
 
-        let mut output = Shapefile::new(&output_file, ShapeType::MultiPoint)
+        let mut output = Shapefile::new(&output_file, ShapeType::PolyLine)
             .expect("Error creating output vector.");
 
         // set the projection information
@@ -739,17 +740,24 @@ impl WhiteboxTool for TopographicHachures {
                             }
                         }
 
-                        let mut sfg = ShapefileGeometry::new(ShapeType::MultiPoint);
-                        sfg.add_part(&points);
-                        output.add_record(sfg);
-                        output.attributes.add_record(
-                            vec![
-                                FieldData::Int(fid as i32 + 1),
-                                FieldData::Real(base_contour + z * contour_interval),
-                            ],
-                            false,
-                        );
-                        fid += 1;
+                        for seed in points {
+                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                            let flowline = get_flowline(
+                                &cov, seed, discretization * res_xy,
+                                base_contour + (z-1.0) * contour_interval,
+                                0.0, deflection_tolerance
+                            );
+                            sfg.add_part(&flowline);
+                            output.add_record(sfg);
+                            output.attributes.add_record(
+                                vec![
+                                    FieldData::Int(fid as i32 + 1),
+                                    FieldData::Real(base_contour + z * contour_interval),
+                                ],
+                                false,
+                            );
+                            fid += 1;
+                        }
                     }
                 }
             }
@@ -943,17 +951,26 @@ impl WhiteboxTool for TopographicHachures {
                     }
 
                     if (max_x - min_x) > res_x || (max_y - min_y) > res_y {
-                        let mut sfg = ShapefileGeometry::new(ShapeType::MultiPoint);
-                        sfg.add_part(&points);
-                        output.add_record(sfg);
-                        output.attributes.add_record(
-                            vec![
-                                FieldData::Int(fid as i32 + 1),
-                                FieldData::Real(base_contour + z * contour_interval),
-                            ],
-                            false,
-                        );
-                        fid += 1;
+
+                        for seed in points {
+                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                            let flowline = get_flowline(
+                                &cov, seed, discretization * res_xy,
+                                base_contour + (z-1.0) * contour_interval,
+                                0.0, deflection_tolerance
+                            );
+                            sfg.add_part(&flowline);
+                            output.add_record(sfg);
+                            output.attributes.add_record(
+                                vec![
+                                    FieldData::Int(fid as i32 + 1),
+                                    FieldData::Real(base_contour + z * contour_interval),
+                                ],
+                                false,
+                            );
+                            fid += 1;
+                        }
+
                     }
                 }
             }
@@ -1032,14 +1049,14 @@ pub fn path_deflection(previous: Point2D, current: Point2D, next: Point2D) -> f6
 }
 
 #[derive(Default, Clone)]
-struct RasterCoverage {
+pub struct RasterCoverage {
     pub configs: RasterConfigs,
 
     // bilinear interpolation coefficients
     a00: Vec<f64>,
-    a01: Vec<f64>,
     a10: Vec<f64>,
-    a11: Vec<f64>,
+    a01: Vec<f64>,
+    a11: Vec<f64>
 }
 
 impl RasterCoverage {
@@ -1052,23 +1069,23 @@ impl RasterCoverage {
         let mut output = RasterCoverage {
             configs: raster.configs.clone(),
             a00: vec![0f64; npixels],
-            a01: vec![0f64; npixels],
             a10: vec![0f64; npixels],
+            a01: vec![0f64; npixels],
             a11: vec![0f64; npixels]
         };
 
         for row in 0..rows {
             for col in 0..columns {
                 let z00 = raster.get_value(row, col);
-                let z01 = raster.get_value(row, col + 1);
-                let z10 = raster.get_value(row + 1, col);
+                let z10 = raster.get_value(row, col + 1);
+                let z01 = raster.get_value(row + 1, col);
                 let z11 = raster.get_value(row + 1, col + 1);
 
                 let idx= (row * columns + col) as usize;
 
                 output.a00[idx] = z00;
-                output.a01[idx] = z01 - z00;
                 output.a10[idx] = z10 - z00;
+                output.a01[idx] = z00 - z01;
                 output.a11[idx] = z00 + z11 - z01 - z10;
             }
         }
@@ -1103,31 +1120,125 @@ impl RasterCoverage {
     pub fn get_cell_coords(&self, x: f64, y: f64) -> (usize, f64, f64) {
         let row = self.get_row_from_y(y);
         let col = self.get_column_from_x(x);
-        let xcol = self.get_x_from_column(col);
-        let yrow = self.get_y_from_row(row);
 
-        let idx= (row * self.configs.columns as isize + col) as usize;
+        if  row < 0 || col < 0 ||
+            row as usize >= self.configs.rows ||
+            col as usize >= self.configs.columns {
+            return (usize::MAX, -1f64, -1f64)
+        } else {
+            let xcol = self.get_x_from_column(col);
+            let yrow = self.get_y_from_row(row);
 
-        let xcell = (x - xcol) / self.configs.resolution_x;
-        let ycell = (yrow - y) / self.configs.resolution_y;
+            let idx= (row * self.configs.columns as isize + col) as usize;
 
-        (idx, xcell, ycell)
+            let xcell = (x - xcol) / self.configs.resolution_x;
+            let ycell = (yrow - y) / self.configs.resolution_y;
+
+            // if xcell < 0. || ycell < 0. || xcell > 1. || ycell > 1. {
+            //    return (usize::MAX, -1f64, -1f64)
+            // }
+
+            (idx, xcell, ycell)
+        }
     }
 
     pub fn get_value(&self, x: f64, y: f64) -> f64 {
         let (idx, xcell, ycell) = self.get_cell_coords(x, y);
 
-        self.a00[idx] + self.a10[idx] * xcell +
-            self.a01[idx] * ycell + self.a11[idx] * xcell * ycell
+        if idx == usize::MAX {
+            self.configs.nodata
+        } else {
+            self.a00[idx] + self.a10[idx] * xcell +
+                self.a01[idx] * ycell + self.a11[idx] * xcell * ycell
+        }
     }
 
     pub fn get_gradient(&self, x: f64, y: f64) -> [f64; 2] {
         let (idx, xcell, ycell) = self.get_cell_coords(x, y);
+
         [
             self.a10[idx] + self.a11[idx] * ycell,
-            self.a01[idx] + self.a11[idx] * xcell,
+            self.a01[idx] + self.a11[idx] * xcell
         ]
     }
 
+    pub fn get_slope(&self, x: f64, y: f64) -> f64 {
+        let grad = self.get_gradient(x, y);
+        (grad[0]*grad[0] + grad[1]*grad[1]).powf(0.5)
+    }
 
+    pub fn get_slope_rad(&self, x: f64, y: f64) -> f64 {
+        self.get_slope(x, y).atan()
+    }
+
+    pub fn get_slope_deg(&self, x: f64, y: f64) -> f64 {
+        self.get_slope(x, y).atan().to_degrees()
+    }
+}
+
+/// Traces the flowline from `p` using `discr` step until:
+/// - elevation is smaller than `zmin` or
+/// - slope is smaller than `slopemin` or
+/// - deflection is larger than `defmax`
+pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
+                    discr: f64, zmin: f64, slopemin: f64, defmin: f64) -> Vec<Point2D> {
+    let mut points = vec![];
+    let mut zcur: f64;
+    let mut zprev: f64;
+    let mut slope: f64;
+    let mut grad: [f64; 2];
+
+    let mut p1: Point2D = p.clone();
+    let mut p2: Point2D;
+
+    zprev = cov.get_value(p1.x, p1.y);
+
+    if zprev == zmin || zprev == cov.configs.nodata {
+        return points;
+    }
+
+    points.push(p1);
+
+    loop {
+        slope = cov.get_slope_deg(p1.x, p1.y);
+        if slope < slopemin { break; }
+
+        grad = cov.get_gradient(p1.x, p1.y);
+
+        p2 = Point2D::new(
+          p1.x - discr * grad[0] / slope,
+          p1.y - discr * grad[1] / slope,
+        );
+
+        zcur = cov.get_value(p2.x, p2.y);
+
+        if zcur == cov.configs.nodata { break; }
+
+        if zcur < zmin {
+            let t = (zprev - zmin) / (zprev  - zcur);
+            let pend = Point2D::new(
+                (1.0 - t)*p1.x + t*p2.x,
+                (1.0 - t)*p1.y + t*p2.y
+            );
+            points.push(pend);
+            break;
+        } else if zcur < zprev {
+            points.push(p2);
+            p1 = p2;
+            zprev = zcur;
+        } else {
+            break;
+        }
+
+        let n = points.len();
+        // if n >= 3 {
+        //     if path_deflection(points[n-3], points[n-2], points[n-1]) < defmin {
+        //         points.pop();
+        //         break
+        //     }
+        // }
+
+    }
+
+    points
 }
