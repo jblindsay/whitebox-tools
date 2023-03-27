@@ -817,8 +817,8 @@ impl WhiteboxTool for TopographicHachures {
                             while dist > accdist[j] { j+=1; }
                             let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
                             seeds.push(Point2D::new(
-                                t * points[j-1].x + (1.-t) * points[j].x,
-                                t * points[j-1].y + (1.-t) * points[j].y
+                                (1.-t) * points[j-1].x + t * points[j].x,
+                                (1.-t) * points[j-1].y + t * points[j].y
                             ));
                         }
 
@@ -1063,8 +1063,8 @@ impl WhiteboxTool for TopographicHachures {
                             while dist > accdist[j] { j+=1; }
                             let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
                             seeds.push(Point2D::new(
-                                t * points[j-1].x + (1.-t) * points[j].x,
-                                t * points[j-1].y + (1.-t) * points[j].y
+                                (1.-t) * points[j-1].x + t * points[j].x,
+                                (1.-t) * points[j-1].y + t * points[j].y
                             ));
                         }
 
