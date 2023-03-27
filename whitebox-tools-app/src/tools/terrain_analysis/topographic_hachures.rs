@@ -21,6 +21,7 @@ use num_cpus;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
+use crate::tools::hydro_analysis::SnapPourPoints;
 
 /// This tool can be used to create a vector contour coverage from an input raster surface model (`--input`), such as a digital
 /// elevation model (DEM). The user must specify the contour interval (`--interval`) and optionally, the base contour value (`--base`).
@@ -789,7 +790,41 @@ impl WhiteboxTool for TopographicHachures {
                             }
                         }
 
-                        for seed in points {
+                        let npts = points.len();
+                        let mut perim: f64 = 0.0;
+                        let mut accdist = vec![0.0; npts];
+
+                        for i in 1..npts {
+                            perim += points[i-1].distance(&points[i]);
+                            accdist[i] = perim;
+                        }
+
+                        let step = discretization * res_xy;
+                        let num = perim / step;
+                        let to_up = (num.ceil() - num) < (num - num.floor());
+                        let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
+                        let num_seeds= (perim / new_step) as i32;
+
+                        let mut seeds = Vec::new();
+
+                        seeds.push(points[0]);
+
+                        let mut dist;
+                        let mut j = 0;
+
+                        for i in 1..num_seeds-1 {
+                            dist = i as f64 * new_step;
+                            while dist > accdist[j] { j+=1; }
+                            let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
+                            seeds.push(Point2D::new(
+                                t * points[j-1].x + (1.-t) * points[j].x,
+                                t * points[j-1].y + (1.-t) * points[j].y
+                            ));
+                        }
+
+                        seeds.push(points[npts-1]);
+
+                        for seed in seeds {
                             let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                             let flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
@@ -1001,7 +1036,41 @@ impl WhiteboxTool for TopographicHachures {
 
                     if (max_x - min_x) > res_x || (max_y - min_y) > res_y {
 
-                        for seed in points {
+                        let npts = points.len();
+                        let mut perim: f64 = 0.0;
+                        let mut accdist = vec![0.0; npts];
+
+                        for i in 1..npts {
+                            perim += points[i-1].distance(&points[i]);
+                            accdist[i] = perim;
+                        }
+
+                        let step = discretization * res_xy;
+                        let num = perim / step;
+                        let to_up = (num.ceil() - num) < (num - num.floor());
+                        let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
+                        let num_seeds= (perim / new_step) as i32;
+
+                        let mut seeds = Vec::new();
+
+                        seeds.push(points[0]);
+
+                        let mut dist;
+                        let mut j = 0;
+
+                        for i in 1..num_seeds-1 {
+                            dist = i as f64 * new_step;
+                            while dist > accdist[j] { j+=1; }
+                            let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
+                            seeds.push(Point2D::new(
+                                t * points[j-1].x + (1.-t) * points[j].x,
+                                t * points[j-1].y + (1.-t) * points[j].y
+                            ));
+                        }
+
+                        seeds.push(points[npts-1]);
+
+                        for seed in seeds {
                             let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                             let flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
