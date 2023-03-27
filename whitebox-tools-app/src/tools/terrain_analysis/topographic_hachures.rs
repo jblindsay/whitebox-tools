@@ -127,6 +127,26 @@ impl TopographicHachures {
             optional: false,
         });
 
+        parameters.push(ToolParameter {
+            name: "Flowline maximum turning angle".to_owned(),
+            flags: vec!["--turning".to_owned()],
+            description: "Maximum turning angle valid for hachure, in degrees (0-90)"
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("45.0".to_owned()),
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Minimum slope angle".to_owned(),
+            flags: vec!["--slopemin".to_owned()],
+            description: "Slope angle, in degrees, at which flowline tracing ends"
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("1.0".to_owned()),
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -205,6 +225,8 @@ impl WhiteboxTool for TopographicHachures {
         let mut filter_size = 9;
         let mut separation = 2f64;
         let mut discretization = 0.5f64;
+        let mut turning = 45.0f64;
+        let mut slopemin = 1.0f64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -319,11 +341,38 @@ impl WhiteboxTool for TopographicHachures {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
+            } else if flag_val == "-turning" {
+                turning = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+            } else if flag_val == "-slopemin" {
+                slopemin = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 
         let filter_radius = filter_size as isize / 2isize;
         deflection_tolerance = deflection_tolerance.to_radians().cos();
+        turning = turning.to_radians().cos();
+        slopemin = slopemin.to_radians().tan();
+        println!("{}", slopemin);
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
@@ -745,7 +794,7 @@ impl WhiteboxTool for TopographicHachures {
                             let flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
                                 base_contour + (z-1.0) * contour_interval,
-                                0.0, deflection_tolerance
+                                slopemin, turning
                             );
                             sfg.add_part(&flowline);
                             output.add_record(sfg);
@@ -957,7 +1006,7 @@ impl WhiteboxTool for TopographicHachures {
                             let flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
                                 base_contour + (z-1.0) * contour_interval,
-                                0.0, deflection_tolerance
+                                slopemin, turning
                             );
                             sfg.add_part(&flowline);
                             output.add_record(sfg);
@@ -1157,14 +1206,14 @@ impl RasterCoverage {
         let (idx, xcell, ycell) = self.get_cell_coords(x, y);
 
         [
-            self.a10[idx] + self.a11[idx] * ycell,
-            self.a01[idx] + self.a11[idx] * xcell
+            (self.a10[idx] + self.a11[idx] * ycell) / self.configs.resolution_x,
+            (self.a01[idx] + self.a11[idx] * xcell) / self.configs.resolution_y
         ]
     }
 
     pub fn get_slope(&self, x: f64, y: f64) -> f64 {
         let grad = self.get_gradient(x, y);
-        (grad[0]*grad[0] + grad[1]*grad[1]).powf(0.5)
+        (grad[0]*grad[0] + grad[1]*grad[1]).sqrt()
     }
 
     pub fn get_slope_rad(&self, x: f64, y: f64) -> f64 {
@@ -1200,7 +1249,8 @@ pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
     points.push(p1);
 
     loop {
-        slope = cov.get_slope_deg(p1.x, p1.y);
+        slope = cov.get_slope(p1.x, p1.y);
+
         if slope < slopemin { break; }
 
         grad = cov.get_gradient(p1.x, p1.y);
@@ -1231,12 +1281,12 @@ pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
         }
 
         let n = points.len();
-        // if n >= 3 {
-        //     if path_deflection(points[n-3], points[n-2], points[n-1]) < defmin {
-        //         points.pop();
-        //         break
-        //     }
-        // }
+        if n >= 3 {
+            if path_deflection(points[n-3], points[n-2], points[n-1]) < defmin {
+                points.pop();
+                break
+            }
+        }
 
     }
 
