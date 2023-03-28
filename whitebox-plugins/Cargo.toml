@@ -92,7 +92,7 @@ path = "src/vector_stream_network_analysis/main.rs"
 fasteval = "0.2.4"
 kd-tree = { version = "0.4.1", features = ["rayon"] }
 kdtree = "0.6.0"
-nalgebra = "0.18.0"
+nalgebra = "0.32.2"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
 rstar = "0.9.3"
