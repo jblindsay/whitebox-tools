@@ -1327,7 +1327,6 @@ impl ToolManager {
                         "recreatepasslines",
                         "registerlicense",
                         "removefieldedgepoints",
-                        "repairstreamvectortopology",
                         "ringcurvature",
                         "rotor",
                         "shadowanimation",
@@ -1341,7 +1340,6 @@ impl ToolManager {
                         "svmregression",
                         "topographicpositionanimation",
                         "unsphericity",
-                        "vectorstreamnetworkanalysis",
                         "verticalexcesscurvature",
                         "yieldfilter",
                         "yieldmap",
@@ -1482,7 +1480,6 @@ Example usage:
         match self.get_tool(tool_name.as_ref()) {
             Some(tool) => println!("{}", tool.get_tool_parameters()),
             None => {
-                // println!("I'm here {}", tool_name);
                 let plugin_list = self.get_plugin_list()?;
                 if plugin_list.contains_key(&tool_name.to_lowercase()) {
                     let plugin_data = plugin_list.get(&tool_name.to_lowercase()).expect(&format!("Unrecognized plugin name {}.", tool_name));

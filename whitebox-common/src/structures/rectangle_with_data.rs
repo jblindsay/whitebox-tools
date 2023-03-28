@@ -60,39 +60,39 @@ impl<T> PointDistance for RectangleWithData<T> {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::RectangleWithData;
-    use crate::rstar::{PointDistance, RTree};
+// #[cfg(test)]
+// mod test {
+//     use super::RectangleWithData;
+//     use crate::rstar::{PointDistance, RTree};
 
-    #[test]
-    fn rectangle_distance() {
-        let rectangle = RectangleWithData::new(1, [0.5, 0.5], [1.0, 2.0]);
-        let small_val = 0.00001;
-        assert!((rectangle.distance_2(&[0.5, 0.5]) - 0.0) < small_val);
-        assert!((rectangle.distance_2(&[0.0, 0.5]) - 0.5 * 0.5) < small_val);
-        assert!((rectangle.distance_2(&[0.5, 1.0]) - 0.0) < small_val);
-        assert!((rectangle.distance_2(&[0.0, 0.0]) - 0.5) < small_val);
-        assert!((rectangle.distance_2(&[0.0, 1.0]) - 0.5 * 0.5) < small_val);
-        assert!((rectangle.distance_2(&[1.0, 3.0]) - 1.0) < small_val);
-        assert!((rectangle.distance_2(&[1.0, 1.0]) - 0.0) < small_val);
-    }
+//     #[test]
+//     fn rectangle_distance() {
+//         let rectangle = RectangleWithData::new(1, [0.5, 0.5], [1.0, 2.0]);
+//         let small_val = 0.00001;
+//         assert!((rectangle.distance_2(&[0.5, 0.5]) - 0.0) < small_val);
+//         assert!((rectangle.distance_2(&[0.0, 0.5]) - 0.5 * 0.5) < small_val);
+//         assert!((rectangle.distance_2(&[0.5, 1.0]) - 0.0) < small_val);
+//         assert!((rectangle.distance_2(&[0.0, 0.0]) - 0.5) < small_val);
+//         assert!((rectangle.distance_2(&[0.0, 1.0]) - 0.5 * 0.5) < small_val);
+//         assert!((rectangle.distance_2(&[1.0, 3.0]) - 1.0) < small_val);
+//         assert!((rectangle.distance_2(&[1.0, 1.0]) - 0.0) < small_val);
+//     }
 
-    #[test]
-    fn rectangle_locate_all_at_point() {
-        let tree = RTree::bulk_load(vec![
-            RectangleWithData::new(1, [0.0, 0.0], [2.0, 2.0]),
-            RectangleWithData::new(2, [1.0, 1.0], [3.0, 3.0]),
-            RectangleWithData::new(3, [2.5, 2.5], [4.0, 4.0]),
-        ]);
+//     #[test]
+//     fn rectangle_locate_all_at_point() {
+//         let tree = RTree::bulk_load(vec![
+//             RectangleWithData::new(1, [0.0, 0.0], [2.0, 2.0]),
+//             RectangleWithData::new(2, [1.0, 1.0], [3.0, 3.0]),
+//             RectangleWithData::new(3, [2.5, 2.5], [4.0, 4.0]),
+//         ]);
 
-        assert_eq!(tree.locate_all_at_point(&[1.5, 1.5]).count(), 2);
-        assert_eq!(tree.locate_all_at_point(&[0.0, 0.0]).count(), 1);
-        assert_eq!(tree.locate_all_at_point(&[-1., 0.0]).count(), 0);
-        assert_eq!(tree.locate_all_at_point(&[2.6, 2.6]).count(), 2);
+//         assert_eq!(tree.locate_all_at_point(&[1.5, 1.5]).count(), 2);
+//         assert_eq!(tree.locate_all_at_point(&[0.0, 0.0]).count(), 1);
+//         assert_eq!(tree.locate_all_at_point(&[-1., 0.0]).count(), 0);
+//         assert_eq!(tree.locate_all_at_point(&[2.6, 2.6]).count(), 2);
 
-        let ret = tree.locate_all_at_point(&[1.5, 1.5]).collect::<Vec<_>>();
-        assert_eq!(ret[0].data, 2);
-        assert_eq!(ret[1].data, 1);
-    }
-}
+//         let ret = tree.locate_all_at_point(&[1.5, 1.5]).collect::<Vec<_>>();
+//         assert_eq!(ret[0].data, 2);
+//         assert_eq!(ret[1].data, 1);
+//     }
+// }

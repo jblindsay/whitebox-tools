@@ -56,19 +56,23 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 2.3.0 (XX-XX-202X)
-- Added the new Whitebox Runner v2.0. This is a whole new program with many advancements over the
-  previous version of the WbRunner. It is now written in pure Rust (compared with the old Python
-  TkInter app) using the egui user-interface library. It has a more modern feel, is cross-platform,
-  and has no dependencies (including Python). You can now open multiple tools simultaneously. 
-- Added the IndividualTreeDetection tool for intentifying points in a LiDAR point cloud that are associated 
-  with the tops of individual trees.
-- Added the NormalizeLidar tool for normalizing LiDAR point clouds, i.e., converting their z-values 
-  from elevation to height-above-ground.
+Version 2.3.0 (30-03-2023)
+- Added the new Whitebox Runner v2.0. This version of WbRunner is an entirely new application with many 
+  advancements over the previous version of the WbRunner. It is now written in pure Rust (compared with 
+  the old Python TkInter app) using the egui user-interface library. It has a more modern feel, is 
+  cross-platform, and has no dependencies (including Python). You can now open multiple tools simultaneously. 
+- WbRunner is now the preferred way now for installing the Whitebox Toolset Extension (WTE).
 - Added the LaunchWbRunner and InstallWbExtension tools so that the Whitebox Runner will be more 
   accessible from other Whitebox frontends. This way users will always have a good fall-back if the 
   frontend is not up-to-date with the WBT backend, since WbRunner is always current with the installed 
-  version of WBT. Also, the WbRunner is the preferred way now for installing Whitebox extensions.
+  version of WBT.
+- Added the IndividualTreeDetection tool for identifying points in a LiDAR point cloud that are associated 
+  with the tops of individual trees.
+- Added the NormalizeLidar tool for normalizing LiDAR point clouds, i.e., converting their z-values 
+  from elevation to height-above-ground.
+- Natural Resources Canada (NRCan) has sponsored the open-sourcing of two tools contained in the extension,
+  VectorStreamNetworkAnalysis and RepairStreamVectorTopology. These two tools are are now available in the 
+  WbT Open Core.
 - Fixed a bug with the LidarShift tool. The tool was calculating the shift in transformed coordinates
   incorrectly leading to very strange outputs.
 - The MultiscaleTopographicPositionImage tool now takes an optional hillshade image as input.

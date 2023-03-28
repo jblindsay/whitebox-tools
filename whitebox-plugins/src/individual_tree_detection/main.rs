@@ -24,7 +24,7 @@ use std::thread;
 
 /// This tool can be used to identify points in a LiDAR point cloud that are associated with the tops of individual trees. The
 /// tool takes a LiDAR point cloud as an input (`input_lidar`) and it is best if the input file has been normalized using the
-/// `lidar_tophat_transform` function, such that points record height above the ground surface. Note that the `input` 
+/// `NormalizeLidar` or `LidarTophatTransform` tools, such that points record height above the ground surface. Note that the `input` 
 /// parameter is optional and if left unspecified the tool will search for all valid LiDAR (*.las, *.laz, *.zlidar) files 
 /// contained within the current working directory. This 'batch mode' operation is common among many of the LiDAR processing 
 /// tools. Output vectors are saved to disc automatically for each processed LiDAR file when operating in batch mode.
@@ -46,8 +46,10 @@ use std::thread;
 /// simply set the `only_use_veg` parameter to True. This parameter should only be set to True when you know that the
 /// input file contains point classifications, otherwise the tool may generate an empty output vector file.
 /// 
+/// ![](../../doc_img/IndividualTreeDetection.png)
+/// 
 /// # See Also
-/// `LidarTophatTransform`
+/// `NormalizeLidar`, `LidarTophatTransform`
 fn main() {
     let args: Vec<String> = env::args().collect();
 

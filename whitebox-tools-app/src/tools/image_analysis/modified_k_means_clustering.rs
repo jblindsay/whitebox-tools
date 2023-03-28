@@ -435,8 +435,8 @@ impl WhiteboxTool for ModifiedKMeansClustering {
         // initialize the class centres randomly
         let mut rng = thread_rng();
         for a in 0..num_classes {
-            let row = rng.gen_range(0, rows); // Range::new(0, rows).ind_sample(&mut rng);
-            let col = rng.gen_range(0, columns); // Range::new(0, columns).ind_sample(&mut rng);
+            let row = rng.gen_range(0..rows); // Range::new(0, rows).ind_sample(&mut rng);
+            let col = rng.gen_range(0..columns); // Range::new(0, columns).ind_sample(&mut rng);
             for i in 0..num_files {
                 //let between = Range::new(minimum[i], maximum[i]);
                 // class_centres[a][i] = between.ind_sample(&mut rng);

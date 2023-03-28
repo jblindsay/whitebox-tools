@@ -1,6 +1,6 @@
 [package]
 name = "whitebox_plugins"
-version = "2.0.0"
+version = "2.3.0"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 edition = "2021"
 
@@ -69,6 +69,10 @@ name = "raster_calculator"
 path = "src/raster_calculator/main.rs"
 
 [[bin]]
+name = "repair_stream_vector_topology"
+path = "src/repair_stream_vector_topology/main.rs"
+
+[[bin]]
 name = "rho8_flow_accumulation"
 path = "src/rho8_flow_accumulation/main.rs"
 
@@ -80,12 +84,18 @@ path = "src/split_vector_lines/main.rs"
 name = "travelling_salesman_problem"
 path = "src/travelling_salesman_problem/main.rs"
 
+[[bin]]
+name = "vector_stream_network_analysis"
+path = "src/vector_stream_network_analysis/main.rs"
+
 [dependencies]
 fasteval = "0.2.4"
 kd-tree = { version = "0.4.1", features = ["rayon"] }
+kdtree = "0.6.0"
 nalgebra = "0.18.0"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
+rstar = "0.9.3"
 tsp-rs = "0.1.0"
 typenum = "1.15.0"
 whitebox_common = { path = "../whitebox-common" }

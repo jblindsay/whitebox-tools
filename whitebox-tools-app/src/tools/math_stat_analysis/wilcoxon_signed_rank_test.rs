@@ -6,7 +6,7 @@ Last Modified: 25/10/2019
 License: MIT
 */
 
-use self::statrs::distribution::{Normal, Univariate};
+use self::statrs::distribution::{ContinuousCDF, Normal};
 use whitebox_raster::*;
 use whitebox_common::rendering::html::*;
 use whitebox_common::rendering::LineGraph;
@@ -350,8 +350,8 @@ impl WhiteboxTool for WilcoxonSignedRankTest {
             let (mut row, mut col): (isize, isize);
             let mut sample_num = 0usize;
             while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize);
-                col = rng.gen_range(0, columns as isize);
+                row = rng.gen_range(0..rows as isize);
+                col = rng.gen_range(0..columns as isize);
                 z1 = input1.get_value(row, col);
                 z2 = input2.get_value(row, col);
                 if z1 != nodata1 && z2 != nodata2 {

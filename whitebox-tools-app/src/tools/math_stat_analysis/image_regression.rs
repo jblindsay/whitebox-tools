@@ -6,7 +6,7 @@ Last Modified: 18/10/2019
 License: MIT
 */
 
-use self::statrs::distribution::{FisherSnedecor, StudentsT, Univariate};
+use self::statrs::distribution::{ContinuousCDF, FisherSnedecor, StudentsT};
 use whitebox_raster::*;
 use whitebox_common::rendering::Scattergram;
 use crate::tools::*;
@@ -757,8 +757,8 @@ impl WhiteboxTool for ImageRegression {
             let mut sample_num = 0usize;
             let (mut x, mut y): (f64, f64);
             while sample_num < num_samples {
-                let row = rng.gen_range(0, rows as isize);
-                let col = rng.gen_range(0, columns as isize);
+                let row = rng.gen_range(0..rows as isize);
+                let col = rng.gen_range(0..columns as isize);
                 x = input1.get_value(row, col);
                 y = input2.get_value(row, col);
                 if x != nodata1 && y != nodata2 {

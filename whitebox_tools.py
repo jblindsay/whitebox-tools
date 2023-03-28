@@ -727,6 +727,7 @@ Okay, that's it for now.
     
     
     
+    
     ##############
     # Data Tools #
     ##############
@@ -906,7 +907,7 @@ Okay, that's it for now.
         return self.run_tool('merge_vectors', args, callback) # returns 1 if error
 
     def modify_no_data_value(self, i, new_value="-32768.0", callback=None):
-        """Converts nodata values in a raster to zero.
+        """Modifies nodata values in a raster.
 
         Keyword arguments:
 
@@ -1068,7 +1069,7 @@ Okay, that's it for now.
         return self.run_tool('remove_raster_polygon_holes', args, callback) # returns 1 if error
 
     def set_nodata_value(self, i, output, back_value=0.0, callback=None):
-        """Assign a specified value in an input image to the NoData value.
+        """Assign the NoData value for an input image.
 
         Keyword arguments:
 
@@ -1478,7 +1479,7 @@ Okay, that's it for now.
         return self.run_tool('find_lowest_or_highest_points', args, callback) # returns 1 if error
 
     def heat_map(self, i, output, weight_field=None, bandwidth="", kernel="quartic", cell_size="", base=None, callback=None):
-        """This tool calculates a heat map, or kernel density estimation (KDE), for an input point set.
+        """Calculates a heat map, or kernel density estimation (KDE), for an input point set.
 
         Keyword arguments:
 
@@ -1882,7 +1883,7 @@ Okay, that's it for now.
         return self.run_tool('smooth_vectors', args, callback) # returns 1 if error
 
     def split_vector_lines(self, i, output, length=None, callback=None):
-        """This tool can be used to split a vector line coverage into even-lengthed segments.
+        """Used to split a vector line coverage into even-lengthed segments.
 
         Keyword arguments:
 
@@ -1922,7 +1923,7 @@ Okay, that's it for now.
         return self.run_tool('tin_gridding', args, callback) # returns 1 if error
 
     def travelling_salesman_problem(self, i, output, duration=60, callback=None):
-        """This tool finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.
+        """Finds approximate solutions to travelling salesman problems, the goal of which is to identify the shortest route connecting a set of locations.
 
         Keyword arguments:
 
@@ -2105,7 +2106,7 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('clip', args, callback) # returns 1 if error
 
-    def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=True, callback=None):
+    def clip_raster_to_polygon(self, i, polygons, output, maintain_dimensions=False, callback=None):
         """Clips a raster to a vector polygon.
 
         Keyword arguments:
@@ -2895,6 +2896,28 @@ Okay, that's it for now.
         args.append("--zfactor={}".format(zfactor))
         return self.run_tool('curvedness', args, callback) # returns 1 if error
 
+    def dem_void_filling(self, dem, fill, output, mean_plane_dist=20, edge_treatment="use DEM", weight_value=2.0, callback=None):
+        """This tool can be used to fill the void areas of a DEM using another fill DEM data set.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file, containing the void areas. 
+        fill -- Name of the input fill DEM file, containing the values used to fill the void areas in the other DEM. 
+        output -- Name of the output void-filled DEM file. 
+        mean_plane_dist -- Distance to void edge at which the mean-plane value is used as an offset, measured in grid cells. 
+        edge_treatment -- How should void-edge cells be treated? Options include 'use DEM' (default), 'use Fill', 'average'. 
+        weight_value -- Weight value used for IDW interpolation (default is 2.0). 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--fill='{}'".format(fill))
+        args.append("--output='{}'".format(output))
+        args.append("--mean_plane_dist={}".format(mean_plane_dist))
+        args.append("--edge_treatment={}".format(edge_treatment))
+        args.append("--weight_value={}".format(weight_value))
+        return self.run_tool('dem_void_filling', args, callback) # returns 1 if error
+
     def dev_from_mean_elev(self, dem, output, filterx=11, filtery=11, callback=None):
         """Calculates deviation from mean elevation.
 
@@ -3102,7 +3125,7 @@ Okay, that's it for now.
         return self.run_tool('embankment_mapping', args, callback) # returns 1 if error
 
     def exposure_towards_wind_flux(self, dem, output, azimuth="", max_dist="", zfactor="", callback=None):
-        """This tool evaluates hydrologic connectivity within a DEM.
+        """Evaluates hydrologic connectivity within a DEM.
 
         Keyword arguments:
 
@@ -3218,7 +3241,7 @@ Okay, that's it for now.
         return self.run_tool('gaussian_curvature', args, callback) # returns 1 if error
 
     def gaussian_scale_space(self, dem, output, output_zscore, output_scale, points=None, sigma=0.5, step=0.5, num_steps=10, lsp="Slope", z_factor=None, callback=None):
-        """This tool uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.
+        """Uses the fast Gaussian approximation algorithm to produce scaled land-surface parameter measurements from an input DEM.
 
         Keyword arguments:
 
@@ -3418,7 +3441,7 @@ Okay, that's it for now.
         return self.run_tool('local_hypsometric_analysis', args, callback) # returns 1 if error
 
     def local_quadratic_regression(self, dem, output, filter=3, callback=None):
-        """This tool is an implementation of the constrained quadratic regression algorithm using a flexible window size described in Wood (1996).
+        """An implementation of the constrained quadratic regression algorithm using a flexible window size described in Wood (1996).
 
         Keyword arguments:
 
@@ -3692,6 +3715,36 @@ Okay, that's it for now.
         if zfactor is not None: args.append("--zfactor='{}'".format(zfactor))
         if full_mode: args.append("--full_mode")
         return self.run_tool('multidirectional_hillshade', args, callback) # returns 1 if error
+
+    def multiscale_curvatures(self, dem, out_mag, curv_type="ProfileCurv", out_scale=None, min_scale=0, step=1, num_steps=1, step_nonlinearity=1.0, log=True, standardize=False, callback=None):
+        """This tool calculates several multiscale curvatures and curvature-based indices from an input DEM.
+
+        Keyword arguments:
+
+        dem -- Name of the input raster DEM file. 
+        curv_type -- Curvature type. 
+        out_mag -- Output raster magnitude file. 
+        out_scale -- Output raster scale file. 
+        min_scale -- Minimum search neighbourhood radius in grid cells. 
+        step -- Step size as any positive non-zero integer. 
+        num_steps -- Number of steps. 
+        step_nonlinearity -- Step nonlinearity factor (1.0-2.0 is typical). 
+        log -- Display output values using a log-scale. 
+        standardize -- Should each scale be standardized to z-scores?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--curv_type={}".format(curv_type))
+        args.append("--out_mag='{}'".format(out_mag))
+        if out_scale is not None: args.append("--out_scale='{}'".format(out_scale))
+        args.append("--min_scale={}".format(min_scale))
+        args.append("--step={}".format(step))
+        args.append("--num_steps={}".format(num_steps))
+        args.append("--step_nonlinearity={}".format(step_nonlinearity))
+        if log: args.append("--log")
+        if standardize: args.append("--standardize")
+        return self.run_tool('multiscale_curvatures', args, callback) # returns 1 if error
 
     def multiscale_elevation_percentile(self, dem, out_mag, out_scale, sig_digits=3, min_scale=4, step=1, num_steps=10, step_nonlinearity=1.0, callback=None):
         """Calculates surface roughness over a range of spatial scales.
@@ -4357,6 +4410,40 @@ Okay, that's it for now.
         args.append("--end_time={}".format(end_time))
         return self.run_tool('time_in_daylight', args, callback) # returns 1 if error
 
+    def topo_render(self, dem, output, palette="soft", rev_palette=False, az=315.0, alt=30.0, background_hgt_offset=10.0, polygon=None, background_clr="[255, 255, 255]", attenuation=0.6, ambient_light=0.2, z_factor=1.0, callback=None):
+        """This tool creates a pseudo-3D rendering from an input DEM, for the purpose of effective topographic visualization.
+
+        Keyword arguments:
+
+        dem -- Name of the input digital elevation model (DEM) raster file. 
+        output -- Name of the output raster file. 
+        palette -- Palette name; options are 'atlas', 'high_relief', 'arid', 'soft', 'earthtones', 'muted', 'light_quant', 'purple', 'viridi', 'gn_yl', 'pi_y_g', 'bl_yl_rd', 'deep', 'imhof', and 'white'. 
+        rev_palette -- Reverse the palette?. 
+        az -- Light source azimuth direction (degrees, 0-360). 
+        alt -- Light source altitude (degrees, 0-90). 
+        background_hgt_offset -- Offset height of background, in z-units. 
+        polygon -- Clipping polygon vector file (optional). 
+        background_clr -- Background red-green-blue (RGB) or red-green-blue-alpha (RGBA) colour, e.g. '[255, 255, 245]', '[255, 255, 245, 200]'. 
+        attenuation -- Attenuation parameter. Range is 0-4. Zero means no attenuation. 
+        ambient_light -- Ambient light parameter. Range is 0.0-0.7. Zero means no ambient light. 
+        z_factor -- Elevation multiplier, or a vertical exageration. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--dem='{}'".format(dem))
+        args.append("--output='{}'".format(output))
+        args.append("--palette={}".format(palette))
+        if rev_palette: args.append("--rev_palette")
+        args.append("--az={}".format(az))
+        args.append("--alt={}".format(alt))
+        args.append("--background_hgt_offset={}".format(background_hgt_offset))
+        if polygon is not None: args.append("--polygon='{}'".format(polygon))
+        args.append("--background_clr={}".format(background_clr))
+        args.append("--attenuation={}".format(attenuation))
+        args.append("--ambient_light={}".format(ambient_light))
+        args.append("--z_factor={}".format(z_factor))
+        return self.run_tool('topo_render', args, callback) # returns 1 if error
+
     def topographic_position_animation(self, i, output, palette="bl_yl_rd", min_scale=1, num_steps=100, step_nonlinearity=1.5, height=600, delay=250, label="", dev_max=False, callback=None):
         """This tool creates an animated GIF of multi-scale local topographic position (elevation deviation).
 
@@ -4812,7 +4899,7 @@ Okay, that's it for now.
         return self.run_tool('downslope_flowpath_length', args, callback) # returns 1 if error
 
     def edge_contamination(self, dem, output, flow_type="mfd", zfactor="", callback=None):
-        """This tool identifies grid cells within an input DEM that may be impacted by edge contamination for hydrological applications.
+        """Identifies grid cells within an input DEM that may be impacted by edge contamination for hydrological applications.
 
         Keyword arguments:
 
@@ -5250,7 +5337,7 @@ Okay, that's it for now.
         return self.run_tool('max_upslope_flowpath_length', args, callback) # returns 1 if error
 
     def max_upslope_value(self, dem, values, output, callback=None):
-        """This tool calculates the maximum upslope value from an input values raster along flowpaths.
+        """Calculates the maximum upslope value from an input values raster along flowpaths.
 
         Keyword arguments:
 
@@ -5304,7 +5391,7 @@ Okay, that's it for now.
         return self.run_tool('num_inflowing_neighbours', args, callback) # returns 1 if error
 
     def qin_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=10.0, max_slope=45.0, threshold=None, log=False, clip=False, callback=None):
-        """This tool calculates Qin et al. (2007) flow accumulation.
+        """Calculates Qin et al. (2007) flow accumulation.
 
         Keyword arguments:
 
@@ -5330,7 +5417,7 @@ Okay, that's it for now.
         return self.run_tool('qin_flow_accumulation', args, callback) # returns 1 if error
 
     def quinn_flow_accumulation(self, dem, output, out_type="specific contributing area", exponent=1.0, threshold=None, log=False, clip=False, callback=None):
-        """This tool calculates Quinn et al. (1995) flow accumulation.
+        """Calculates Quinn et al. (1995) flow accumulation.
 
         Keyword arguments:
 
@@ -5374,7 +5461,7 @@ Okay, that's it for now.
         return self.run_tool('raise_walls', args, callback) # returns 1 if error
 
     def rho8_flow_accumulation(self, i, output, out_type="specific contributing area", log=False, clip=False, pntr=False, esri_pntr=False, callback=None):
-        """This tool calculates Fairfield and Leymarie (1991) flow accumulation.
+        """Calculates Fairfield and Leymarie (1991) flow accumulation.
 
         Keyword arguments:
 
@@ -7237,13 +7324,37 @@ Okay, that's it for now.
         Keyword arguments:
 
         i -- Input LiDAR file (including extension). 
-        output -- Output raster file (including extension). 
+        output -- Output lidar file (including extension). 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         return self.run_tool('height_above_ground', args, callback) # returns 1 if error
+
+    def individual_tree_detection(self, i=None, output=None, min_search_radius=1.0, min_height=0.0, max_search_radius="", max_height="", only_use_veg=False, callback=None):
+        """Identifies points in a LiDAR point cloud that are associated with the tops of individual trees.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR file. 
+        output -- Name of the output vector points file. 
+        min_search_radius -- Minimum search radius (m). 
+        min_height -- Minimum height (m). 
+        max_search_radius -- Maximum search radius (m). 
+        max_height -- Maximum height (m). 
+        only_use_veg -- Only use veg. class points?. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        if i is not None: args.append("--input='{}'".format(i))
+        if output is not None: args.append("--output='{}'".format(output))
+        args.append("--min_search_radius={}".format(min_search_radius))
+        args.append("--min_height={}".format(min_height))
+        args.append("--max_search_radius={}".format(max_search_radius))
+        args.append("--max_height={}".format(max_height))
+        if only_use_veg: args.append("--only_use_veg")
+        return self.run_tool('individual_tree_detection', args, callback) # returns 1 if error
 
     def las_to_ascii(self, inputs, callback=None):
         """Converts one or more LAS files into ASCII text files.
@@ -7395,7 +7506,7 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         return self.run_tool('lidar_colourize', args, callback) # returns 1 if error
 
-    def lidar_contour(self, i=None, output=None, interval=10.0, smooth=5, parameter="elevation", returns="all", exclude_cls=None, minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
+    def lidar_contour(self, i=None, output=None, interval=10.0, base=0.0, smooth=5, parameter="elevation", returns="all", exclude_cls=None, minz=None, maxz=None, max_triangle_edge_length=None, callback=None):
         """This tool creates a vector contour coverage from an input LiDAR point file.
 
         Keyword arguments:
@@ -7403,6 +7514,7 @@ Okay, that's it for now.
         i -- Name of the input LiDAR points. 
         output -- Name of the output vector lines file. 
         interval -- Contour interval. 
+        base -- Base contour. 
         smooth -- Smoothing filter size (in num. points), e.g. 3, 5, 7, 9, 11. 
         parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'user_data'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
@@ -7416,6 +7528,7 @@ Okay, that's it for now.
         if i is not None: args.append("--input='{}'".format(i))
         if output is not None: args.append("--output='{}'".format(output))
         args.append("--interval={}".format(interval))
+        args.append("--base={}".format(base))
         args.append("--smooth={}".format(smooth))
         args.append("--parameter={}".format(parameter))
         args.append("--returns={}".format(returns))
@@ -7664,7 +7777,7 @@ Okay, that's it for now.
 
         i -- Input LiDAR file (including extension). 
         output -- Output raster file (including extension). 
-        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data'. 
+        parameter -- Interpolation parameter; options are 'elevation' (default), 'intensity', 'class', 'return_number', 'number_of_returns', 'scan angle', 'rgb', 'user data', 'time'. 
         returns -- Point return types to include; options are 'all' (default), 'last', 'first'. 
         resolution -- Output raster's grid resolution. 
         radius -- Search Radius. 
@@ -8156,6 +8269,22 @@ Okay, that's it for now.
         args.append("--output='{}'".format(output))
         args.append("--radius={}".format(radius))
         return self.run_tool('normal_vectors', args, callback) # returns 1 if error
+
+    def normalize_lidar(self, i, output, dtm, callback=None):
+        """Normalizes a LiDAR point cloud.
+
+        Keyword arguments:
+
+        i -- Name of the input LiDAR file. 
+        output -- Name of the output LiDAR file. 
+        dtm -- Name of the input digital terrain model (DTM) raster file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        args.append("--output='{}'".format(output))
+        args.append("--dtm='{}'".format(dtm))
+        return self.run_tool('normalize_lidar', args, callback) # returns 1 if error
 
     def recover_flightline_info(self, i, output, max_time_diff=5.0, pt_src_id=False, user_data=False, rgb=False, callback=None):
         """Associates LiDAR points by their flightlines.
@@ -8740,7 +8869,7 @@ Okay, that's it for now.
 
         Keyword arguments:
 
-        i -- Input raster file. 
+        i -- Input vector file. 
         field -- Input field name in attribute table. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
         callback -- Custom function for handling tool text outputs.
@@ -8786,7 +8915,7 @@ Okay, that's it for now.
         return self.run_tool('ceil', args, callback) # returns 1 if error
 
     def conditional_evaluation(self, i, output, statement="", true=None, false=None, callback=None):
-        """This tool performs a conditional evaluation (if-then-else) operation on a raster.
+        """Performs a conditional evaluation (if-then-else) operation on a raster.
 
         Keyword arguments:
 
@@ -9260,7 +9389,7 @@ Okay, that's it for now.
 
         Keyword arguments:
 
-        i -- Input raster file. 
+        i -- Input vector file. 
         field -- Input field name in attribute table. 
         output -- Output HTML file (default name will be based on input file if unspecified). 
         callback -- Custom function for handling tool text outputs.
@@ -9270,6 +9399,18 @@ Okay, that's it for now.
         args.append("--field='{}'".format(field))
         args.append("--output='{}'".format(output))
         return self.run_tool('list_unique_values', args, callback) # returns 1 if error
+
+    def list_unique_values_raster(self, i, callback=None):
+        """Lists the unique values contained in a field within a vector's attribute table.
+
+        Keyword arguments:
+
+        i -- Input vector file. 
+        callback -- Custom function for handling tool text outputs.
+        """
+        args = []
+        args.append("--input='{}'".format(i))
+        return self.run_tool('list_unique_values_raster', args, callback) # returns 1 if error
 
     def ln(self, i, output, callback=None):
         """Returns the natural logarithm of values in a raster.
@@ -9522,7 +9663,7 @@ Okay, that's it for now.
         return self.run_tool('random_sample', args, callback) # returns 1 if error
 
     def raster_calculator(self, output, statement="", callback=None):
-        """This tool performs a complex mathematical operations on one or more input raster images on a cell-to-cell basis.
+        """Performs a complex mathematical operations on one or more input raster images on a cell-to-cell basis.
 
         Keyword arguments:
 

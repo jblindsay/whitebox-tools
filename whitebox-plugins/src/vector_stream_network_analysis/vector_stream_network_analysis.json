@@ -1,0 +1,51 @@
+{
+    "tool_name": "VectorStreamNetworkAnalysis",
+    "exe": "vector_stream_network_analysis",
+    "short_description": "This tool performs common stream network analysis operations on an input vector stream file.",
+    "help": "This tool performs common stream network analysis operations on an input vector stream file.",
+    "toolbox": "Stream Network Analysis",
+    "license": "MIT",
+    "example": ">> .*EXE_NAME -r=VectorStreamNetworkAnalysis --streams=rivers.shp --dem=DEM.tif -o=network_analysis.shp --cutting_height=10.0 --snap=1.0",
+    "parameters": [
+        {
+            "name": "Input Streams Vector",
+            "flags": ["--streams"],
+            "description": "Name of the input streams vector file.",
+            "parameter_type": {"ExistingFile":{"Vector":"Line"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Input DEM Raster",
+            "flags": ["--dem"],
+            "description": "Name of the input DEM raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Lines",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output lines shapefile.",
+            "parameter_type": {"NewFile":{"Vector":"Line"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Maximum Ridge-cutting Height (z units)",
+            "flags": ["--cutting_height"],
+            "description": "Maximum ridge-cutting height (z units).",
+            "parameter_type": "Float",
+            "default_value": "10.0",
+            "optional": true
+        },
+        {
+            "name": "Snap Distance",
+            "flags": ["--snap"],
+            "description": "Snap distance, in xy units (metres).",
+            "parameter_type": "Float",
+            "default_value": "0.1",
+            "optional": true
+        }
+    ]
+}
