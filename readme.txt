@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 2.3.0 (30-03-2023)
+Version 2.3.0 (28-03-2023)
 - Added the new Whitebox Runner v2.0. This version of WbRunner is an entirely new application with many 
   advancements over the previous version of the WbRunner. It is now written in pure Rust (compared with 
   the old Python TkInter app) using the egui user-interface library. It has a more modern feel, is 
