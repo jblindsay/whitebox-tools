@@ -231,8 +231,8 @@ impl WhiteboxTool for RandomSample {
         let mut sample_num = 0usize;
         let mut num_tries = 0usize;
         while sample_num < num_samples {
-            let row = rng.gen_range(0, rows as isize); //row_rng.ind_sample(&mut rng);
-            let col = rng.gen_range(0, columns as isize); //col_rng.ind_sample(&mut rng);
+            let row = rng.gen_range(0..rows as isize); //row_rng.ind_sample(&mut rng);
+            let col = rng.gen_range(0..columns as isize); //col_rng.ind_sample(&mut rng);
             if output.get_value(row, col) == 0f64 && input.get_value(row, col) != nodata {
                 sample_num += 1;
                 output.set_value(row, col, sample_num as f64);

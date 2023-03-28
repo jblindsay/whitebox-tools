@@ -10,7 +10,7 @@ use crate::tools::*;
 use whitebox_vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use statrs::distribution::{StudentsT, Univariate};
+use statrs::distribution::{ContinuousCDF, StudentsT};
 use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;

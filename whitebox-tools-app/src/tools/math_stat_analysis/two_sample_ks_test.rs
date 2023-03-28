@@ -300,8 +300,8 @@ impl WhiteboxTool for TwoSampleKsTest {
             let (mut row, mut col): (isize, isize);
             let mut sample_num = 0usize;
             while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize);
-                col = rng.gen_range(0, columns as isize);
+                row = rng.gen_range(0..rows as isize);
+                col = rng.gen_range(0..columns as isize);
                 z1 = input1.get_value(row, col);
                 if z1 != nodata1 {
                     data1.push(z1);
@@ -320,8 +320,8 @@ impl WhiteboxTool for TwoSampleKsTest {
 
             sample_num = 0usize;
             while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize);
-                col = rng.gen_range(0, columns as isize);
+                row = rng.gen_range(0..rows as isize);
+                col = rng.gen_range(0..columns as isize);
                 z2 = input2.get_value(row, col);
                 if z2 != nodata2 {
                     data2.push(z2);

@@ -319,28 +319,28 @@ impl WhiteboxTool for TurningBandsSimulation {
             // assign the spatially autocorrelated data line an equation of a transect of the grid
             // first, pick two points on different edges of the grid at random.
             // Edges are as follows 0 = left, 1 = top, 2 = right, and 3 = bottom
-            let edge1 = rng.gen_range(0, 4); //between.ind_sample(&mut rng);
+            let edge1 = rng.gen_range(0..4); //between.ind_sample(&mut rng);
             let mut edge2 = edge1;
             while edge2 == edge1 {
-                edge2 = rng.gen_range(0, 4); //between.ind_sample(&mut rng);
+                edge2 = rng.gen_range(0..4); //between.ind_sample(&mut rng);
             }
 
             match edge1 {
                 0 => {
                     pnt1x = 0f64;
-                    pnt1y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                    pnt1y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                 }
                 1 => {
-                    pnt1x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                    pnt1x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt1y = 0f64;
                 }
                 2 => {
                     pnt1x = (columns - 1) as f64;
-                    pnt1y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                    pnt1y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                 }
                 _ => {
                     // 3
-                    pnt1x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                    pnt1x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt1y = (rows - 1) as f64;
                 }
             }
@@ -348,19 +348,19 @@ impl WhiteboxTool for TurningBandsSimulation {
             match edge2 {
                 0 => {
                     pnt2x = 0f64;
-                    pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                    pnt2y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                 }
                 1 => {
-                    pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                    pnt2x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt2y = 0f64;
                 }
                 2 => {
                     pnt2x = (columns - 1) as f64;
-                    pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                    pnt2y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                 }
                 _ => {
                     // 3
-                    pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                    pnt2x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                     pnt2y = (rows - 1) as f64;
                 }
             }
@@ -370,19 +370,19 @@ impl WhiteboxTool for TurningBandsSimulation {
                     match edge2 {
                         0 => {
                             pnt2x = 0f64;
-                            pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                            pnt2y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                         }
                         1 => {
-                            pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                            pnt2x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                             pnt2y = 0f64;
                         }
                         2 => {
                             pnt2x = (columns - 1) as f64;
-                            pnt2y = rng2.gen_range(0, rows as isize) as f64; //between_rows.ind_sample(&mut rng);
+                            pnt2y = rng2.gen_range(0..rows as isize) as f64; //between_rows.ind_sample(&mut rng);
                         }
                         _ => {
                             // 3
-                            pnt2x = rng2.gen_range(0, columns as isize) as f64; //between_cols.ind_sample(&mut rng);
+                            pnt2x = rng2.gen_range(0..columns as isize) as f64; //between_cols.ind_sample(&mut rng);
                             pnt2y = (rows - 1) as f64;
                         }
                     }

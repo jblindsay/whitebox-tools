@@ -1,0 +1,35 @@
+{
+    "tool_name": "RepairStreamVectorTopology",
+    "exe": "repair_stream_vector_topology",
+    "short_description": "This tool resolves topological errors and inconsistencies associated with digitized vector streams.",
+    "help": "This tool resolves topological errors and inconsistencies associated with digitized vector streams.",
+    "toolbox": "Stream Network Analysis",
+    "license": "MIT",
+    "example": ">> .*EXE_NAME -r=RepairStreamVectorTopology --input=streams.shp --output=streams_fixed.shp --snap=2.0",
+    "parameters": [
+        {
+            "name": "Input Vector Lines",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input lines vector file.",
+            "parameter_type": {"ExistingFile":{"Vector":"Line"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Lines",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output lines vector file.",
+            "parameter_type": {"NewFile":{"Vector":"Line"}},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Snap Distance",
+            "flags": ["--snap", "--dist"],
+            "description": "Snap distance, in xy units (metres).",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": false
+        }
+    ]
+}

@@ -350,8 +350,8 @@ impl WhiteboxTool for PairedSampleTTest {
             let (mut row, mut col): (isize, isize);
             let mut sample_num = 0usize;
             while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize);
-                col = rng.gen_range(0, columns as isize);
+                row = rng.gen_range(0..rows as isize);
+                col = rng.gen_range(0..columns as isize);
                 z1 = input1.get_value(row, col);
                 z2 = input2.get_value(row, col);
                 if z1 != nodata1 && z2 != nodata2 {

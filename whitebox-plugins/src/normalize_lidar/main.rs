@@ -43,6 +43,8 @@ use std::thread;
 /// results in some cases, the `NormalizeLidar` tool likely works better under more rugged topography and in areas with 
 /// extensive building coverage, and provides greater control over the definition of the ground surface.
 /// 
+/// ![](../../doc_img/NormalizeLidar.png)
+/// 
 /// # See Also
 /// `LidarTophatTransform`, `IndividualTreeDetection`, `LidarGroundPointFilter`, `ClassifyLidar`
 fn main() {

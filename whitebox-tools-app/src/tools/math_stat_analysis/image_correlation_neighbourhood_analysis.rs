@@ -8,7 +8,7 @@ License: MIT
 
 use whitebox_raster::*;
 use crate::tools::*;
-use statrs::distribution::{StudentsT, Univariate};
+use statrs::distribution::{ContinuousCDF, StudentsT};
 use std::cmp::Ordering::Equal;
 use std::env;
 use std::f64;

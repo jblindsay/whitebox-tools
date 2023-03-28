@@ -297,8 +297,8 @@ impl WhiteboxTool for KsTestForNormality {
             let mut sample_cells = Vec::with_capacity(num_samples);
             let mut sample_num = 0usize;
             while sample_num < num_samples {
-                row = rng.gen_range(0, rows as isize); // row_rng.ind_sample(&mut rng);
-                col = rng.gen_range(0, columns as isize); // col_rng.ind_sample(&mut rng);
+                row = rng.gen_range(0..rows as isize); // row_rng.ind_sample(&mut rng);
+                col = rng.gen_range(0..columns as isize); // col_rng.ind_sample(&mut rng);
                 z = input.get_value(row, col);
                 if z != nodata {
                     bin_num = ((z - min_value) / bin_size).floor() as usize;

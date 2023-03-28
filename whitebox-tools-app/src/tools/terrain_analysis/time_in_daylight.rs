@@ -9,8 +9,7 @@ License: MIT
 use whitebox_raster::Raster;
 use whitebox_common::structures::Array2D;
 use crate::tools::*;
-use chrono::prelude::*;
-use chrono::{Date, FixedOffset, NaiveTime, TimeZone};
+use time::{Date, macros::time, OffsetDateTime, Time, UtcOffset};
 use num_cpus;
 use rayon::prelude::*;
 use std::env;
@@ -253,8 +252,10 @@ impl WhiteboxTool for TimeInDaylight {
         let mut utc_offset = 0f64;
         let mut start_day = 1u32;
         let mut end_day = 365u32;
-        let mut start_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap(); // midnight
-        let mut end_time = NaiveTime::from_hms_opt(23, 59, 59).unwrap(); // the second before midnight
+        // let mut start_time = NaiveTime::from_hms_opt(0, 0, 0).unwrap(); // midnight
+        // let mut end_time = NaiveTime::from_hms_opt(23, 59, 59).unwrap(); // the second before midnight
+        let mut start_time = time!(0:0:0);
+        let mut end_time = time!(23:59:59);
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -413,7 +414,8 @@ impl WhiteboxTool for TimeInDaylight {
                         0i32
                     };
                     if hr >= 0 && hr < 24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 {
-                        start_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
+                        // start_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
+                        start_time = Time::from_hms(hr as u8, min as u8, sec as u8).unwrap();
                     } else {
                         panic!("Invalid start time.");
                     }
@@ -447,7 +449,8 @@ impl WhiteboxTool for TimeInDaylight {
                         0i32
                     };
                     if hr >= 0 && hr < 24 && min >= 0 && min < 60 && sec >= 0 && sec < 60 {
-                        end_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
+                        // end_time = NaiveTime::from_hms_opt(hr as u32, min as u32, sec as u32).unwrap();
+                        end_time = Time::from_hms(hr as u8, min as u8, sec as u8).unwrap();
                     } else {
                         panic!("Invalid end time.");
                     }
@@ -567,8 +570,10 @@ impl WhiteboxTool for TimeInDaylight {
 
         let mut azimuth = 0f32;
         // altitudes_and_durations key: altitude, duration, time (as NaiveTime), day (as ordinal)
+        // let mut altitudes_and_durations =
+        //     vec![(0f32, 0f64, NaiveTime::from_hms_opt(0, 0, 0).unwrap(), 0u32); 365];
         let mut altitudes_and_durations =
-            vec![(0f32, 0f64, NaiveTime::from_hms_opt(0, 0, 0).unwrap(), 0u32); 365];
+            vec![(0f32, 0f64, Time::from_hms(0, 0, 0).unwrap(), 0u32); 365];
         let mut horizon_angle: Array2D<f32> =
             Array2D::new(rows, columns, 0f32, nodata_f32).expect("Error creating Array2D");
         let mut total_daylight = 0f64;
@@ -582,7 +587,7 @@ impl WhiteboxTool for TimeInDaylight {
                     almanac[day - 1].data[bin].altitude as f32,
                     almanac[day - 1].data[bin].duration,
                     almanac[day - 1].data[bin].time,
-                    almanac[day - 1].date.ordinal(),
+                    almanac[day - 1].date.ordinal() as u32,
                 );
                 if altitudes_and_durations[day - 1].3 >= start_day
                     && altitudes_and_durations[day - 1].3 <= end_day
@@ -904,26 +909,42 @@ fn generate_almanac(
     az_interval: f64,
     seconds_interval: usize,
 ) -> Vec<Day> {
-    let hour_sec = 3600f64;
+    // let hour_sec = 3600f64;
     let mut almanac = vec![];
     let mut num_days = 0;
     // let doy = 1; //233;
-    for doy in 1..=366 {
-        let midnight = if utc_offset < 0f64 {
-            FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
-                .yo(2020, doy as u32)
-                .and_hms(0, 0, 0)
-        } else {
-            FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
-                .yo(2020, doy as u32)
-                .and_hms(0, 0, 0)
-        };
+    for doy in 1..366 {
+        // let midnight = if utc_offset < 0f64 {
+        //     FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
+        //         .yo(2020, doy as u32)
+        //         .and_hms_opt(0, 0, 0).unwrap()
+        //         // .from_local_datatime(
+        //         //     NaiveDate::from_yo_opt(2023, doy).unwrap().and_hms_opt(0, 0, 0).unwrap()
+        //         // )
+            
+        // } else {
+        //     FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
+        //         .yo(2020, doy as u32)
+        //         .and_hms_opt(0, 0, 0).unwrap()
+        //         // .from_local_datatime(
+        //         //     NaiveDate::from_yo_opt(2023, doy).unwrap().and_hms_opt(0, 0, 0).unwrap()
+        //         // )
+        // };
+
+        let midnight = Date::from_ordinal_date(2023, doy as u16)
+                            .unwrap()
+                            .with_hms(0, 0, 0)
+                            .unwrap()
+                            .assume_offset(
+                                UtcOffset::from_hms(utc_offset as i8, 0, 0)
+                                .unwrap()
+                            );
 
         let mut diff: f64;
         let mut sunrise = false;
         let num_bins = (360.0f64 / az_interval).ceil() as usize;
         almanac.push(Day {
-            date: midnight.date(),
+            date: midnight,
             sunrise: PositionTime::default(),
             sunset: PositionTime::default(),
             data: vec![PositionTime::default(); num_bins],
@@ -932,16 +953,31 @@ fn generate_almanac(
         for hr in 0..24 {
             for minute in 0..60 {
                 for sec in (0..=45).step_by(seconds_interval) {
-                    let dt = if utc_offset < 0f64 {
-                        FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
-                            .yo(2020, doy as u32)
-                            .and_hms_opt(hr, minute, sec).unwrap()
-                    } else {
-                        FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
-                            .yo(2020, doy as u32)
-                            .and_hms_opt(hr, minute, sec).unwrap()
-                    };
-                    let unixtime = dt.timestamp() * 1000 + dt.timestamp_subsec_millis() as i64;
+                    // let dt = if utc_offset < 0f64 {
+                    //     FixedOffset::west_opt((utc_offset.abs() * hour_sec) as i32).unwrap()
+                    //         // .yo(2020, doy as u32)
+                    //         // .and_hms_opt(hr, minute, sec).unwrap()
+                    //         .from_local_datetime(
+                    //             &NaiveDateTime::new(NaiveDate::from_yo_opt(2023, doy).unwrap(), NaiveTime::from_hms_opt(hr, minute, sec).unwrap())
+                    //         )
+                    // } else {
+                    //     FixedOffset::east_opt((utc_offset * hour_sec) as i32).unwrap()
+                    //         // .yo(2020, doy as u32)
+                    //         // .and_hms_opt(hr, minute, sec).unwrap()
+                    //         .from_local_datetime(
+                    //             &NaiveDateTime::new(NaiveDate::from_yo_opt(2023, doy).unwrap(), NaiveTime::from_hms_opt(hr, minute, sec).unwrap())
+                    //         )
+                    // };
+                    let dt = Date::from_ordinal_date(2023, doy as u16)
+                            .unwrap()
+                            .with_hms(hr as u8, minute as u8, sec as u8)
+                            .unwrap()
+                            .assume_offset(
+                                UtcOffset::from_hms(utc_offset as i8, 0, 0)
+                                .unwrap()
+                            );
+                    // let unixtime = dt.timestamp() * 1000 + dt.timestamp_subsec_millis() as i64;
+                    let unixtime = (dt.unix_timestamp_nanos() / 1000) as i64;
                     let pos = pos(unixtime, latitude, longitude);
                     let az_actual = pos.azimuth.to_degrees();
                     let alt = pos.altitude.to_degrees();
@@ -987,7 +1023,8 @@ fn generate_almanac(
 }
 
 pub struct Day {
-    date: Date<FixedOffset>,
+    // date: Date<FixedOffset>,
+    date: OffsetDateTime,
     sunrise: PositionTime,
     sunset: PositionTime,
     data: Vec<PositionTime>,
@@ -1010,7 +1047,7 @@ pub struct PositionTime {
     azimuth: f64,        // in degrees
     actual_azimuth: f64, // in degrees; because we are finding the closest time/position to the target azimuth, this won't be the same as azimuth, with proximity determined by the temporal resolution
     altitude: f64,       // in degrees
-    time: NaiveTime,
+    time: Time,
     diff: f64,     // only used for the approximation of azimuth
     duration: f64, // in seconds
 }
@@ -1021,7 +1058,7 @@ impl PositionTime {
             azimuth: 0f64,
             actual_azimuth: 0f64,
             altitude: 0f64,
-            time: NaiveTime::from_hms_opt(0, 0, 0).unwrap(),
+            time: Time::from_hms(0, 0, 0).unwrap(),
             diff: 360f64,
             duration: 0f64,
         }

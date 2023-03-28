@@ -6,7 +6,7 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use self::statrs::distribution::{Normal, Univariate};
+use self::statrs::distribution::{ContinuousCDF, Normal};
 use whitebox_raster::*;
 use crate::tools::*;
 use num_cpus;

@@ -2,7 +2,7 @@
 This code is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 21/06/2017
-Last Modified: 30/01/2022
+Last Modified: 23/03/2023
 License: MIT
 */
 
@@ -435,7 +435,7 @@ Example Usage:
 
 fn license() {
     let license_text = "WhiteboxTools License
-Copyright 2017-2022 John Lindsay
+Copyright 2017-2023 John Lindsay
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the \"Software\"), to deal in the Software without restriction,

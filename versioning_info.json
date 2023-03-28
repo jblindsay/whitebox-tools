@@ -1,5 +1,5 @@
 {
-    "wbtVersion": "2.2.0",
+    "wbtVersion": "2.3.0",
     "gteTools": [
     "AccumulationCurvature",
     "AssessRoute",
@@ -49,7 +49,6 @@
     "RecreatePassLines",
     "RemoveFieldEdgePoints",
     "RemoveRasterPolygonHoles",
-    "RepairStreamVectorTopology",
     "RingCurvature",
     "RiverCenterlines",
     "Rotor",
@@ -64,7 +63,6 @@
     "SvmRegression",
     "TopographicPositionAnimation",
     "Unsphericity",
-    "VectorStreamNetworkAnalysis",
     "VerticalExcessCurvature",
     "YieldFilter",
     "YieldMap",
@@ -85,7 +83,6 @@
     "LowPointsOnHeadwaterDivides",
     "MultiscaleCurvatures",
     "Openness",
-    "RepairStreamVectorTopology",
     "RingCurvature",
     "RiverCenterlines",
     "Rotor",
@@ -96,7 +93,6 @@
     "SmoothVegetationResidual",
     "TopographicPositionAnimation",
     "Unsphericity",
-    "VectorStreamNetworkAnalysis",
     "VerticalExcessCurvature"
     ],
     "lidarTools": [
