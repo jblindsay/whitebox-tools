@@ -799,7 +799,7 @@ impl WhiteboxTool for TopographicHachures {
                             accdist[i] = perim;
                         }
 
-                        let step = discretization * res_xy;
+                        let step = separation * res_xy;
                         let num = perim / step;
                         let to_up = (num.ceil() - num) < (num - num.floor());
                         let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
@@ -824,13 +824,23 @@ impl WhiteboxTool for TopographicHachures {
 
                         seeds.push(points[npts-1]);
 
+                        let mut flowlines = Vec::new();
+
                         for seed in seeds {
-                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                            let flowline = get_flowline(
+                            let mut flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
                                 base_contour + (z-1.0) * contour_interval,
                                 slopemin, turning
                             );
+                            let mut idx = intersection_idx(&flowline, &flowlines,
+                                                           separation * res_xy * 0.25);
+                            flowline.truncate(idx);
+                            flowlines.push(flowline);
+                        }
+
+
+                        for flowline in flowlines {
+                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                             sfg.add_part(&flowline);
                             output.add_record(sfg);
                             output.attributes.add_record(
@@ -1045,7 +1055,7 @@ impl WhiteboxTool for TopographicHachures {
                             accdist[i] = perim;
                         }
 
-                        let step = discretization * res_xy;
+                        let step = separation * res_xy;
                         let num = perim / step;
                         let to_up = (num.ceil() - num) < (num - num.floor());
                         let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
@@ -1070,13 +1080,23 @@ impl WhiteboxTool for TopographicHachures {
 
                         seeds.push(points[npts-1]);
 
+                        let mut flowlines = Vec::new();
+
                         for seed in seeds {
-                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                            let flowline = get_flowline(
+                            let mut flowline = get_flowline(
                                 &cov, seed, discretization * res_xy,
                                 base_contour + (z-1.0) * contour_interval,
                                 slopemin, turning
                             );
+                            let mut idx = intersection_idx(&flowline, &flowlines,
+                                                           separation * res_xy * 0.25);
+                            flowline.truncate(idx);
+                            flowlines.push(flowline);
+                        }
+
+
+                        for flowline in flowlines {
+                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                             sfg.add_part(&flowline);
                             output.add_record(sfg);
                             output.attributes.add_record(
@@ -1360,4 +1380,29 @@ pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
     }
 
     points
+}
+
+pub fn intersection_idx(newline: &Vec<Point2D>, lines: &Vec<Vec<Point2D>>, dist: f64) -> usize {
+    for line in lines.iter().rev() {
+        for i in 1..newline.len() {
+            for j in 1..line.len() {
+                if newline[i].distance(&line[j]) < dist {
+                    return i
+                }
+                if is_intersection(&newline[i-1], &newline[i], &line[j-1], &line[j]) {
+                    return i
+                }
+            }
+        }
+    }
+    newline.len()
+}
+
+pub fn point_side(p1: &Point2D, p2: &Point2D, p3: &Point2D) -> bool {
+    (p3.x - p1.x)*(p2.y - p1.y) < (p3.y - p1.y)*(p2.x - p1.x)
+}
+
+pub fn is_intersection(p1: &Point2D, p2: &Point2D, p3: &Point2D, p4: &Point2D) -> bool {
+    (point_side(p1, p2, p3) != point_side(p1, p2, p4)) &&
+    (point_side(p3, p4, p1) != point_side(p3, p4, p2))
 }
