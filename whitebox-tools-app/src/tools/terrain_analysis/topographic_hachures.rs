@@ -10,10 +10,13 @@ use whitebox_raster::{Raster, RasterConfigs};
 use whitebox_common::structures::{Array2D, Point2D};
 use crate::tools::*;
 use whitebox_vector::*;
+use std::cmp;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
+use std::cmp::Ordering;
+use std::collections::BTreeSet;
 const EPSILON: f64 = f64::EPSILON;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
@@ -75,7 +78,7 @@ impl TopographicHachures {
             flags: vec!["--interval".to_owned()],
             description: "Contour interval.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("10.0".to_owned()),
+            default_value: Some("500.0".to_owned()),
             optional: false,
         });
 
@@ -109,19 +112,19 @@ impl TopographicHachures {
         });
 
         parameters.push(ToolParameter {
-            name: "Flowline seed separation".to_owned(),
-            flags: vec!["--separation".to_owned()],
+            name: "Seed separation".to_owned(),
+            flags: vec!["--sep".to_owned()],
             description: "Separation distance between seed points of hachures (in cells)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("2.0".to_owned()),
+            default_value: Some("2.5".to_owned()),
             optional: false,
         });
 
         parameters.push(ToolParameter {
-            name: "Flowline discretization".to_owned(),
-            flags: vec!["--discretization".to_owned()],
-            description: "Discretization step used in tracing the flowline (in cells)."
+            name: "Minimum distance".to_owned(),
+            flags: vec!["--distmin".to_owned()],
+            description: "Minimum distance between converging flowlines (as a separation ratio)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.5".to_owned()),
@@ -129,8 +132,28 @@ impl TopographicHachures {
         });
 
         parameters.push(ToolParameter {
-            name: "Flowline maximum turning angle".to_owned(),
-            flags: vec!["--turning".to_owned()],
+            name: "Maximum distance".to_owned(),
+            flags: vec!["--distmax".to_owned()],
+            description: "Maximum distance between diverging flowlines (as a separation ratio)."
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2".to_owned()),
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Discretization".to_owned(),
+            flags: vec!["--discr".to_owned()],
+            description: "Discretization step used in tracing the flowline (in cells)."
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("2.0".to_owned()),
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Maximum turning angle".to_owned(),
+            flags: vec!["--turnmax".to_owned()],
             description: "Maximum turning angle valid for hachure, in degrees (0-90)"
                 .to_owned(),
             parameter_type: ParameterType::Float,
@@ -144,7 +167,17 @@ impl TopographicHachures {
             description: "Slope angle, in degrees, at which flowline tracing ends"
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("1.0".to_owned()),
+            default_value: Some("0.5".to_owned()),
+            optional: false,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Nesting depth".to_owned(),
+            flags: vec!["--depthmax".to_owned()],
+            description: "Maximum depth of nested flowlines (0-255)"
+                .to_owned(),
+            parameter_type: ParameterType::Float,
+            default_value: Some("16".to_owned()),
             optional: false,
         });
 
@@ -224,10 +257,13 @@ impl WhiteboxTool for TopographicHachures {
         let mut base_contour = 0f64;
         let mut deflection_tolerance = 10f64;
         let mut filter_size = 9;
-        let mut separation = 2f64;
-        let mut discretization = 0.5f64;
-        let mut turning = 45.0f64;
+        let mut separation = 5f64;
+        let mut distmin = 0.5f64;
+        let mut distmax = 2.0f64;
+        let mut discretization = 2.0f64;
+        let mut turnmax = 45.0f64;
         let mut slopemin = 1.0f64;
+        let mut depth= 16u8;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -318,7 +354,7 @@ impl WhiteboxTool for TopographicHachures {
                     // must be an odd integer.
                     filter_size += 1;
                 }
-            } else if flag_val == "-separation" {
+            } else if flag_val == "-sep" {
                 separation = if keyval {
                     vec[1]
                         .to_string()
@@ -330,7 +366,31 @@ impl WhiteboxTool for TopographicHachures {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
-            } else if flag_val == "-discretization" {
+            } else if flag_val == "-distmin" {
+                distmin = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+            } else if flag_val == "-distmax" {
+                distmax = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<f64>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
+            } else if flag_val == "-discr" {
                 discretization = if keyval {
                     vec[1]
                         .to_string()
@@ -342,8 +402,8 @@ impl WhiteboxTool for TopographicHachures {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
-            } else if flag_val == "-turning" {
-                turning = if keyval {
+            } else if flag_val == "-turnmax" {
+                turnmax = if keyval {
                     vec[1]
                         .to_string()
                         .parse::<f64>()
@@ -366,14 +426,25 @@ impl WhiteboxTool for TopographicHachures {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
+            } else if flag_val == "-depthmax" {
+                depth = if keyval {
+                    vec[1]
+                        .to_string()
+                        .parse::<u8>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                } else {
+                    args[i + 1]
+                        .to_string()
+                        .parse::<u8>()
+                        .expect(&format!("Error parsing {}", flag_val))
+                };
             }
         }
 
         let filter_radius = filter_size as isize / 2isize;
         deflection_tolerance = deflection_tolerance.to_radians().cos();
-        turning = turning.to_radians().cos();
+        turnmax = turnmax.to_radians().cos();
         slopemin = slopemin.to_radians().tan();
-        println!("{}", slopemin);
         let mut progress: usize;
         let mut old_progress: usize = 1;
 
@@ -593,6 +664,9 @@ impl WhiteboxTool for TopographicHachures {
         let mut line_start: usize;
         let mut fid = 1;
         let mut flag: bool;
+
+        let mut contours = Vec::new();
+
         for line_segment in 0..line_segments.len() {
             if segment_live[line_segment] {
                 z = line_segments[line_segment].value;
@@ -790,68 +864,14 @@ impl WhiteboxTool for TopographicHachures {
                             }
                         }
 
-                        let npts = points.len();
-                        let mut perim: f64 = 0.0;
-                        let mut accdist = vec![0.0; npts];
+                        contours.push(
+                            Contour {
+                                points: points,
+                                value: base_contour + z * contour_interval,
+                                closed: false
+                            }
+                        );
 
-                        for i in 1..npts {
-                            perim += points[i-1].distance(&points[i]);
-                            accdist[i] = perim;
-                        }
-
-                        let step = separation * res_xy;
-                        let num = perim / step;
-                        let to_up = (num.ceil() - num) < (num - num.floor());
-                        let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
-                        let num_seeds= (perim / new_step) as i32;
-
-                        let mut seeds = Vec::new();
-
-                        seeds.push(points[0]);
-
-                        let mut dist;
-                        let mut j = 0;
-
-                        for i in 1..num_seeds-1 {
-                            dist = i as f64 * new_step;
-                            while dist > accdist[j] { j+=1; }
-                            let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
-                            seeds.push(Point2D::new(
-                                (1.-t) * points[j-1].x + t * points[j].x,
-                                (1.-t) * points[j-1].y + t * points[j].y
-                            ));
-                        }
-
-                        seeds.push(points[npts-1]);
-
-                        let mut flowlines = Vec::new();
-
-                        for seed in seeds {
-                            let mut flowline = get_flowline(
-                                &cov, seed, discretization * res_xy,
-                                base_contour + (z-1.0) * contour_interval,
-                                slopemin, turning
-                            );
-                            let mut idx = intersection_idx(&flowline, &flowlines,
-                                                           separation * res_xy * 0.25);
-                            flowline.truncate(idx);
-                            flowlines.push(flowline);
-                        }
-
-
-                        for flowline in flowlines {
-                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                            sfg.add_part(&flowline);
-                            output.add_record(sfg);
-                            output.attributes.add_record(
-                                vec![
-                                    FieldData::Int(fid as i32 + 1),
-                                    FieldData::Real(base_contour + z * contour_interval),
-                                ],
-                                false,
-                            );
-                            fid += 1;
-                        }
                     }
                 }
             }
@@ -1045,70 +1065,13 @@ impl WhiteboxTool for TopographicHachures {
                     }
 
                     if (max_x - min_x) > res_x || (max_y - min_y) > res_y {
-
-                        let npts = points.len();
-                        let mut perim: f64 = 0.0;
-                        let mut accdist = vec![0.0; npts];
-
-                        for i in 1..npts {
-                            perim += points[i-1].distance(&points[i]);
-                            accdist[i] = perim;
-                        }
-
-                        let step = separation * res_xy;
-                        let num = perim / step;
-                        let to_up = (num.ceil() - num) < (num - num.floor());
-                        let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
-                        let num_seeds= (perim / new_step) as i32;
-
-                        let mut seeds = Vec::new();
-
-                        seeds.push(points[0]);
-
-                        let mut dist;
-                        let mut j = 0;
-
-                        for i in 1..num_seeds-1 {
-                            dist = i as f64 * new_step;
-                            while dist > accdist[j] { j+=1; }
-                            let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
-                            seeds.push(Point2D::new(
-                                (1.-t) * points[j-1].x + t * points[j].x,
-                                (1.-t) * points[j-1].y + t * points[j].y
-                            ));
-                        }
-
-                        seeds.push(points[npts-1]);
-
-                        let mut flowlines = Vec::new();
-
-                        for seed in seeds {
-                            let mut flowline = get_flowline(
-                                &cov, seed, discretization * res_xy,
-                                base_contour + (z-1.0) * contour_interval,
-                                slopemin, turning
-                            );
-                            let mut idx = intersection_idx(&flowline, &flowlines,
-                                                           separation * res_xy * 0.25);
-                            flowline.truncate(idx);
-                            flowlines.push(flowline);
-                        }
-
-
-                        for flowline in flowlines {
-                            let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
-                            sfg.add_part(&flowline);
-                            output.add_record(sfg);
-                            output.attributes.add_record(
-                                vec![
-                                    FieldData::Int(fid as i32 + 1),
-                                    FieldData::Real(base_contour + z * contour_interval),
-                                ],
-                                false,
-                            );
-                            fid += 1;
-                        }
-
+                        contours.push(
+                            Contour {
+                                points: points,
+                                value: base_contour + z * contour_interval,
+                                closed: true
+                            }
+                        );
                     }
                 }
             }
@@ -1123,6 +1086,154 @@ impl WhiteboxTool for TopographicHachures {
         }
 
         // println!("Number of points removed: {}", num_points_removed);
+
+        contours.sort();
+        // contours.reverse();
+
+        let mut counter = 0;
+        let mut hid = 1;
+        let ncont = contours.len();
+
+        let mut flowlines: Vec<Vec<Point2D>> = Vec::new();
+        let mut val = contours[0].value;
+        let mut starts = BTreeSet::new();
+
+        for contour in &contours {
+
+            let points = &contour.points;
+            let npts = points.len();
+            let mut perim: f64 = 0.0;
+            let mut accdist = vec![0.0; npts];
+
+            for i in 1..npts {
+                perim += points[i-1].distance(&points[i]);
+                accdist[i] = perim;
+            }
+
+            let step = separation * res_xy;
+            let num = perim / step;
+            let to_up = (num.ceil() - num) < (num - num.floor());
+            let new_step = if to_up { perim / num.ceil() } else { perim / num.floor() };
+            let num_seeds= (perim / new_step) as i32;
+
+            let discr = discretization * res_xy;
+            let zmin = contour.value - contour_interval;
+
+            let new_distmin = distmin * new_step;
+            let new_distmax = distmax * new_step;
+
+            let mut seeds = Vec::new();
+
+            seeds.push(points[0]);
+
+            let mut dist;
+            let mut j = 0;
+
+            for i in 1..num_seeds {
+                dist = i as f64 * new_step;
+                while dist > accdist[j] { j+=1; }
+                let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
+                seeds.push(Point2D::new(
+                    (1.-t) * points[j-1].x + t * points[j].x,
+                    (1.-t) * points[j-1].y + t * points[j].y
+                ));
+            }
+
+            seeds.push(points[npts-1]);
+
+            starts.insert(flowlines.len());
+
+            for seed in seeds {
+                let mut flowline = get_flowline(
+                    &cov, &seed, discr,
+                    zmin, slopemin, turnmax
+                );
+                if flowline.len() > 1 {
+                    let mut idx = intersection_idx(&flowline, &flowlines,
+                                                   new_distmin);
+                    flowline.truncate(idx);
+
+                    if flowline.len() > 1 {
+                        flowlines.push(flowline);
+                    }
+                }
+            }
+
+            if counter < ncont-1 {
+                if contours[counter+1].value != val {
+
+                    let n = flowlines.len()-1;
+
+                    if (n > 0) {
+                        for i in 0..n {
+                            if !starts.contains(&(i+1)) {
+                                insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
+                                                 depth, new_distmin, new_distmax,
+                                                 discr, zmin, slopemin, turnmax);
+                            }
+                        }
+                    }
+
+
+                    for flowline in &flowlines {
+                        let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                        sfg.add_part(&flowline);
+                        output.add_record(sfg);
+                        output.attributes.add_record(
+                            vec![
+                                FieldData::Int(hid as i32),
+                                FieldData::Real(val),
+                            ],
+                            false,
+                        );
+                        hid += 1;
+                    }
+                    flowlines.clear();
+                    starts.clear();
+                    val = contour.value;
+                }
+            } else {
+                let n = flowlines.len()-1;
+
+                if (n > 0) {
+                    for i in 0..n {
+                        if !starts.contains(&(i+1)) {
+                            insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
+                                             depth, new_distmin, new_distmax,
+                                             discr, zmin, slopemin, turnmax);
+                        }
+                    }
+                }
+
+                for flowline in &flowlines {
+                    let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                    sfg.add_part(&flowline);
+                    output.add_record(sfg);
+                    output.attributes.add_record(
+                        vec![
+                            FieldData::Int(hid as i32),
+                            FieldData::Real(val),
+                        ],
+                        false,
+                    );
+                    hid += 1;
+                }
+                flowlines.clear();
+                starts.clear();
+                val = contour.value;
+            }
+
+            counter += 1;
+
+            if verbose {
+                progress =
+                    (100.0_f64 * counter as f64 / (ncont- 1) as f64) as usize;
+                if progress != old_progress {
+                    println!("Tracing hachures: {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
 
         let elapsed_time = get_formatted_elapsed_time(start);
 
@@ -1185,6 +1296,47 @@ pub fn path_deflection(previous: Point2D, current: Point2D, next: Point2D) -> f6
     let p2 = next - current;
     ((p1 * p2) / (p1.magnitude() * p2.magnitude())).abs()
 }
+
+pub fn path_turn(previous: Point2D, current: Point2D, next: Point2D) -> f64 {
+    let p1 = current - previous;
+    let p2 = next - current;
+    (p1 * p2) / (p1.magnitude() * p2.magnitude())
+}
+
+pub struct Contour {
+    points: Vec<Point2D>,
+    value: f64,
+    closed: bool
+}
+
+impl PartialOrd for Contour {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Contour {
+    fn cmp(&self, other: &Self) -> Ordering {
+        if self.value > other.value {
+            Ordering::Less
+        }
+        else if self.value > other.value {
+            Ordering::Greater
+        }
+        else {
+            Ordering::Equal
+        }
+    }
+}
+
+
+impl PartialEq for Contour {
+    fn eq(&self, other: &Self) -> bool {
+        self.value == other.value && self.closed == other.closed
+    }
+}
+
+impl Eq for Contour {}
 
 #[derive(Default, Clone)]
 pub struct RasterCoverage {
@@ -1318,7 +1470,7 @@ impl RasterCoverage {
 /// - elevation is smaller than `zmin` or
 /// - slope is smaller than `slopemin` or
 /// - deflection is larger than `defmax`
-pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
+pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
                     discr: f64, zmin: f64, slopemin: f64, defmin: f64) -> Vec<Point2D> {
     let mut points = vec![];
     let mut zcur: f64;
@@ -1371,26 +1523,81 @@ pub fn get_flowline(cov: &RasterCoverage, p: Point2D,
 
         let n = points.len();
         if n >= 3 {
-            if path_deflection(points[n-3], points[n-2], points[n-1]) < defmin {
+            if path_turn(points[n-3], points[n-2], points[n-1]) < defmin {
                 points.pop();
                 break
             }
         }
-
     }
 
     points
 }
 
+pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
+                        n1: usize, n2: usize, k1: usize, k2:usize, depth: u8, distmin: f64,
+                        distmax: f64, discr: f64, zmin: f64, slopemin: f64, defmin: f64) {
+    if depth == 0 { return }
+
+    let mut p1: Point2D;
+    let mut p2: Point2D;
+    let mut p3: Point2D;
+    let mut dist: f64;
+    let mut flowline: Vec<Point2D>;
+    let mut idx: usize;
+    let mut nlast: usize;
+
+    let n = cmp::min(flowlines[n1].len()-k1, flowlines[n2].len()-k2);
+
+    for i in 0..n {
+        p1 = flowlines[n1][i+k1];
+        p2 = flowlines[n2][i+k2];
+        dist = p1.distance(&p2);
+
+        if dist >= distmax {
+            p3 = Point2D::midpoint(&p1, &p2);
+            flowline = get_flowline(cov, &p3, discr, zmin, slopemin, defmin);
+
+            if flowline.len() > 1 {
+                idx = intersection_idx(&flowline, flowlines,distmin);
+                flowline.truncate(idx);
+
+                if flowline.len() > 1 {
+                    flowlines.push(flowline);
+                    nlast = flowlines.len()-1;
+                    insert_flowlines(cov, flowlines, n1, nlast, i+k1, 0,
+                                     depth-1, distmin, distmax, discr,
+                                     zmin, slopemin, defmin);
+                    insert_flowlines(cov, flowlines, n2, nlast, i+k2, 0,
+                                     depth-1, distmin, distmax, discr,
+                                     zmin, slopemin, defmin);
+                }
+            }
+
+            return
+        }
+    }
+}
+
+
 pub fn intersection_idx(newline: &Vec<Point2D>, lines: &Vec<Vec<Point2D>>, dist: f64) -> usize {
     for line in lines.iter().rev() {
-        for i in 1..newline.len() {
-            for j in 1..line.len() {
-                if newline[i].distance(&line[j]) < dist {
-                    return i
-                }
-                if is_intersection(&newline[i-1], &newline[i], &line[j-1], &line[j]) {
-                    return i
+        let d1 = newline[0].distance(&newline[newline.len()-1]);
+        let d2 = line[0].distance(&line[line.len()-1]);
+
+        let c1 = Point2D::midpoint(&newline[0], &newline[newline.len()-1]);
+        let c2 = Point2D::midpoint(&line[0], &line[line.len()-1]);
+
+        let d3 = c1.distance(&c2);
+
+        if d3 < (d1 + d2)/2.0 {
+            for i in 1..newline.len() {
+                for j in 1..line.len() {
+                    if newline[i].distance(&line[j]) < dist {
+                        return i
+                    }
+                    if is_intersection(&newline[i-1], &newline[i], &line[j-1], &line[j]) {
+                        return i
+                    }
                 }
             }
         }
