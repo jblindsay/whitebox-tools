@@ -1162,10 +1162,10 @@ impl WhiteboxTool for TopographicHachures {
             if counter < ncont-1 {
                 if contours[counter+1].value != val {
 
-                    let n = flowlines.len()-1;
+                    let n = flowlines.len();
 
-                    if (n > 0) {
-                        for i in 0..n {
+                    if n > 1 {
+                        for i in 0..n-1 {
                             if !starts.contains(&(i+1)) {
                                 insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
                                                  depth, new_distmin, new_distmax,
@@ -1173,7 +1173,6 @@ impl WhiteboxTool for TopographicHachures {
                             }
                         }
                     }
-
 
                     for flowline in &flowlines {
                         let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
@@ -1193,10 +1192,10 @@ impl WhiteboxTool for TopographicHachures {
                     val = contour.value;
                 }
             } else {
-                let n = flowlines.len()-1;
+                let n = flowlines.len();
 
-                if (n > 0) {
-                    for i in 0..n {
+                if n > 1 {
+                    for i in 0..n-1 {
                         if !starts.contains(&(i+1)) {
                             insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
                                              depth, new_distmin, new_distmax,
@@ -1366,16 +1365,16 @@ impl RasterCoverage {
 
         for row in 0..rows {
             for col in 0..columns {
-                let z00 = raster.get_value(row, col);
-                let z10 = raster.get_value(row, col + 1);
-                let z01 = raster.get_value(row + 1, col);
-                let z11 = raster.get_value(row + 1, col + 1);
+                let z00 = raster.get_value(row + 1, col);
+                let z10 = raster.get_value(row + 1, col + 1);
+                let z01 = raster.get_value(row, col);
+                let z11 = raster.get_value(row, col + 1);
 
                 let idx= (row * columns + col) as usize;
 
                 output.a00[idx] = z00;
                 output.a10[idx] = z10 - z00;
-                output.a01[idx] = z00 - z01;
+                output.a01[idx] = z01 - z00;
                 output.a11[idx] = z00 + z11 - z01 - z10;
             }
         }
@@ -1385,11 +1384,11 @@ impl RasterCoverage {
     }
 
     pub fn get_column_from_x(&self, x: f64) -> isize {
-        ((x - self.configs.west) / self.configs.resolution_x).floor() as isize
+        ((x - self.configs.west - 0.5*self.configs.resolution_x) / self.configs.resolution_x).floor() as isize
     }
 
     pub fn get_row_from_y(&self, y: f64) -> isize {
-        ((self.configs.north - y) / self.configs.resolution_y).floor() as isize
+        ((self.configs.north - y - 0.5*self.configs.resolution_y) / self.configs.resolution_y).floor() as isize
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {
@@ -1422,11 +1421,7 @@ impl RasterCoverage {
             let idx= (row * self.configs.columns as isize + col) as usize;
 
             let xcell = (x - xcol) / self.configs.resolution_x;
-            let ycell = (yrow - y) / self.configs.resolution_y;
-
-            // if xcell < 0. || ycell < 0. || xcell > 1. || ycell > 1. {
-            //    return (usize::MAX, -1f64, -1f64)
-            // }
+            let ycell = 1.0 - (yrow - y) / self.configs.resolution_y;
 
             (idx, xcell, ycell)
         }
@@ -1477,6 +1472,7 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
     let mut zprev: f64;
     let mut slope: f64;
     let mut grad: [f64; 2];
+    let mut grad2: [f64; 2];
 
     let mut p1: Point2D = p.clone();
     let mut p2: Point2D;
@@ -1503,7 +1499,20 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
 
         zcur = cov.get_value(p2.x, p2.y);
 
-        if zcur == cov.configs.nodata { break; }
+        if zcur == cov.configs.nodata {
+            break;
+        } else {
+            grad2 = cov.get_gradient(p2.x, p2.y);
+            grad[0] = 0.5 * (grad[0] + grad2[0]);
+            grad[1] = 0.5 * (grad[1] + grad2[1]);
+
+            p2 = Point2D::new(
+                p1.x - discr * grad[0] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
+                p1.y - discr * grad[1] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
+            );
+
+            zcur = cov.get_value(p2.x, p2.y);
+        }
 
         if zcur < zmin {
             let t = (zprev - zmin) / (zprev  - zcur);
