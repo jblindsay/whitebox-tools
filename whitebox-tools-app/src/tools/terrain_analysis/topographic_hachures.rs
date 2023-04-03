@@ -506,8 +506,79 @@ impl WhiteboxTool for TopographicHachures {
             10u8,
             0u8
         ));
+
         output.attributes.add_field(&AttributeField::new(
             "HEIGHT",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "SLOPE",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "ASPECT",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "N",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "NE",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "E",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "SE",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "S",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "SW",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "W",
+            FieldDataType::Real,
+            12u8,
+            5u8,
+        ));
+
+        output.attributes.add_field(&AttributeField::new(
+            "NW",
             FieldDataType::Real,
             12u8,
             5u8,
@@ -1094,9 +1165,13 @@ impl WhiteboxTool for TopographicHachures {
         let mut hid = 1;
         let ncont = contours.len();
 
+        let mut flowlines_prev: Vec<Vec<Point2D>> = Vec::new();
         let mut flowlines: Vec<Vec<Point2D>> = Vec::new();
-        let mut val = contours[0].value;
         let mut starts = BTreeSet::new();
+        let mut seed_starts = BTreeSet::new();
+        seed_starts.insert(0);
+
+        let mut level_seeds = Vec::new();
 
         for contour in &contours {
 
@@ -1117,7 +1192,10 @@ impl WhiteboxTool for TopographicHachures {
             let num_seeds= (perim / new_step) as i32;
 
             let discr = discretization * res_xy;
-            let zmin = contour.value - contour_interval;
+            let val = contour.value;
+            let zmin = val - contour_interval;
+            let zmax = val + contour_interval;
+
 
             let new_distmin = distmin * new_step;
             let new_distmax = distmax * new_step;
@@ -1133,20 +1211,25 @@ impl WhiteboxTool for TopographicHachures {
                 dist = i as f64 * new_step;
                 while dist > accdist[j] { j+=1; }
                 let t = (dist - accdist[j-1]) / (accdist[j] - accdist[j-1]);
-                seeds.push(Point2D::new(
+
+                let seed = Point2D::new(
                     (1.-t) * points[j-1].x + t * points[j].x,
                     (1.-t) * points[j-1].y + t * points[j].y
-                ));
+                );
+                seeds.push(seed);
+                level_seeds.push(seed);
             }
 
             seeds.push(points[npts-1]);
+            level_seeds.push(points[npts-1]);
 
             starts.insert(flowlines.len());
+            seed_starts.insert(level_seeds.len());
 
-            for seed in seeds {
+            for seed in &seeds {
                 let mut flowline = get_flowline(
                     &cov, &seed, discr,
-                    zmin, slopemin, turnmax
+                    zmin, slopemin, turnmax, true
                 );
                 if flowline.len() > 1 {
                     let mut idx = intersection_idx(&flowline, &flowlines,
@@ -1162,19 +1245,115 @@ impl WhiteboxTool for TopographicHachures {
             if counter < ncont-1 {
                 if contours[counter+1].value != val {
 
-                    let n = flowlines.len();
+                    let mut n = flowlines.len();
 
                     if n > 1 {
                         for i in 0..n-1 {
                             if !starts.contains(&(i+1)) {
                                 insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
                                                  depth, new_distmin, new_distmax,
-                                                 discr, zmin, slopemin, turnmax);
+                                                 discr, zmin, slopemin, turnmax, true);
                             }
                         }
                     }
 
+                    let mut flowlines_up: Vec<Vec<Point2D>> = Vec::new();
+                    let mut idxs: Vec<usize> = Vec::new();
+                    let mut i: usize = 0;
+
+                    for seed in &level_seeds {
+                        // println!("{}", flowlines_prev.len());
+                        let mut flowline = get_flowline(
+                            &cov, &seed, discr,
+                            zmax, slopemin, turnmax, false
+                        );
+                        if flowline.len() > 1 {
+                            let mut idx1 = intersection_idx(&flowline, &flowlines_prev,
+                                                            step);
+
+                            let mut idx2 = intersection_idx(&flowline, &flowlines_up,
+                                                           new_distmin);
+
+                            let mut idx = cmp::min(idx1, idx2);
+
+                            flowline.truncate(idx);
+
+                            if flowline.len() > 1 {
+                                flowlines_up.push(flowline);
+                                idxs.push(i);
+                            }
+                        }
+                        i += 1;
+                    }
+
+                    n = flowlines_up.len();
+
+                    if n > 1 {
+                        for i in 0..n-1 {
+                            if (!seed_starts.contains(&idxs[i+1])) && (idxs[i+1]-idxs[i] == 1) {
+                                insert_flowlines(&cov, &mut flowlines_up, i, i+1, 0, 0,
+                                                 depth, new_distmin, new_distmax,
+                                                 discr, zmax, slopemin, turnmax, false);
+                            }
+                        }
+                    }
+
+                    flowlines_prev = flowlines.clone();
+                    level_seeds = Vec::new();
+
+                    let mut dxsum: f64;
+                    let mut dysum: f64;
+                    let mut grad: [f64; 2];
+                    let mut grad_len: f64;
+                    let mut dx: f64;
+                    let mut dy: f64;
+                    let mut dx1: f64;
+                    let mut dy1: f64;
+                    let mut slope: f64;
+                    let mut math_aspect: f64;
+                    let mut aspect: f64;
+
+                    let mut N: f64;
+                    let mut NE: f64;
+                    let mut E: f64;
+                    let mut SE: f64;
+                    let mut S: f64;
+                    let mut SW: f64;
+                    let mut W: f64;
+                    let mut NW: f64;
+                    let sqrt_05 = 0.5_f64.sqrt();
+
                     for flowline in &flowlines {
+
+                        dxsum = 0.0;
+                        dysum = 0.0;
+
+                        for point in flowline {
+                            grad = cov.get_gradient(point.x, point.y);
+                            dxsum += grad[0];
+                            dysum += grad[1];
+                        }
+
+                        dx = -dxsum / flowline.len() as f64;
+                        dy = -dysum / flowline.len() as f64;
+                        grad_len = (dx*dx + dy*dy).sqrt();
+
+                        slope = grad_len.atan().to_degrees();
+                        math_aspect = dy.atan2(dx).to_degrees();
+                        aspect = if math_aspect < 90.0 { 90.0 - math_aspect } else { 450.0 - math_aspect };
+
+                        dx1 = dx / grad_len;
+                        dy1 = dy / grad_len;
+
+                        N =       0.0 * dx1 +     1.0 * dy1;
+                        NE =  sqrt_05 * dx1 + sqrt_05 * dy1;
+                        E =       1.0 * dx1 +     0.0 * dy1;
+                        SE =  sqrt_05 * dx1 - sqrt_05 * dy1;
+                        S =       0.0 * dx1 -     1.0 * dy1;
+                        SW = -sqrt_05 * dx1 - sqrt_05 * dy1;
+                        W =      -1.0 * dx1 +     0.0 * dy1;
+                        NW = -sqrt_05 * dx1 + sqrt_05 * dy1;
+
                         let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                         sfg.add_part(&flowline);
                         output.add_record(sfg);
@@ -1182,29 +1361,186 @@ impl WhiteboxTool for TopographicHachures {
                             vec![
                                 FieldData::Int(hid as i32),
                                 FieldData::Real(val),
+                                FieldData::Real(slope),
+                                FieldData::Real(aspect),
+                                FieldData::Real(N),
+                                FieldData::Real(NE),
+                                FieldData::Real(E),
+                                FieldData::Real(SE),
+                                FieldData::Real(S),
+                                FieldData::Real(SW),
+                                FieldData::Real(W),
+                                FieldData::Real(NW)
                             ],
                             false,
                         );
                         hid += 1;
                     }
+
+                    for flowline in &flowlines_up {
+                        dxsum = 0.0;
+                        dysum = 0.0;
+
+                        for point in flowline {
+                            grad = cov.get_gradient(point.x, point.y);
+                            dxsum += grad[0];
+                            dysum += grad[1];
+                        }
+
+                        dx = -dxsum / flowline.len() as f64;
+                        dy = -dysum / flowline.len() as f64;
+                        grad_len = (dx*dx + dy*dy).sqrt();
+
+                        slope = grad_len.atan().to_degrees();
+                        math_aspect = dy.atan2(dx).to_degrees();
+                        aspect = if math_aspect < 90.0 { 90.0 - math_aspect } else { 450.0 - math_aspect };
+
+                        dx1 = dx / grad_len;
+                        dy1 = dy / grad_len;
+
+                        N =       0.0 * dx1 +     1.0 * dy1;
+                        NE =  sqrt_05 * dx1 + sqrt_05 * dy1;
+                        E =       1.0 * dx1 +     0.0 * dy1;
+                        SE =  sqrt_05 * dx1 - sqrt_05 * dy1;
+                        S =       0.0 * dx1 -     1.0 * dy1;
+                        SW = -sqrt_05 * dx1 - sqrt_05 * dy1;
+                        W =      -1.0 * dx1 +     0.0 * dy1;
+                        NW = -sqrt_05 * dx1 + sqrt_05 * dy1;
+
+                        let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                        sfg.add_part(&flowline);
+                        output.add_record(sfg);
+                        output.attributes.add_record(
+                            vec![
+                                FieldData::Int(hid as i32),
+                                FieldData::Real(val),
+                                FieldData::Real(slope),
+                                FieldData::Real(aspect),
+                                FieldData::Real(N),
+                                FieldData::Real(NE),
+                                FieldData::Real(E),
+                                FieldData::Real(SE),
+                                FieldData::Real(S),
+                                FieldData::Real(SW),
+                                FieldData::Real(W),
+                                FieldData::Real(NW)
+                            ],
+                            false,
+                        );
+                        hid += 1;
+                    }
+
                     flowlines.clear();
+                    flowlines_up.clear();
                     starts.clear();
-                    val = contour.value;
+                    seed_starts.clear();
+                    seed_starts.insert(0);
                 }
             } else {
-                let n = flowlines.len();
+                let mut n = flowlines.len();
 
                 if n > 1 {
                     for i in 0..n-1 {
                         if !starts.contains(&(i+1)) {
                             insert_flowlines(&cov, &mut flowlines, i, i+1, 0, 0,
                                              depth, new_distmin, new_distmax,
-                                             discr, zmin, slopemin, turnmax);
+                                             discr, zmin, slopemin, turnmax, true);
                         }
                     }
                 }
 
+                let mut flowlines_up: Vec<Vec<Point2D>> = Vec::new();
+                let mut idxs: Vec<usize> = Vec::new();
+                let mut i: usize = 0;
+
+                for seed in &level_seeds {
+                    let mut flowline = get_flowline(
+                        &cov, &seed, discr,
+                        zmax, slopemin, turnmax, false
+                    );
+                    if flowline.len() > 1 {
+                        let mut idx1 = intersection_idx(&flowline, &flowlines_prev,
+                                                        step);
+
+                        let mut idx2 = intersection_idx(&flowline, &flowlines_up,
+                                                        new_distmin);
+
+                        let mut idx = cmp::min(idx1, idx2);
+
+                        flowline.truncate(idx);
+
+                        if flowline.len() > 1 {
+                            flowlines_up.push(flowline);
+                            idxs.push(i);
+                        }
+                    }
+                    i += 1;
+                }
+
+                n = flowlines_up.len();
+
+                if n > 1 {
+                    for i in 0..n-1 {
+                        if (!seed_starts.contains(&idxs[i+1])) && (idxs[i+1]-idxs[i] == 1) {
+                            insert_flowlines(&cov, &mut flowlines_up, i, i+1, 0, 0,
+                                             depth, new_distmin, new_distmax,
+                                             discr, zmax, slopemin, turnmax, false);
+                        }
+                    }
+                }
+
+                let mut dxsum: f64;
+                let mut dysum: f64;
+                let mut grad: [f64; 2];
+                let mut grad_len: f64;
+                let mut dx: f64;
+                let mut dy: f64;
+                let mut dx1: f64;
+                let mut dy1: f64;
+                let mut slope: f64;
+                let mut math_aspect: f64;
+                let mut aspect: f64;
+
+                let mut N: f64;
+                let mut NE: f64;
+                let mut E: f64;
+                let mut SE: f64;
+                let mut S: f64;
+                let mut SW: f64;
+                let mut W: f64;
+                let mut NW: f64;
+                let sqrt_05 = 0.5_f64.sqrt();
+
                 for flowline in &flowlines {
+                    dxsum = 0.0;
+                    dysum = 0.0;
+
+                    for point in flowline {
+                        grad = cov.get_gradient(point.x, point.y);
+                        dxsum += grad[0];
+                        dysum += grad[1];
+                    }
+
+                    dx = -dxsum / flowline.len() as f64;
+                    dy = -dysum / flowline.len() as f64;
+                    grad_len = (dx*dx + dy*dy).sqrt();
+
+                    slope = grad_len.atan().to_degrees();
+                    math_aspect = dy.atan2(dx).to_degrees();
+                    aspect = if math_aspect < 90.0 { 90.0 - math_aspect } else { 450.0 - math_aspect };
+
+                    dx1 = dx / grad_len;
+                    dy1 = dy / grad_len;
+
+                    N =       0.0 * dx1 +     1.0 * dy1;
+                    NE =  sqrt_05 * dx1 + sqrt_05 * dy1;
+                    E =       1.0 * dx1 +     0.0 * dy1;
+                    SE =  sqrt_05 * dx1 - sqrt_05 * dy1;
+                    S =       0.0 * dx1 -     1.0 * dy1;
+                    SW = -sqrt_05 * dx1 - sqrt_05 * dy1;
+                    W =      -1.0 * dx1 +     0.0 * dy1;
+                    NW = -sqrt_05 * dx1 + sqrt_05 * dy1;
+
                     let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
                     sfg.add_part(&flowline);
                     output.add_record(sfg);
@@ -1212,14 +1548,80 @@ impl WhiteboxTool for TopographicHachures {
                         vec![
                             FieldData::Int(hid as i32),
                             FieldData::Real(val),
+                            FieldData::Real(slope),
+                            FieldData::Real(aspect),
+                            FieldData::Real(N),
+                            FieldData::Real(NE),
+                            FieldData::Real(E),
+                            FieldData::Real(SE),
+                            FieldData::Real(S),
+                            FieldData::Real(SW),
+                            FieldData::Real(W),
+                            FieldData::Real(NW)
                         ],
                         false,
                     );
                     hid += 1;
                 }
+
+                for flowline in &flowlines_up {
+                    dxsum = 0.0;
+                    dysum = 0.0;
+
+                    for point in flowline {
+                        grad = cov.get_gradient(point.x, point.y);
+                        dxsum += grad[0];
+                        dysum += grad[1];
+                    }
+
+                    dx = -dxsum / flowline.len() as f64;
+                    dy = -dysum / flowline.len() as f64;
+                    grad_len = (dx*dx + dy*dy).sqrt();
+
+                    slope = grad_len.atan().to_degrees();
+                    math_aspect = dy.atan2(dx).to_degrees();
+                    aspect = if math_aspect < 90.0 { 90.0 - math_aspect } else { 450.0 - math_aspect };
+
+                    dx1 = dx / grad_len;
+                    dy1 = dy / grad_len;
+
+                    N =       0.0 * dx1 +     1.0 * dy1;
+                    NE =  sqrt_05 * dx1 + sqrt_05 * dy1;
+                    E =       1.0 * dx1 +     0.0 * dy1;
+                    SE =  sqrt_05 * dx1 - sqrt_05 * dy1;
+                    S =       0.0 * dx1 -     1.0 * dy1;
+                    SW = -sqrt_05 * dx1 - sqrt_05 * dy1;
+                    W =      -1.0 * dx1 +     0.0 * dy1;
+                    NW = -sqrt_05 * dx1 + sqrt_05 * dy1;
+
+                    let mut sfg = ShapefileGeometry::new(ShapeType::PolyLine);
+                    sfg.add_part(&flowline);
+                    output.add_record(sfg);
+                    output.attributes.add_record(
+                        vec![
+                            FieldData::Int(hid as i32),
+                            FieldData::Real(val),
+                            FieldData::Real(slope),
+                            FieldData::Real(aspect),
+                            FieldData::Real(N),
+                            FieldData::Real(NE),
+                            FieldData::Real(E),
+                            FieldData::Real(SE),
+                            FieldData::Real(S),
+                            FieldData::Real(SW),
+                            FieldData::Real(W),
+                            FieldData::Real(NW)
+                        ],
+                        false,
+                    );
+                    hid += 1;
+                }
+
                 flowlines.clear();
+                flowlines_up.clear();
                 starts.clear();
-                val = contour.value;
+                seed_starts.clear();
+                seed_starts.insert(0);
             }
 
             counter += 1;
@@ -1466,7 +1868,7 @@ impl RasterCoverage {
 /// - slope is smaller than `slopemin` or
 /// - deflection is larger than `defmax`
 pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
-                    discr: f64, zmin: f64, slopemin: f64, defmin: f64) -> Vec<Point2D> {
+                    discr: f64, zlim: f64, slopemin: f64, defmin: f64, down: bool) -> Vec<Point2D> {
     let mut points = vec![];
     let mut zcur: f64;
     let mut zprev: f64;
@@ -1474,12 +1876,14 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
     let mut grad: [f64; 2];
     let mut grad2: [f64; 2];
 
+    let sign = if down { 1.0 } else { -1.0 };
+
     let mut p1: Point2D = p.clone();
     let mut p2: Point2D;
 
     zprev = cov.get_value(p1.x, p1.y);
 
-    if zprev == zmin || zprev == cov.configs.nodata {
+    if zprev == zlim || zprev == cov.configs.nodata {
         return points;
     }
 
@@ -1493,8 +1897,8 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
         grad = cov.get_gradient(p1.x, p1.y);
 
         p2 = Point2D::new(
-          p1.x - discr * grad[0] / slope,
-          p1.y - discr * grad[1] / slope,
+          p1.x - sign * discr * grad[0] / slope,
+          p1.y - sign * discr * grad[1] / slope,
         );
 
         zcur = cov.get_value(p2.x, p2.y);
@@ -1507,22 +1911,22 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
             grad[1] = 0.5 * (grad[1] + grad2[1]);
 
             p2 = Point2D::new(
-                p1.x - discr * grad[0] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
-                p1.y - discr * grad[1] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
+                p1.x - sign * discr * grad[0] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
+                p1.y - sign * discr * grad[1] / (grad[0]*grad[0] + grad[1]*grad[1]).sqrt(),
             );
 
             zcur = cov.get_value(p2.x, p2.y);
         }
 
-        if zcur < zmin {
-            let t = (zprev - zmin) / (zprev  - zcur);
+        if (down && (zcur < zlim)) || (!down && (zcur > zlim)) {
+            let t = (zprev - zlim) / (zprev  - zcur);
             let pend = Point2D::new(
                 (1.0 - t)*p1.x + t*p2.x,
                 (1.0 - t)*p1.y + t*p2.y
             );
             points.push(pend);
             break;
-        } else if zcur < zprev {
+        } else if (down && (zcur < zprev)) || (!down && (zcur > zprev))  {
             points.push(p2);
             p1 = p2;
             zprev = zcur;
@@ -1544,7 +1948,7 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
 
 pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
                         n1: usize, n2: usize, k1: usize, k2:usize, depth: u8, distmin: f64,
-                        distmax: f64, discr: f64, zmin: f64, slopemin: f64, defmin: f64) {
+                        distmax: f64, discr: f64, zlim: f64, slopemin: f64, defmin: f64, down: bool) {
     if depth == 0 { return }
 
     let mut p1: Point2D;
@@ -1564,7 +1968,7 @@ pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
 
         if dist >= distmax {
             p3 = Point2D::midpoint(&p1, &p2);
-            flowline = get_flowline(cov, &p3, discr, zmin, slopemin, defmin);
+            flowline = get_flowline(cov, &p3, discr, zlim, slopemin, defmin, down);
 
             if flowline.len() > 1 {
                 idx = intersection_idx(&flowline, flowlines,distmin);
@@ -1575,10 +1979,10 @@ pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
                     nlast = flowlines.len()-1;
                     insert_flowlines(cov, flowlines, n1, nlast, i+k1, 0,
                                      depth-1, distmin, distmax, discr,
-                                     zmin, slopemin, defmin);
+                                     zlim, slopemin, defmin, down);
                     insert_flowlines(cov, flowlines, n2, nlast, i+k2, 0,
                                      depth-1, distmin, distmax, discr,
-                                     zmin, slopemin, defmin);
+                                     zlim, slopemin, defmin, down);
                 }
             }
 
@@ -1589,6 +1993,8 @@ pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
 
 
 pub fn intersection_idx(newline: &Vec<Point2D>, lines: &Vec<Vec<Point2D>>, dist: f64) -> usize {
+
+    let mut imin = newline.len();
     for line in lines.iter().rev() {
         let d1 = newline[0].distance(&newline[newline.len()-1]);
         let d2 = line[0].distance(&line[line.len()-1]);
@@ -1602,16 +2008,18 @@ pub fn intersection_idx(newline: &Vec<Point2D>, lines: &Vec<Vec<Point2D>>, dist:
             for i in 1..newline.len() {
                 for j in 1..line.len() {
                     if newline[i].distance(&line[j]) < dist {
-                        return i
+                        imin = if i < imin { i } else { imin };
+                        if imin == 1 { return imin }
                     }
                     if is_intersection(&newline[i-1], &newline[i], &line[j-1], &line[j]) {
-                        return i
+                        imin = if i < imin { i } else { imin };
+                        if imin == 1 { return imin }
                     }
                 }
             }
         }
     }
-    newline.len()
+    imin
 }
 
 pub fn point_side(p1: &Point2D, p2: &Point2D, p3: &Point2D) -> bool {
