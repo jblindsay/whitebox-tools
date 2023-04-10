@@ -76,7 +76,7 @@ impl TopographicHachures {
             flags: vec!["--interval".to_owned()],
             description: "Contour interval.".to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("500.0".to_owned()),
+            default_value: Some("10.0".to_owned()),
             optional: false,
         });
 
@@ -112,17 +112,17 @@ impl TopographicHachures {
         parameters.push(ToolParameter {
             name: "Seed separation".to_owned(),
             flags: vec!["--sep".to_owned()],
-            description: "Separation distance between seed points of hachures (in cells)."
+            description: "Separation distance between seed points of hachures (in pixels)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("2.5".to_owned()),
+            default_value: Some("2".to_owned()),
             optional: false,
         });
 
         parameters.push(ToolParameter {
             name: "Minimum distance".to_owned(),
             flags: vec!["--distmin".to_owned()],
-            description: "Minimum distance between converging flowlines (as a separation ratio)."
+            description: "Minimum distance between converging flowlines (in relation to seed separation)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.5".to_owned()),
@@ -132,7 +132,7 @@ impl TopographicHachures {
         parameters.push(ToolParameter {
             name: "Maximum distance".to_owned(),
             flags: vec!["--distmax".to_owned()],
-            description: "Maximum distance between diverging flowlines (as a separation ratio)."
+            description: "Maximum distance between diverging flowlines (in relation to seed separation)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("2".to_owned()),
@@ -142,17 +142,17 @@ impl TopographicHachures {
         parameters.push(ToolParameter {
             name: "Discretization".to_owned(),
             flags: vec!["--discr".to_owned()],
-            description: "Discretization step used in tracing the flowline (in cells)."
+            description: "Discretization step used in tracing the flowline (in pixels)."
                 .to_owned(),
             parameter_type: ParameterType::Float,
-            default_value: Some("2.0".to_owned()),
+            default_value: Some("0.5".to_owned()),
             optional: false,
         });
 
         parameters.push(ToolParameter {
             name: "Maximum turning angle".to_owned(),
             flags: vec!["--turnmax".to_owned()],
-            description: "Maximum turning angle valid for hachure, in degrees (0-90)"
+            description: "Maximum turning angle valid for hachure (in degrees, 0-90)"
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("45.0".to_owned()),
@@ -162,7 +162,7 @@ impl TopographicHachures {
         parameters.push(ToolParameter {
             name: "Minimum slope angle".to_owned(),
             flags: vec!["--slopemin".to_owned()],
-            description: "Slope angle, in degrees, at which flowline tracing ends"
+            description: "Slope angle, in degrees, at which flowline tracing ends (in degrees, 0-90)"
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("0.5".to_owned()),
@@ -172,7 +172,7 @@ impl TopographicHachures {
         parameters.push(ToolParameter {
             name: "Nesting depth".to_owned(),
             flags: vec!["--depthmax".to_owned()],
-            description: "Maximum depth of nested flowlines (0-255)"
+            description: "Maximum depth of nested flowlines, inserted within divergence areas (0-255)"
                 .to_owned(),
             parameter_type: ParameterType::Float,
             default_value: Some("16".to_owned()),
@@ -193,7 +193,7 @@ impl TopographicHachures {
             short_exe += ".exe";
         }
         let usage = format!(
-            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=hachures.shp --interval=100.0 --base=0.0 --smooth=11 --tolerance=20.0 --distance=2.0 --discretization=0.5",
+            ">>.*{0} -r={1} -v --wd=\"*path*to*data*\" --input=DEM.tif -o=hachures.shp --interval=10.0 --base=0.0 --smooth=9 --tolerance=10.0 --sep=2.0 --distmin=0.5 --distmax=2.0 --discr=0.5 --turnmax=45.0 --slopemin=0.5",
             short_exe, name
         )
         .replace("*", &sep);
@@ -255,12 +255,12 @@ impl WhiteboxTool for TopographicHachures {
         let mut base_contour = 0f64;
         let mut deflection_tolerance = 10f64;
         let mut filter_size = 9;
-        let mut separation = 5f64;
+        let mut separation = 2.0f64;
         let mut distmin = 0.5f64;
         let mut distmax = 2.0f64;
-        let mut discretization = 2.0f64;
+        let mut discretization = 0.5f64;
         let mut turnmax = 45.0f64;
-        let mut slopemin = 1.0f64;
+        let mut slopemin = 0.5f64;
         let mut depth= 16u8;
 
         if args.len() == 0 {
@@ -1155,11 +1155,12 @@ impl WhiteboxTool for TopographicHachures {
 
         // println!("Number of points removed: {}", num_points_removed);
 
-        contours.sort();
-        // contours.reverse();
+        // HACHURE GENERATION STARTS HERE
+
+        contours.sort(); // sort contours from in order of decreasing elevation
 
         let mut counter = 0;
-        let mut hid = 1;
+        let mut hid = 1; // hachure id
         let ncont = contours.len();
 
         let mut flowlines_prev: Vec<Vec<Point2D>> = Vec::new();
@@ -1179,6 +1180,7 @@ impl WhiteboxTool for TopographicHachures {
             let mut perim: f64 = 0.0;
             let mut accdist = vec![0.0; npts];
 
+            // adjust seed separation so each contour fits integer number of hachures
             for i in 1..npts {
                 perim += points[i-1].distance(&points[i]);
                 accdist[i] = perim;
@@ -1198,7 +1200,7 @@ impl WhiteboxTool for TopographicHachures {
             let new_distmin = distmin * new_step;
             let new_distmax = distmax * new_step;
 
-            let mut seeds = Vec::new();
+            let mut seeds = Vec::new(); // seeds are starting point of hachures
 
             seeds.push(points[0]);
 
@@ -1224,6 +1226,7 @@ impl WhiteboxTool for TopographicHachures {
             starts.insert(flowlines.len());
             seed_starts.insert(level_seeds.len());
 
+            // downslope hachures main cycle
             for seed in &seeds {
                 let mut flowline = get_flowline(
                     &cov, &seed, discr,
@@ -1249,6 +1252,9 @@ impl WhiteboxTool for TopographicHachures {
                 }
             }
 
+            // when all contours of current height level are processed,
+            // then try to insert additional hachures in divergence areas,
+            // and then try to add upslope hachures
             if finished_level {
 
                 let mut n = flowlines.len();
@@ -1267,6 +1273,7 @@ impl WhiteboxTool for TopographicHachures {
                 let mut idxs: Vec<usize> = Vec::new();
                 let mut i: usize = 0;
 
+                // upslope hachures
                 for seed in &level_seeds {
 
                     let mut flowline = get_flowline(
@@ -1487,10 +1494,10 @@ impl PartialOrd for Contour {
 
 impl Ord for Contour {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self.value > other.value {
+        if self.value > other.value { // deliberately inverted
             Ordering::Less
         }
-        else if self.value > other.value {
+        else if self.value < other.value {  // deliberately inverted
             Ordering::Greater
         }
         else {
@@ -1519,6 +1526,8 @@ pub struct RasterCoverage {
     a11: Vec<f64>
 }
 
+// raster coverage is a continuous surface that returns interpolated
+// value at any specified coordinate within its spatial domain
 impl RasterCoverage {
     pub fn new<'a>(raster: &'a Raster) -> RasterCoverage {
 
@@ -1563,9 +1572,6 @@ impl RasterCoverage {
     }
 
     pub fn get_x_from_column(&self, column: isize) -> f64 {
-        // self.configs.west - self.configs.resolution_x / 2f64 +
-        // column as f64 * self.configs.resolution_x
-        // Not sure why it must be + 1/2 resolution rather than minus
         self.configs.west
             + self.configs.resolution_x / 2f64
             + column as f64 * self.configs.resolution_x
@@ -1623,6 +1629,8 @@ impl RasterCoverage {
         (grad[0]*grad[0] + grad[1]*grad[1]).sqrt()
     }
 
+    // currently unused functions
+
     // pub fn get_slope_rad(&self, x: f64, y: f64) -> f64 {
     //     self.get_slope(x, y).atan()
     // }
@@ -1633,7 +1641,7 @@ impl RasterCoverage {
 }
 
 /// Traces the flowline from `p` using `discr` step until:
-/// - elevation is smaller than `zmin` or
+/// - elevation is smaller/greater than `zlim` or
 /// - slope is smaller than `slopemin` or
 /// - deflection is larger than `defmax`
 pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
@@ -1715,6 +1723,7 @@ pub fn get_flowline(cov: &RasterCoverage, p: &Point2D,
     points
 }
 
+// insertes flowlines recursively
 pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
                         n1: usize, n2: usize, k1: usize, k2:usize, depth: u8, distmin: f64,
                         distmax: f64, discr: f64, zlim: f64, slopemin: f64, defmin: f64, down: bool) {
@@ -1760,7 +1769,7 @@ pub fn insert_flowlines(cov: &RasterCoverage, flowlines: &mut Vec<Vec<Point2D>>,
     }
 }
 
-
+// checks the distance to the previously generated flowlines
 pub fn intersection_idx(newline: &Vec<Point2D>, lines: &Vec<Vec<Point2D>>, dist: f64) -> usize {
 
     let mut imin = newline.len();
