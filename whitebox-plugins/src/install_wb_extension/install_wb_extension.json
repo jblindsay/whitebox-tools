@@ -4,7 +4,7 @@
     "short_description": "Use to install a Whitebox extension product.",
     "toolbox": "Whitebox Utilities",
     "license": "Proprietary",
-    "example": ">> .*EXE_NAME -r=LaunchWbRunner",
+    "example": ">> .*EXE_NAME -r=InstallWbExtension",
     "parameters": [
         {
             "name": "Whitebox Extension Product Name",

@@ -368,33 +368,35 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                         pd = input[point_num];
                         if !pd.withheld() && !pd.is_classified_noise() && (!only_use_veg || pd.is_classified_vegetation()) {
                             p = input.get_transformed_coords(point_num);
-                            radius = if p.z < min_height {
-                                min_search_radius
-                            } else if p.z > max_height {
-                                max_search_radius
-                            } else {
-                                min_search_radius + (p.z - min_height) / height_range * radius_range
-                            };
-                            let found = kdtree.within_radius(&[p.x, p.y], radius);
-                            is_highest_pt = true;
-                            for i in 0..found.len() {
-                                index_n = found[i].id;
-                                p2 = input.get_transformed_coords(index_n);
-                                if p2.z > p.z {
-                                    is_highest_pt = false;
-                                    break;
+                            if p.z >= min_height {
+                                radius = if p.z < min_height {
+                                    min_search_radius
+                                } else if p.z > max_height {
+                                    max_search_radius
+                                } else {
+                                    min_search_radius + (p.z - min_height) / height_range * radius_range
+                                };
+                                let found = kdtree.within_radius(&[p.x, p.y], radius);
+                                is_highest_pt = true;
+                                for i in 0..found.len() {
+                                    index_n = found[i].id;
+                                    p2 = input.get_transformed_coords(index_n);
+                                    if p2.z > p.z {
+                                        is_highest_pt = false;
+                                        break;
+                                    }
                                 }
-                            }
 
-                            if is_highest_pt {
-                                output.add_point_record(p.x, p.y);
-                                output.attributes.add_record(
-                                    vec![
-                                        FieldData::Int(point_num as i32 + 1i32),
-                                        FieldData::Real(p.z)
-                                    ],
-                                    false,
-                                );
+                                if is_highest_pt {
+                                    output.add_point_record(p.x, p.y);
+                                    output.attributes.add_record(
+                                        vec![
+                                            FieldData::Int(point_num as i32 + 1i32),
+                                            FieldData::Real(p.z)
+                                        ],
+                                        false,
+                                    );
+                                }
                             }
                         }
                     }

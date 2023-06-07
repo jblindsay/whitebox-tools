@@ -119,6 +119,15 @@ impl ZonalStatistics {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Treat zero-valued cells as background?".to_owned(),
+            flags: vec!["--zero_is_background".to_owned()],
+            description: "Treat zero-valued cells as background?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -192,6 +201,7 @@ impl WhiteboxTool for ZonalStatistics {
         // let mut out_table = false;
         let mut output_html_file = String::new();
         let mut stat_type = String::from("mean");
+        let mut zero_is_background = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -240,6 +250,10 @@ impl WhiteboxTool for ZonalStatistics {
                 } else {
                     args[i + 1].to_string().to_lowercase()
                 };
+            } else if vec[0].to_lowercase() == "-zero_is_background" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    zero_is_background = true;
+                }
             }
         }
 
@@ -378,7 +392,7 @@ impl WhiteboxTool for ZonalStatistics {
             for col in 0..columns {
                 val = input.get_value(row, col);
                 features_val = features.get_value(row, col);
-                if val != nodata && features_val != features_nodata {
+                if val != nodata && features_val != features_nodata && !(zero_is_background && val == 0.0) {
                     id = (features_val.round() as isize - min_id) as usize;
                     features_data[id].push(val);
                     features_present[id] = true;
@@ -412,7 +426,7 @@ impl WhiteboxTool for ZonalStatistics {
             for col in 0..columns {
                 val = input.get_value(row, col);
                 features_val = features.get_value(row, col);
-                if val != nodata && features_val != features_nodata {
+                if val != nodata && features_val != features_nodata && !(zero_is_background && val == 0.0) {
                     id = (features_val.round() as isize - min_id) as usize;
                     features_total_deviation[id] +=
                         (val - features_average[id]) * (val - features_average[id]);
@@ -474,7 +488,7 @@ impl WhiteboxTool for ZonalStatistics {
                 for col in 0..columns {
                     val = input.get_value(row, col);
                     features_val = features.get_value(row, col);
-                    if val != nodata && features_val != features_nodata {
+                    if val != nodata && features_val != features_nodata && !(zero_is_background && val == 0.0) {
                         id = (features_val.round() as isize - min_id) as usize;
                         output.set_value(row, col, out_stat[id]);
                     }

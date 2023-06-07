@@ -81,6 +81,7 @@ impl ToolManager {
         tool_names.push("CreateHexagonalVectorGrid".to_string());
         tool_names.push("CreatePlane".to_string());
         tool_names.push("CreateRectangularVectorGrid".to_string());
+        tool_names.push("DeviationFromRegionalDirection".to_string());
         tool_names.push("Difference".to_string());
         tool_names.push("Dissolve".to_string());
         tool_names.push("EdgeProportion".to_string());
@@ -579,6 +580,7 @@ impl ToolManager {
             "createrectangularvectorgrid" => {
                 Some(Box::new(gis_analysis::CreateRectangularVectorGrid::new()))
             }
+            "deviationfromregionaldirection" => Some(Box::new(gis_analysis::DeviationFromRegionalDirection::new())), 
             "difference" => Some(Box::new(gis_analysis::Difference::new())),
             "dissolve" => Some(Box::new(gis_analysis::Dissolve::new())),
             "edgeproportion" => Some(Box::new(gis_analysis::EdgeProportion::new())),

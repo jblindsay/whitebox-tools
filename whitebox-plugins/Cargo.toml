@@ -21,6 +21,10 @@ name = "exposure_towards_wind_flux"
 path = "src/exposure_towards_wind_flux/main.rs"
 
 [[bin]]
+name = "extract_by_attribute"
+path = "src/extract_by_attribute/main.rs"
+
+[[bin]]
 name = "gaussian_scale_space"
 path = "src/gaussian_scale_space/main.rs"
 
@@ -57,6 +61,10 @@ name = "normalize_lidar"
 path = "src/normalize_lidar/main.rs"
 
 [[bin]]
+name = "otsu_thresholding"
+path = "src/otsu_thresholding/main.rs"
+
+[[bin]]
 name = "qin_flow_accumulation"
 path = "src/qin_flow_accumulation/main.rs"
 
@@ -89,12 +97,14 @@ name = "vector_stream_network_analysis"
 path = "src/vector_stream_network_analysis/main.rs"
 
 [dependencies]
+evalexpr = "10.0.0"
 fasteval = "0.2.4"
 kd-tree = { version = "0.4.1", features = ["rayon"] }
 kdtree = "0.6.0"
 nalgebra = "0.18.0"
 num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
+rayon = "1.7.0"
 rstar = "0.9.3"
 tsp-rs = "0.1.0"
 typenum = "1.15.0"

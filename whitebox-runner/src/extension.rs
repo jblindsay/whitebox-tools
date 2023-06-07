@@ -1,7 +1,9 @@
+extern crate copypasta;
 use crate::MyApp;
 use reqwest;
 use std::{env, ffi, fs, io, path, process, time};
 use anyhow::{bail, Result};
+use copypasta::{ClipboardContext, ClipboardProvider};
 
 #[derive(Default)]
 pub struct ExtensionInstall {
@@ -72,6 +74,18 @@ impl MyApp {
                     egui::TextEdit::singleline(&mut self.ei.activation_key)
                     .desired_width(self.state.textbox_width)
                 );
+                if ui.button("📋").clicked() {
+                    // ui.output_mut(|o| o.copied_text = "some_text".to_string());
+                    // self.ei.activation_key = "hello world".to_string(); // ui.output().copied_text.clone();
+                    let mut ctx = ClipboardContext::new().unwrap();
+
+                    // let msg = "Hello, world!";
+                    // ctx.set_contents(msg.to_owned()).unwrap();
+
+                    let content = ctx.get_contents().unwrap_or("Clipboard empty".to_string());
+
+                    self.ei.activation_key = content;
+                }
                 ui.end_row();
             });
 

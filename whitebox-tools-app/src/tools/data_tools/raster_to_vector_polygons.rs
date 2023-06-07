@@ -496,6 +496,10 @@ impl WhiteboxTool for RasterToVectorPolygons {
                             if is_clockwise_order(&points) {
                                 points.reverse();
                             }
+                        } else {
+                            if !is_clockwise_order(&points) {
+                                points.reverse();
+                            }
                         }
                         geometries[z as usize - 1].add_part(&points);
                     }

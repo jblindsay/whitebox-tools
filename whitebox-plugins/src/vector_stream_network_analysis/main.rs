@@ -647,10 +647,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
             if is_exterior || crosses_nodata[i] {
                 is_exterior_link[i] = true;
-                if link_min_elev[i] <= z || crosses_nodata[i] { 
-
-                    z = link_min_elev[i];
-                    queue.push(StreamLink{ index: i, min: z + max_ridge_cutting_height });
+                if link_min_elev[i] <= z || crosses_nodata[i] {
+                    queue.push(StreamLink{ index: i, min: link_min_elev[i] + max_ridge_cutting_height });
                 }
             }
         }
@@ -920,6 +918,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     while !stack.is_empty() {
         let i = stack.pop().expect("Error during pop operation.");
         link_mag[i] += link_lengths[i];
+        max_upstream_length[i] += link_lengths[i];
         dsn = downstream_link[i];
         if dsn >= 0isize {
             // pass this downstream
@@ -935,8 +934,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 strahler_order[dsn as usize] = strahler_order[i];
             }
 
-            if max_upstream_length[i] + link_lengths[i] > max_upstream_length[dsn as usize] {
-                max_upstream_length[dsn as usize] = max_upstream_length[i] + link_lengths[i];
+            if max_upstream_length[i] > max_upstream_length[dsn as usize] {
+                max_upstream_length[dsn as usize] = max_upstream_length[i];
             }
 
             shreve_order[dsn as usize] += shreve_order[i];
@@ -988,7 +987,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         neighbour_list.clear();
         let mut max_tucl = 0f64;
         let mut max_tucl_link = -1isize;
-        for pt in link_key_points[i].get_all_points() { // (XYPoint pt : linkKeyPoints[i].getAllPoints()) {
+        for pt in link_key_points[i].get_all_points() {
             x = pt.x;
             y = pt.y;
             let ret = points_tree.within(&[x, y], precision, &squared_euclidean).unwrap();
@@ -997,8 +996,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 id = *ret[j].1;
                 if downstream_link[id] == i as isize {
                     neighbour_list.push(id);
-                    if link_mag[id] > max_tucl {
-                        max_tucl = link_mag[id];
+                    // if link_mag[id] > max_tucl {
+                    if max_upstream_length[id] > max_tucl {
+                        max_tucl = max_upstream_length[id]; // link_mag[id];
                         max_tucl_link = id as isize;
                     }
                 }

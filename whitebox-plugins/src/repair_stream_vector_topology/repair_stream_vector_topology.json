@@ -13,7 +13,7 @@
             "description": "Name of the input lines vector file.",
             "parameter_type": {"ExistingFile":{"Vector":"Line"}},
             "default_value": null,
-            "optional": false
+            "optional": true
         },
         {
             "name": "Output Lines",
@@ -21,7 +21,7 @@
             "description": "Name of the output lines vector file.",
             "parameter_type": {"NewFile":{"Vector":"Line"}},
             "default_value": null,
-            "optional": false
+            "optional": true
         },
         {
             "name": "Snap Distance",

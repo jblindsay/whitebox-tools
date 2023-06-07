@@ -196,7 +196,7 @@ impl WhiteboxTool for PatchOrientation {
             "ORIENT",
             FieldDataType::Real,
             7u8,
-            5u8,
+            4u8,
         ));
 
         let mut part_start: usize;

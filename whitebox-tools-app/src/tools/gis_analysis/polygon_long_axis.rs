@@ -200,8 +200,27 @@ impl WhiteboxTool for PolygonLongAxis {
         }
 
         // create output file
-        let mut output =
-            Shapefile::initialize_using_file(&output_file, &input, ShapeType::PolyLine, true)?;
+        let mut output = Shapefile::initialize_using_file(&output_file, &input, ShapeType::PolyLine, false)?;
+
+        // add the attributes
+        let mut fields_vec: Vec<AttributeField> = vec![];
+
+        let in_atts = input.attributes.clone();
+        for i in 0..in_atts.fields.len() {
+            let field = in_atts.get_field(i);
+            fields_vec.push(field.clone());
+        }
+
+        fields_vec.push(
+            AttributeField::new(
+                "DIRECTION", 
+                FieldDataType::Real, 
+                7u8, 
+                2u8
+            )
+        );
+
+        output.attributes.add_fields(&fields_vec);
 
         for record_num in 0..input.num_records {
             let record = input.get_record(record_num);
@@ -240,7 +259,14 @@ impl WhiteboxTool for PolygonLongAxis {
             sfg.add_part(&points);
             output.add_record(sfg);
 
-            let atts = input.attributes.get_record(record_num);
+            let mut orientation = if p2.y > p1.y {
+                -((p2.y - p1.y).atan2(p2.x - p1.x)).to_degrees() + 90.0
+            } else {
+                -((p1.y - p2.y).atan2(p1.x - p2.x)).to_degrees() + 90.0
+            };
+            if orientation < 0.0 { orientation = 180.0 + orientation; }
+            let mut atts = input.attributes.get_record(record_num);
+            atts.push(FieldData::Real(orientation));
             output.attributes.add_record(atts.clone(), false);
 
             if verbose {

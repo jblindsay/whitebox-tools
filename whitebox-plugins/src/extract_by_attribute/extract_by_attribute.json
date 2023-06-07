@@ -1,0 +1,34 @@
+{
+    "tool_name": "ExtractByAttribute",
+    "exe": "extract_by_attribute",
+    "short_description": "Extracts features from an input vector into an output file based on attribute properties.",
+    "toolbox": "GIS Analysis",
+    "license": "MIT",
+    "example": ">> .*EXE_NAME -r=ExtractByAttribute -i=input.shp -o=output.shp --statement=\"ELEV>500.0\"",
+    "parameters": [
+        {
+            "name": "Input Vector File",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input vector file.",
+            "parameter_type": {"ExistingFile":{"Vector":"Any"}},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Output Vector File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output LiDAR points.",
+            "parameter_type": {"NewFile":{"Vector":"Any"}},
+            "default_value": null,
+            "optional": true
+        },
+        {
+            "name": "Statement:",
+            "flags": ["-s", "--statement"],
+            "description": "Modify statement e.g. ELEV>500.0.",
+            "parameter_type": "String",
+            "default_value": "",
+            "optional": false
+        }
+    ]
+}

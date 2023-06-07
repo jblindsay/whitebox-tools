@@ -1,0 +1,26 @@
+{
+    "tool_name": "OtsuThresholding",
+    "exe": "otsu_thresholding",
+    "short_description": "Applies Ostu's method for optimal binary thresholding of a continuous image.",
+    "toolbox": "Image Processing Tools",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=OtsuThresholding -i=input.tif -o=segmented.tif --num_bins=1024",
+    "parameters": [
+        {
+            "name": "Input Raster",
+            "flags": ["-i", "--input"],
+            "description": "Name of the input DEM raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["-o", "--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        }
+    ]
+}

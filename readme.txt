@@ -56,6 +56,13 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 2.4.0 (xx-xx-20xx)
+- Added the ExtractByAttribute tool to filter out vector features by attribute characteristics.
+- Added the DeviationFromRegionalDirection tool.
+- Added the OtsuThresholding tool, which uses Ostu's method for optimal binary thresholding,
+  transforming the input image into background and foreground pixels.
+- Fixed a bug with polygon holes in the RasterToVectorPolygons tool.
+
 Version 2.3.0 (28-03-2023)
 - Added the new Whitebox Runner v2.0. This version of WbRunner is an entirely new application with many 
   advancements over the previous version of the WbRunner. It is now written in pure Rust (compared with 

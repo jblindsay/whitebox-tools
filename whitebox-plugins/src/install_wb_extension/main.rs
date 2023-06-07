@@ -12,11 +12,12 @@ use std::{
     process::Command,
 };
 
-/// This tool can be used to launch the Whitebox Runner application from within other Whitebox front-ends.
-/// The purpose of this tool is to make the Whitebox Runner more accessible from other Whitebox front-ends.
-/// However, note that you can also launch the Whitebox Runner simply by double-clicking on the executable
-/// file (`whitebox_runner.exe` on Windows, `whitebox_tools` on other systems) located within your WBT 
-/// directory, containing your Whitebox installation.
+/// This tool can be used to install the [Whitebox Toolset Extension](https://www.whiteboxgeo.com/whitebox-toolset-extension/) 
+/// (WTE). The WTE is a commercial add-on for the WhiteboxTools Open Core and contains more than 60 advanced tools for 
+/// geospatial data processing. The WTE easily integrates into your current WhiteboxTools environment. This tool will launch 
+/// the Whitebox Runner, allowing users a convenient way to install the extension. While this tool will install the extension
+/// running the extension tools does require a valid license, which can be purchased from 
+/// [Whitebox Geospatial Inc.](https://www.whiteboxgeo.com/extension-pricing/).
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -76,9 +77,9 @@ fn version() {
     );
 }
 
-pub fn get_tool_name() -> String {
-    String::from("InstallWbExtension") // This should be camel case and is a reference to the tool name.
-}
+// fn get_tool_name() -> String {
+//     String::from("InstallWbExtension") // This should be camel case and is a reference to the tool name.
+// }
 
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     // read the arguments

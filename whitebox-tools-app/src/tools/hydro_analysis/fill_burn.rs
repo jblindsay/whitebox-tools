@@ -22,7 +22,7 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// Burns streams into a DEM using the FillBurn (Saunders, 1999) method which produces a hydro-enforced DEM.
+/// Burns streams into a digital elevation model (DEM) using the FillBurn (Saunders, 1999) method which produces a hydro-enforced DEM.
 /// This tool uses the algorithm described in:
 ///
 /// Lindsay JB. 2016. The practice of DEM stream burning revisited. Earth Surface Processes
@@ -32,6 +32,13 @@ use std::thread;
 ///
 /// Saunders, W. 1999. Preparation of DEMs for use in environmental modeling analysis, in: ESRI User
 /// Conference. pp. 24-30.
+/// 
+/// The `TopologicalBreachBurn` tool, contained within the Whitebox Toolset Extension (WTE), should be preferred to
+/// this `FillBurn`, because it accounts for the topological errors that frequently occur when burning vector streams
+/// into a DEM.
+/// 
+/// # See Also
+/// `TopologicalBreachBurn`, `PruneVectorStreams`
 pub struct FillBurn {
     name: String,
     description: String,

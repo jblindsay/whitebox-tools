@@ -77,9 +77,9 @@ fn version() {
     );
 }
 
-pub fn get_tool_name() -> String {
-    String::from("LaunchWbRunner") // This should be camel case and is a reference to the tool name.
-}
+// fn get_tool_name() -> String {
+//     String::from("LaunchWbRunner") // This should be camel case and is a reference to the tool name.
+// }
 
 fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     // read the arguments

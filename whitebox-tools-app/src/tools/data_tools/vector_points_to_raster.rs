@@ -85,7 +85,7 @@ impl VectorPointsToRaster {
         parameters.push(ToolParameter{
             name: "Assignment Operation".to_owned(), 
             flags: vec!["--assign".to_owned()], 
-            description: "Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'sum', 'number'".to_owned(),
+            description: "Assignment operation, where multiple points are in the same grid cell; options include 'first', 'last' (default), 'min', 'max', 'mean', 'sum', 'number'".to_owned(),
             parameter_type: ParameterType::OptionList(vec!["first".to_owned(), "last".to_owned(), "min".to_owned(), "max".to_owned(), "sum".to_owned(), "number".to_owned()]),
             default_value: Some("last".to_owned()),
             optional: true
