@@ -62,6 +62,8 @@ Version 2.4.0 (xx-xx-20xx)
 - Added the OtsuThresholding tool, which uses Ostu's method for optimal binary thresholding,
   transforming the input image into background and foreground pixels.
 - Fixed a bug with polygon holes in the RasterToVectorPolygons tool.
+- Fixed a bug with the IndividualTreeDetection tool that prevented use of the min_height parameter
+  when applied in batch mode.
 
 Version 2.3.0 (28-03-2023)
 - Added the new Whitebox Runner v2.0. This version of WbRunner is an entirely new application with many 

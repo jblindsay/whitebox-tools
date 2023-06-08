@@ -1,7 +1,7 @@
 /* 
 Authors:  Dr. John Lindsay
-Created: 21/07/2021
-Last Modified: 21/07/2021
+Created: 03/06/2023
+Last Modified: 03/06/2023
 License: MIT
 */
 
@@ -11,15 +11,86 @@ use std::io::{Error, ErrorKind};
 use std::path;
 use std::str;
 use std::time::Instant;
-// use std::sync::mpsc;
-// use std::sync::Arc;
-// use std::thread;
-// use num_cpus;
 use whitebox_common::utils::get_formatted_elapsed_time;
 use whitebox_vector::{FieldData, Shapefile, ShapeType};
 use evalexpr::*;
+use std::f64::consts::PI;
 
-/// The 
+/// This tool extracts features from an input vector into an output file based on attribute properties. The user must
+/// specify the name of the input (`--input`) and output (`--output`) files, along with the filter statement (`--statement`).
+/// The conditional statement is a single-line logical condition containing one or more attribute variables contained in
+/// the file's attribute table that evaluates to TRUE/FALSE. In addition to the common comparison and logical  
+/// operators, i.e. < > <= >= == (EQUAL TO) != (NOT EQUAL TO) || (OR) && (AND), conditional statements may contain a  
+/// any valid mathematical operation and the `null` value. 
+/// 
+/// | Identifier           | Argument Amount | Argument Types                | Description |
+/// |----------------------|-----------------|-------------------------------|-------------|
+/// | `min`                | >= 1            | Numeric                       | Returns the minimum of the arguments |
+/// | `max`                | >= 1            | Numeric                       | Returns the maximum of the arguments |
+/// | `len`                | 1               | String/Tuple                  | Returns the character length of a string, or the amount of elements in a tuple (not recursively) |
+/// | `floor`              | 1               | Numeric                       | Returns the largest integer less than or equal to a number |
+/// | `round`              | 1               | Numeric                       | Returns the nearest integer to a number. Rounds half-way cases away from 0.0 |
+/// | `ceil`               | 1               | Numeric                       | Returns the smallest integer greater than or equal to a number |
+/// | `if`                 | 3               | Boolean, Any, Any             | If the first argument is true, returns the second argument, otherwise, returns the third  |
+/// | `contains`           | 2               | Tuple, any non-tuple          | Returns true if second argument exists in first tuple argument. |
+/// | `contains_any`       | 2               | Tuple, Tuple of any non-tuple | Returns true if one of the values in the second tuple argument exists in first tuple argument. |
+/// | `typeof`             | 1               | Any                           | returns "string", "float", "int", "boolean", "tuple", or "empty" depending on the type of the argument  |
+/// | `math::is_nan`       | 1               | Numeric                       | Returns true if the argument is the floating-point value NaN, false if it is another floating-point value, and throws an error if it is not a number  |
+/// | `math::is_finite`    | 1               | Numeric                       | Returns true if the argument is a finite floating-point number, false otherwise  |
+/// | `math::is_infinite`  | 1               | Numeric                       | Returns true if the argument is an infinite floating-point number, false otherwise  |
+/// | `math::is_normal`    | 1               | Numeric                       | Returns true if the argument is a floating-point number that is neither zero, infinite, [subnormal](https://en.wikipedia.org/wiki/Subnormal_number), or NaN, false otherwise  |
+/// | `math::ln`           | 1               | Numeric                       | Returns the natural logarithm of the number |
+/// | `math::log`          | 2               | Numeric, Numeric              | Returns the logarithm of the number with respect to an arbitrary base |
+/// | `math::log2`         | 1               | Numeric                       | Returns the base 2 logarithm of the number |
+/// | `math::log10`        | 1               | Numeric                       | Returns the base 10 logarithm of the number |
+/// | `math::exp`          | 1               | Numeric                       | Returns `e^(number)`, (the exponential function) |
+/// | `math::exp2`         | 1               | Numeric                       | Returns `2^(number)` |
+/// | `math::pow`          | 2               | Numeric, Numeric              | Raises a number to the power of the other number |
+/// | `math::cos`          | 1               | Numeric                       | Computes the cosine of a number (in radians) |
+/// | `math::acos`         | 1               | Numeric                       | Computes the arccosine of a number. The return value is in radians in the range [0, pi] or NaN if the number is outside the range [-1, 1] |
+/// | `math::cosh`         | 1               | Numeric                       | Hyperbolic cosine function |
+/// | `math::acosh`        | 1               | Numeric                       | Inverse hyperbolic cosine function |
+/// | `math::sin`          | 1               | Numeric                       | Computes the sine of a number (in radians) |
+/// | `math::asin`         | 1               | Numeric                       | Computes the arcsine of a number. The return value is in radians in the range [-pi/2, pi/2] or NaN if the number is outside the range [-1, 1] |
+/// | `math::sinh`         | 1               | Numeric                       | Hyperbolic sine function |
+/// | `math::asinh`        | 1               | Numeric                       | Inverse hyperbolic sine function |
+/// | `math::tan`          | 1               | Numeric                       | Computes the tangent of a number (in radians) |
+/// | `math::atan`         | 1               | Numeric                       | Computes the arctangent of a number. The return value is in radians in the range [-pi/2, pi/2] |
+/// | `math::atan2`        | 2               | Numeric, Numeric              | Computes the four quadrant arctangent in radians |
+/// | `math::tanh`         | 1               | Numeric                       | Hyperbolic tangent function |
+/// | `math::atanh`        | 1               | Numeric                       | Inverse hyperbolic tangent function. |
+/// | `math::sqrt`         | 1               | Numeric                       | Returns the square root of a number. Returns NaN for a negative number |
+/// | `math::cbrt`         | 1               | Numeric                       | Returns the cube root of a number |
+/// | `math::hypot`        | 2               | Numeric                       | Calculates the length of the hypotenuse of a right-angle triangle given legs of length given by the two arguments |
+/// | `math::abs`          | 1               | Numeric                       | Returns the absolute value of a number, returning an integer if the argument was an integer, and a float otherwise |
+/// | `str::regex_matches` | 2               | String, String                | Returns true if the first argument matches the regex in the second argument (Requires `regex_support` feature flag) |
+/// | `str::regex_replace` | 3               | String, String, String        | Returns the first argument with all matches of the regex in the second argument replaced by the third argument (Requires `regex_support` feature flag) |
+/// | `str::to_lowercase`  | 1               | String                        | Returns the lower-case version of the string |
+/// | `str::to_uppercase`  | 1               | String                        | Returns the upper-case version of the string |
+/// | `str::trim`          | 1               | String                        | Strips whitespace from the start and the end of the string |
+/// | `str::from`          | >= 0            | Any                           | Returns passed value as string |
+/// | `bitand`             | 2               | Int                           | Computes the bitwise and of the given integers |
+/// | `bitor`              | 2               | Int                           | Computes the bitwise or of the given integers |
+/// | `bitxor`             | 2               | Int                           | Computes the bitwise xor of the given integers |
+/// | `bitnot`             | 1               | Int                           | Computes the bitwise not of the given integer |
+/// | `shl`                | 2               | Int                           | Computes the given integer bitwise shifted left by the other given integer |
+/// | `shr`                | 2               | Int                           | Computes the given integer bitwise shifted right by the other given integer |
+/// | `random`             | 0               | Empty                         | Return a random float between 0 and 1. Requires the `rand` feature flag. |
+/// | `pi`                 | 0               | Empty                         | Return the value of the PI constant. |/
+///
+/// The following are examples of valid conditional statements:
+/// 
+/// ```
+/// HEIGHT >= 300.0
+/// 
+/// CROP == "corn"
+/// 
+/// (ELEV >= 525.0) && (HGT_AB_GR <= 5.0)
+/// 
+/// math::ln(CARBON) > 1.0
+/// 
+/// VALUE == null
+/// ```
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -61,14 +132,14 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    -o, --output   Name of the output raster file.
+    -o, --output   Name of the output vector file.
     --statement    Statement of a mathematical expression e.g. "raster1" > 35.0.
     
     Input/output file names can be fully qualified, or can rely on the working directory contained in 
     the WhiteboxTools settings.json file.
 
     Example Usage:
-    >> .*EXE_NAME run -i=DEM.tif --statement='value > 2500.0' --true=2500.0 --false=DEM.tif --output=onlyLowPlaces.tif
+    >> .*EXE_NAME run -i=input.shp -o=output.shp --statement=\"ELEV>500.0\"
     "#
     .replace("*", &sep)
     .replace("EXE_NAME", exe_name);
@@ -98,8 +169,6 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     if !working_directory.is_empty() && !working_directory.ends_with(&sep) {
         working_directory += &sep;
     }
-    // let max_procs = configurations.max_procs;
-
     // read the arguments
     let mut statement = String::new();
     let mut input_file: String = String::new();
@@ -216,6 +285,11 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             _ = context.set_value("NULL".into(), "null".into());
             _ = context.set_value("none".into(), "null".into());
             _ = context.set_value("NONE".into(), "null".into());
+            _ = context.set_value("nodata".into(), "null".into());
+            _ = context.set_value("NoData".into(), "null".into());
+            _ = context.set_value("NODATA".into(), "null".into());
+            _ = context.set_value("pi".into(), (PI).into());
+            _ = context.set_value("PI".into(), (PI).into());
             
             if !contains_fid { // add the FID
                 _ = context.set_value("FID".into(), (record_num as i64).into());
@@ -228,15 +302,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 if value {
                     output.add_record(record.clone());
                     output.attributes.add_record(att_data.clone(), false);
-
                     num_extracted += 1;
-
-                    // tx.send((i, true)).unwrap();
-                // } else {
-                //     tx.send((i, false)).unwrap();
                 }
-            // } else {
-            //     tx.send((i, false)).unwrap();
             }
         }
         

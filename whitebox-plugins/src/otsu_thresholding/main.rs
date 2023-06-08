@@ -72,17 +72,14 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    -d, --dem     Name of the input DEM raster file.
+    -i, --input   Name of the input raster file.
     -o, --output  Name of the output raster file.
-    --azimuth     Wind azimuth, in degrees.
-    --max_dist    Optional maximum search distance. Minimum value is 5 x cell size.
-    --z_factor    Optional multiplier for when the vertical and horizontal units are not the same.
     
     Input/output file names can be fully qualified, or can rely on the
     working directory contained in the WhiteboxTools settings.json file.
 
     Example Usage:
-    >> .*EXE_NAME run -i=input.tif -o=new.tif --sigma=0.25 --low=0.1 --high=0.2
+    >> .*EXE_NAME run -i=input.tif -o=segmented.tif
 
     Note: Use of this tool requires a valid license. To obtain a license,
     contact Whitebox Geospatial Inc. (support@whiteboxgeo.com).
@@ -385,7 +382,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         if configurations.verbose_mode {
             progress = (100.0_f64 * r as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Calculating index: {}%", progress);
+                println!("Progress: {}%", progress);
                 old_progress = progress;
             }
         }

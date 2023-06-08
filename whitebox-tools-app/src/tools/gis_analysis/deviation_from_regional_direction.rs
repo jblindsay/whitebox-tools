@@ -15,20 +15,17 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool calculates the orientation of polygon features based on the slope of a reduced major
-/// axis (RMA) regression line. The regression analysis use the vertices of the exterior hull nodes
-/// of a vector polygon. The only required input is the name of the vector polygon file. The
-/// orientation values, measured in degrees from north, will be placed in the accompanying attribute
-/// table as a new field (ORIENT). The value of the orientation measure for any polygon will
-/// depend on how elongated the feature is.
-///
-/// Note that the output values are polygon orientations and not true directions. While directions
-/// may take values ranging from 0-360, orientation is expressed as an angle between 0 and 180 degrees
-/// clockwise from north. Lastly, the orientation measure may become unstable when polygons are
-/// oriented nearly vertical or horizontal.
+/// This tool calculates the degree to which each polygon in an input shapefile (`--input`) deviates from the average, 
+/// or regional, direction. The input file will have a new attribute inserted in the attribute table, `DEV_DIR`, which
+/// will contain the calculated values. The deviation values are in degrees. The orientation of each polygon is determined
+/// based on the long-axis of the minimum bounding box fitted to the polygon. The regional direction is based on the 
+/// mean direciton of the polygons, weighted by long-axis length (longer polygons contribute more weight) and elongation,
+/// i.e., a function of the long and short axis lengths (greater elongation contributes more weight). Polygons with 
+/// elongation values lower than the elongation threshold value (`--elong_threshold`), which has values between 0 and 1, 
+/// will be excluded from the calculation of the regional direction. 
 ///
 /// # See Also
-/// `LinearityIndex`, `ElongationRatio`
+/// `PatchOrientation`, `ElongationRatio`
 pub struct DeviationFromRegionalDirection {
     name: String,
     description: String,
@@ -42,7 +39,7 @@ impl DeviationFromRegionalDirection {
         // public constructor
         let name = "DeviationFromRegionalDirection".to_string();
         let toolbox = "GIS Analysis/Patch Shape Tools".to_string();
-        let description = "Calculates the orientation of vector polygons.".to_string();
+        let description = "Calculates the deviation of vector polygons from the regional average direction.".to_string();
 
         let mut parameters = vec![];
         parameters.push(ToolParameter {
