@@ -226,7 +226,7 @@ impl WhiteboxTool for FillBurn {
         if verbose {
             println!("Reading DEM data...")
         };
-        let dem = Arc::new(Raster::new(&dem_file, "r")?);
+        let dem = Arc::new(Raster::new(&dem_file, "r")?); // Mem usage: 8 bytes per pixel
         let rows = dem.configs.rows as isize;
         let columns = dem.configs.columns as isize;
         let nodata = dem.configs.nodata;
@@ -242,7 +242,7 @@ impl WhiteboxTool for FillBurn {
         }
 
         // create the output raster file
-        let mut raster_streams: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?;
+        let mut raster_streams: Array2D<u8> = Array2D::new(rows, columns, 0u8, 0u8)?; // Mem usage: 9 bytes per pixel
         let mut z: f64;
         let mut col: isize;
         let mut row: isize;
@@ -362,6 +362,8 @@ impl WhiteboxTool for FillBurn {
                 }
             }
         }
+
+        drop(streams);
 
         // Perform line-thinning
         let mut did_something = true;
@@ -551,6 +553,8 @@ impl WhiteboxTool for FillBurn {
             }
         }
 
+        drop(queue);
+
         // Perform the priority flood operation.
 
         let elev_digits = (dem.configs.maximum as i64).to_string().len();
@@ -592,6 +596,9 @@ impl WhiteboxTool for FillBurn {
                 }
             }
         }
+
+        drop(minheap);
+        drop(in_queue);
 
         // Find the minimum elevation difference between the
         // filled DEM and the original DEM along the

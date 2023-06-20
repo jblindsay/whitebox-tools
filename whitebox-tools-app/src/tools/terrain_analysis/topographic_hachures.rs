@@ -34,7 +34,7 @@ use std::thread;
 /// of the output contour vector file, at the cost of generating straighter contour line segments.
 ///
 /// # See Also
-/// `RasterToVectorPolygons`
+/// `ContoursFromRaster`, `RasterToVectorPolygons`
 pub struct TopographicHachures {
     name: String,
     description: String,

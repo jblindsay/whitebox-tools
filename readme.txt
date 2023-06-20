@@ -61,6 +61,7 @@ Version 2.4.0 (xx-xx-20xx)
 - Added the DeviationFromRegionalDirection tool.
 - Added the OtsuThresholding tool, which uses Ostu's method for optimal binary thresholding,
   transforming the input image into background and foreground pixels.
+- Added the TopographicHachures tool.
 - Fixed a bug with polygon holes in the RasterToVectorPolygons tool.
 - Fixed a bug with the IndividualTreeDetection tool that prevented use of the min_height parameter
   when applied in batch mode.

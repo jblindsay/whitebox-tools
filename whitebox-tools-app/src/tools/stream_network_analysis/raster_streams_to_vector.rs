@@ -82,6 +82,15 @@ impl RasterStreamsToVector {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Preserve all stream vertices?".to_owned(),
+            flags: vec!["--all_vertices".to_owned()],
+            description: "Do you want to preserve all vertices in output (i.e. no straight-line generalization)".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -153,6 +162,7 @@ impl WhiteboxTool for RasterStreamsToVector {
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
+        let mut all_vertices = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -191,6 +201,10 @@ impl WhiteboxTool for RasterStreamsToVector {
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
+                }
+            } else if flag_val == "-all_vertices" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    all_vertices = true;
                 }
             }
         }
@@ -365,7 +379,7 @@ impl WhiteboxTool for RasterStreamsToVector {
                 while flag {
                     if pntr.get_value(row, col) != pntr_nodata {
                         dir = pntr.get_value(row, col) as usize;
-                        already_added_point = if dir != prev_dir {
+                        already_added_point = if dir != prev_dir || all_vertices {
                             x = pntr.get_x_from_column(col);
                             y = pntr.get_y_from_row(row);
                             points.push(Point2D::new(x, y));
