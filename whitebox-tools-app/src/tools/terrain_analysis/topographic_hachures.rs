@@ -24,14 +24,41 @@ use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 
-/// This tool can be used to create a vector contour coverage from an input raster surface model (`--input`), such as a digital
-/// elevation model (DEM). The user must specify the contour interval (`--interval`) and optionally, the base contour value (`--base`).
-/// The degree to which contours are smoothed is controlled by the **Smoothing Filter Size** parameter (`--smooth`). This value, which
-/// determines the size of a mean filter applied to the x-y position of vertices in each contour, should be an odd integer value, e.g.
-/// 3, 5, 7, 9, 11, etc. Larger values will result in smoother contour lines. The tolerance parameter (`--tolerance`) controls the
-/// amount of line generalization. That is, vertices in a contour line will be selectively removed from the line if they do not result in
-/// an angular deflection in the line's path of at least this threshold value. Increasing this value can significantly decrease the size
-/// of the output contour vector file, at the cost of generating straighter contour line segments.
+/// This tool can be used to create a topographic hachures vector dataset from an input raster surface model (`--input`), such as a digital
+/// elevation model (DEM). Topographic hachures are short flowlines arranged along contours for cartographic relief presentation.
+///
+/// ![](../../doc_img/TopographicHachures.png)
+///
+/// The first group of parameters is the same as in the  `ContoursFromRaster` tool. The user must specify the contour interval (`--interval`)
+/// and optionally, the base contour value (`--base`). The degree to which contours are smoothed is controlled by the **Smoothing Filter Size**
+/// parameter (`--smooth`). This value, which determines the size of a mean filter applied to the x-y position of vertices in each contour,
+/// should be an odd integer value, e.g. 3, 5, 7, 9, 11, etc. Larger values will result in smoother contour lines. The tolerance
+/// parameter (`--tolerance`) controls the amount of line generalization. That is, vertices in a contour line will be selectively removed
+/// from the line if they do not result in an angular deflection in the line's path of at least this threshold value. Increasing this value
+/// will lead to straighter contour line segments.
+///
+/// The remaining parameters control the hachures generation process. Seed separation (`--sep`) is the distance between neighboring hachures
+/// along contours (in pixels, can be fractional). Minimum distance (`--distmin`) and Maximum distance (`--distmax`) determine
+/// how much closer hachures can converge or diverge in relation to the seed separation. The hachure is approximated by polyline which
+/// follows the flow direction, and the length of each polyline segment is controlled by Discretization (`--discr`) parameter, expressed
+/// in pixels (can be fractional). Smoother and more accurate flowlines are generated with smaller discretization. Normally, each hachure
+/// starts at contour line and ends by the contour line which is one interval lower. However, flowline behaviour becomes unpredictable in
+/// the areas of low slope angles. To deal with such cases, the Maximum turning angle (`--turnmax`) and the Minimum slope angle
+/// (`--slopemin`) are used. If the next step in flowline tracing would violate these conditions, the process is interrupted at current point.
+/// Finally, the Nesting depth (`--depthmax`) parameter determines how deep the hachures are inserted recursively in divergence areas.
+///
+/// The output vector dataset (`--output`) contains several attributes which are helpful during visualization. In particular, _HEIGHT_, _SLOPE_,
+/// and _ASPECT_ attributes contain the elevation of the hachure seed, as well as the average slope and elevation along its flowline.
+/// Each of the remaining _N_, _NE_, _E_, _SE_, _S_, _SW_, _W_, and _NW_ attributes is essentially the cosine of the angle between the
+/// light source with corresponding direction and the aspect of the hachure. For example, the classic "shadow hachuring" technique with
+/// northwestern illumination can be implemented by varying the line stroke width based on the _(1 - NW) * SLOPE_ expression. Atmospheric
+/// perspective is achieved by making the hachures more transparent (or closer to the background color) for smaller values of _HEIGHT_.
+///
+/// # References
+///
+/// Imhof, E., 1982. Cartographic Relief Presentation. Walter der Gruyter, Berlin.
+///
+/// Samsonov, T., 2014. Morphometric Mapping of Topography by Flowline Hachures. The Cartographic Journal 51, 63–74. https://doi.org/10.1179/1743277413Y.0000000036
 ///
 /// # See Also
 /// `ContoursFromRaster`, `RasterToVectorPolygons`
