@@ -41,14 +41,15 @@ use std::thread;
 /// along contours (in pixels, can be fractional). Minimum distance (`--distmin`) and Maximum distance (`--distmax`) determine
 /// how much closer hachures can converge or diverge in relation to the seed separation. The hachure is approximated by polyline which
 /// follows the flow direction, and the length of each polyline segment is controlled by Discretization (`--discr`) parameter, expressed
-/// in pixels (can be fractional). Smoother and more accurate flowlines are generated with smaller discretization. Normally, each hachure
+/// in pixels (can be fractional). Smoother and more accurate flowlines are generated with smaller discretization. However, this will
+/// also lead to lines that contain more vertices, and will require more storage space and visualization time.  Normally, each hachure
 /// starts at contour line and ends by the contour line which is one interval lower. However, flowline behaviour becomes unpredictable in
 /// the areas of low slope angles. To deal with such cases, the Maximum turning angle (`--turnmax`) and the Minimum slope angle
 /// (`--slopemin`) are used. If the next step in flowline tracing would violate these conditions, the process is interrupted at current point.
 /// Finally, the Nesting depth (`--depthmax`) parameter determines how deep the hachures are inserted recursively in divergence areas.
 ///
 /// The output vector dataset (`--output`) contains several attributes which are helpful during visualization. In particular, _HEIGHT_, _SLOPE_,
-/// and _ASPECT_ attributes contain the elevation of the hachure seed, as well as the average slope and elevation along its flowline.
+/// and _ASPECT_ attributes contain the elevation of the hachure seed, as well as the average slope and aspect along its flowline.
 /// Each of the remaining _N_, _NE_, _E_, _SE_, _S_, _SW_, _W_, and _NW_ attributes is essentially the cosine of the angle between the
 /// light source with corresponding direction and the aspect of the hachure. For example, the classic "shadow hachuring" technique with
 /// northwestern illumination can be implemented by varying the line stroke width based on the _(1 - NW) * SLOPE_ expression. Atmospheric
