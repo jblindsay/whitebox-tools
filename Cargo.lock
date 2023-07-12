@@ -1636,7 +1636,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f54287107c30b23cf7a32e394c68b9472220a090c897d916dfdf467caef88864"
 dependencies = [
  "num-traits",
- "ordered-float 3.4.0",
+ "ordered-float 3.7.0",
  "paste",
  "pdqselect",
  "typenum",
@@ -2296,9 +2296,9 @@ dependencies = [
 
 [[package]]
 name = "ordered-float"
-version = "3.4.0"
+version = "3.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d84eb1409416d254e4a9c8fa56cc24701755025b458f0fcd8e59e1f5f40c23bf"
+checksum = "2fc2dbde8f8a79f2102cc474ceb0ad68e3b80b85289ea62389b60e66777e4213"
 dependencies = [
  "num-traits",
 ]
@@ -3820,6 +3820,7 @@ dependencies = [
  "kdtree",
  "nalgebra 0.18.1",
  "num_cpus",
+ "ordered-float 3.7.0",
  "rand 0.7.3",
  "rayon",
  "rstar 0.9.3",

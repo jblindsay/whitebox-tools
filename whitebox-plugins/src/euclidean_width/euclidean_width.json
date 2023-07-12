@@ -23,7 +23,7 @@
             "optional": false
         },
         {
-            "name": "Maximum width for high-precision calculation",
+            "name": "Maximum width",
             "flags": ["--max_width"],
             "description": "Maximum width for high-precision calculation",
             "parameter_type": "Float",
