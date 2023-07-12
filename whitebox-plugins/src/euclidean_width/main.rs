@@ -1,10 +1,17 @@
 use whitebox_raster::*;
 use whitebox_common::structures::Array2D;
-use crate::tools::*;
+use whitebox_common::utils::{ get_formatted_elapsed_time, wrapped_print };
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
+use std::time::Instant;
+use std::sync::mpsc;
+use std::thread;
+use std::collections::{BinaryHeap};
+use ordered_float::OrderedFloat;
+use num_cpus;
+
 
 fn main() {
 
@@ -92,7 +99,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     let mut input_file: String = String::new();
     let mut output_file: String = String::new();
-    let mut max_width = f32::INFINITY;
+    let mut max_width = f64::INFINITY;
 
     if args.len() <= 1 {
         return Err(Error::new(
@@ -127,12 +134,12 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             max_width = if keyval {
                 vec[1]
                     .to_string()
-                    .parse::<f32>()
+                    .parse::<f64>()
                     .expect(&format!("Error parsing {}", flag_val))
             } else {
                 args[i + 1]
                     .to_string()
-                    .parse::<f32>()
+                    .parse::<f64>()
                     .expect(&format!("Error parsing {}", flag_val))
             };
         }
@@ -165,23 +172,32 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         max_width = 0.0;
     }
 
-    if verbose {
+    if configurations.verbose_mode {
         println!("Reading data...")
     };
 
     let input = Raster::new(&input_file, "r")?;
 
-    let nodata = input.configs.nodata;
-    let rows = input.configs.rows as isize;
-    let columns = input.configs.columns as isize;
+    if configurations.verbose_mode {
+        println!("Processing data...")
+    };
+
+    let configs = input.configs.clone();
+
+    let nodata = configs.nodata;
+    let rows = configs.rows as isize;
+    let columns = configs.columns as isize;
 
     let start = Instant::now();
+
+    // EUCLIDEAN DISTANCE CALCULATION
 
     let mut rx: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
     let mut ry: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
+    let mut distance: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
+
     let mut output = Raster::initialize_using_file(&output_file, &input);
-    output.configs.data_type = DataType::F32;
 
     let mut h: f64;
     let mut which_cell: usize;
@@ -197,12 +213,13 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         for col in 0..columns {
             z = input.get_value(row, col);
             if z != 0.0 && z != nodata {
-                output.set_value(row, col, 0.0);
+                distance.set_value(row, col, 0.0);
             } else {
-                output.set_value(row, col, inf_val);
+                distance.set_value(row, col, inf_val);
             }
+            output.set_value(row, col, 0.0);
         }
-        if verbose {
+        if configurations.verbose_mode {
             progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
                 println!("Initializing Rasters: {}%", progress);
@@ -213,14 +230,14 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     for row in 0..rows {
         for col in 0..columns {
-            z = output.get_value(row, col);
+            z = distance.get_value(row, col);
             if z != 0.0 {
                 z_min = inf_val;
                 which_cell = 0;
                 for i in 0..4 {
                     x = col + dx[i];
                     y = row + dy[i];
-                    z2 = output.get_value(y, x);
+                    z2 = distance.get_value(y, x);
                     if z2 != nodata {
                         h = match i {
                             0 => 2.0 * rx.get_value(y, x) + 1.0,
@@ -236,7 +253,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     }
                 }
                 if z_min < z {
-                    output.set_value(row, col, z_min);
+                    distance.set_value(row, col, z_min);
                     x = col + dx[which_cell];
                     y = row + dy[which_cell];
                     rx.set_value(row, col, rx.get_value(y, x) + gx[which_cell]);
@@ -244,10 +261,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 }
             }
         }
-        if verbose {
+        if configurations.verbose_mode {
             progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Progress (1 of 3): {}%", progress);
+                println!("Progress (1 of 4): {}%", progress);
                 old_progress = progress;
             }
         }
@@ -255,14 +272,14 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     for row in (0..rows).rev() {
         for col in (0..columns).rev() {
-            z = output.get_value(row, col);
+            z = distance.get_value(row, col);
             if z != 0.0 {
                 z_min = inf_val;
                 which_cell = 0;
                 for i in 4..8 {
                     x = col + dx[i];
                     y = row + dy[i];
-                    z2 = output.get_value(y, x);
+                    z2 = distance.get_value(y, x);
                     if z2 != nodata {
                         h = match i {
                             5 => 2.0 * (rx.get_value(y, x) + ry.get_value(y, x) + 1.0),
@@ -278,7 +295,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     }
                 }
                 if z_min < z {
-                    output[(row, col)] = z_min;
+                    distance.set_value(row, col, z_min);
                     x = col + dx[which_cell];
                     y = row + dy[which_cell];
                     rx.set_value(row, col, rx.get_value(y, x) + gx[which_cell]);
@@ -286,32 +303,137 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 }
             }
         }
-        if verbose {
+        if configurations.verbose_mode {
             progress = (100.0_f64 * (rows - row) as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Progress (2 of 3): {}%", progress);
+                println!("Progress (2 of 4): {}%", progress);
                 old_progress = progress;
             }
         }
     }
 
-    let cell_size = (input.configs.resolution_x + input.configs.resolution_y) / 2.0;
+    let cell_size = (configs.resolution_x + configs.resolution_y) / 2.0;
     for row in 0..rows {
         for col in 0..columns {
             if input.get_value(row, col) != nodata {
-                output.set_value(row, col, output.get_value(row, col).sqrt() * cell_size);
+                distance.set_value(row, col, distance.get_value(row, col).sqrt() * cell_size);
             } else {
-                output.set_value(row, col, nodata);
+                distance.set_value(row, col, nodata);
             }
         }
-        if verbose {
+        if configurations.verbose_mode {
             progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
             if progress != old_progress {
-                println!("Progress (3 of 3): {}%", progress);
+                println!("Progress (3 of 4): {}%", progress);
                 old_progress = progress;
             }
         }
     }
+
+    // EUCLIDEAN WIDTH CALCULATION
+
+    let mut num_procs = num_cpus::get_physical() as isize;
+    if max_procs > 0 && max_procs < num_procs {
+        num_procs = max_procs;
+    }
+
+    let mut tasks = Vec::new();
+    let (tx, rx) = mpsc::channel();
+
+    for proc in 0..num_procs {
+
+        let mut output_ref = output.clone();
+        let input_ref = distance.clone();
+
+        let tx = tx.clone();
+
+        tasks.push(thread::spawn(move || {
+            let mut radius: f64;
+            let (mut w, mut ik, mut jl): (isize, isize, isize);
+
+            let mut queue = BinaryHeap::new();
+
+            for i in (0..rows).filter(|r| r % num_procs == proc) {
+                for j in 0..columns {
+                    if input_ref.get_value(i, j) != nodata && input_ref.get_value(i, j) > 0.0 {
+                        queue.push((OrderedFloat(input_ref.get_value(i, j)), i, j));
+                    } else {
+                        tx.send(1.0).unwrap();
+                    }
+                }
+            }
+
+            while queue.len() > 0 {
+                let (ord_radius, i, j) = queue.pop().unwrap();
+
+                tx.send(1.0).unwrap();
+
+                if output_ref.get_value(i, j) >= max_width {
+                    continue;
+                }
+
+                radius = f64::from(ord_radius);
+
+                w = (radius / cell_size).floor() as isize;
+
+                for k in (-w+1)..w {
+                    for l in (-w+1)..w {
+                        if k*k + l*l > w*w {
+                            continue;
+                        }
+                        ik = i as isize + k;
+                        jl = j as isize + l;
+
+                        if ik < 0 || ik >= rows || jl < 0 || jl >= columns {
+                            continue;
+                        }
+
+                        if output_ref.get_value(ik, jl) < 2.0 * radius && input_ref.get_value(ik, jl) > 0.0 {
+                            output_ref.set_value(ik, jl, 2.0 * radius);
+                        }
+                    }
+                }
+            }
+
+            return output_ref;
+        }))
+    }
+
+    let total = (rows * columns) as f64;
+    let mut counter = 0.0;
+    for _ in 0..rows {
+        for _ in 0..columns {
+            counter += rx.recv().unwrap();
+            if configurations.verbose_mode {
+                progress = (100.0_f64 * counter / total) as usize;
+                if progress != old_progress {
+                    println!("Progress (4 of 4): {}%", progress);
+                    old_progress = progress;
+                }
+            }
+        }
+    }
+
+    for task in tasks {
+        let add = task.join().unwrap();
+        for i in 0..rows {
+            for j in 0..columns {
+                if add.get_value(i, j) > output.get_value(i, j) {
+                    output.set_value(i, j, add.get_value(i, j));
+                }
+            }
+        }
+    }
+
+    for i in 0..rows {
+        for j in 0..columns {
+            if input.get_value(i, j) == nodata {
+                output.set_value(i, j, nodata);
+            }
+        }
+    }
+
+    // WRITING OUTPUT
 
     let elapsed_time = get_formatted_elapsed_time(start);
     output.configs.palette = "grey.plt".to_string();
@@ -322,19 +444,19 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     output.add_metadata_entry(format!("Input file: {}", input_file));
     output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
-    if verbose {
+    if configurations.verbose_mode {
         println!("Saving data...")
     };
     let _ = match output.write() {
         Ok(_) => {
-            if verbose {
+            if configurations.verbose_mode {
                 println!("Output file written")
             }
         }
         Err(e) => return Err(e),
     };
 
-    if verbose {
+    if configurations.verbose_mode {
         println!(
             "{}",
             &format!("Elapsed Time (excluding I/O): {}", elapsed_time)

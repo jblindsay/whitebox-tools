@@ -1,7 +1,7 @@
 [package]
 name = "whitebox_plugins"
 version = "2.3.0"
-authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
+authors = ["John Lindsay <jlindsay@uoguelph.ca>", "Timofey Samsonov <tsamsonov@geogr.msu.ru>"]
 edition = "2021"
 
 [[bin]]
@@ -23,6 +23,10 @@ path = "src/exposure_towards_wind_flux/main.rs"
 [[bin]]
 name = "extract_by_attribute"
 path = "src/extract_by_attribute/main.rs"
+
+[[bin]]
+name = "euclidean_width"
+path = "src/euclidean_width/main.rs"
 
 [[bin]]
 name = "gaussian_scale_space"
@@ -103,6 +107,7 @@ kd-tree = { version = "0.4.1", features = ["rayon"] }
 kdtree = "0.6.0"
 nalgebra = "0.18.0"
 num_cpus = "1.13.0"
+ordered-float = "3.7.0"
 rand = { version = "0.7", features = ["small_rng"] }
 rayon = "1.7.0"
 rstar = "0.9.3"
