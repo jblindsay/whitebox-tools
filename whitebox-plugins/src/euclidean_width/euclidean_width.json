@@ -1,0 +1,34 @@
+{
+    "tool_name": "EuclideanWidth",
+    "exe": "euclidean_width",
+    "short_description": "Calculates width of the free space between obstacles",
+    "toolbox": "GIS Analysis/Distance Tools",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=EuclideanWidth -i=input.tif -o=width.tif --max_width=1000.0",
+    "parameters": [
+        {
+            "name": "Input Raster File",
+            "flags": ["-i", "--input"],
+            "description": "Input raster file.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["-o", "--output"],
+            "description": "Output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Maximum width for high-precision calculation",
+            "flags": ["--max_width"],
+            "description": "Maximum width for high-precision calculation",
+            "parameter_type": "Float",
+            "default_value": null,
+            "optional": true
+        }
+    ]
+}
