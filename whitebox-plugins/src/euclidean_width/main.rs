@@ -12,6 +12,46 @@ use std::collections::{BinaryHeap};
 use ordered_float::OrderedFloat;
 use num_cpus;
 
+/// This tool will estimate the width of the free space between obstacles in the input raster.
+/// For each pixel the width is defined as the diameter of the largest circle that covers the
+/// pixel and is inscribed in a set of obstacles. Obstacles are all non-zero, non-NoData grid cells.
+/// Width in the output image is measured in projection units of the input raster.
+///
+/// ![](../../doc_img/EuclideanWidth.png)
+///
+/// # Algorithm Description
+/// The algorithm is based on the width estimation procedure developed by Samsonov et al. (2019)
+/// to find the appropriate places for drawing the supplementary contour lines. First, the Euclidean
+/// distance raster is calculated using the obstacles as target pixels (see more details in the docs
+/// of the `Euclidean distance` tool). Next, an output raster with the same geometry is created and
+/// initialized with zero values. We now propagate the doubled value of each pixel of the distance
+/// raster to the output pixels that are covered by the circle neighbourhood of the corresponding
+/// radius. The resulting value is determined by the following rule: If a pixel is empty or has a
+/// value smaller than the doubled value of the distance raster, then its value is replaced with
+/// the doubled value of the distance raster; otherwise, it remains unchanged. To speed up the
+/// computations all pixels in distance raster are organized using the binary heap, so the pixel
+/// with the largest distance pops first and the width is calculated only once for each output pixel.
+///
+/// Since the procedure of reconstructing the pixel neighborhoods is computationally intensive, you
+/// can set the upper limit for precise computation of the width. This is done by the optional
+/// `max_width` parameter. If this parameter is set, the width will be estimated much faster (and
+/// less accurately) in areas of larger widths. This can be very important if you have the clustered
+/// distribution of obstacles (e.g. buildings clustered in settlements) and interested only in the
+/// width inside clusters. In this case setting the appropriate `max_width` may speed up the
+/// computation of width between clusters by an order of magnitude.
+///
+/// All NoData value grid pixels in the input image will contain NoData values in the
+/// output image. As such, NoData is not a suitable background value for non-obstacle pixel.
+/// Background areas should be designated with zero values.
+///
+/// # Reference
+/// Samsonov, T., Koshel, S., Walther, D., Jenny, B., 2019. Automated placement of supplementary
+/// contour lines. International Journal of Geographical Information Science 33, 2072–2093.
+/// https://doi.org/10.1080/13658816.2019.1610965
+///
+/// # See Also
+/// `EuclideanDistance`
+
 
 fn main() {
 
@@ -75,7 +115,7 @@ fn help() {
 fn version() {
     const VERSION: Option<&'static str> = option_env!("CARGO_PKG_VERSION");
     println!(
-        "exposure_towards_wind_flux v{} by Dr. Timofey E. Samsonov and Dr. John B. Lindsay (c) 2023.",
+        "euclidean_width v{} by Dr. Timofey E. Samsonov and Dr. John B. Lindsay (c) 2023.",
         VERSION.unwrap_or("Unknown version")
     );
 }
@@ -190,7 +230,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
     let start = Instant::now();
 
-    // EUCLIDEAN DISTANCE CALCULATION
+    //////////////////////////////////
+    // Calculate euclidean distance //
+    //////////////////////////////////
 
     let mut rx: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
     let mut ry: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
@@ -330,7 +372,9 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         }
     }
 
-    // EUCLIDEAN WIDTH CALCULATION
+    ///////////////////////////////
+    // Calculate euclidean width //
+    ///////////////////////////////
 
     let mut num_procs = num_cpus::get_physical() as isize;
     if max_procs > 0 && max_procs < num_procs {
@@ -338,7 +382,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     }
 
     let mut tasks = Vec::new();
-    let (tx, rx) = mpsc::channel();
+    let (tx, rx) = mpsc::channel(); // used only for progress bar
 
     for proc in 0..num_procs {
 
