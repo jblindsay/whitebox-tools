@@ -2803,7 +2803,7 @@ Okay, that's it for now.
 
         dem -- Name of the input raster image file. 
         output -- Name of the output vector lines file. 
-        threshold -- Threshold value (0 - infinity but typcially 1 to 5 works well). 
+        threshold -- Threshold value (0 - infinity but typically 1 to 5 works well). 
         min_length -- Minimum line length, in grid cells. 
         callback -- Custom function for handling tool text outputs.
         """
@@ -8945,11 +8945,11 @@ Okay, that's it for now.
         iterations -- Maximum iterations (if stopping criteria not reached). 
         seed -- Seed for RNG consistency. 
         prob -- Probability of random resample or resampling worst strata between [0,1]. 
-        threshold -- Objective function values below the theshold stop the resampling iterations. 
+        threshold -- Objective function values below the threshold stop the resampling iterations. 
         temp -- Initial annealing temperature between [0,1]. 
         temp_decay -- Annealing temperature decay proportion between [0,1]. Reduce temperature by this proportion each annealing cycle. 
         cycle -- Number of iterations before decaying annealing temperature. 
-        average -- Weight the continuous objective funtion by the 1/N contributing strata. 
+        average -- Weight the continuous objective function by the 1/N contributing strata. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
