@@ -1,7 +1,7 @@
 /* 
 Authors: Prof. John Lindsay
 Created: 28/07/2021 (oringinally in Whitebox Toolset Extension)
-Last Modified: 23/03/2023
+Last Modified: 01/09/2023
 License: MIT
 */
 
@@ -38,22 +38,14 @@ use whitebox_vector::*;
 /// | SHREVE | Shreve stream magnitude | 
 /// | HACK | Hack stream order | 
 /// | MAINSTREAM | Boolean value indicating whether link is the main stream trunk of its basin | 
-/// | MIN_ELEV | Minimum link elevation (from DEM) | 
-/// | MAX_ELEV | Maximum link elevation (from DEM) | 
 /// | IS_OUTLET | Boolean value indicating whether link is an outlet link |  
 ///
-/// In addition to the input and output files, the user must also specify the name of an input DEM file 
-/// (`--dem`), the maximum ridge-cutting height, in DEM z units (`--cutting_height`), and the snap distance
-/// used for identifying any topological errors in the stream file (`--snap`).  The main function of the 
-/// input DEM is to distinguish between outlet and headwater links in the network, which
-/// can be differentiated by their elevations during the priority-flood operation used in the algorithm 
-/// (see Lindsay et al. 2019). The maximum ridge-cutting height parameter is useful for preventing 
-/// erroneous stream capture in the headwaters when channel heads are very near (within the sanp distance),
-/// which is usually very rare. The snap distance parameter is used to deal with certain common topological
-/// errors. However, it is advisable that the input streams file be pre-processed prior to analysis.
+/// In addition to the input and output files, the user must also specify the snap distance
+/// used to associate points at confluences within the network (`--snap`). It is advisable that the 
+/// input streams file be pre-processed prior to analysis using the `RepairStreamVectorTopology` tool.
 ///
 /// > Note: The input streams file for this tool should be pre-processed using the `RepairStreamVectorTopology`
-/// > tool. **This is an important step**.
+/// > and `CorrectStreamVectorDirection` tools. **This is an important step**.
 ///
 /// OUTLET:
 /// ![](../../doc_img/StreamVectorAnalysis1.png)
@@ -76,7 +68,7 @@ use whitebox_vector::*;
 /// 10.3390/ijgi8090422
 ///
 /// # See Also
-/// `RepairStreamVectorTopology`, `StrahlerStreamOrder`, `ShreveStreamMagnitude`
+/// `RepairStreamVectorTopology`, `CorrectStreamVectorDirection`, `StrahlerStreamOrder`, `ShreveStreamMagnitude`
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -118,16 +110,14 @@ fn help() {
 
     The following flags can be used with the 'run' command:
     --streams          Name of the input streams vector.
-    --dem              Name of the input DEM raster file.
     -o, --output       Name of the output lines shapefile.
-    --cutting_height   Maximum ridge-cutting height (z units).
     --snap             Snap distance, in xy units (metres).
     
     Input/output file names can be fully qualified, or can rely on the
     working directory contained in the WhiteboxTools settings.json file.
 
     Example Usage:
-    >> .*EXE_NAME run --streams=rivers.shp --dem=DEM.tif -o=network_analysis.shp --cutting_height=10.0 --snap=1.0
+    >> .*EXE_NAME run --streams=rivers.shp -o=network_analysis.shp --snap=1.0
 
     Note: Use of this tool requires a valid license. To obtain a license,
     contact Whitebox Geospatial Inc. (support@whiteboxgeo.com).

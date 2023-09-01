@@ -60,6 +60,7 @@ Version 2.4.0 (xx-xx-20xx)
 - Removed the requirement for an input DEM in the VectorStreamNetworkAnalysis tool. 
 - Fixed a bug in the RepairStreamVectorTopology tool that reversed the direction of some stream arcs.
 - Added the CorrectStreamVectorDirection tool.
+- Added the ability to preserve all vertices to the RasterStreamsToVector tool.
 - Added the ExtractByAttribute tool to filter out vector features by attribute characteristics.
 - Added the DeviationFromRegionalDirection tool.
 - Added the OtsuThresholding tool, which uses Ostu's method for optimal binary thresholding,
