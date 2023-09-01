@@ -1,11 +1,11 @@
 {
-    "tool_name": "RepairStreamVectorTopology",
-    "exe": "repair_stream_vector_topology",
-    "short_description": "This tool resolves topological errors and inconsistencies associated with digitized vector streams.",
-    "help": "This tool resolves topological errors and inconsistencies associated with digitized vector streams.",
+    "tool_name": "CorrectStreamVectorDirection",
+    "exe": "correct_stream_vector_direction",
+    "short_description": "This tool resolves directional errors in digitized vector streams.",
+    "help": "This tool resolves directional errors in digitized vector streams.",
     "toolbox": "Stream Network Analysis",
     "license": "MIT",
-    "example": ">> .*EXE_NAME -r=RepairStreamVectorTopology --input=streams.shp --output=streams_fixed.shp --snap=2.0",
+    "example": ">> .*EXE_NAME -r=CorrectStreamVectorDirection --input=streams.shp --outlet=outlet.shp --output=streams_fixed.shp --snap=2.0",
     "parameters": [
         {
             "name": "Input Vector Lines",
@@ -13,7 +13,15 @@
             "description": "Name of the input lines vector file.",
             "parameter_type": {"ExistingFile":{"Vector":"Line"}},
             "default_value": null,
-            "optional": true
+            "optional": false
+        },
+        {
+            "name": "Outlet Vector Points",
+            "flags": ["--outlet"],
+            "description": "Name of the input outlet vector points file.",
+            "parameter_type": {"ExistingFile":{"Vector":"Point"}},
+            "default_value": null,
+            "optional": false
         },
         {
             "name": "Output Lines",
@@ -21,7 +29,7 @@
             "description": "Name of the output lines vector file.",
             "parameter_type": {"NewFile":{"Vector":"Line"}},
             "default_value": null,
-            "optional": true
+            "optional": false
         },
         {
             "name": "Snap Distance",
@@ -30,14 +38,6 @@
             "parameter_type": "Float",
             "default_value": "",
             "optional": false
-        },
-        {
-            "name": "Reverse backward arcs?",
-            "flags": ["--reverse_backward_arcs"],
-            "description": "Optional flag to request that arcs that can be proven to be backwards have their direction reversed.",
-            "parameter_type": "Boolean",
-            "default_value": "true",
-            "optional": true
         }
     ]
 }

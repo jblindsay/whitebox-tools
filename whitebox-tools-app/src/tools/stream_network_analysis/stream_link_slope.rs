@@ -14,7 +14,7 @@ use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-/// This tool can be used to measure the average slope gradient, in degrees, of each link in a raster stream
+/// This tool can be used to measure the average slope gradient, in percent, of each link in a raster stream
 /// network. To estimate the slope of individual grid cells in a raster stream network, use the
 /// `StreamSlopeContinuous` tool instead. The user must specify the names of a stream link identifier raster image (`--linkid`), a D8
 /// pointer image (`--d8_pntr`), and a digital elevation model (`--dem`). The pointer image is used to traverse the

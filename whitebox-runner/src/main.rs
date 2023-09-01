@@ -453,7 +453,7 @@ impl MyApp {
         }
 
         let mut installed_extensions = InstalledExtensions::default();
-        installed_extensions.gte = tool_order.contains_key("RandomForestClassification");
+        installed_extensions.gte = tool_order.contains_key("RandomForestClassificationFit");
         if !installed_extensions.gte {
             if tool_order.contains_key("Curvedness") {
                 installed_extensions.dem = true;

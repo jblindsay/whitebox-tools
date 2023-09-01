@@ -13,6 +13,10 @@ name = "conditioned_latin_hypercube"
 path = "src/conditioned_latin_hypercube/main.rs"
 
 [[bin]]
+name = "correct_stream_vector_direction"
+path = "src/correct_stream_vector_direction/main.rs"
+
+[[bin]]
 name = "edge_contamination"
 path = "src/edge_contamination/main.rs"
 

@@ -157,6 +157,15 @@ impl RadialBasisFunctionInterpolation {
             optional: true
         });
 
+        parameters.push(ToolParameter {
+            name: "Only interpolate points within the data convex hull?".to_owned(),
+            flags: vec!["--use_data_hull".to_owned()],
+            description: "Only interpolate points within the data convex hull?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -228,6 +237,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
         let mut func_type = String::from("ThinPlateSpline").to_lowercase();
         let mut poly_order = 0usize;
         let mut weight = 0.1f64;
+        let mut use_data_hull = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -341,6 +351,10 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                         .parse::<f64>()
                         .expect(&format!("Error parsing {}", flag_val))
                 };
+            } else if flag_val == "-use_data_hull" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    use_data_hull = true;
+                }
             }
         }
 
@@ -552,7 +566,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                     for col in 0..columns {
                         x = west + (col as f64 + 0.5) * res_x;
                         y = north - (row as f64 + 0.5) * res_y;
-                        if point_in_poly(&Point2D::new(x, y), &hull) {
+                        if !use_data_hull || use_data_hull && point_in_poly(&Point2D::new(x, y), &hull) {
                             let mut ret = tree.within(&[x, y], radius, &squared_euclidean).unwrap();
                             if ret.len() < min_points {
                                 ret = tree
@@ -571,7 +585,7 @@ impl WhiteboxTool for RadialBasisFunctionInterpolation {
                                     centers, vals, basis_func, poly_order,
                                 );
                                 z = rbf.eval(DVector::from_vec(vec![x, y]))[0];
-                                if (z - mid_point).abs() < range_threshold {
+                                if (z - mid_point).abs() < range_threshold*5.0 {
                                     // if the estimated value is well outside of the range of values in the input points, don't output it.
                                     data[col as usize] = z;
                                 }

@@ -152,6 +152,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut input_file = String::new();
     let mut output_file: String = String::new();
     let mut snap_dist = 1.0; 
+    let mut reverse_backward_arcs = false;
     if args.len() <= 1 {
         return Err(Error::new(
             ErrorKind::InvalidInput,
@@ -192,6 +193,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     .parse::<f64>()
                     .expect(&format!("Error parsing {}", flag_val))
             };
+        } else if flag_val == "-reverse_backward_arcs" {
+            if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                reverse_backward_arcs = true;
+            }
         }
     }
 
@@ -250,11 +255,8 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         if output_file.is_empty() {
             output_file = input_file
                 .clone()
-                .replace(".las", ".tif")
-                .replace(".LAS", ".tif")
-                .replace(".laz", ".tif")
-                .replace(".LAZ", ".tif")
-                .replace(".zlidar", ".tif");
+                .replace(".shp", "_corrected.shp")
+                .replace(".SHP", "_corrected.shp");
         }
         if !output_file.contains(path::MAIN_SEPARATOR) && !output_file.contains("/") {
             output_file = format!("{}{}", working_directory, output_file);
@@ -727,10 +729,222 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         }
 
 
-
         // Find segments that have a gap at their endnodes and can be joined.
 
-        
+
+
+        // We want line segements to have the same orientation as the input lines. This may not always be
+        // possible because two lines may have been joined at their ends (meaning at least one must be reversed)
+        // but the majority should follow the same direction
+        // Read each line segment into an rtree.
+        type Location2 = GeomWithData<[f64; 2], (usize, usize)>;
+        let mut vertices = vec![];
+        let (mut part_start, mut part_end): (usize, usize);
+        let mut polylines = vec![];
+        let mut fid = 0;
+        for record_num in 0..input.num_records {
+            let record = input.get_record(record_num);        
+            for part in 0..record.num_parts as usize {
+                part_start = record.parts[part] as usize;
+                part_end = if part < record.num_parts as usize - 1 {
+                    record.parts[part + 1] as usize - 1
+                } else {
+                    record.num_points as usize - 1
+                };
+
+                polylines.push(
+                    Polyline::new(
+                        &record.points[part_start..=part_end], 
+                        fid
+                    )
+                );
+
+                for i in part_start..part_end {
+                    vertices.push(Location2::new(
+                        [record.points[i].x, record.points[i].y],
+                        (fid, i)
+                    ));
+                }
+
+                fid += 1;
+            }
+
+            if configurations.verbose_mode && inputs.len() == 1 {
+                progress = (100.0_f64 * (record_num + 1) as f64 / input.num_records as f64) as usize;
+                let mut old_progress = old_progress.lock().unwrap();
+                if progress != *old_progress {
+                    println!("Creating vertex tree: {}%", progress);
+                    *old_progress = progress;
+                }
+            }
+        }
+
+        // Find all of the segments that can be joined because they link at non-confluences.
+        let vertex_tree = RTree::bulk_load(vertices);
+        let mut p1: Point2D;
+        let mut p2: Point2D;
+        let mut p3: Point2D;
+        let mut percent_reverse = vec![0.0; polylines2.len()];
+        for fid in 0..polylines2.len() {
+            for i in 0..polylines2[fid].len()-1 {
+                // get the id of the cooresponding vertex in the original file
+                p1 = polylines2[fid].vertices[i];
+                let ret = vertex_tree.locate_within_distance([p1.x, p1.y], precision);
+
+                p2 = polylines2[fid].vertices[i+1]; // The next vertex in the output line
+
+                for p in ret { // there should only ever be one
+                    let (in_fid, in_vertex) = p.data; // The corresponding point in the input line
+
+                    if in_vertex < polylines[in_fid].len() - 1 {
+                        p3 = polylines[in_fid].vertices[in_vertex+1]; // The next vertex in the input line
+
+                        // Are p2 and p3 the same location? If so, then the line order is unchanged, if no,
+                        // then it's been reversed.
+                        if p2.distance(&p3) > precision {
+                            percent_reverse[fid] += 1.0;
+                        }
+                    }
+                }
+            }
+            
+            if configurations.verbose_mode && inputs.len() == 1 {
+                progress = (100.0_f64 * (fid + 1) as f64 / num_polylines as f64) as usize;
+                let mut old_progress = old_progress.lock().unwrap();
+                if progress != *old_progress {
+                    println!("Looking for joins in arcs: {}%", progress);
+                    *old_progress = progress;
+                }
+            }
+        }
+
+
+        // If more than half of the vertices in a line have been reverse, reverse it back to the orginal order.
+        // Remember, output lines may be composed of multiple input lines some of which may have been reversed,
+        // while others were not. This voting scheme represents a 'majority' line order.
+        for fid in 0..polylines2.len() {
+            percent_reverse[fid] = 100.0 * percent_reverse[fid] / (polylines2[fid].len() - 1) as f64;
+            if percent_reverse[fid] > 50.0 {
+                let mut line = polylines2[fid].vertices.clone();
+                line.reverse();
+                polylines2[fid].vertices = line;
+            }
+        }
+
+
+
+
+
+        if reverse_backward_arcs {
+            let mut vertices = vec![];
+            let mut p1: Point2D;
+            for fid in 0..polylines2.len() {
+                p1 = polylines2[fid].get_first_node();
+                vertices.push(Location2::new(
+                    [p1.x, p1.y],
+                    (fid, 1)
+                ));
+
+                p1 = polylines2[fid].get_last_node();
+                vertices.push(Location2::new(
+                    [p1.x, p1.y],
+                    (fid, 0)
+                ));
+
+                if configurations.verbose_mode && inputs.len() == 1 {
+                    progress = (100.0_f64 * (fid + 1) as f64 / num_polylines as f64) as usize;
+                    let mut old_progress = old_progress.lock().unwrap();
+                    if progress != *old_progress {
+                        println!("Creating endnode tree: {}%", progress);
+                        *old_progress = progress;
+                    }
+                }
+            }
+
+            // Find all of the segments that can be joined because they link at non-confluences.
+            let tree = RTree::bulk_load(vertices);
+            let mut reverse = vec![false; polylines2.len()];
+            for fid in 0..polylines2.len() {
+                // look for lines that have a neighbouring starting node at the line start and none at the line end.
+                let mut has_neighbouring_start_at_start = false;
+                p1 = polylines2[fid].get_first_node();
+                let ret = tree.locate_within_distance([p1.x, p1.y], precision);
+                for p in ret {
+                    let (in_fid, is_start) = p.data;
+                    if in_fid != fid {
+                        if is_start == 1 {
+                            has_neighbouring_start_at_start = true;
+                            break;
+                        }
+                    }
+                }
+
+                if has_neighbouring_start_at_start {
+                    let mut has_neighbouring_start_at_end = false;
+                    p1 = polylines2[fid].get_last_node();
+                    let ret = tree.locate_within_distance([p1.x, p1.y], precision);
+                    for p in ret {
+                        let (in_fid, is_start) = p.data;
+                        if in_fid != fid {
+                            if is_start == 1 {
+                                has_neighbouring_start_at_end = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if !has_neighbouring_start_at_end {
+                        reverse[fid] = true;
+                    }
+                }
+                
+                if configurations.verbose_mode && inputs.len() == 1 {
+                    progress = (100.0_f64 * (fid + 1) as f64 / num_polylines as f64) as usize;
+                    let mut old_progress = old_progress.lock().unwrap();
+                    if progress != *old_progress {
+                        println!("Looking backwards arcs: {}%", progress);
+                        *old_progress = progress;
+                    }
+                }
+            }
+
+            let mut num_reversed = 0;
+            for fid in 0..polylines2.len() {
+                if reverse[fid] {
+                    let mut line = polylines2[fid].vertices.clone();
+                    line.reverse();
+                    polylines2[fid].vertices = line;
+                    num_reversed += 1;
+                }
+            }
+            println!("num. reversed arcs: {num_reversed}");
+
+            // create output file
+            let mut output = Shapefile::initialize_using_file(&output_file.replace(".shp", "_reversed_arcs.shp"), &input, ShapeType::PolyLine, false).expect("Error creating output file");
+
+            // add the attributes
+            output.attributes.add_field(
+                &AttributeField::new(
+                    "FID", 
+                    FieldDataType::Int, 
+                    7u8, 
+                    0u8
+                )
+            );
+
+            let mut sfg: ShapefileGeometry;
+            for fid in 0..polylines2.len() {
+                if reverse[fid] {
+                    sfg = ShapefileGeometry::new(ShapeType::PolyLine); 
+                    sfg.add_part(&polylines2[fid].vertices);
+                    output.add_record(sfg);
+                    output.attributes.add_record(vec![FieldData::Int((fid + 1) as i32)], false);
+                }
+            }
+
+            output.write().expect("Error writing file.");
+        }
+
         // create output file
         let mut output = Shapefile::initialize_using_file(&output_file, &input, ShapeType::PolyLine, false).expect("Error creating output file"); //?;
 
