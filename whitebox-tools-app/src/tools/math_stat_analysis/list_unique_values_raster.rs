@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 12/04/2018
-Last Modified: 09/02/2023
+Last Modified: 18/10/2023
 License: MIT
 */
 
@@ -21,11 +21,8 @@ use num_cpus;
 /// This tool can be used to list each of the unique values contained within a categorical raster (`input`). The tool 
 /// outputs an HTML formatted report (`--output`)
 /// containing a table of the unique values and their frequency of occurrence within the data. The user must
-/// specify the name of an input shapefile (`--input`) and the name of one of the fields (`--field`)
-/// contained in the associated attribute table. The specified field *should not contained floating-point
-/// numerical data*, since the number of categories will likely equal the number of records, which may be
-/// quite large. The tool effectively provides tabular output that is similar to the graphical output
-/// provided by the `AttributeHistogram` tool, which, however, can be applied to continuous data.
+/// specify the name of an input raster (`--input`). The specified raster *should not contained categorical data*. 
+/// The tool provides tabular output.
 ///
 /// # See Also
 /// `ListUniqueValues`
@@ -50,10 +47,8 @@ impl ListUniqueValuesRaster {
         parameters.push(ToolParameter {
             name: "Input File".to_owned(),
             flags: vec!["-i".to_owned(), "--input".to_owned()],
-            description: "Input vector file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Vector(
-                VectorGeometryType::Any,
-            )),
+            description: "Input raster file.".to_owned(),
+            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
             default_value: None,
             optional: false,
         });
