@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 28/06/2017
-Last Modified: 18/10/2019
+Last Modified: 26/10/2023
 License: MIT
 
 NOTES: This tool provides a full workflow D8 flow operation. This includes removing depressions, calculating
@@ -89,6 +89,15 @@ impl FlowAccumulationFullWorkflow {
                 "Catchment Area".to_owned(),
             ]),
             default_value: Some("Specific Contributing Area".to_owned()),
+            optional: true,
+        });
+
+        parameters.push(ToolParameter {
+            name: "Corrected flow pointer".to_owned(),
+            flags: vec!["--correct_pntr".to_owned()],
+            description: "Optional flag to apply corerections that limit potential artifacts in the flow pointer.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: None,
             optional: true,
         });
 
@@ -183,6 +192,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
         let mut pntr_file = String::new();
         let mut accum_file = String::new();
         let mut out_type = String::from("sca");
+        let mut correct_pntr = false;
         let mut log_transform = false;
         let mut clip_max = false;
         let mut esri_style = false;
@@ -245,6 +255,10 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                     out_type = String::from("cells");
                 } else {
                     out_type = String::from("ca");
+                }
+            } else if vec[0].to_lowercase() == "-correct_pntr" || vec[0].to_lowercase() == "--correct_pntr" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    correct_pntr = true;
                 }
             } else if vec[0].to_lowercase() == "-log" || vec[0].to_lowercase() == "--log" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
@@ -610,7 +624,128 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
             Err(e) => return Err(e),
         };
 
-        // calculate the number of inflowing cells
+        if correct_pntr {
+            let (mut dir, mut dir_n, mut dir_no, mut new_val, mut old_val): (i8, i8, i8, i8, i8);
+            let (mut l1, mut l2, mut r1, mut r2): (i8, i8, i8, i8);
+            let (mut zl, mut zr, mut zn): (f64, f64, f64);
+            let mut count: isize;
+            let mut resolved: bool;
+            for row in 1..(rows-1) { // buffer the edges
+                for col in 1..(columns-1) {
+                    // flow_dir is the n-index of the flow revicing cell
+                    dir = flow_dir.get_value(row, col);
+                    old_val = dir;
+                    if dir >= 0 {
+                        // error 1: zig-zag where two flow directions intersect at 90deg angles
+                        // because scan order is top down, crosses should only occur on the bottom half
+                        l1 = dir + 7 - (8 * (dir + 7 > 7) as i8);
+                        r1 = dir + 1 - (8 * (dir + 1 > 7) as i8);
+                        l2 = r1 + 5 - (8 * (r1 + 5 > 7) as i8);
+                        r2 = l1 + 3 - (8 * (l1 + 3 > 7) as i8);
+                        dir_n = flow_dir.get_value(row + dy[l1 as usize], col + dx[l1 as usize]); // left
+                        zl = output.get_value(row + dy[l1 as usize], col + dx[l1 as usize]);
+                        dir_no = flow_dir.get_value(row + dy[r1 as usize], col + dx[r1 as usize]); // right
+                        zr = output.get_value(row + dy[r1 as usize], col + dx[r1 as usize]);
+                        zn = output.get_value(row + dy[dir as usize], col + dx[dir as usize]);
+                        if dir_n == r2 && zr != nodata && zr <= zn { // left -> right cross && not nodata && is lower
+                            new_val = r1;
+                        } else if dir_no == l2 && zl != nodata && zl <= zn { // right -> left cross && not nodata && is lower
+                            new_val = l1;
+                        } else { // keep original value
+                            new_val = dir;
+                        }
+                        
+                        if new_val != dir && new_val % 2 == 0 && [0,6,7].contains(&new_val) { // make sure new val doesn't create error 1 where it can't be corrected
+                            l1 = new_val + 7 - (8 * (new_val + 7 > 7) as i8);
+                            r1 = new_val + 1 - (8 * (new_val + 1 > 7) as i8);
+                            l2 = r1 + 5 - (8 * (r1 + 5 > 7) as i8);
+                            r2 = l1 + 3 - (8 * (l1 + 3 > 7) as i8);
+                            dir_n = flow_dir.get_value(row + dy[l1 as usize], col + dx[l1 as usize]); // left
+                            dir_no = flow_dir.get_value(row + dy[r1 as usize], col + dx[r1 as usize]); // right
+                            if dir_n == r2 || dir_no == l2 { // avoid new error, roll back
+                                new_val = old_val;
+                            }
+                        }
+                        
+                        // setting value here preserves solutions from error 1 but prevents this scan from beng parallelized
+                        flow_dir.set_value(row, col, new_val);
+
+                        // error 2: overshoot where flow points to a cell that points back into the original neighbourhood
+                        resolved = false;
+                        count = 0;
+                        dir = new_val;
+                        while !resolved && dir >= 0 { // search until outflow is found, else keep original value.
+                            // find the flow reviever n-index.
+                            dir_n = flow_dir.get_value(row + dy[dir as usize], col + dx[dir as usize]);
+                            if dir_n >= 0 {
+                                old_val = dir; // always set to the last valid direction
+
+                                // flow within these bounds flow back into the original neighbourhood.
+                                l1 = dir + 5 - (8 * (dir + 5 > 7) as i8);
+                                r1 = dir + 3 - (8 * (dir + 3 > 7) as i8);
+                                l2 = dir + 6 - (8 * (dir + 6 > 7) as i8);
+                                r2 = dir + 2 - (8 * (dir + 2 > 7) as i8);
+
+                                if dir % 2 == 0 { // diagonal
+                                    if dir_n == l1 {
+                                        new_val = r1 + 4 - (8 * (r1 + 4 > 7) as i8);
+                                    } else if dir_n == r1 {
+                                        new_val = l1 + 4 - (8 * (l1 + 4 > 7) as i8);
+                                    } else {
+                                        new_val = dir;
+                                        resolved = true;
+                                    }
+                                } else { // cardinal
+                                    if dir_n == l1 {
+                                        new_val = r2 + 4 - (8 * (r2 + 4 > 7) as i8);
+                                    } else if dir_n == r1 {
+                                        new_val = l2 + 4 - (8 * (l2 + 4 > 7) as i8);
+                                    } else if dir_n == l2 {
+                                        new_val = r1 + 4 - (8 * (r1 + 4 > 7) as i8);  
+                                    } else if dir_n == r2 {
+                                        new_val = l1 + 4 - (8 * (l1 + 4 > 7) as i8);
+                                    } else {
+                                        new_val = dir;
+                                        resolved = true;
+                                    };
+                                }
+
+                                if new_val != dir && new_val % 2 == 0 && [0,6,7].contains(&new_val) { // make sure new val doesn't create error 1 where it can't be corrected
+                                    l1 = new_val + 7 - (8 * (new_val + 7 > 7) as i8);
+                                    r1 = new_val + 1 - (8 * (new_val + 1 > 7) as i8);
+                                    l2 = r1 + 5 - (8 * (r1 + 5 > 7) as i8);
+                                    r2 = l1 + 3 - (8 * (l1 + 3 > 7) as i8);
+                                    dir_n = flow_dir.get_value(row + dy[l1 as usize], col + dx[l1 as usize]); // left
+                                    dir_no = flow_dir.get_value(row + dy[r1 as usize], col + dx[r1 as usize]); // right
+                                    if dir_n == r2 || dir_no == l2 { // roll back
+                                        new_val = old_val;
+                                        resolved = true;
+                                    }
+                                }                                
+                            } else { // roll back
+                                new_val = old_val;
+                                resolved = true;
+                            }
+                            if count > 7 { // stuck in a loop, use original flow_dir
+                                new_val = flow_dir.get_value(row, col);
+                                resolved = true;
+                            }
+                            dir = new_val;
+                            count += 1;
+                        } 
+                        flow_dir.set_value(row, col, new_val);
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Correcting flow direction: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }  
+        }
+
         let flow_dir = Arc::new(flow_dir);
         let mut num_inflowing: Array2D<i8> = Array2D::new(rows, columns, -1, -1)?;
 

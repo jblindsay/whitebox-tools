@@ -3009,10 +3009,10 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         // tGTCitationGeoKey (1026)
         let mut v = String::from(
-            geographic_type_map
+            *geographic_type_map
                 .get(&r.configs.epsg_code)
                 .unwrap()
-                .clone(),
+                // .clone(),
         );
         v.push_str("|");
         v = v.replace("_", " ");
@@ -3087,10 +3087,10 @@ pub fn write_geotiff<'a>(r: &'a mut Raster) -> Result<(), Error> {
 
         // PCSCitationGeoKey (3073)
         let mut v = String::from(
-            projected_cs_type_map
+            *projected_cs_type_map
                 .get(&r.configs.epsg_code)
                 .unwrap()
-                .clone(),
+                // .clone(),
         );
         v.push_str("|");
         v = v.replace("_", " ");

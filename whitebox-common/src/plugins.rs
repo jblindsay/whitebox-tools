@@ -23,6 +23,7 @@ impl<S: ToString> From<S> for InvocationError {
 }
 
 #[derive(Copy, Clone)]
+#[warn(improper_ctypes_definitions)]
 pub struct PluginDeclaration {
     pub rustc_version: &'static str,
     pub core_version: &'static str,

@@ -1,7 +1,7 @@
 /* 
 Authors: Prof. John Lindsay
 Created: 03/08/2021 (oringinally in Whitebox Toolset Extension)
-Last Modified: 19/05/2023
+Last Modified: 04/10/2023
 License: MIT
 */
 
@@ -46,7 +46,7 @@ const EPSILON: f64 = std::f64::EPSILON;
 ///
 /// ![](../../doc_img/RepairStreamVectorTopology.png)
 ///
-/// The user may optinally specify the name of the input vector stream network (`--input`) and the output file 
+/// The user may optionally specify the name of the input vector stream network (`--input`) and the output file 
 /// (`--output`). Note that if an input file is not specified by the user, the tool will search for all vector
 /// files (*.shp) files contained within the current working directory. This feature can be very useful when 
 /// you need to process a large number of stream files contained within a single directory. The tool will 
@@ -56,6 +56,11 @@ const EPSILON: f64 = std::f64::EPSILON;
 /// is in the input layer's x-y units. The tool works best on projected input 
 /// data, however, if the input are in geographic coordinates (latitude and longitude), then specifying a
 /// small valued snap distance is advisable. 
+/// 
+/// Additionally, the tool possesses two Boolean flags, `--reverse_backward_arcs` and `--correct_nonconfluence_joins`
+/// which determine whether the tool will correct backward arcs (i.e., line segements that are oriented
+/// in the reverse direction to the streamflow) and non-confluence joins (i.e., upstream/downstream line
+/// segments that are not joined at confluence locations).
 /// 
 /// Notice that the attributes of the input layer will not be
 /// carried over to the output file because there is not a one-for-one feature correspondence between the
@@ -105,10 +110,12 @@ fn help() {
     version    Prints the tool version information.
 
     The following flags can be used with the 'run' command:
-    --routes       Name of the input routes vector file.
-    -o, --output   Name of the output HTML file.
-    --length       Maximum segment length (m).
-    --dist         Search distance, in grid cells, used in visibility analysis.
+    --routes                  Name of the input routes vector file.
+    -o, --output              Name of the output HTML file.
+    --length                  Maximum segment length (m).
+    --dist                    Search distance, in grid cells, used in visibility analysis.
+    --reverse_backward_arcs   Boolean flag determines whether backward arcs are corrected.
+    --correct_nonconfluence_joins  Boolean flag determines whether non-confluence joins are corrected.
     
     Input/output file names can be fully qualified, or can rely on the
     working directory contained in the WhiteboxTools settings.json file.
@@ -153,6 +160,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut output_file: String = String::new();
     let mut snap_dist = 1.0; 
     let mut reverse_backward_arcs = false;
+    let mut correct_nonconfluence_joins = false;
     if args.len() <= 1 {
         return Err(Error::new(
             ErrorKind::InvalidInput,
@@ -196,6 +204,10 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         } else if flag_val == "-reverse_backward_arcs" {
             if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                 reverse_backward_arcs = true;
+            }
+        } else if flag_val == "-correct_nonconfluence_joins" {
+            if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                correct_nonconfluence_joins = true;
             }
         }
     }
@@ -368,53 +380,54 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         let mut num_polylines = polylines.len(); // will be updated after the joins.
 
 
-
-
-        // Find all of the segments that can be joined because they link at non-confluences.
         let endnode_tree = RTree::bulk_load(end_nodes);
         let precision = EPSILON * 10f64;
         let mut p1: Point2D;
         let mut connections = vec![[num_polylines, num_polylines]; num_polylines];
         let mut connected_polyline: usize;
         let mut num_neighbours: usize;
-        for fid in 0..num_polylines {
-            // fid = polylines[poly_id].id1;
-            p1 = polylines[fid].get_first_node();
-            let ret = endnode_tree.locate_within_distance([p1.x, p1.y], precision);
+            
+        if correct_nonconfluence_joins {
+            // Find all of the segments that can be joined because they link at non-confluences.
+            for fid in 0..num_polylines {
+                // fid = polylines[poly_id].id1;
+                p1 = polylines[fid].get_first_node();
+                let ret = endnode_tree.locate_within_distance([p1.x, p1.y], precision);
 
-            connected_polyline = num_polylines;
-            num_neighbours = 0;
-            for p in ret {
-                if p.data != fid {
-                    connected_polyline = p.data;
-                    num_neighbours += 1;
+                connected_polyline = num_polylines;
+                num_neighbours = 0;
+                for p in ret {
+                    if p.data != fid {
+                        connected_polyline = p.data;
+                        num_neighbours += 1;
+                    }
                 }
-            }
-            if num_neighbours == 1 {
-                connections[fid][0] = connected_polyline;
-            }
-
-            p1 = polylines[fid].get_last_node();
-            let ret = endnode_tree.locate_within_distance([p1.x, p1.y], precision);
-
-            connected_polyline = num_polylines;
-            num_neighbours = 0;
-            for p in ret {
-                if p.data != fid {
-                    connected_polyline = p.data;
-                    num_neighbours += 1;
+                if num_neighbours == 1 {
+                    connections[fid][0] = connected_polyline;
                 }
-            }
-            if num_neighbours == 1 {
-                connections[fid][1] = connected_polyline;
-            }
 
-            if configurations.verbose_mode && inputs.len() == 1 {
-                progress = (100.0_f64 * (fid + 1) as f64 / num_polylines as f64) as usize;
-                let mut old_progress = old_progress.lock().unwrap();
-                if progress != *old_progress {
-                    println!("Looking for joins in arcs: {}%", progress);
-                    *old_progress = progress;
+                p1 = polylines[fid].get_last_node();
+                let ret = endnode_tree.locate_within_distance([p1.x, p1.y], precision);
+
+                connected_polyline = num_polylines;
+                num_neighbours = 0;
+                for p in ret {
+                    if p.data != fid {
+                        connected_polyline = p.data;
+                        num_neighbours += 1;
+                    }
+                }
+                if num_neighbours == 1 {
+                    connections[fid][1] = connected_polyline;
+                }
+
+                if configurations.verbose_mode && inputs.len() == 1 {
+                    progress = (100.0_f64 * (fid + 1) as f64 / num_polylines as f64) as usize;
+                    let mut old_progress = old_progress.lock().unwrap();
+                    if progress != *old_progress {
+                        println!("Looking for joins in arcs: {}%", progress);
+                        *old_progress = progress;
+                    }
                 }
             }
         }

@@ -38,6 +38,14 @@
             "parameter_type": "Boolean",
             "default_value": "true",
             "optional": true
+        },
+        {
+            "name": "Correct non-confluence joins?",
+            "flags": ["--correct_nonconfluence_joins"],
+            "description": "Optional flag to request that non-confluence joins be corrected.",
+            "parameter_type": "Boolean",
+            "default_value": "true",
+            "optional": true
         }
     ]
 }
