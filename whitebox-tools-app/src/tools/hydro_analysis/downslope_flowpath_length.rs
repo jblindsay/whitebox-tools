@@ -22,7 +22,8 @@ use std::path;
 /// optionally provide watershed (`--watersheds`) and weights (`--weights`) images. The optional watershed
 /// image can be used to define one or more irregular-shaped watershed boundaries. Flowpath lengths are
 /// measured within each watershed in the watershed image (each defined by a unique identifying number) as
-/// the flowpath length to the watershed's outlet cell.
+/// the flowpath length to the watershed's outlet cell. The flowpath length may also optionally be computed as
+/// a number of cells (`--cells`) from the outlet to all cells upstream instead of distance unit.
 ///
 /// The optional weight image is multiplied by the flow-length through each grid cell. This can be useful
 /// when there is a need to convert the units of the output image. For example, the default unit of
@@ -99,6 +100,15 @@ impl DownslopeFlowpathLength {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Does the output file should represent the number of cells?".to_owned(),
+            flags: vec!["--cells".to_owned()],
+            description: "Distance count in number of cells rather than unit of distance.".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_owned()),
+            optional: true,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -164,6 +174,7 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         let mut weights_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
+        let mut out_type_cells = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -208,6 +219,10 @@ impl WhiteboxTool for DownslopeFlowpathLength {
             } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
+                };
+            } else if flag_val == "-cells" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    out_type_cells = true;
                 }
             }
         }
@@ -332,16 +347,25 @@ impl WhiteboxTool for DownslopeFlowpathLength {
             pntr_matches[128] = 0usize;
         }
 
-        let grid_lengths = [
-            diag_cell_size,
-            cell_size_x,
-            diag_cell_size,
-            cell_size_y,
-            diag_cell_size,
-            cell_size_x,
-            diag_cell_size,
-            cell_size_y,
-        ];
+        let grid_lengths =
+            if out_type_cells {
+                // Measure length in number of cells
+                [1f64; 8]
+            } else {
+                // Measure length in unit of distance
+                // from center of one pixel to the center of the next
+                [
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                    diag_cell_size,
+                    cell_size_x,
+                    diag_cell_size,
+                    cell_size_y,
+                ]
+            };
+
         let mut current_id: f64;
         let mut dir: f64;
         let mut c: usize;
