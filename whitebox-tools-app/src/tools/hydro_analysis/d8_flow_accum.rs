@@ -31,10 +31,10 @@ use std::thread;
 /// optional `--esri_pntr` flag.
 ///
 /// In addition to the input DEM/pointer, the user must specify the output type. The output flow-accumulation
-/// can be 1) `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
-/// or `specific contributing area` (i.e. the catchment area divided by the flow width. The default value
+/// can be `cells` (i.e. the number of inflowing grid cells), `catchment area` (i.e. the upslope area),
+/// or `specific contributing area` (i.e. the catchment area divided by the flow width). The default value
 /// is `cells`. The user must also specify whether the output flow-accumulation grid should be
-/// log-tranformed (`--log`), i.e. the output, if this option is selected, will be the natural-logarithm of the
+/// log-tranformed (`--log`), i.e. if the output should represent the natural-logarithm of the
 /// accumulated flow value. This is a transformation that is often performed to better visualize the
 /// contributing area distribution. Because contributing areas tend to be very high along valley bottoms
 /// and relatively low on hillslopes, when a flow-accumulation image is displayed, the distribution of
@@ -571,7 +571,7 @@ impl WhiteboxTool for D8FlowAccumulation {
             }
         }
 
-        let mut cell_area = cell_size_x * cell_size_y;
+        
         // if flow width is allowed to vary by direction, the flow accumulation output will not
         // increase continuously downstream and any applications involving stream network
         // extraction will encounter issues with discontinuous streams. The Whitebox GAT tool
@@ -587,22 +587,20 @@ impl WhiteboxTool for D8FlowAccumulation {
         //     cell_size_x,
         // ];
 
-        let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
-        let mut flow_widths = [
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-            avg_cell_size,
-        ];
+        let cell_area;
+        let flow_widths;
+        
         if out_type == "cells" {
             cell_area = 1.0;
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            flow_widths = vec![1.0; 8];
         } else if out_type == "ca" {
-            flow_widths = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0];
+            cell_area = cell_size_x * cell_size_y;
+            flow_widths = vec![1.0; 8];
+        } else {
+            // if specific catchment area
+            cell_area = cell_size_x * cell_size_y;
+            let avg_cell_size = (cell_size_x + cell_size_y) / 2.0;
+            flow_widths = vec![avg_cell_size; 8];
         }
 
         if log_transform {
