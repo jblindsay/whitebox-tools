@@ -165,7 +165,7 @@ proc = "amd64"
 if "arm" in proc and "darwin" in platform.system():
     proc = "m_series"
 
-output_zip = os.path.join(app_dir, f"WhiteboxTools_{platform.system()}_{proc}")
+output_zip = os.path.join(app_dir, "zip_files", f"WhiteboxTools_{platform.system()}_{proc}")
 make_archive(output_zip, 'zip', output_dir)
 
 print("Done!")

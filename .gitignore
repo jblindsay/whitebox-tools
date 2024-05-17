@@ -8,5 +8,7 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 *.pyc
+*.zip
 /.idea
 /WBT/
+/zip_files/
