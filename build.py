@@ -1,6 +1,6 @@
 import platform, subprocess
 import os, sys
-from shutil import copyfile, copytree, rmtree
+from shutil import copyfile, copytree, make_archive, rmtree
 
 # To use this script:
 #
@@ -157,5 +157,15 @@ if os.path.exists('../GeneralToolsetExtension'):
         print("No register_license file found...")
 else:
     print("No directory containing the register_license file found...")
+
+
+# Make a zip of the WBT folder
+print("Creating zip artifact...")
+proc = "amd64"
+if "arm" in proc and "darwin" in platform.system():
+    proc = "m_series"
+
+output_zip = os.path.join(app_dir, f"WhiteboxTools_{platform.system()}_{proc}")
+make_archive(output_zip, 'zip', output_dir)
 
 print("Done!")

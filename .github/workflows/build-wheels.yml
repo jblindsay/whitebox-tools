@@ -2,9 +2,9 @@ name: Build WhiteboxTools
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - master  # Adjust to match your primary branch name
+  # push:
+  #   branches:
+  #     - master  # Adjust to match your primary branch name
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # os: [ubuntu-latest, windows-latest, macOS-latest, ubuntu-20.04, ]
-        os: [windows-latest] #, macos-12, macOS-latest]
+        os: [windows-latest, macos-12] #, macOS-latest]
         python-version: ['3.11']
 
     steps:
@@ -34,4 +34,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wbt-${{ matrix.os }}-${{ matrix.python-version }}
-          path: WBT
+          path: /*.zip
+
+      # - name: Download WBT
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     path: WBT
