@@ -613,9 +613,9 @@ impl WhiteboxTool for TimeInDaylight {
             if altitudes_and_durations[0].1 > 0f64 && total_daylight_in_az > 0f64 {
                 // This azimuth sees sunshine at least part of the year.
                 line_slope = if azimuth < 180f32 {
-                    (90f32 - azimuth).to_radians().tan()
+                    ((90f32 - azimuth) as f64).to_radians().tan() as f32
                 } else {
-                    (270f32 - azimuth).to_radians().tan()
+                    ((270f32 - azimuth) as f64).to_radians().tan() as f32
                 };
 
                 // Now perform the filter
@@ -716,7 +716,7 @@ impl WhiteboxTool for TimeInDaylight {
                         let early_stopping_slope = 80f32.to_radians().tan();
                         let mut current_elev: f32;
                         let mut current_max_slope: f32;
-                        let mut current_max_elev: f32;
+                        // let mut current_max_elev: f32;
                         let a_small_value = -9999999f32;
                         for row in (0..rows).filter(|r| r % num_procs == tid) {
                             let mut data: Vec<f32> = vec![nodata_f32; columns as usize];
@@ -725,7 +725,7 @@ impl WhiteboxTool for TimeInDaylight {
                                 if current_elev != nodata_f32 {
                                     // Run down the offsets of the ray
                                     current_max_slope = a_small_value;
-                                    current_max_elev = a_small_value;
+                                    // current_max_elev = a_small_value;
                                     for i in 0..num_offsets {
                                         // Where are we on the grid?
                                         x1 = col + offsets[i].0;
@@ -747,10 +747,10 @@ impl WhiteboxTool for TimeInDaylight {
 
                                         z = z1 + offsets[i].4 * (z2 - z1);
 
-                                        // All previous cells are nearer, and so if this isn't a higher
-                                        // cell than the current highest, it can't be the horizon cell.
-                                        if z > current_max_elev {
-                                            current_max_elev = z;
+                                        // // All previous cells are nearer, and so if this isn't a higher
+                                        // // cell than the current highest, it can't be the horizon cell.
+                                        // if z > current_max_elev {
+                                            // current_max_elev = z;
 
                                             // Calculate the slope
                                             slope = (z - current_elev) / offsets[i].5;
@@ -760,7 +760,7 @@ impl WhiteboxTool for TimeInDaylight {
                                                     break; // we're unlikely to find a farther horizon cell.
                                                 }
                                             }
-                                        }
+                                        // }
                                     }
 
                                     if current_max_slope == a_small_value {

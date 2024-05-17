@@ -377,7 +377,7 @@ impl WhiteboxTool for LidarPointDensity {
             //     }
             // }
             if std::path::Path::new(&working_directory).is_dir() {
-                for entry in fs::read_dir(working_directory.clone())? {
+                for entry in fs::read_dir(working_directory)? {
                     let s = entry?
                         .path()
                         .into_os_string()

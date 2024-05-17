@@ -190,7 +190,7 @@ impl WhiteboxTool for ZlidarToLas {
                     "This tool must be run by specifying either an individual input file or a working directory."));
             }
             if std::path::Path::new(&working_directory).is_dir() {
-                for entry in fs::read_dir(working_directory.clone())? {
+                for entry in fs::read_dir(working_directory)? {
                     let s = entry?
                         .path()
                         .into_os_string()

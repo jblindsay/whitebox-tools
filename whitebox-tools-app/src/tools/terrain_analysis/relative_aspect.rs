@@ -29,7 +29,7 @@ use whitebox_common::utils::{
 /// landforms and the deflection of wind by topography.
 ///
 /// The user must specify the name of a digital elevation model (DEM) (`--dem`) and an azimuth (i.e. a wind direction). The
-/// Z Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the same in the DEM.
+/// Z Conversion Factor (`--zfactor`) is only important when the vertical and horizontal units are not the same in the DEM, and the DEM is in a projected coordinate system.
 /// When this is the case, the algorithm will multiply each elevation in the DEM by the Z Conversion Factor.
 ///
 /// # Reference

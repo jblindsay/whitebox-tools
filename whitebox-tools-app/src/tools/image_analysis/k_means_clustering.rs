@@ -741,7 +741,7 @@ impl WhiteboxTool for KMeansClustering {
                     &format!(
                         "<strong>Image {}</strong>: {}<br>",
                         i + 1,
-                        input_files[i].clone()
+                        input_files[i]
                     )
                     .as_bytes(),
                 )?;

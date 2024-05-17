@@ -12,12 +12,12 @@ use crate::tools::*;
 use whitebox_vector::*;
 use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
-use std::cmp::Ordering;
+// use std::cmp::Ordering;
 use std::env;
 use std::io::{Error, ErrorKind};
 use std::path;
 
-const EPSILON: f64 = std::f64::EPSILON;
+// const EPSILON: f64 = std::f64::EPSILON;
 
 /// Vector lines can sometimes contain two features that are connected by a shared end vertex. This tool
 /// identifies connected line features in an input vector file (`--input`) and merges them in the output
@@ -521,38 +521,38 @@ impl WhiteboxTool for MergeLineSegments {
     }
 }
 
-#[derive(Debug)]
-struct Link {
-    id: usize,
-    priority: f64,
-}
+// #[derive(Debug)]
+// struct Link {
+//     id: usize,
+//     priority: f64,
+// }
 
-impl PartialEq for Link {
-    fn eq(&self, other: &Self) -> bool {
-        (self.priority - other.priority).abs() < EPSILON && self.id == other.id
-    }
-}
+// impl PartialEq for Link {
+//     fn eq(&self, other: &Self) -> bool {
+//         (self.priority - other.priority).abs() < EPSILON && self.id == other.id
+//     }
+// }
 
-impl Eq for Link {}
+// impl Eq for Link {}
 
-impl Ord for Link {
-    fn cmp(&self, other: &Link) -> Ordering {
-        // this sorts priorities from low to high
-        // and when priorities are equal, id's from
-        // high to low.
-        let mut ord = other.priority.partial_cmp(&self.priority).unwrap();
-        if ord == Ordering::Equal {
-            ord = self.id.cmp(&other.id);
-        }
-        ord
-    }
-}
+// impl Ord for Link {
+//     fn cmp(&self, other: &Link) -> Ordering {
+//         // this sorts priorities from low to high
+//         // and when priorities are equal, id's from
+//         // high to low.
+//         let mut ord = other.priority.partial_cmp(&self.priority).unwrap();
+//         if ord == Ordering::Equal {
+//             ord = self.id.cmp(&other.id);
+//         }
+//         ord
+//     }
+// }
 
-impl PartialOrd for Link {
-    fn partial_cmp(&self, other: &Link) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
+// impl PartialOrd for Link {
+//     fn partial_cmp(&self, other: &Link) -> Option<Ordering> {
+//         Some(self.cmp(other))
+//     }
+// }
 
 fn get_other_endnode(index: usize) -> usize {
     if index % 2 == 0 {

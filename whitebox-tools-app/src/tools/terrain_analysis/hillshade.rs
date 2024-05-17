@@ -27,7 +27,7 @@ use whitebox_common::utils::{
 /// be specified include the illumination source azimuth (`--azimuth`), or sun direction (0-360 degrees), the
 /// illumination source altitude (`--altitude`; i.e. the elevation of the sun above the horizon, measured as an angle
 /// from 0 to 90 degrees) and the Z conversion factor (`--zfactor`). The *Z conversion factor* is only important
-/// when the vertical and horizontal units are not the same in the DEM. When this is the case,
+/// when the vertical and horizontal units are not the same in the DEM, and the DEM is in a projected coordinate system. When this is the case,
 /// the algorithm will multiply each elevation in the DEM by the Z conversion factor. If the
 /// DEM is in the geographic coordinate system (latitude and longitude), the following equation
 /// is used:

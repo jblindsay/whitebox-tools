@@ -1,6 +1,6 @@
 [package]
 name = "whitebox_plugins"
-version = "2.3.0"
+version = "2.4.0"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 edition = "2021"
 
@@ -11,6 +11,10 @@ path = "src/conditional_evaluation/main.rs"
 [[bin]]
 name = "conditioned_latin_hypercube"
 path = "src/conditioned_latin_hypercube/main.rs"
+
+[[bin]]
+name = "convergence_index"
+path = "src/convergence_index/main.rs"
 
 [[bin]]
 name = "correct_stream_vector_direction"

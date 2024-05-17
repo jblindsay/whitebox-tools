@@ -585,14 +585,14 @@ impl WhiteboxTool for ImageRegression {
         let x_filename = path.file_name().unwrap().to_str().unwrap();
         let s1 = &format!(
             "<p><strong>Input Image 1 (independent variable, X):</strong> {}</p>",
-            x_filename.clone()
+            x_filename
         );
         writer.write_all(s1.as_bytes())?;
         let path = Path::new(&input_file2);
         let y_filename = path.file_name().unwrap().to_str().unwrap();
         let s1 = &format!(
             "<p><strong>Input Image 2 (dependent variable, Y):</strong> {}</p><br>",
-            y_filename.clone()
+            y_filename
         );
         writer.write_all(s1.as_bytes())?;
 
@@ -738,7 +738,7 @@ impl WhiteboxTool for ImageRegression {
             input2.get_short_filename(),
             slope,
             input1.get_short_filename(),
-            sign.clone(),
+            sign,
             intercept.abs()
         );
         writer.write_all(s2.as_bytes())?;

@@ -287,9 +287,9 @@ impl WhiteboxTool for HorizonAngle {
         let start = Instant::now();
 
         let line_slope: f32 = if azimuth < 180f32 {
-            (90f32 - azimuth).to_radians().tan()
+            ((90f32 - azimuth) as f64).to_radians().tan() as f32
         } else {
-            (270f32 - azimuth).to_radians().tan()
+            ((270f32 - azimuth) as f64).to_radians().tan() as f32
         };
 
         let rows = configs.rows as isize;

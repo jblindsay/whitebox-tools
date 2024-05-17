@@ -273,7 +273,7 @@ impl WhiteboxTool for PrincipalComponentAnalysis {
                 sep
             )
         } else {
-            working_directory.clone().to_owned()
+            working_directory.to_owned()
         };
 
         if !output_html_file.contains(&sep) && !output_html_file.contains("/") && !output_html_file.is_empty() {

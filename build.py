@@ -6,7 +6,7 @@ from shutil import copyfile, copytree, rmtree
 #
 # python3 build.py do_clean
 #
-# Where 'do_clean' is true or false and determines whether or not to clean existing files first. 
+# Where 'do_clean' is true or false and determines whether or not to clean existing files first.
 #
 # You will need Rust installed before running the script. The output will be contained within a
 # folder named 'WBT'.
@@ -42,9 +42,6 @@ else:
     result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
     if len(result.stdout) > 0:
         print(result.stdout)
-# result = subprocess.run(['cargo', 'build', '--release'], stdout=subprocess.PIPE)
-# if len(result.stdout) > 0:
-#     print(result.stdout)
 
 if not os.path.exists(output_plugin_dir):
     os.makedirs(output_plugin_dir)
@@ -78,7 +75,38 @@ src = os.path.join(app_dir, 'UserManual.txt')
 dst = os.path.join(output_dir, 'UserManual.txt')
 copyfile(src, dst)
 
-# Copy the Runner app
+# if len(sys.argv) > 2:
+#     if "t" in sys.argv[2].lower():
+#         # Compile the Runner app
+#         runner_dir = os.path.join(app_dir, 'whitebox-runner')
+#         os.chdir(runner_dir)
+#         if platform.system() != 'Linux':
+#             result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
+#             if len(result.stdout) > 0:
+#                 print(result.stdout)
+#         else:
+#             print("Compiling for musl target...")
+#             result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
+#             if len(result.stdout) > 0:
+#                 print(result.stdout)
+
+
+#         # Copy the Runner app
+#         runner_target_dir = os.path.join(runner_dir, 'target/release')
+#         if platform.system() == "Linux":
+#             runner_target_dir = os.path.join(runner_dir, 'target/x86_64-unknown-linux-musl/release')
+
+#         exe_file = os.path.join(runner_target_dir, 'whitebox_runner') + ext
+#         dst = os.path.join(output_dir, 'whitebox_runner') + ext
+#         copyfile(exe_file, dst)
+#         if platform.system() != 'Windows':
+#             result = subprocess.run(['strip', dst], stdout=subprocess.PIPE)
+#         os.system("chmod 755 " + dst) # grant executable 
+
+#         # Return to the app_dir
+#         os.chdir(app_dir)
+
+ # Copy the Runner app
 exe_file = os.path.join(target_dir, 'whitebox_runner') + ext
 dst = os.path.join(output_dir, 'whitebox_runner') + ext
 copyfile(exe_file, dst)

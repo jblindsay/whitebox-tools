@@ -24,7 +24,13 @@ use std::path;
 /// integer value. The database file will also have a field for the length of each
 /// link in the stream network. The flow pointer file must be calculated from a DEM with
 /// all topographic depressions and flat areas removed and must be calculated using the
-/// D8 flow pointer algorithm. The output vector will contain PolyLine features.
+/// D8 flow pointer algorithm. The output vector will contain PolyLine features. By default,
+/// the tool will only maintain vertices in the output vector file where there is a change
+/// in the downstream flow direction, which can result in a significant reduction in the
+/// number of vertices in the output file, and therefore reduced file sizes. However, the
+/// user can optionally override this behaviour by specifying the `--all_vertices` input
+/// parameter. If specified, this parameter has the effect of presering all of the verticies
+/// associated with grid cells in the input raster within the output vector file. 
 ///
 /// # See Also
 /// `RasterizeStreams`, `RasterToVectorLines`

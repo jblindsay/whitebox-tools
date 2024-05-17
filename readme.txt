@@ -56,7 +56,7 @@ for more details.
 * Release Notes: *
 ******************
 
-Version 2.4.0 (xx-xx-20xx)
+Version 2.4.0 (17-05-2024)
 - Removed the requirement for an input DEM in the VectorStreamNetworkAnalysis tool. 
 - Fixed a bug in the RepairStreamVectorTopology tool that reversed the direction of some stream arcs.
 - Added the CorrectStreamVectorDirection tool.
@@ -69,6 +69,7 @@ Version 2.4.0 (xx-xx-20xx)
 - Fixed a bug with polygon holes in the RasterToVectorPolygons tool.
 - Fixed a bug with the IndividualTreeDetection tool that prevented use of the min_height parameter
   when applied in batch mode.
+- Added the ConvergenceIndex tool.
 
 Version 2.3.0 (28-03-2023)
 - Added the new Whitebox Runner v2.0. This version of WbRunner is an entirely new application with many 

@@ -1,0 +1,34 @@
+{
+    "tool_name": "ConvergenceIndex",
+    "exe": "convergence_index",
+    "short_description": "Calculates Qin et al. (2007) flow accumulation.",
+    "toolbox": "Geomorphometric Analysis",
+    "license": "MIT",
+    "example": ".*EXE_NAME -r=ConvergenceIndex --dem=DEM.tif --output=convergence.tif --z_factor=1.0",
+    "parameters": [
+        {
+            "name": "Input DEM Raster",
+            "flags": ["-d", "--dem"],
+            "description": "Name of the input DEM raster file; must be depressionless.",
+            "parameter_type": {"ExistingFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Output Raster File",
+            "flags": ["--output"],
+            "description": "Name of the output raster file.",
+            "parameter_type": {"NewFile":"Raster"},
+            "default_value": null,
+            "optional": false
+        },
+        {
+            "name": "Z Conversion Factor",
+            "flags": ["--zfactor"],
+            "description": "Optional multiplier for when the vertical and horizontal units are not the same.",
+            "parameter_type": "Float",
+            "default_value": "",
+            "optional": true
+        }
+    ]
+}

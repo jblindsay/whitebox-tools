@@ -1,7 +1,7 @@
 /* 
 Authors: Prof. John Lindsay
 Created: 03/08/2021 (oringinally in Whitebox Toolset Extension)
-Last Modified: 04/10/2023
+Last Modified: 04/11/2023
 License: MIT
 */
 
@@ -1063,7 +1063,7 @@ impl Polyline {
     // Creates a new Polyline from vertices
     fn new(vertices: &[Point2D], id: usize) -> Self {
         Polyline {
-            vertices: vertices.clone().to_vec(),
+            vertices: vertices.to_vec(),
             id,
             split_points: vec![],
             splits_offset_by_one: false,

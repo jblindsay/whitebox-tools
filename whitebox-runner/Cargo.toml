@@ -1,6 +1,6 @@
 [package]
 name = "whitebox_runner"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["John Lindsay <jlindsay@uoguelph.ca>"]
 edition = "2021"
 

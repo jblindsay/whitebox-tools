@@ -335,8 +335,11 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         if num_iter < 1 {
             num_iter = 1;
         }
-        if max_norm_diff > 90f32 {
-            max_norm_diff = 90f32;
+        // if max_norm_diff > 90f32 {
+        //     max_norm_diff = 90f32;
+        // }
+        if max_norm_diff > 180f32 {
+            max_norm_diff = 180f32;
         }
         let threshold = max_norm_diff.to_radians().cos();
 

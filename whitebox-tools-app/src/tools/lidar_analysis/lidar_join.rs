@@ -217,8 +217,8 @@ impl WhiteboxTool for LidarJoin {
                 let n_points = input.header.number_of_points as usize;
 
                 let mut pr: LidarPointRecord;
-                for i in 0..n_points {
-                    pr = input.get_record(i);
+                for p in 0..n_points {
+                    pr = input.get_record(p);
                     output.add_point_record(pr);
                 }
             }

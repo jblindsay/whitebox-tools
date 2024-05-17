@@ -104,7 +104,7 @@ impl MyApp {
             "lidar".to_string()
         } else if ext_name.to_lowercase().contains("dem") {
             "dem".to_string()
-        } else if ext_name.to_lowercase().contains("general") {
+        } else if ext_name.to_lowercase().contains("general") || ext_name.to_lowercase().contains("whitebox") {
             "general".to_string()
         } else {
             bail!("Unrecognized extension product {}.\n", ext_name);

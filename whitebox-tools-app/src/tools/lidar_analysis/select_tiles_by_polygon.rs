@@ -189,7 +189,7 @@ impl WhiteboxTool for SelectTilesByPolygon {
         let sep: String = path::MAIN_SEPARATOR.to_string();
 
         if input_directory.is_empty() {
-            input_directory = working_directory.clone().to_string();
+            input_directory = working_directory.to_string();
         }
         if !polygons_file.contains(&sep) && !polygons_file.contains("/") {
             polygons_file = format!("{}{}", working_directory, polygons_file);

@@ -25,7 +25,7 @@ use whitebox_common::utils::{
 /// This tool calculates slope aspect (i.e. slope orientation in degrees clockwise from north) for each grid cell
 /// in an input digital elevation model (DEM). The user must specify the name of the input
 /// DEM (`--dem`) and the output raster image. The *Z conversion factor* is only important
-/// when the vertical and horizontal units are not the same in the DEM. When this is the case,
+/// when the vertical and horizontal units are not the same in the DEM, and the DEM is in a projected coordinate system. When this is the case,
 /// the algorithm will multiply each elevation in the DEM by the Z conversion factor. 
 /// 
 /// For DEMs in projected coordinate systems, the tool uses the 3rd-order bivariate 

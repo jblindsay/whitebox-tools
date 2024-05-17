@@ -407,7 +407,7 @@ impl MyApp {
 
         let mut tb_hm = HashMap::new();
         for i in 0..tb.len() {
-            let tlbx = tb[i].clone();
+            let tlbx = tb[i];
             let mut v = vec![];
             for j in 0..tool_list.len() {
                 if tool_list[j].1 == tlbx {
