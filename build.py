@@ -24,8 +24,8 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
     plugins_dir = os.path.join(app_dir, 'whitebox-plugins/src')
 
     target_dir = os.path.join(app_dir, 'target/release')
-    if platform.system() == "Linux":
-        target_dir = os.path.join(app_dir, 'target/x86_64-unknown-linux-musl/release')
+    # if platform.system() == "Linux":
+    #     target_dir = os.path.join(app_dir, 'target/x86_64-unknown-linux-musl/release')
 
     if do_clean:
         print("Cleaning old files...")
