@@ -4,17 +4,22 @@ from shutil import copyfile, copytree, make_archive, rmtree
 
 # To use this script:
 #
-# python3 build.py do_clean exclude_runner zip
+# python3 build.py [args]
 #
-# Where 'do_clean' is true or false and determines whether or not to clean existing files first;
-# 'exclude_runner' is true or false and determines whether the WhiteboxTools Runner app is excluded
-# from the build; and, 'create_zip_artifact' is true or false and determines whether a zip file
-# of the WBT folder is also created.
+# Script Keyword Arguments:
 #
+# do_clean           If present, the existing files will be cleaned before compiling.
+# exclude_runner     Excludes the WhiteboxTools Runner app from the build (Windows and macos). 
+# zip                Creates a zip file output in addition to the WBT folder
+#
+# Notes:
 # You will need Rust installed before running the script. The output will be contained within a
-# folder named 'WBT'.
+# folder named 'WBT'. The WhiteboxTools Runner app will always be excluded from Linux builds. 
+# Compiling the Runner causes an error on our Ubuntu compile target.
 #
-# Note that the WhiteboxTools Runner app will always be excluded from Linux builds.
+# Example:
+# python3 build.py do_clean exclude_runner zip
+
 
 def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
     # Set the directory variables
@@ -61,6 +66,10 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
             print(result.stdout)
     else:
         print("Compiling for musl target...")
+        result = subprocess.run(['rustup', 'target', "add", "x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
+        if len(result.stdout) > 0:
+            print(result.stdout)
+            
         result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
         if len(result.stdout) > 0:
             print(result.stdout)
