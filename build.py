@@ -52,15 +52,18 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
 
 
     print("Compiling...")
-    if platform.system() != 'Linux':
-        result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
-        if len(result.stdout) > 0:
-            print(result.stdout)
-    else:
-        print("Compiling for musl target...")
-        result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
-        if len(result.stdout) > 0:
-            print(result.stdout)
+    result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
+    if len(result.stdout) > 0:
+        print(result.stdout)
+    # if platform.system() != 'Linux':
+    #     result = subprocess.run(['cargo', 'build', "--release"], stdout=subprocess.PIPE)
+    #     if len(result.stdout) > 0:
+    #         print(result.stdout)
+    # else:
+    #     print("Compiling for musl target...")
+    #     result = subprocess.run(['cargo', 'build', "--release", "--target=x86_64-unknown-linux-musl"], stdout=subprocess.PIPE)
+    #     if len(result.stdout) > 0:
+    #         print(result.stdout)
 
     if not os.path.exists(output_plugin_dir):
         os.makedirs(output_plugin_dir)
