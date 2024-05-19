@@ -39,7 +39,7 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
 
     # Create the Cargo.toml file
     workspace_str = '[workspace]\nmembers = ["whitebox-common", "whitebox-lidar", "whitebox-plugins", "whitebox-raster", "whitebox-runner", "whitebox-tools-app", "whitebox-vector"]\n\n'
-    if exclude_runner or platform.system() == 'Linux':
+    if exclude_runner: # or platform.system() == 'Linux':
         # Exclude the runner if the second command line arg is set to True or if the platform is linux
         workspace_str = '[workspace]\nmembers = ["whitebox-common", "whitebox-lidar", "whitebox-plugins", "whitebox-raster", "whitebox-tools-app", "whitebox-vector"]\n\n'
 
@@ -158,7 +158,11 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
         if "arm" in platform.processor().lower() and "darwin" in platform.system().lower():
             proc = "m_series"
 
-        zip_name = f"WhiteboxTools_{platform.system().lower()}_{proc}"
+        pltfm = platform.system().lower()
+        if "windows" in pltfm:
+            pltfm = "win"
+
+        zip_name = f"WhiteboxTools_{pltfm}_{proc}"
         # output_zip = os.path.join(app_dir, zip_name, "WBT")
         copytree(output_dir, os.path.join(app_dir, zip_name, "WBT"), dirs_exist_ok=True)
         # output_zip = os.path.join(app_dir, zip_name)
