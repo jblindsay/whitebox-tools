@@ -28,7 +28,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Run build script
-        run: python build.py
+        run: python build.py do_clean zip
 
       - name: Upload WBT
         uses: actions/upload-artifact@v4
