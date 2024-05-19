@@ -159,24 +159,25 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
             proc = "m_series"
 
         zip_name = f"WhiteboxTools_{platform.system().lower()}_{proc}"
-        output_zip = os.path.join(app_dir, zip_name, "WBT")
-        copytree(output_dir, output_zip, dirs_exist_ok=True)
-        output_zip = os.path.join(app_dir, zip_name)
+        # output_zip = os.path.join(app_dir, zip_name, "WBT")
+        copytree(output_dir, os.path.join(app_dir, zip_name, "WBT"), dirs_exist_ok=True)
+        # output_zip = os.path.join(app_dir, zip_name)
         
-        with open(os.path.join(output_zip, 'readme.txt'), "w") as readme_file:
+        with open(os.path.join(os.path.join(app_dir, zip_name), 'readme.txt'), "w") as readme_file:
             readme_file.write("""Instructions:
 
-    Copy the WBT folder and its entire contents to any location on your system. Configure your Whitebox
-    frontend, whether that is the QGIS or ArcGIS plugin, or the Python package, to point to this WBT
-    folder location. To access the functionality of WhiteboxTools without the need for a 3rd party
-    frontend, launch the WhiteboxTools Runner app (whitebox_runner), if it is contained within the WBT 
-    folder.""")
+Copy the WBT folder and its entire contents to any location on your system. Configure your Whitebox
+frontend, whether that is the QGIS or ArcGIS plugin, or the Python package, to point to this WBT
+folder location. To access the functionality of WhiteboxTools without the need for a 3rd party
+frontend, launch the WhiteboxTools Runner app (whitebox_runner), if it is contained within the WBT 
+folder.""")
 
-        make_archive(output_zip, 'zip', output_zip)
+        # output_zip = os.path.join(app_dir, 'zip_file', zip_name)
+        make_archive(os.path.join(app_dir, 'zip_file', zip_name), 'zip', os.path.join(app_dir, zip_name))
 
         # Delete the folder
-        if os.path.exists(output_zip):
-            rmtree(output_zip)
+        if os.path.exists(os.path.join(app_dir, zip_name)):
+            rmtree(os.path.join(app_dir, zip_name))
 
     print("Done!")
 
