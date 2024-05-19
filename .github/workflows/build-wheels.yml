@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # os: [ubuntu-latest, windows-latest, macOS-latest, ubuntu-20.04, ]
-        os: [windows-latest, macos-12, macOS-latest]
+        os: [ubuntu-latest, windows-latest, macos-12, macOS-latest]
         python-version: ['3.11']
 
     steps:
@@ -33,5 +33,5 @@ jobs:
       - name: Upload WBT
         uses: actions/upload-artifact@v4
         with:
-          name: wbt-${{ matrix.os }}-${{ matrix.python-version }}
+          name: wbt-${{ matrix.os }}
           path: zip_files/*.zip
