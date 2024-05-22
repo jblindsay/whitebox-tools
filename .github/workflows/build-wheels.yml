@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # os: [ubuntu-latest, windows-latest, macOS-latest, ubuntu-20.04, ]
-        os: [ubuntu-22.04] #, windows-latest, macos-12, macOS-latest]
+        os: [ubuntu-22.04, windows-latest, macos-12, macOS-latest]
         python-version: ['3.11']
 
     steps:
@@ -32,6 +32,7 @@ jobs:
         run: |
           sudo apt install musl-tools
 
+      # Compiling the WbRunner app on linux causes an error related to openssl, so use exclude_runner
       - name: Run build script linux
         if: startsWith(matrix.os, 'ubuntu')
         run: python build.py do_clean exclude_runner zip

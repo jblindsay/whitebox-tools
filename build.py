@@ -9,13 +9,15 @@ from shutil import copyfile, copytree, make_archive, rmtree
 # Script Keyword Arguments:
 #
 # do_clean           If present, the existing files will be cleaned before compiling.
-# exclude_runner     Excludes the WhiteboxTools Runner app from the build (Windows and macos). 
+# exclude_runner     Excludes the WhiteboxTools Runner app from the build. 
 # zip                Creates a zip file output in addition to the WBT folder
 #
 # Notes:
 # You will need Rust installed before running the script. The output will be contained within a
-# folder named 'WBT'. The WhiteboxTools Runner app will always be excluded from Linux builds. 
-# Compiling the Runner causes an error on our Ubuntu compile target.
+# folder named 'WBT'. The WhiteboxTools Runner app often results in an error when compiling on
+# Linux. This seems to be related to openssl libraries, which need to be set up correctly. If 
+# you are unable to figure out the set-up correctly and you do not need the Runner app, you
+# would be advised to use the exclude_runner argument on linux.
 #
 # Example:
 # python3 build.py do_clean exclude_runner zip
@@ -44,7 +46,7 @@ def build(do_clean=False, exclude_runner=False, create_zip_artifact=False):
 
     # Create the Cargo.toml file
     workspace_str = '[workspace]\nmembers = ["whitebox-common", "whitebox-lidar", "whitebox-plugins", "whitebox-raster", "whitebox-runner", "whitebox-tools-app", "whitebox-vector"]\n\n'
-    if exclude_runner: # or platform.system() == 'Linux':
+    if exclude_runner:
         # Exclude the runner if the second command line arg is set to True or if the platform is linux
         workspace_str = '[workspace]\nmembers = ["whitebox-common", "whitebox-lidar", "whitebox-plugins", "whitebox-raster", "whitebox-tools-app", "whitebox-vector"]\n\n'
 
