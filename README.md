@@ -1,6 +1,8 @@
 ![](./img/WhiteboxToolsLogoBlue.png)
 
 
+> Note: Compiled WhiteboxTools binaries for Windows, macOS, and Linux can be found at: https://www.whiteboxgeo.com/download-whiteboxtools/
+
 *This page is related to the stand-alone command-line program and Python scripting API for geospatial analysis, **WhiteboxTools**.
 
 The official WhiteboxTools User Manual can be found [at this link](https://whiteboxgeo.com/manual/wbt_book/preface.html).
