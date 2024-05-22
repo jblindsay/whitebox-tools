@@ -27,7 +27,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run build script
+      - name: Install musl on linux
+        if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          sudo apt-get install -y musl
+
+      - name: Run build script linux
+        if: startsWith(matrix.os, 'ubuntu')
+        run: python build.py do_clean exclude_runner zip
+      
+      - name: Run build script non-linux
+        if: startsWith(matrix.os, 'ubuntu') != true
         run: python build.py do_clean zip
 
       - name: Upload WBT
