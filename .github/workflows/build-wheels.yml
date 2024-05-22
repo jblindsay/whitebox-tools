@@ -30,7 +30,7 @@ jobs:
       - name: Install musl on linux
         if: startsWith(matrix.os, 'ubuntu')
         run: |
-          apt install musl-tools
+          sudo apt install musl-tools
 
       - name: Run build script linux
         if: startsWith(matrix.os, 'ubuntu')
