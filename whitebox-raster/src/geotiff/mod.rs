@@ -485,10 +485,17 @@ pub fn read_geotiff<'a>(
         }
     };
 
-    // let num_samples = match ifd_map.get(&277) {
-    //     Some(ifd) => ifd.interpret_as_u16()[0],
-    //     _ => 0,
-    // };
+    match ifd_map.get(&277) {
+        Some(ifd) => {
+            configs.bands = ifd.interpret_as_u16()[0] as u8; // warning: a GeoTIFF can contain more than 256 bands
+        }
+        _ => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                "The raster SamplesPerPixel value was not read correctly",
+            ))
+        }
+    };
 
     match ifd_map.get(&280) {
         Some(ifd) => {
