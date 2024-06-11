@@ -1203,7 +1203,7 @@ impl ToolManager {
 
     fn get_plugin_list(&self) -> Result<HashMap<String, serde_json::Value>, Error> {
         // let exe_path = std::env::current_dir()?.to_str().unwrap_or("No exe path found.").to_string();
-        let mut dir = env::current_exe()?;
+        let mut dir = fs::canonicalize(env::current_exe()?)?;
         dir.pop();
         dir.push("plugins");
         let plugin_directory = dir.to_str().unwrap_or("No exe path found.").to_string();
