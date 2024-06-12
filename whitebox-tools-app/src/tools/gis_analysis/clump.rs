@@ -19,8 +19,8 @@ use std::path;
 /// identifiers. The input raster should either be
 /// Boolean (1's and 0's) or categorical. The input raster could be created using
 /// the `Reclass` tool or one of the comparison operators (`GreaterThan`, `LessThan`,
-/// `EqualTo`, `NotEqualTo`). Use the *treat zeros as background cells* options
-/// (`--zero_back`) if you would like to only assigned contiguous groups of non-zero
+/// `EqualTo`, `NotEqualTo`). Use the *treat zeros as background cells* option
+/// (`--zero_back`) if you would like to only assign contiguous groups of non-zero
 /// values in the raster unique identifiers. Additionally, inter-cell connectivity
 /// can optionally include diagonally neighbouring cells if the `--diag` flag is
 /// specified.
