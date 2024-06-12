@@ -6,13 +6,13 @@ Last Modified: 12/10/2018
 License: MIT
 */
 
-use whitebox_raster::*;
-use whitebox_common::structures::Array2D;
 use crate::tools::*;
 use std::env;
 use std::f64;
 use std::io::{Error, ErrorKind};
 use std::path;
+use whitebox_common::structures::Array2D;
+use whitebox_raster::*;
 
 /// This tool can be used to calculate the elevation of each grid cell in a raster above the nearest stream cell,
 /// measured along the straight-line distance. This terrain index, a measure of relative topographic position, is
@@ -180,11 +180,18 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
 
         if verbose {
             let tool_name = self.get_tool_name();
-            let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28); 
+            let welcome_len = format!("* Welcome to {} *", tool_name).len().max(28);
             // 28 = length of the 'Powered by' by statement.
             println!("{}", "*".repeat(welcome_len));
-            println!("* Welcome to {} {}*", tool_name, " ".repeat(welcome_len - 15 - tool_name.len()));
-            println!("* Powered by WhiteboxTools {}*", " ".repeat(welcome_len - 28));
+            println!(
+                "* Welcome to {} {}*",
+                tool_name,
+                " ".repeat(welcome_len - 15 - tool_name.len())
+            );
+            println!(
+                "* Powered by WhiteboxTools {}*",
+                " ".repeat(welcome_len - 28)
+            );
             println!("* www.whiteboxgeo.com {}*", " ".repeat(welcome_len - 23));
             println!("{}", "*".repeat(welcome_len));
         }
@@ -211,14 +218,15 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
         let dem = Raster::new(&dem_file, "r")?;
         let input = Raster::new(&streams_file, "r")?;
 
-        let nodata = input.configs.nodata;
-        let rows = input.configs.rows as isize;
-        let columns = input.configs.columns as isize;
+        let nodata = dem.configs.nodata;
+        let input_nodata = input.configs.nodata;
+        let rows = dem.configs.rows as isize;
+        let columns = dem.configs.columns as isize;
         let mut r_x: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut r_y: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
         let mut distance: Array2D<f64> = Array2D::new(rows, columns, 0f64, nodata)?;
 
-        if dem.configs.rows as isize != rows || dem.configs.columns as isize != columns {
+        if input.configs.rows as isize != rows || input.configs.columns as isize != columns {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "Input DEM and streams file must have the same extent (rows and columns).",
@@ -242,7 +250,7 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
         for row in 0..rows {
             for col in 0..columns {
                 z = input.get_value(row, col);
-                if z != 0.0 && z != nodata {
+                if z != 0.0 && z != input_nodata {
                     distance.set_value(row, col, 0.0);
                     allocation.set_value(row, col, dem.get_value(row, col));
                 } else {
@@ -347,7 +355,7 @@ impl WhiteboxTool for ElevationAboveStreamEuclidean {
 
         for row in 0..rows {
             for col in 0..columns {
-                z = input[(row, col)];
+                z = dem.get_value(row, col);
                 if z == nodata {
                     allocation.set_value(row, col, nodata);
                 } else {
