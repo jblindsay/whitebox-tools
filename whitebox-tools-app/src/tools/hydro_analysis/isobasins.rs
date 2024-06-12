@@ -431,7 +431,7 @@ impl WhiteboxTool for Isobasins {
                 } else {
                     outlet_fa.push(fa);
                     accum.set_value(row, col, 1);
-                    fa = 1;
+                    fa = 0;
                     output.set_value(row, col, outlet_id);
                     outlet_id += 1f64;
                     outlet_row.push(row);
