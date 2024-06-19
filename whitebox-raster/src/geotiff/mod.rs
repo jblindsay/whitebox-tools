@@ -688,7 +688,7 @@ pub fn read_geotiff<'a>(
         let upper_left_y = minyp + val.1;
 
         // upper-right corner coordinates
-        col = (configs.columns - 1) as f64;
+        col = configs.columns as f64;
         row = 0.0;
         val = pr2d.get_value(col, row);
         let upper_right_x = minxp + val.0;
@@ -696,14 +696,14 @@ pub fn read_geotiff<'a>(
 
         // lower-left corner coordinates
         col = 0.0;
-        row = (configs.rows - 1) as f64;
+        row = configs.rows as f64;
         val = pr2d.get_value(col, row);
         let lower_left_x = minxp + val.0;
         let lower_left_y = minyp + val.1;
 
         // lower-right corner coordinates
-        col = (configs.columns - 1) as f64;
-        row = (configs.rows - 1) as f64;
+        col = configs.columns as f64;
+        row = configs.rows as f64;
         val = pr2d.get_value(col, row);
         let lower_right_x = minxp + val.0;
         let lower_right_y = minyp + val.1;
@@ -733,7 +733,7 @@ pub fn read_geotiff<'a>(
             + configs.model_transformation[7];
 
         // upper-right corner coordinates
-        col = (configs.columns - 1) as f64;
+        col = configs.columns as f64;
         row = 0.0;
         let upper_right_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
@@ -744,7 +744,7 @@ pub fn read_geotiff<'a>(
 
         // lower-left corner coordinates
         col = 0.0;
-        row = (configs.rows - 1) as f64;
+        row = configs.rows as f64;
         let lower_left_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
             + configs.model_transformation[3];
@@ -753,8 +753,8 @@ pub fn read_geotiff<'a>(
             + configs.model_transformation[7];
 
         // lower-right corner coordinates
-        col = (configs.columns - 1) as f64;
-        row = (configs.rows - 1) as f64;
+        col = configs.columns as f64;
+        row = configs.rows as f64;
         let lower_right_x = configs.model_transformation[0] * col
             + configs.model_transformation[1] * row
             + configs.model_transformation[3];
@@ -1626,16 +1626,77 @@ pub fn read_geotiff<'a>(
     match ifd_map.get(&317) {
         Some(ifd) => {
             if ifd.interpret_as_u16()[0] == 2 {
-                // Horizontal predictor
-                // transform the data
-                let mut idx: usize;
-                for row in 0..configs.rows {
-                    for col in 1..configs.columns {
-                        idx = row * configs.columns + col;
-                        data[idx] += data[idx - 1];
+                // Horizontal predictor transformation
+                // Only the width of the blocks matters because the
+                // transformation only affects values on the same row and block
+                let mut col_start: usize;
+                let mut col_end: usize;
+                for i in 0..blocks_across {
+                    let blk_w = if block_padding && i == blocks_across - 1 && configs.columns % block_width != 0 {
+                        configs.columns % block_width
+                    } else {
+                        block_width
+                    };
+                    col_start = i * block_width + 1;
+                    col_end = i * block_width + blk_w;
+                    
+                    match sample_format[0] {
+                        1 => {
+                            // unsigned integer
+                            let max_value = 2.0_f64.powf(bits_per_sample[0] as f64) - 1.0;
+                            let mut diff_wraparound: f64;
+                            let mut idx: usize;
+                            for row in 0..configs.rows {
+                                for col in col_start..col_end {
+                                    idx = row * configs.columns + col;
+                                    
+                                    if data[idx] + data[idx - 1] > max_value {
+                                        // Integer underflow occured at encoding
+                                        diff_wraparound = max_value - data[idx - 1];
+                                        data[idx] -= diff_wraparound + 1.0;
+                                    } else {
+                                        // No integer wraparound occured at encoding
+                                        data[idx] += data[idx - 1];
+                                    }
+                                }
+                            }
+                        }
+                        2 => {
+                            // signed integer
+                            let max_value = 2.0_f64.powf(bits_per_sample[0] as f64 - 1.0) - 1.0;
+                            let mut diff_wraparound: f64;
+                            let mut idx: usize;
+                            for row in 0..configs.rows {
+                                for col in col_start..col_end {
+                                    idx = row * configs.columns + col;
+                                    
+                                    if data[idx] + data[idx - 1] < -max_value {
+                                        // Integer overflow occured at encoding
+                                        diff_wraparound = -max_value - data[idx];
+                                        data[idx] = data[idx - 1] - diff_wraparound + max_value + 2.0;
+                                    } else if data[idx] + data[idx - 1] > max_value {
+                                        // Integer underflow occured at encoding
+                                        diff_wraparound = max_value - data[idx];
+                                        data[idx] = data[idx - 1] - diff_wraparound - max_value - 2.0;
+                                    } else {
+                                        // No integer wraparound occured at encoding
+                                        data[idx] += data[idx - 1];
+                                    }
+                                }
+                            }
+                        }
+                        3 => {
+                            // floating point
+                            return Err(Error::new(
+                                ErrorKind::InvalidData,
+                                "The GeoTIFF reader does not currently support 32-bit floating points with horizontal predictor (PREDICTOR=2).",
+                            ))
+                        }
+                        _ => {} // do nothing
                     }
                 }
             }
+
             // if ifd.interpret_as_u16()[0] == 3 {
             //     if configs.endian == Endianness::LittleEndian {
             //         if configs.data_type == DataType::F32 {
