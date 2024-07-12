@@ -24,7 +24,8 @@ use whitebox_common::structures::Array2D;
 /// Rho8 is a single-flow-direction (SFD) method because the flow entering each grid cell is routed
 /// to only one downslope neighbour, i.e. flow divergence is not permitted. The user must specify the
 /// name of a digital elevation model (DEM) file (`--dem`) that has been hydrologically corrected to
-/// remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`). The 
+/// remove all spurious depressions and flat areas (`BreachDepressions`, `FillDepressions`). An 
+/// optional positive integer seed value (`--seed`) can be provided to ensure reproducible results. The
 /// output of this tool (`--output`) is often used as the input to the `Rho8FlowAccumulation` tool.
 ///
 /// By default, the Rho8 flow pointers use the following clockwise, base-2 numeric index convention:
@@ -94,6 +95,15 @@ impl Rho8Pointer {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Seed".to_owned(),
+            flags: vec!["--seed".to_owned()],
+            description: "Seed to initialize stochastic function.".to_owned(),
+            parameter_type: ParameterType::Integer,
+            default_value: None,
+            optional: false,
+        });
+
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -160,6 +170,8 @@ impl WhiteboxTool for Rho8Pointer {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
+        let mut seed_flag = false;
+        let mut seed = 0u64;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -198,6 +210,15 @@ impl WhiteboxTool for Rho8Pointer {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
                 }
+            } else if vec[0].to_lowercase() == "-seed" 
+                || vec[0].to_lowercase() == "--seed"
+            {
+                seed_flag = true;
+                seed = if keyval {
+                    vec[1].to_string().parse::<u64>().unwrap()
+                } else {
+                    args[i + 1].to_string().parse::<u64>().unwrap()
+                };
             }
         }
 
@@ -255,8 +276,12 @@ impl WhiteboxTool for Rho8Pointer {
                     false => [1i16, 2, 4, 8, 16, 32, 64, 128],
                 };
                 let (mut z, mut z_n, mut slope): (f64, f64, f64);
-                // let between = Range::new(0f64, 1f64);
-                let mut rng = thread_rng();
+                let mut rng = if seed_flag {
+                    StdRng::seed_from_u64(seed + tid as u64)
+                } else {
+                    StdRng::from_entropy()
+                };
+
                 for row in (0..rows).filter(|r| r % num_procs == tid) {
                     let mut data = vec![out_nodata; columns as usize];
                     for col in 0..columns {
@@ -269,7 +294,7 @@ impl WhiteboxTool for Rho8Pointer {
                                 if z_n != nodata {
                                     slope = match i {
                                         1 | 3 | 5 | 7 => z - z_n,
-                                        _ => (z - z_n) / (2f64 - rng.gen_range(0f64..1f64)), //between.ind_sample(&mut rng)),
+                                        _ => (z - z_n) / (2f64 - rng.gen_range(0f64..1f64)),
                                     };
                                     if slope > max_slope && slope > 0f64 {
                                         max_slope = slope;
