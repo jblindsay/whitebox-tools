@@ -387,6 +387,9 @@ impl WhiteboxTool for AsciiToLas {
                 for line in f.lines() {
                     let line_unwrapped = line?;
                     let line_data = line_unwrapped.split(",").collect::<Vec<&str>>();
+                    if line_data.len() == 1 {
+                        line_data = line_unwrapped.split(" ").collect::<Vec<&str>>();
+                    }
                     if line_data.len() >= num_fields {
                         // check to see if the first field contains a number; if not, it's likely a header row and should be ignored
                         let is_num = line_data[0].parse::<f64>().is_ok();

@@ -136,12 +136,23 @@ pub fn read_saga(
                 .parse::<f64>()
                 .unwrap();
         } else if vec[0].to_lowercase().contains("nodata_value") {
-            configs.nodata = vec[1]
+            if !vec[1].contains(";") {
+                configs.nodata = vec[1]
                 .replace("=", "")
                 .trim()
                 .to_string()
                 .parse::<f64>()
                 .unwrap();
+            } else {
+                let line_split2 = vec[1].split(";");
+                let vec2 = line_split2.collect::<Vec<&str>>();
+                configs.nodata = vec2[0]
+                .replace("=", "")
+                .trim()
+                .to_string()
+                .parse::<f64>()
+                .unwrap();
+            }
         } else if vec[0].to_lowercase().contains("toptobottom") {
             top_to_bottom = vec[1].replace("=", "").trim().to_lowercase().contains("t")
         }

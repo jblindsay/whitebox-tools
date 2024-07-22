@@ -32,7 +32,7 @@ use std::process::Command;
 /// tool to relatively small rasters. The Trend Surface (Vector Points) tool can be
 /// used instead if the input data is vector points contained in a shapefile.
 ///
-/// Numerical stability is enhanced by transforming the x, y, z data by their minimum
+/// Numerical stability is enhanced by transforming the x, y, z data by subtracting their minimum
 /// values before performing the regression analysis. These transform parameters
 /// are also reported in the output report.
 pub struct TrendSurface {

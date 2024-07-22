@@ -34,7 +34,7 @@ use whitebox_raster::*;
 /// values near -90 and highly divergent areas have values near 90. Therefore, in actuality, <it>C</it> is more properly 
 /// an index of divergence rather than a convergence index, despite its name.
 /// 
-/// ![](../../doc_img/ConvergenceIndex.png)
+/// ![](../../../doc_img/ConvergenceIndex.png)
 /// 
 /// The user must specify the name of the input DEM (`dem`) and the 
 /// output raster (`output`). The Z conversion factor (`zfactor`) is only important when the vertical and 

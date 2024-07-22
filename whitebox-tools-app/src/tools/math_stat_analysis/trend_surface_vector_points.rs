@@ -34,7 +34,7 @@ use std::process::Command;
 /// r-square value. The Trend Surface tool can be used instead if the input data is a raster
 /// image.
 ///
-/// Numerical stability is enhanced by transforming the x, y, z data by their minimum
+/// Numerical stability is enhanced by transforming the x, y, z data by subtracting their minimum
 /// values before performing the regression analysis. These transform parameters
 /// are also reported in the output report.
 pub struct TrendSurfaceVectorPoints {
