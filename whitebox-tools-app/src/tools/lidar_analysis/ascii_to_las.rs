@@ -386,7 +386,7 @@ impl WhiteboxTool for AsciiToLas {
                 let mut coord_val: f64;
                 for line in f.lines() {
                     let line_unwrapped = line?;
-                    let line_data = line_unwrapped.split(",").collect::<Vec<&str>>();
+                    let mut line_data = line_unwrapped.split(",").collect::<Vec<&str>>();
                     if line_data.len() == 1 {
                         line_data = line_unwrapped.split(" ").collect::<Vec<&str>>();
                     }
