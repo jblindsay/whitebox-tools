@@ -5484,7 +5484,7 @@ Okay, that's it for now.
         if esri_pntr: args.append("--esri_pntr")
         return self.run_tool('rho8_flow_accumulation', args, callback) # returns 1 if error
 
-    def rho8_pointer(self, dem, output, esri_pntr=False, callback=None):
+    def rho8_pointer(self, dem, output, esri_pntr=False, seed=None, callback=None):
         """Calculates a stochastic Rho8 flow pointer raster from an input DEM.
 
         Keyword arguments:
@@ -5492,12 +5492,14 @@ Okay, that's it for now.
         dem -- Input raster DEM file. 
         output -- Output raster file. 
         esri_pntr -- D8 pointer uses the ESRI style scheme. 
+        seed -- Seed to initialize stochastic function. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
         args.append("--dem='{}'".format(dem))
         args.append("--output='{}'".format(output))
         if esri_pntr: args.append("--esri_pntr")
+        if seed is not None: args.append("--seed='{}'".format(seed))
         return self.run_tool('rho8_pointer', args, callback) # returns 1 if error
 
     def river_centerlines(self, i, output, min_length=3, radius=4, callback=None):
