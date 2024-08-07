@@ -56,6 +56,11 @@ for more details.
 * Release Notes: *
 ******************
 
+Version 2.X.X (XX-XX-202X)
+- Fixed a bug with the MultiscaleTopographicPositionImage tool. Previously an error would
+  be issued if the user did not specify the hillshade image, which was intended to be an
+  optional input parameter.
+
 Version 2.4.0 (17-05-2024)
 - Removed the requirement for an input DEM in the VectorStreamNetworkAnalysis tool. 
 - Fixed a bug in the RepairStreamVectorTopology tool that reversed the direction of some stream arcs.

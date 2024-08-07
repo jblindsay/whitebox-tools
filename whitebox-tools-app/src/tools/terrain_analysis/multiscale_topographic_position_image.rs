@@ -346,8 +346,8 @@ impl WhiteboxTool for MultiscaleTopographicPositionImage {
             ));
         }
 
-        if hs_specified && input_r.configs.rows as isize != hs.rows
-            || input_r.configs.columns as isize != hs.columns
+        if hs_specified && (input_r.configs.rows as isize != hs.rows
+            || input_r.configs.columns as isize != hs.columns)
         {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
