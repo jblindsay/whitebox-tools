@@ -10,7 +10,7 @@
             "name": "Input Raster",
             "flags": ["-i", "--inputs"],
             "description": "Name of the input raster file",
-            "parameter_type": {"FileList":{"ExistingFile":"Raster"}},
+            "parameter_type": {"FileList":"Raster"},
             "default_value": null,
             "optional": false
         },
