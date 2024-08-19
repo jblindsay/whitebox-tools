@@ -19,10 +19,10 @@ use std::path;
 /// specify the name of a flow pointer grid (`--d8_pntr`) derived using the D8 flow algorithm (`D8Pointer`).
 /// This grid should be derived from a digital elevation model (DEM) that has been pre-processed to remove
 /// artifact topographic depressions and flat areas (`BreachDepressions`, `FillDepressions`). The user may also
-/// optionally provide watershed (`--watersheds`) and weights (`--weights`) images. The optional watershed
-/// image can be used to define one or more irregular-shaped watershed boundaries. Flowpath lengths are
-/// measured within each watershed in the watershed image (each defined by a unique identifying number) as
-/// the flowpath length to the watershed's outlet cell.
+/// optionally provide watershed (`--watersheds`) and weights as a raster file or a constant value (`--weights`).
+/// The optional watershed image can be used to define one or more irregular-shaped watershed boundaries.
+/// Flowpath lengths are measured within each watershed in the watershed image (each defined
+/// by a unique identifying number) as the flowpath length to the watershed's outlet cell.
 ///
 /// The optional weight image is multiplied by the flow-length through each grid cell. This can be useful
 /// when there is a need to convert the units of the output image. For example, the default unit of
@@ -73,10 +73,10 @@ impl DownslopeFlowpathLength {
         });
 
         parameters.push(ToolParameter {
-            name: "Input Weights File (optional)".to_owned(),
+            name: "Input Weights File or Constant Value (optional)".to_owned(),
             flags: vec!["--weights".to_owned()],
-            description: "Optional input weights raster file.".to_owned(),
-            parameter_type: ParameterType::ExistingFile(ParameterFileType::Raster),
+            description: "Optional input weights raster file or constant value.".to_owned(),
+            parameter_type: ParameterType::ExistingFileOrFloat(ParameterFileType::Raster),
             default_value: None,
             optional: true,
         });
@@ -243,14 +243,25 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         } else {
             use_watersheds = false;
         }
-        let use_weights: bool;
+
+        let mut use_weights_constant = false;
+        let mut use_weights_file = false;
+        let mut weights_constant = 1f32;
         if !weights_file.is_empty() {
-            use_weights = true;
-            if !weights_file.contains(&sep) {
-                weights_file = format!("{}{}", working_directory, weights_file);
+            use_weights_constant = match weights_file.parse::<f32>() {
+                Ok(val) => {
+                    weights_constant = val;
+                    true
+                }
+                Err(_) => false,
+            };
+
+            if !use_weights_constant {
+                use_weights_file = true;
+                if !weights_file.contains(&sep) {
+                    weights_file = format!("{}{}", working_directory, weights_file);
+                }
             }
-        } else {
-            use_weights = false
         }
 
         if verbose {
@@ -284,18 +295,17 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if verbose {
             println!("Initializing weights data...")
         };
-        let weights: Array2D<f32> = match use_weights {
-            false => Array2D::new(1, 1, 1f32, 1f32)?,
-            true => {
-                // if verbose { println!("Reading weights data...") };
+        let weights: Array2D<f32> =
+            if use_weights_file {
                 let r = Raster::new(&weights_file, "r")?;
                 if r.configs.rows != rows as usize || r.configs.columns != columns as usize {
                     return Err(Error::new(ErrorKind::InvalidInput,
                                         "The input files must have the same number of rows and columns and spatial extent."));
                 }
                 r.get_data_as_f32_array2d()
-            }
-        };
+            } else {
+                Array2D::new(1, 1, weights_constant, weights_constant)?
+            };
 
         let start = Instant::now();
 
@@ -433,8 +443,11 @@ impl WhiteboxTool for DownslopeFlowpathLength {
         if use_watersheds {
             output.add_metadata_entry(format!("Input watersheds file: {}", watersheds_file));
         }
-        if use_weights {
+        if use_weights_file {
             output.add_metadata_entry(format!("Input weights file: {}", weights_file));
+        }
+        if use_weights_constant {
+            output.add_metadata_entry(format!("Input weight value: {}", weights_constant));
         }
         output.add_metadata_entry(format!("Elapsed Time (excluding I/O): {}", elapsed_time));
 
