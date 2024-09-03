@@ -462,9 +462,11 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         values are added can't be garanted from run to run meaning that a simple sort by height might
         lead to different breaching solutions caused by a different processing order if two pits have
         the same height. To avoid this, pit cells are sorted first by X, then by Y and finally by height.*/
-        undefined_flow_cells.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(Equal));
-        undefined_flow_cells.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Equal));
-        undefined_flow_cells.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(Equal));
+        undefined_flow_cells.sort_by(|a, b| {
+            a.2.partial_cmp(&b.2).unwrap()
+                .then(b.1.cmp(&a.1))
+                .then(b.0.cmp(&a.0))
+            });
         let num_deps = undefined_flow_cells.len();
         if num_deps == 0 && verbose {
             println!("No depressions found. Process ending...");
