@@ -463,7 +463,7 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         lead to different breaching solutions caused by a different processing order if two pits have
         the same height. To avoid this, pit cells are sorted first by X, then by Y and finally by height.*/
         undefined_flow_cells.sort_by(|a, b| {
-            a.2.partial_cmp(&b.2).unwrap()
+            b.2.partial_cmp(&a.2).unwrap()
                 .then(b.1.cmp(&a.1))
                 .then(b.0.cmp(&a.0))
             });
