@@ -458,8 +458,15 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         ////////////////////////////////////////////////////////////////////////////////////////////
 
         /* Vec is a stack and so if we want to pop the values from lowest to highest, we need to sort
-        them from highest to lowest. */
-        undefined_flow_cells.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(Equal));
+        them from highest to lowest. The stack being built with parallelism, the order in which the
+        values are added can't be garanted from run to run meaning that a simple sort by height might
+        lead to different breaching solutions caused by a different processing order if two pits have
+        the same height. To avoid this, pit cells are sorted first by X, then by Y and finally by height.*/
+        undefined_flow_cells.sort_by(|a, b| {
+            b.2.partial_cmp(&a.2).unwrap()
+                .then(b.1.cmp(&a.1))
+                .then(b.0.cmp(&a.0))
+            });
         let num_deps = undefined_flow_cells.len();
         if num_deps == 0 && verbose {
             println!("No depressions found. Process ending...");
@@ -475,6 +482,8 @@ impl WhiteboxTool for BreachDepressionsLeastCost {
         let filter_size = ((max_dist * 2 + 1) * (max_dist * 2 + 1)) as usize;
         let mut minheap = BinaryHeap::with_capacity(filter_size);
         while let Some(cell) = undefined_flow_cells.pop() {
+            // Height is retrieved from the output raster instead of the popped cell because
+            // the current height could have been modified by a previous breaching iteration
             row = cell.0;
             col = cell.1;
             z = output.get_value(row, col);
