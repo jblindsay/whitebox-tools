@@ -449,7 +449,7 @@ impl PointData {
         }
     }
 
-    /// Returns `true` if the point is classifed as either low, medium or high vegetation.
+    /// Returns `true` if the point is classified as either low, medium or high vegetation.
     pub fn is_classified_vegetation(&self) -> bool {
         let class = self.classification();
         class == 3 || class == 4 || class == 5

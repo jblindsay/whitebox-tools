@@ -22,8 +22,8 @@ use std::collections::HashMap;
 use std::cmp::min;
 use rand::prelude::*;
 
-/// This tool creates a new shapefile output (`--output`) sample sites that sastisfy a latin hypercube based
-/// on a set of input rasters wth the same projections (`--inputs`), and is therefore a multidimensional stratified random
+/// This tool creates a new shapefile output (`--output`) sample sites that satisfy a latin hypercube based
+/// on a set of input rasters with the same projections (`--inputs`), and is therefore a multidimensional stratified random
 /// sampling scheme. A random subset of samples (`--samples`, n << N) is chosen from the population and iteratively resampled
 /// (`--max_iter`) to minimize an objective function. An annealing schedule and a random resample probability
 /// (`--rs_prob`) are used to control how likely a interation is to randomly resample, or resample the worst
@@ -32,19 +32,19 @@ use rand::prelude::*;
 /// The annealing process controls the probability that samples will be discarded each iteration.
 /// The temperature is decreased over several iterations, decreasing the probability of discarding
 /// the new sample. The properties of the annealing process can be manipulated through the
-/// parameters `--temp` for initial temperature `--temp_decay` for the tempature decay rate,
+/// parameters `--temp` for initial temperature `--temp_decay` for the temperature decay rate,
 /// and  `-cycle` to determine the number of iterations before re-applying the decay rate.
 ///
 /// This implementation is loosely based on Minasny and McBratney (2006). An additional optional
 /// parameter `--average` has been added to normalize the continuous objective function and bring
-/// it closer to the range of values for the catagorical and correlation objective functions. This
+/// it closer to the range of values for the categorical and correlation objective functions. This
 /// prevents continuous inputs from dominating the objective function and makes the objective function
 /// cutoff threshold (`--threshold`) more predictable. However, as a result, the algorithm will emphasize
-/// the catagorical and correlation objective relative to the standard weighting.
+/// the categorical and correlation objective relative to the standard weighting.
 ///
 /// data objective function has been used to average the number of strata so that it does not dominate the
 /// objective function, and makes a objective function cutoff value more predictable (`--o_thresh`).
-/// Another departure from the orignal is that a lower objective function forces the sample to be retained
+/// Another departure from the original is that a lower objective function forces the sample to be retained
 /// instead of rejected. This was originally based on a random number and the annealed changed in objective function.
 ///
 /// # Reference
@@ -343,7 +343,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut totals = vec![0f64; num_files];
     let mut averages = vec![0f64; num_files];
     let mut num_cells = vec![0f64; num_files];
-    let mut k_is_cont = vec![true; num_files]; // true for continuous, false for catagorical
+    let mut k_is_cont = vec![true; num_files]; // true for continuous, false for categorical
 
     let num_bins = 25000isize;
     let mut quantiles = vec![vec![]; num_files];
@@ -440,7 +440,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                     valid_indices[idx] = idx as f64;
                     // because data holds cell values, it can also be used to hash classes
                     if !is_cont {
-                        // is catagorical data, where val is the class key
+                        // is categorical data, where val is the class key
                         let counter = class_histo.entry(val as isize)
                                 .or_insert(0);
                         *counter += 1; // increment hashmap value
@@ -482,7 +482,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                         }
                         histogram[bin as usize] += 1f64;
                     } else {
-                        // is catagorical data, where z is the class key
+                        // is categorical data, where z is the class key
                         let counter = class_histo.entry(z as isize)
                                 .or_insert(0);
                         *counter += 1; // increment hashmap value
@@ -522,7 +522,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
                 quantiles[k][s] = minval + (bin as f64 * binsize)
             }
         } else {
-            // catagorical data
+            // categorical data
             // use quantiles[k] to hold unique classes for now
             quantiles[k] = class_histo.clone().into_keys()
                             .map(|c| c as f64).collect::<Vec<f64>>();

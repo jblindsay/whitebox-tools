@@ -58,7 +58,7 @@ const EPSILON: f64 = std::f64::EPSILON;
 /// small valued snap distance is advisable. 
 /// 
 /// Additionally, the tool possesses two Boolean flags, `--reverse_backward_arcs` and `--correct_nonconfluence_joins`
-/// which determine whether the tool will correct backward arcs (i.e., line segements that are oriented
+/// which determine whether the tool will correct backward arcs (i.e., line segments that are oriented
 /// in the reverse direction to the streamflow) and non-confluence joins (i.e., upstream/downstream line
 /// segments that are not joined at confluence locations).
 /// 
@@ -436,7 +436,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         let mut marked_for_deletion = vec![false; num_polylines];
         for fid in 0..num_polylines {
             // We're looking for segments where one end is joined and the other end is not. These are 
-            // valid starting segements for chains of joined segments.
+            // valid starting segments for chains of joined segments.
             // if fid == 21414 || fid == 16471 || fid == 3703 || fid == 3683 {
             //     println!("{} {} {} {} {}", fid, connections[fid][0], connections[fid][1], marked_for_deletion[fid], num_polylines);
             // }
@@ -800,7 +800,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         let mut percent_reverse = vec![0.0; polylines2.len()];
         for fid in 0..polylines2.len() {
             for i in 0..polylines2[fid].len()-1 {
-                // get the id of the cooresponding vertex in the original file
+                // get the id of the corresponding vertex in the original file
                 p1 = polylines2[fid].vertices[i];
                 let ret = vertex_tree.locate_within_distance([p1.x, p1.y], precision);
 

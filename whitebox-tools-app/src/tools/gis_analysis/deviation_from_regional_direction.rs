@@ -19,7 +19,7 @@ use std::path;
 /// or regional, direction. The input file will have a new attribute inserted in the attribute table, `DEV_DIR`, which
 /// will contain the calculated values. The deviation values are in degrees. The orientation of each polygon is determined
 /// based on the long-axis of the minimum bounding box fitted to the polygon. The regional direction is based on the 
-/// mean direciton of the polygons, weighted by long-axis length (longer polygons contribute more weight) and elongation,
+/// mean direction of the polygons, weighted by long-axis length (longer polygons contribute more weight) and elongation,
 /// i.e., a function of the long and short axis lengths (greater elongation contributes more weight). Polygons with 
 /// elongation values lower than the elongation threshold value (`--elong_threshold`), which has values between 0 and 1, 
 /// will be excluded from the calculation of the regional direction. 

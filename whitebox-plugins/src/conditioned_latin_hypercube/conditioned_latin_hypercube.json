@@ -57,7 +57,7 @@
         {
             "name": "Objective function threshold.",
             "flags": ["--threshold"],
-            "description": "Objective function values below the theshold stop the resampling iterations.",
+            "description": "Objective function values below the threshold stop the resampling iterations.",
             "parameter_type": "Float",
             "default_value": null,
             "optional": true
@@ -89,7 +89,7 @@
         {
             "name": "Average the continuous Obj. Func.",
             "flags": ["--average"],
-            "description": "Weight the continuous objective funtion by the 1/N contributing strata.",
+            "description": "Weight the continuous objective function by the 1/N contributing strata.",
             "parameter_type": "Boolean",
             "default_value": "false",
             "optional": true
