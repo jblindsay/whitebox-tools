@@ -44,7 +44,7 @@ use whitebox_raster::*;
 ///
 /// If a Rho8 pointer is used as the input raster, the user must specify this (`--pntr`). Similarly, 
 /// if a pointer input is used and the pointer follows the Esri pointer convention, rather than the 
-/// default WhiteboxTools convension for pointer files, then this must also be specified (`--esri_pntr`).
+/// default WhiteboxTools conversion for pointer files, then this must also be specified (`--esri_pntr`).
 ///
 /// # Reference
 /// Fairfield, J., and Leymarie, P. 1991. Drainage networks from grid digital elevation models. *Water

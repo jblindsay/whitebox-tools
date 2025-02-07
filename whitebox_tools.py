@@ -4426,7 +4426,7 @@ Okay, that's it for now.
         background_clr -- Background red-green-blue (RGB) or red-green-blue-alpha (RGBA) colour, e.g. '[255, 255, 245]', '[255, 255, 245, 200]'. 
         attenuation -- Attenuation parameter. Range is 0-4. Zero means no attenuation. 
         ambient_light -- Ambient light parameter. Range is 0.0-0.7. Zero means no ambient light. 
-        z_factor -- Elevation multiplier, or a vertical exageration. 
+        z_factor -- Elevation multiplier, or a vertical exaggeration. 
         callback -- Custom function for handling tool text outputs.
         """
         args = []
