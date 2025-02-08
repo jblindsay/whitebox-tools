@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: WhiteboxTools Google Group
+    url: https://groups.google.com/g/whiteboxtools
+    about: Ask and answer questions about Whitebox tools here.
+
+  - name: WhiteboxTools on GIS StackExchange
+    url: https://gis.stackexchange.com/questions/tagged/whitebox-tools
+    about: Ask and answer questions about Whitebox tools here.
+  
+  - name: ArcGIS plugin
+    url: https://github.com/giswqs/WhiteboxTools-ArcGIS/issues
+    about: Report an issue with the ArcGIS plugin.
+
+  - name: R package
+    url: https://github.com/giswqs/whiteboxR/issues
+    about: Report an issue with the R package.
