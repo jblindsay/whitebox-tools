@@ -508,7 +508,7 @@ impl WhiteboxTool for DrainagePreservingSmoothing {
                                         }
                                     }
                                 }
-                                // calcualate the median from the histogram
+                                // calculate the median from the histogram
                                 let mut sum = 0f64;
                                 let target = (n / 2f64).floor();
                                 for i in 0..num_bins as usize {

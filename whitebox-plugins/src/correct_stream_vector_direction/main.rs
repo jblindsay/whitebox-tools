@@ -41,7 +41,7 @@ const EPSILON: f64 = std::f64::EPSILON;
 ///
 /// ![](../../doc_img/RepairStreamVectorTopology.png)
 ///
-/// The user may optinally specify the name of the input vector stream network (`--input`) and the output file 
+/// The user may optionally specify the name of the input vector stream network (`--input`) and the output file 
 /// (`--output`). Note that if an input file is not specified by the user, the tool will search for all vector
 /// files (*.shp) files contained within the current working directory. This feature can be very useful when 
 /// you need to process a large number of stream files contained within a single directory. The tool will 

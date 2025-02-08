@@ -82,7 +82,7 @@ impl DownslopeIndex {
         });
 
         parameters.push(ToolParameter {
-            name: "Verical Drop".to_owned(),
+            name: "Vertical Drop".to_owned(),
             flags: vec!["--drop".to_owned()],
             description: "Vertical drop value (default is 2.0).".to_owned(),
             parameter_type: ParameterType::Float,

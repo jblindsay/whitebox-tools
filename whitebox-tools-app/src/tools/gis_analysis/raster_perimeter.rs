@@ -236,7 +236,7 @@ impl WhiteboxTool for RasterPerimeter {
         }
 
         if !output_raster && !output_text {
-            println!("Warning: Niether a raster nor text outputs were selected. An area raster will be generated.");
+            println!("Warning: Neither a raster nor text outputs were selected. An area raster will be generated.");
             output_file = String::from("area.tif");
             output_raster = true;
         }

@@ -35,7 +35,7 @@ use whitebox_common::utils::{
 /// > zfactor = 1.0 / (111320.0 x cos(mid_lat))
 ///
 /// where `mid_lat` is the latitude of the centre of the raster, in radians. The Z conversion factor can also be used
-/// used to apply a vertical exageration to further emphasize landforms within the hillshade output.
+/// used to apply a vertical exaggeration to further emphasize landforms within the hillshade output.
 ///
 /// The hillshade value (*HS*) of a DEM grid cell is calculate as:
 ///

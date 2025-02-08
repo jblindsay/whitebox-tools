@@ -1024,7 +1024,7 @@ impl WhiteboxTool for Clip {
                         // }
 
                         //////////////////////////////////////////////////////////////////////////////////////////
-                        // This is the main part of the anaysis. It is responsible for rebuilding the polygons. //
+                        // This is the main part of the analysis. It is responsible for rebuilding the polygons. //
                         //////////////////////////////////////////////////////////////////////////////////////////
                         let mut bb: Vec<BoundingBox> = vec![];
                         let mut current_node: usize;

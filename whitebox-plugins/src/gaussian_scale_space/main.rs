@@ -655,7 +655,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         sigma_prev = sigma_actual;
         let buffer = if sigma < 3f64 { // not fast gaussian, no buffer
             0isize
-        } else { // is fast gaussian, buffer by upper window lenght
+        } else { // is fast gaussian, buffer by upper window length
             filter_size + 1 // (filter_size as f64 / 2f64).floor() as isize + 1
         };
 

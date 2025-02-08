@@ -26,7 +26,7 @@ use num_cpus;
 /// a hypothetical wind flux. It can be conceptualized as the angle between a plane orthogonal to the wind 
 /// and a plane that represents the local topography at a grid cell (Bohner and Antonic, 2007). The user must specify 
 /// the names of the input digital elevation model (`--dem`) and output file (`--output`), as well as the
-/// dominant wind azimuth (`--azimuth`) and a maximum search distance (`--max_dist`) used to calclate the horizon
+/// dominant wind azimuth (`--azimuth`) and a maximum search distance (`--max_dist`) used to calculate the horizon
 /// angle. Notice that the specified azimuth represents a regional average wind direction. 
 ///
 /// Exposure towards the sloped wind flux essentially combines the relative terrain aspect and the maximum upwind 

@@ -29,7 +29,7 @@ use std::thread;
 /// algorithm with efficiency optimizations and other significant enhancements. The approach uses a least-cost
 /// path analysis to identify the breach channel that connects pit cells (i.e. grid cells for
 /// which there is no lower neighbour) to some distant lower cell. Prior to breaching and in order
-/// to minimize the depth of breach channels, all pit cells are rised to the elevation of the lowest
+/// to minimize the depth of breach channels, all pit cells are raised to the elevation of the lowest
 /// neighbour minus a small heigh value. Here, the cost of a breach path is determined by the amount
 /// of elevation lowering needed to cut the breach channel through the surrounding topography.
 ///

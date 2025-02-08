@@ -26,7 +26,7 @@ use rand::prelude::*;
 /// on a set of input rasters with the same projections (`--inputs`), and is therefore a multidimensional stratified random
 /// sampling scheme. A random subset of samples (`--samples`, n << N) is chosen from the population and iteratively resampled
 /// (`--max_iter`) to minimize an objective function. An annealing schedule and a random resample probability
-/// (`--rs_prob`) are used to control how likely a interation is to randomly resample, or resample the worst
+/// (`--rs_prob`) are used to control how likely a interaction is to randomly resample, or resample the worst
 /// strata, where higher values favour a more random sample, and lower values favour a more stratified sample.
 ///
 /// The annealing process controls the probability that samples will be discarded each iteration.
@@ -154,7 +154,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
     let mut o_thresh = f64::MIN;
     let mut rng_seed = -1isize;
     let mut norm_o1 = false;
-    let mut weights = [1f64, 1f64, 1f64]; // add weights agruments later
+    let mut weights = [1f64, 1f64, 1f64]; // add weights arguments later
 
     if args.len() == 0 {
         return Err(Error::new(
@@ -585,7 +585,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
             }
         }
     }
-    // ramdomize reservoir sample order
+    // randomize reservoir sample order
     reservoir.shuffle(&mut rng);
 
     if verbose { println!("Calculating the correlation matrix..."); }

@@ -23,7 +23,7 @@ use std::process::Command;
 /// This tool can be used to plot a histogram of data derived from a LiDAR file. The user must specify the
 /// name of the input LAS file (`--input`), the name of the output HTML file (`--output`), the parameter
 /// (`--parameter`) to be plotted, and the amount (in percent) to clip the upper and lower tails of the f
-/// requency distribution (`--clip`). The LiDAR parameters that can be plotted using `LidarHistogram`
+/// frequency distribution (`--clip`). The LiDAR parameters that can be plotted using `LidarHistogram`
 /// include the point elevations, intensity values, scan angles, and class values.
 ///
 /// Use the `LidarPointStats` tool instead to examine the spatial distribution of LiDAR points.

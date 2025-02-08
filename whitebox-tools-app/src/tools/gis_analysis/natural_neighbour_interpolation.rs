@@ -27,7 +27,7 @@ use std::thread;
 /// Sibson's (1981) natural neighbour method. Similar to inverse-distance-weight interpolation (`IdwInterpolation`),
 /// the natural neighbour method performs a weighted averaging of nearby point values to estimate the attribute
 /// (`--field`) value at grid cell intersections in the output raster (`--output`). However, the two methods differ
-/// quite significantly in the way that neighbours are identified and in the weighting scheme. First, natural neigbhour
+/// quite significantly in the way that neighbours are identified and in the weighting scheme. First, natural neighbour
 /// identifies neighbours to be used in the interpolation of a point by finding the points connected to the
 /// estimated value location in a [Delaunay triangulation](https://en.wikipedia.org/wiki/Delaunay_triangulation), that
 /// is, the so-called *natural neighbours*. This approach has the main advantage of not having to specify an arbitrary

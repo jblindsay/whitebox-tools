@@ -54,7 +54,7 @@ use nalgebra::{Vector3, Matrix3};
 /// identification of a landform element regardless of its scale.
 ///
 /// An experimental feature has been added to correct for global inclination. Global inclination
-/// biases the flatness threshold angle becasue it is measured relative to the z-axis, especially
+/// biases the flatness threshold angle because it is measured relative to the z-axis, especially
 /// in locally flat areas. Including the `--residuals` flag "flattens" the input by converting
 /// elevation to residuals of a 2-d linear model.
 ///

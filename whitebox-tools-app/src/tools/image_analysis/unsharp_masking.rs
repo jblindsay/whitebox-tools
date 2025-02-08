@@ -20,7 +20,7 @@ use std::thread;
 
 /// Unsharp masking is an image edge-sharpening technique commonly applied in digital image processing.
 /// Admittedly, the name 'unsharp' seems somewhat counter-intuitive given the purpose of the filter, which
-/// is to enchance the definition of edge features within the input image (`--input`). This name comes
+/// is to enhance the definition of edge features within the input image (`--input`). This name comes
 /// from the use of a blurred, or unsharpened, intermediate image (mask) in the process. The blurred image
 /// is combined with the positive (original) image, creating an image that exhibits enhanced feature definition.
 /// A caution is needed in that the output image, although clearer, may be a less accurate representation
