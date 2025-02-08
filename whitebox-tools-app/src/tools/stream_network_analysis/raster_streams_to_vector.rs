@@ -272,7 +272,7 @@ impl WhiteboxTool for RasterStreamsToVector {
         let mut output = Shapefile::new(&output_file, ShapeType::PolyLine)?;
 
         // set the projection information
-        // output.projection = input.get_wkt();
+        output.projection = streams.configs.coordinate_ref_system_wkt.clone();
 
         // add the attributes
         output
