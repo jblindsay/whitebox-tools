@@ -2,7 +2,7 @@
 This tool is part of the WhiteboxTools geospatial analysis library.
 Authors: Dr. John Lindsay
 Created: 01/07/2017
-Last Modified: 13/02/2020
+Last Modified: 04/08/2021
 License: MIT
 */
 
@@ -11,7 +11,9 @@ use whitebox_common::structures::Array2D;
 use crate::tools::*;
 use std::env;
 use std::f64;
-use std::io::{Error, ErrorKind};
+use std::fs::File;
+use std::io::prelude::*;
+use std::io::{BufWriter, Error, ErrorKind};
 use std::path;
 
 /// This tool will identify the catchment areas to each link in a user-specified stream network, i.e. the
@@ -20,6 +22,11 @@ use std::path;
 /// a streams raster (`--streams`), and the output raster (`--output`). The flow pointer and streams rasters should
 /// be generated using the `D8Pointer` algorithm. This will require a depressionless DEM, processed using either
 /// the `BreachDepressions` or `FillDepressions` tool.
+///
+/// The tool can optionally (--connections) output a CSV table that contains the upstream/downstream
+/// connections among sub-basins. That is, this table will identify the downstream basin of each sub-basin,
+/// or will list N/A in the event that there is no downstream basin, i.e. if it drains to an edge. The output
+/// CSV file will have the same name as the output raster, but with a *.csv file extension.
 ///
 /// `Hillslopes` are conceptually similar to sub-basins, except that sub-basins do not distinguish between the
 /// right-bank and left-bank catchment areas of stream links. The Sub-basins tool simply assigns a unique identifier
@@ -86,6 +93,15 @@ impl Subbasins {
             optional: true,
         });
 
+        parameters.push(ToolParameter {
+            name: "Output basin upstream-downstream connections?".to_owned(),
+            flags: vec!["--connections".to_owned()],
+            description: "Output upstream-downstream flow connections among basins?".to_owned(),
+            parameter_type: ParameterType::Boolean,
+            default_value: Some("false".to_string()),
+            optional: true,
+        });
+        
         let sep: String = path::MAIN_SEPARATOR.to_string();
         let e = format!("{}", env::current_exe().unwrap().display());
         let mut parent = env::current_exe().unwrap();
@@ -149,6 +165,7 @@ impl WhiteboxTool for Subbasins {
         let mut streams_file = String::new();
         let mut output_file = String::new();
         let mut esri_style = false;
+        let mut output_connections = false;
 
         if args.len() == 0 {
             return Err(Error::new(
@@ -165,30 +182,32 @@ impl WhiteboxTool for Subbasins {
             if vec.len() > 1 {
                 keyval = true;
             }
-            if vec[0].to_lowercase() == "-d8_pntr" || vec[0].to_lowercase() == "--d8_pntr" {
-                if keyval {
-                    d8_file = vec[1].to_string();
+            let flag_val = vec[0].to_lowercase().replace("--", "-");
+            if flag_val == "-d8_pntr" {
+                d8_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    d8_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-streams" || vec[0].to_lowercase() == "--streams" {
-                if keyval {
-                    streams_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-streams" {
+                streams_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    streams_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-o" || vec[0].to_lowercase() == "--output" {
-                if keyval {
-                    output_file = vec[1].to_string();
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-o" || flag_val == "-output" {
+                output_file = if keyval {
+                    vec[1].to_string()
                 } else {
-                    output_file = args[i + 1].to_string();
-                }
-            } else if vec[0].to_lowercase() == "-esri_pntr"
-                || vec[0].to_lowercase() == "--esri_pntr"
-                || vec[0].to_lowercase() == "--esri_style"
-            {
+                    args[i + 1].to_string()
+                };
+            } else if flag_val == "-esri_pntr" || flag_val == "-esri_style" {
                 if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
                     esri_style = true;
+                }
+            } else if flag_val == "-connections" {
+                if vec.len() == 1 || !vec[1].to_string().to_lowercase().contains("false") {
+                    output_connections = true;
                 }
             }
         }
@@ -347,8 +366,8 @@ impl WhiteboxTool for Subbasins {
                 row_n = row + dy[c];
                 col_n = col + dx[c];
                 if num_inflowing[(row_n, col_n)] > 1 {
-                    current_id += 1f64;
                     pourpts[(row_n, col_n)] = current_id;
+                    current_id += 1f64;
                 } else if pourpts[(row_n, col_n)] == nodata {
                     pourpts[(row_n, col_n)] = val;
                 }
@@ -455,6 +474,66 @@ impl WhiteboxTool for Subbasins {
                 }
             }
         }
+        
+        if output_connections {
+            let num_outlets = current_id as usize;  // in truth, it's the number of outlets plus one
+            let mut connections_table = vec![-1isize; num_outlets];
+            let dx = [1, 1, 1, 0, -1, -1, -1, 0];
+            let dy = [-1, 0, 1, 1, 1, 0, -1, -1];
+            let mut z_n: f64;
+            for row in 0..rows {
+                for col in 0..columns {
+                    z = output.get_value(row, col);
+                    if z != nodata {
+                        for i in 0..8 {
+                            z_n = output.get_value(row + dy[i], col + dx[i]);
+                            if z_n != z && z_n != nodata {
+                                // neighbouring cell is in a different basin
+                                if pntr.get_value(row + dy[i], col + dx[i]) == inflowing_vals[i]
+                                {
+                                    // neighbour cell flows into (row, col)
+                                    connections_table[z_n as usize] = z as isize;
+                                }
+                            }
+                        }
+                    }
+                }
+                if verbose {
+                    progress = (100.0_f64 * row as f64 / (rows - 1) as f64) as usize;
+                    if progress != old_progress {
+                        println!("Labelling basins connections: {}%", progress);
+                        old_progress = progress;
+                    }
+                }
+            }
+
+            let csv_file = path::Path::new(&output_file)
+                .with_extension("csv")
+                .into_os_string()
+                .into_string()
+                .expect("Error when trying to create CSV file.");
+
+            let f = File::create(csv_file.clone()).expect("Error while creating CSV file.");
+            let mut writer = BufWriter::new(f);
+            writer
+                .write_all("UPSTREAM,DOWNSTREAM\n".as_bytes())
+                .expect("Error while writing to CSV file.");
+            
+            for i in 1..num_outlets {
+                let downstream = if connections_table[i] != -1 {connections_table[i].to_string()} else {"N/A".to_string()};
+                let s = format!("{},{}\n", i, downstream);
+                writer
+                    .write_all(s.as_bytes())
+                    .expect("Error while writing to CSV file.");
+            }
+
+            let _ = writer.flush();
+
+            if verbose {
+                println!("Please see {} for basin connection table.", csv_file);
+            }
+        }
+
 
         let elapsed_time = get_formatted_elapsed_time(start);
         output.add_metadata_entry(format!(
