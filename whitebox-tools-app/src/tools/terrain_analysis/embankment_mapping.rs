@@ -21,7 +21,7 @@ use std::path;
 /// model (`--dem`). Fine-resolution LiDAR DEMs can represent surface features such as road and railway 
 /// embankments with high fidelity. However, transportation embankments are problematic for several 
 /// environmental modelling applications, including soil an vegetation distribution mapping, where the pre-embankment
-/// topography is the contolling factor. The algorithm utilizes repositioned (`--search_dist`) transportation 
+/// topography is the controlling factor. The algorithm utilizes repositioned (`--search_dist`) transportation 
 /// network cells, derived from rasterizing a transportation vector (`--road_vec`), as seed points in a 
 /// region-growing operation. The embankment region grows based on derived morphometric parameters, including 
 /// road surface width (`--min_road_width`), embankment width (`--typical_width` and `--max_width`), embankment 

@@ -24,7 +24,7 @@ use std::thread;
 /// by 10,000 and into square-kilometres by dividing by 1,000,000. If the input raster is in geographic coordinates (i.e.
 /// latitude and longitude) a warning will be issued and areas will be estimated based on per-row calculated degree lengths.
 ///
-/// The tool can be run with a raster output (`--output`), a text output (`--out_text`), or both. If niether outputs are specified,
+/// The tool can be run with a raster output (`--output`), a text output (`--out_text`), or both. If neither outputs are specified,
 /// the tool will automatically output a raster named `area.tif`.
 ///
 /// Zero values in the input raster may be excluded from the area analysis if the `--zero_back` flag is used.
@@ -236,7 +236,7 @@ impl WhiteboxTool for RasterArea {
         }
 
         if !output_raster && !output_text {
-            println!("Warning: Niether a raster nor text outputs were selected. An area raster will be generated.");
+            println!("Warning: Neither a raster nor text outputs were selected. An area raster will be generated.");
             output_file = String::from("area.tif");
             output_raster = true;
         }

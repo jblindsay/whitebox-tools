@@ -746,7 +746,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
 
 
 
-        // We want line segements to have the same orientation as the input lines. This may not always be
+        // We want line segments to have the same orientation as the input lines. This may not always be
         // possible because two lines may have been joined at their ends (meaning at least one must be reversed)
         // but the majority should follow the same direction
         // Read each line segment into an rtree.
@@ -832,7 +832,7 @@ fn run(args: &Vec<String>) -> Result<(), std::io::Error> {
         }
 
 
-        // If more than half of the vertices in a line have been reverse, reverse it back to the orginal order.
+        // If more than half of the vertices in a line have been reverse, reverse it back to the original order.
         // Remember, output lines may be composed of multiple input lines some of which may have been reversed,
         // while others were not. This voting scheme represents a 'majority' line order.
         for fid in 0..polylines2.len() {

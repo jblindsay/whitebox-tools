@@ -316,7 +316,7 @@ impl WhiteboxTool for DeviationFromRegionalDirection {
                 num_polys_used += 1;
                 long_axis * elongation
             } else {
-                 0.0 // If the poly isn't elongated enough, don't use it in caluclating the mean regional poly direction
+                 0.0 // If the poly isn't elongated enough, don't use it in calculating the mean regional poly direction
             }; 
             
             // towards calculating the mean regional poly direction
@@ -342,7 +342,7 @@ impl WhiteboxTool for DeviationFromRegionalDirection {
             ));
         }
 
-        // Calculate the weighted regional weighted mean direciton of the polygons
+        // Calculate the weighted regional weighted mean direction of the polygons
         let mut regional_angle = -(sum_sin.atan2(sum_cos) / 2.0).to_degrees() + 90.0; // divided by 2 because these are axial data not true directions
         // let mut regional_angle = -(sum_sin.atan2(sum_cos)).to_degrees() + 90.0; 
         if regional_angle < 0.0 { regional_angle = 180.0 + regional_angle; }

@@ -667,7 +667,7 @@ impl WhiteboxTool for FlowAccumulationFullWorkflow {
                             }
                         }
                         
-                        // setting value here preserves solutions from error 1 but prevents this scan from beng parallelized
+                        // setting value here preserves solutions from error 1 but prevents this scan from being parallelized
                         flow_dir.set_value(row, col, new_val);
 
                         // error 2: overshoot where flow points to a cell that points back into the original neighbourhood

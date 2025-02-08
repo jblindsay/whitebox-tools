@@ -29,7 +29,7 @@ use std::path;
 /// in the downstream flow direction, which can result in a significant reduction in the
 /// number of vertices in the output file, and therefore reduced file sizes. However, the
 /// user can optionally override this behaviour by specifying the `--all_vertices` input
-/// parameter. If specified, this parameter has the effect of presering all of the verticies
+/// parameter. If specified, this parameter has the effect of presering all of the vertices
 /// associated with grid cells in the input raster within the output vector file. 
 ///
 /// # See Also

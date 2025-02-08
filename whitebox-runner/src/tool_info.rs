@@ -102,7 +102,7 @@ impl ToolInfo {
                             param_str.push_str(&format!(" {flag}={}", arg));
                             args.push(format!("{flag}={}", arg));
                         } else {
-                            // we had an error parsing the user intput in a number.
+                            // we had an error parsing the user input in a number.
                             rfd::MessageDialog::new()
                             .set_level(rfd::MessageLevel::Warning).set_title("Error Parsing Parameter")
                             .set_description(&format!("Error parsing a non-optional parameter {}.", parameter.name))
@@ -195,7 +195,7 @@ impl ToolInfo {
                                 args.push(format!("{flag}='{}'", parameter.str_vec_value[0]));
                             },
                             Err(_) => {
-                                // we had an error parsing the user intput in a number.
+                                // we had an error parsing the user input in a number.
                                 rfd::MessageDialog::new()
                                 .set_level(rfd::MessageLevel::Warning).set_title("Error Parsing Parameter")
                                 .set_description(&format!("Error parsing a non-optional parameter {}.", parameter.name))

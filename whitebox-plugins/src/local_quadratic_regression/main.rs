@@ -487,7 +487,7 @@ impl Quadratic2d {
     //     b: Vector6<f64>
     // ) -> Quadratic2d {
     //     if decomp.is_invertible() {
-    //         let x = decomp.solve(&b).expect("Linear resolution fialed.");
+    //         let x = decomp.solve(&b).expect("Linear resolution failed.");
     //         Quadratic2d::new(
     //             *x.get(0).unwrap(), // a
     //             *x.get(1).unwrap(), // b

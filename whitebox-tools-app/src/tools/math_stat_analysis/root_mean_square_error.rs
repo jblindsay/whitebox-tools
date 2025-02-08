@@ -20,8 +20,8 @@ use std::thread;
 
 /// This tool calculates the root-mean-square-error (RMSE) or root-mean-square-difference (RMSD) from two
 /// input rasters. If the two input rasters possess the same number of rows and columns, the RMSE is
-/// calucated on a cell-by-cell basis, otherwise bilinear resampling is used. In addition to RMSE,
-/// the tool also reports other common accuracy statistics including the mean verical error, the
+/// calculated on a cell-by-cell basis, otherwise bilinear resampling is used. In addition to RMSE,
+/// the tool also reports other common accuracy statistics including the mean vertical error, the
 /// 95% confidence limit (RMSE x 1.96), and the 90% linear error (LE90), which is the 90% percentile of
 /// the residuals between two raster surfaces. The LE90 is the most robust of the reported accuracy
 /// statistics when the residuals are non-Gaussian. The LE90 requires sorting the residual values, which
