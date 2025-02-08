@@ -105,7 +105,7 @@ fn help() {
     --temp          Initial annealing temperature between [0,1].
     --temp_decay    Annealing temperature decay rate between [0,1].
     --cycle         Annealing cycle length in iterations.
-    --average       Weight the continuous objective funtion by the 1/N contributing strata.
+    --average       Weight the continuous objective function by the 1/N contributing strata.
 
     Input/output file names can be fully qualified, or can rely on the working directory contained in
     the WhiteboxTools settings.json file.
