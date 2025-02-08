@@ -4650,7 +4650,7 @@ Okay, that's it for now.
         if fill_pits: args.append("--fill_pits")
         return self.run_tool('breach_depressions', args, callback) # returns 1 if error
 
-    def breach_depressions_least_cost(self, dem, output, dist, max_cost=None, min_dist=True, flat_increment=None, fill=True, callback=None):
+    def breach_depressions_least_cost(self, dem, output, dist, max_cost=None, min_dist=False, flat_increment=None, fill=False, callback=None):
         """Breaches the depressions in a DEM using a least-cost pathway method.
 
         Keyword arguments:
