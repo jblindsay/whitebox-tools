@@ -391,9 +391,6 @@ impl WhiteboxTool for LidarPointStats {
                     let south: f64 = north - rows as f64 * grid_res;
                     let east = west + columns as f64 * grid_res;
                     let nodata = -32768.0f64;
-                    let half_grid_res = grid_res / 2.0;
-                    let ns_range = north - south;
-                    let ew_range = east - west;
 
                     let mut configs = RasterConfigs {
                         ..Default::default()
@@ -440,10 +437,12 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             pd = input[i];
                             p = input.get_transformed_coords(i);
-                            col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                .round()) as isize;
-                            row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                .round()) as isize;
+                            col = out_num_pnts.get_column_from_x(p.x);
+                            row = out_num_pnts.get_row_from_y(p.y);
+
+                            // Force points exactly on the edge of the raster to be within the last column or row
+                            if col == (columns as isize) { col = col - 1 };
+                            if row == (rows as isize) { row = row - 1 };
 
                             out_num_pnts.increment(row, col, 1f64);
 
@@ -584,10 +583,12 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             pd = input[i];
                             p = input.get_transformed_coords(i);
-                            col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                .round()) as isize;
-                            row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                .round()) as isize;
+                            col = out_elev_range.get_column_from_x(p.x);
+                            row = out_elev_range.get_row_from_y(p.y);
+
+                            // Force points exactly on the edge of the raster to be within the last column or row
+                            if col == (columns as isize) { col = col - 1 };
+                            if row == (rows as isize) { row = row - 1 };
 
                             new_min_max_z = false;
                             if p.z < min_z.get_value(row, col) {
@@ -705,10 +706,12 @@ impl WhiteboxTool for LidarPointStats {
                         for i in 0..n_points {
                             pd = input[i];
                             p = input.get_transformed_coords(i);
-                            col = (((columns - 1) as f64 * (p.x - west - half_grid_res) / ew_range)
-                                .round()) as isize;
-                            row = (((rows - 1) as f64 * (north - half_grid_res - p.y) / ns_range)
-                                .round()) as isize;
+                            col = out_predominant_class.get_column_from_x(p.x);
+                            row = out_predominant_class.get_row_from_y(p.y);
+
+                            // Force points exactly on the edge of the raster to be within the last column or row
+                            if col == (columns as isize) { col = col - 1 };
+                            if row == (rows as isize) { row = row - 1 };
 
                             class = pd.classification();
                             class_histo[class as usize].increment(row, col, 1u16);
