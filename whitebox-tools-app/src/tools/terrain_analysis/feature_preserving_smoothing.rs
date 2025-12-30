@@ -222,7 +222,7 @@ impl WhiteboxTool for FeaturePreservingSmoothing {
         let mut input_file = String::new();
         let mut output_file = String::new();
         let mut filter_size = 11usize;
-        let mut max_norm_diff = 8f32;
+        let mut max_norm_diff = 15f32;
         let mut num_iter = 3;
         let mut z_factor = -1f32;
         let mut max_z_diff = f32::INFINITY;
