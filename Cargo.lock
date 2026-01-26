@@ -3797,8 +3797,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 [[package]]
 name = "tsp-rs"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02f971d0e820c6e73d2c71cf139e2cbe6962bdacb456efc4a78c2a41b4244426"
+source = "git+https://github.com/stoksc/tsp-rs.git?branch=v0.1.0#f95d80f2d265ea10e06a65f1821fa313b10805cb"
 dependencies = [
  "rand 0.6.5",
 ]

@@ -114,7 +114,7 @@ num_cpus = "1.13.0"
 rand = { version = "0.7", features = ["small_rng"] }
 rayon = "1.7.0"
 rstar = "0.9.3"
-tsp-rs = "0.1.0"
+tsp-rs = { git = "https://github.com/stoksc/tsp-rs.git", branch = "v0.1.0" }
 typenum = "1.15.0"
 whitebox_common = { path = "../whitebox-common" }
 whitebox_lidar = { path = "../whitebox-lidar" }
